@@ -1,9 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
-  ClipboardCheck,
-  Handshake,
-  Rocket,
   ListChecks,
   CalendarClock,
   DollarSign,
@@ -78,13 +75,13 @@ export default function Home() {
       <SiteNav />
 
       {/* ===== 1. HERO ===== */}
-      <section className="relative text-white min-h-[640px] flex items-center py-32 md:py-40">
+      <section className="relative text-white min-h-[640px] flex items-center py-32 md:py-40 overflow-hidden">
         <div
-          className="absolute inset-0 -z-10 bg-cover"
+          className="absolute inset-0 -z-10 bg-cover bg-no-repeat"
           style={{
             backgroundImage:
-              "linear-gradient(100deg, rgba(10,18,32,0.92) 0%, rgba(10,18,32,0.6) 50%, rgba(10,18,32,0.15) 100%), url('https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=2000&q=80')",
-            backgroundPosition: "right bottom",
+              "linear-gradient(100deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.2) 55%, rgba(0,0,0,0) 100%), url('/images/hero-banner.png')",
+            backgroundPosition: "right center",
           }}
           aria-hidden
         />
@@ -154,8 +151,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== 4. 3-STEP SOLUTION (dark navy + blueprint pattern) ===== */}
-      <section className="bg-cream py-20 md:py-24">
+      {/* ===== 4. 3-STEP SOLUTION (dark navy + real gear background) ===== */}
+      <section
+        className="py-20 md:py-24"
+        style={{
+          backgroundImage: "url('/images/3step-bg.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundColor: "#cdcec9",
+        }}
+      >
         <div className="max-w-[1300px] mx-auto px-6">
           <div className="bg-blueprint rounded-2xl px-6 md:px-16 py-16 md:py-20">
             <h2 className="text-gold text-3xl md:text-4xl font-bold mb-14 text-center max-w-[820px] mx-auto">
@@ -163,16 +168,22 @@ export default function Home() {
             </h2>
             <div className="grid md:grid-cols-3 gap-6">
               {[
-                { Icon: ClipboardCheck, n: "Step 1", t: "Get the System", b: "Skip the guesswork. We provide you with a complete, 9-document franchise development system valued at over $33,500. Every checklist, template, and guide you need is ready to go." },
-                { Icon: Handshake, n: "Step 2", t: "Get Coached", b: "We don't disappear. For 6 months we work side by side with you through weekly coaching calls — holding you accountable and customizing the system to your specific brand." },
-                { Icon: Rocket, n: "Step 3", t: "Launch", b: "Complete the program, finalize your FDD with your attorney, and launch your franchise sales with a professional \"Franchise Ready\" certification. Scale faster, smarter, and cheaper." },
-              ].map(({ Icon, n, t, b }) => (
+                { iconSrc: "/icons/step-1-system.png", n: "Step 1", t: "Get the System", b: "Skip the guesswork. We provide you with a complete, 9-document franchise development system valued at over $33,500. Every checklist, template, and guide you need is ready to go." },
+                { iconSrc: "/icons/step-2-coached.png", n: "Step 2", t: "Get Coached", b: "We don't disappear. For 6 months we work side by side with you through weekly coaching calls — holding you accountable and customizing the system to your specific brand." },
+                { iconSrc: "/icons/step-3-launch.png", n: "Step 3", t: "Launch", b: "Complete the program, finalize your FDD with your attorney, and launch your franchise sales with a professional \"Franchise Ready\" certification. Scale faster, smarter, and cheaper." },
+              ].map(({ iconSrc, n, t, b }) => (
                 <div
                   key={n}
                   className="bg-white/[0.04] border border-white/10 rounded-lg p-8 text-center"
                 >
-                  <div className="mx-auto mb-7 flex items-center justify-center w-[72px] h-[72px] text-white">
-                    <Icon size={56} strokeWidth={1.25} />
+                  <div className="mx-auto mb-7 flex items-center justify-center w-[88px] h-[88px]">
+                    <Image
+                      src={iconSrc}
+                      alt={t}
+                      width={80}
+                      height={80}
+                      className="w-20 h-20 object-contain"
+                    />
                   </div>
                   <div className="text-gold font-semibold text-xs tracking-[0.16em] uppercase mb-2">{n}</div>
                   <h3 className="text-gold text-xl font-bold mb-5">{t}</h3>
@@ -404,8 +415,14 @@ export default function Home() {
       <section className="bg-white py-24 md:py-28">
         <div className="max-w-[1200px] mx-auto px-8">
           <div className="grid md:grid-cols-[1fr_1.4fr] gap-10 md:gap-16 items-center">
-            <div className="w-full aspect-[4/5] max-w-[280px] md:max-w-[400px] mx-auto rounded-2xl shadow-featured flex items-center justify-center text-gold text-[160px] font-extrabold bg-gradient-to-br from-navy to-navy-light">
-              J
+            <div className="relative w-full aspect-[4/5] max-w-[320px] md:max-w-[420px] mx-auto rounded-2xl shadow-featured overflow-hidden bg-navy">
+              <Image
+                src="/images/jason.png"
+                alt="Jason — Founder, The Franchisor Blueprint"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 320px, 420px"
+              />
             </div>
             <div>
               <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.16em] uppercase mb-3 border-b-2 border-gold pb-1">

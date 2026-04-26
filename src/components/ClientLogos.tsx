@@ -1,14 +1,10 @@
-/**
- * Client logo strip — placeholder text treatments.
- * TODO: Replace with real logo SVG/PNG files once Jason confirms usage rights
- * and provides files. Drop the assets into public/logos/clients/ and swap
- * each badge for an <Image>.
- */
+import Image from "next/image";
+
 const clients = [
-  { name: "Casa Vida", subtitle: "" },
-  { name: "Black Rifle", subtitle: "Coffee Co." },
-  { name: "Cyberbacker", subtitle: "" },
-  { name: "Bajio", subtitle: "Mexican Grill" },
+  { name: "Costa Vida", src: "/clients/costa-vida.png" },
+  { name: "Black Rifle Coffee Company", src: "/clients/black-rifle.png" },
+  { name: "Cyberbacker", src: "/clients/cyberbacker.png" },
+  { name: "Bajio Mexican Grill", src: "/clients/bajio.png" },
 ];
 
 export function ClientLogos() {
@@ -17,16 +13,15 @@ export function ClientLogos() {
       {clients.map((c) => (
         <div
           key={c.name}
-          className="flex flex-col items-center justify-center rounded-full border border-navy/15 bg-cream-light w-28 h-28 md:w-32 md:h-32 px-3 text-center shadow-sm"
+          className="flex items-center justify-center h-20 md:h-24 w-40 md:w-48 px-3"
         >
-          <span className="text-navy font-bold text-sm md:text-base leading-tight">
-            {c.name}
-          </span>
-          {c.subtitle && (
-            <span className="text-navy/70 text-[10px] md:text-xs uppercase tracking-wider mt-1">
-              {c.subtitle}
-            </span>
-          )}
+          <Image
+            src={c.src}
+            alt={c.name}
+            width={200}
+            height={100}
+            className="max-h-full w-auto object-contain"
+          />
         </div>
       ))}
     </div>
