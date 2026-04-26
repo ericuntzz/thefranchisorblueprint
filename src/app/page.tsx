@@ -21,6 +21,8 @@ import { ClientLogos } from "@/components/ClientLogos";
 import { DeviceMockups } from "@/components/DeviceMockups";
 import { ComparisonTable } from "@/components/ComparisonTable";
 import { Testimonials } from "@/components/Testimonials";
+import { HowItWorks } from "@/components/HowItWorks";
+import { VideoPlayer } from "@/components/VideoPlayer";
 
 const docs = [
   { icon: ListChecks, title: "Fact-Finding Checklist", body: "150+ point audit to organize every detail of your business." },
@@ -140,16 +142,9 @@ export default function Home() {
             You&apos;ve got a profitable concept and customers who love your brand. You know franchising is the next move — but you&apos;re stuck between paying <strong>$80,000 to a big firm</strong> who hands you a binder and disappears, or trying to <strong>DIY a process you&apos;ve never done before</strong>.
           </p>
 
-          {/* Editorial photo */}
-          <div className="relative w-full max-w-[860px] mx-auto aspect-[16/9] rounded-md overflow-hidden shadow-xl mb-12">
-            <div
-              className="absolute inset-0 bg-cover bg-center"
-              style={{
-                backgroundImage:
-                  "url('https://images.unsplash.com/photo-1567721913486-6585f069b332?w=1600&q=80')",
-              }}
-              aria-hidden
-            />
+          {/* Hero video player (placeholder for Jason's intro video) */}
+          <div className="mb-12">
+            <VideoPlayer />
           </div>
 
           <div className="text-navy text-xs font-bold tracking-[0.2em] uppercase mb-7 opacity-70 mt-4">
@@ -287,7 +282,25 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== 7. FOUNDER STORY (cream bg makes portrait pop) ===== */}
+      {/* ===== 7. HOW IT WORKS (6-month coaching cadence) ===== */}
+      <section className="bg-white py-24 md:py-28">
+        <div className="max-w-[1100px] mx-auto px-8">
+          <div className="text-center mb-16">
+            <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase mb-4 border-b-2 border-gold pb-1">
+              How It Works
+            </span>
+            <h2 className="text-3xl md:text-5xl font-bold mb-5 max-w-[860px] mx-auto">
+              Your 6-Month Path from Concept to Franchise-Ready
+            </h2>
+            <p className="text-lg text-grey-3 max-w-[760px] mx-auto">
+              Every Navigator engagement runs on the same proven cadence. Each month builds on the last, so by month six you have a fully documented, attorney-reviewed, sales-ready franchise system.
+            </p>
+          </div>
+          <HowItWorks />
+        </div>
+      </section>
+
+      {/* ===== 8. FOUNDER STORY (cream bg makes portrait pop) ===== */}
       <section className="bg-cream py-24 md:py-28 relative overflow-hidden">
         {/* Dot grid accent — bottom left */}
         <div

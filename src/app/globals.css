@@ -56,6 +56,41 @@ html {
   }
 }
 
+/* Legal-page typography */
+.prose-legal h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  color: var(--color-navy);
+}
+.prose-legal h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-top: 1.75rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-navy);
+}
+.prose-legal p,
+.prose-legal li {
+  color: #4a5568;
+  line-height: 1.75;
+  margin-bottom: 1rem;
+}
+.prose-legal ul {
+  list-style: disc;
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+.prose-legal a {
+  color: var(--color-navy);
+  text-decoration: underline;
+  font-weight: 600;
+}
+.prose-legal strong {
+  color: var(--color-navy);
+}
+
 @utility bg-blueprint {
   background-color: #0e1f3a;
   background-image:

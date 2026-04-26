@@ -2,7 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 
 const links = [
-  { href: "/services", label: "Services" },
+  { href: "/programs", label: "Programs" },
+  { href: "/pricing", label: "Pricing" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];
