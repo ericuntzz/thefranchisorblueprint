@@ -44,7 +44,14 @@ export function SiteFooter() {
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-gold">LinkedIn →</a>
+                <a
+                  href="https://www.linkedin.com/in/jason-stowe-a8093539"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-gold"
+                >
+                  LinkedIn →
+                </a>
               </li>
             </ul>
           </div>

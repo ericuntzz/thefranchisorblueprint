@@ -169,7 +169,7 @@ export default function ContactPage() {
               </div>
             </a>
             <a
-              href="https://www.linkedin.com/"
+              href="https://www.linkedin.com/in/jason-stowe-a8093539"
               target="_blank"
               rel="noopener noreferrer"
               className="group bg-white rounded-2xl p-7 border border-navy/10 shadow-[0_8px_24px_rgba(30,58,95,0.08)] hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(30,58,95,0.14)] transition-all flex items-center gap-4"
