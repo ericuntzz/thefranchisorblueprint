@@ -17,6 +17,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Faq } from "@/components/Faq";
 import { ClientLogos } from "@/components/ClientLogos";
+import { DeviceMockups } from "@/components/DeviceMockups";
 
 const docs = [
   { icon: ListChecks, title: "Fact-Finding Checklist", body: "150+ point audit to organize every detail of your business." },
@@ -195,27 +196,19 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== 5. SOCIAL PROOF BAR ===== */}
-      <div className="bg-grey-2 py-16 text-center">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-[1100px] mx-auto px-8">
-          {[
-            { num: "30+", label: "Years in Franchise Industry" },
-            { num: "9", label: "Professional Documents" },
-            { num: "$33.5K+", label: "System Value Delivered" },
-            { num: "6 mo", label: "to Franchise-Ready" },
-          ].map((s) => (
-            <div key={s.label}>
-              <div className="font-display text-4xl md:text-5xl font-bold text-navy leading-none mb-2 tracking-tight">{s.num}</div>
-              <div className="text-sm text-grey-3 font-semibold tracking-wide">{s.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ===== 6. 9-DOCUMENT SYSTEM ===== */}
-      <section className="bg-grey-1 py-24 md:py-28">
-        <div className="max-w-[1200px] mx-auto px-8">
+      {/* ===== 6. 9-DOCUMENT SYSTEM (cream warmth + lifted white cards) ===== */}
+      <section className="bg-cream py-24 md:py-28 relative overflow-hidden">
+        {/* Subtle decorative arc */}
+        <div
+          className="absolute -top-32 -right-32 w-[420px] h-[420px] rounded-full opacity-[0.05] pointer-events-none"
+          style={{ backgroundColor: "#1e3a5f" }}
+          aria-hidden
+        />
+        <div className="max-w-[1200px] mx-auto px-8 relative">
           <div className="text-center mb-14">
+            <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase mb-4 border-b-2 border-gold pb-1">
+              The Complete System
+            </span>
             <h2 className="text-3xl md:text-5xl font-bold mb-5 max-w-[900px] mx-auto">
               Everything You Need to Franchise Your Business — In One Complete System
             </h2>
@@ -228,9 +221,9 @@ export default function Home() {
             {docs.map(({ icon: Icon, title, body }, i) => (
               <div
                 key={title}
-                className="bg-white p-7 rounded-xl shadow-card flex gap-4 items-start hover:-translate-y-0.5 hover:shadow-card-hover transition-all"
+                className="group bg-white p-7 rounded-xl shadow-card flex gap-4 items-start hover:-translate-y-1 hover:shadow-card-hover transition-all border border-navy/[0.04]"
               >
-                <div className="flex-shrink-0 w-11 h-11 bg-navy/[0.08] rounded-full flex items-center justify-center text-navy">
+                <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-navy to-navy-light rounded-xl flex items-center justify-center text-gold group-hover:scale-105 transition-transform">
                   <Icon size={22} />
                 </div>
                 <div>
@@ -254,9 +247,29 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== 7. PRICING CARDS ===== */}
-      <section className="bg-white text-center py-24 md:py-28">
-        <div className="max-w-[1200px] mx-auto px-8">
+      {/* ===== 7. PRICING CARDS (white + subtle dot grid + radial gold glow on Tier 2) ===== */}
+      <section className="bg-white text-center py-24 md:py-28 relative overflow-hidden">
+        {/* Dot-grid texture */}
+        <div
+          className="absolute inset-0 opacity-[0.35] pointer-events-none"
+          style={{
+            backgroundImage: "radial-gradient(circle, #1e3a5f 1px, transparent 1px)",
+            backgroundSize: "32px 32px",
+            maskImage: "radial-gradient(ellipse at center, black 30%, transparent 75%)",
+            WebkitMaskImage: "radial-gradient(ellipse at center, black 30%, transparent 75%)",
+          }}
+          aria-hidden
+        />
+        {/* Gold glow behind featured tier */}
+        <div
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full opacity-[0.18] blur-3xl pointer-events-none"
+          style={{ background: "radial-gradient(circle, #d4af37 0%, transparent 70%)" }}
+          aria-hidden
+        />
+        <div className="max-w-[1200px] mx-auto px-8 relative">
+          <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase mb-4 border-b-2 border-gold pb-1">
+            Pricing
+          </span>
           <h2 className="text-3xl md:text-5xl font-bold mb-14">
             Choose the Right Level of Support for Where You Are
           </h2>
@@ -345,75 +358,107 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== 8. COACHING DIFFERENCE ===== */}
-      <section className="bg-white grid md:grid-cols-2 items-center min-h-[560px]">
+      {/* ===== 8. COACHING DIFFERENCE (dark navy + device mockups of real deliverables) ===== */}
+      <section className="bg-blueprint text-white py-24 md:py-32 relative overflow-hidden">
+        {/* Soft gold radial glow */}
         <div
-          className="min-h-[300px] md:min-h-[560px]"
-          style={{
-            background:
-              "linear-gradient(135deg, rgba(30,58,95,0.35), rgba(212,175,55,0.2)), url('https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&q=80') center/cover",
-          }}
+          className="absolute -left-32 top-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-20 blur-3xl pointer-events-none"
+          style={{ background: "radial-gradient(circle, #d4af37 0%, transparent 70%)" }}
           aria-hidden
         />
-        <div className="px-8 md:px-16 py-16 md:py-20">
-          <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.16em] uppercase mb-4 border-b-2 border-gold pb-1">
-            What makes us different
-          </span>
-          <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            We Don&apos;t Just Hand You a Binder. We Build It With You.
-          </h2>
-          <p className="text-grey-3 text-base md:text-[17px] leading-relaxed mb-4">
-            The number one reason emerging franchisors fail isn&apos;t bad paperwork — it&apos;s lack of guidance. Most consulting firms operate on a &ldquo;delivery&rdquo; model: they drop a 300-page manual on your desk, wish you luck, and walk away with your check.
-          </p>
-          <p className="text-grey-3 text-base md:text-[17px] leading-relaxed">
-            We operate on a &ldquo;partnership&rdquo; model. With our Navigator and Builder tiers you get structured, weekly coaching from someone who has spent 30 years inside the franchise industry. We review your work, answer your late-night questions, and hold you accountable to your launch timeline.
-          </p>
-          <div className="mt-8 italic text-xl md:text-2xl text-navy border-l-4 border-gold pl-6 py-4 font-light">
-            We don&apos;t just give you the map. We sit in the passenger seat and help you navigate.
+        <div className="max-w-[1300px] mx-auto px-8 grid md:grid-cols-[1.1fr_1fr] gap-16 md:gap-20 items-center relative">
+          {/* Left: Device mockups */}
+          <div className="order-2 md:order-1">
+            <DeviceMockups />
           </div>
-        </div>
-      </section>
 
-      {/* ===== 9. WHO THIS IS FOR ===== */}
-      <section className="bg-grey-1 py-24 md:py-28">
-        <div className="max-w-[1200px] mx-auto px-8">
-          <h2 className="text-3xl md:text-5xl font-bold text-center mb-14">
-            Is The Franchisor Blueprint Right for You?
-          </h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="p-10 rounded-2xl bg-green-tint border border-[#d4e5d4]">
-              <h3 className="text-xl font-extrabold mb-6 text-[#2d6a2d]">
-                This IS for you if...
-              </h3>
-              <ul className="list-none space-y-2.5">
-                {yesList.map((item) => (
-                  <li key={item} className="flex gap-3 items-start text-[15px] text-[#333] leading-relaxed">
-                    <CheckCircle2 className="text-[#2d6a2d] flex-shrink-0 mt-0.5" size={20} />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="p-10 rounded-2xl bg-red-tint border border-[#e8d4d4]">
-              <h3 className="text-xl font-extrabold mb-6 text-[#8a3a3a]">
-                This is NOT for you if...
-              </h3>
-              <ul className="list-none space-y-2.5">
-                {noList.map((item) => (
-                  <li key={item} className="flex gap-3 items-start text-[15px] text-[#333] leading-relaxed">
-                    <XCircle className="text-[#8a3a3a] flex-shrink-0 mt-0.5" size={20} />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
+          {/* Right: Copy */}
+          <div className="order-1 md:order-2">
+            <span className="inline-block text-gold font-semibold text-xs tracking-[0.16em] uppercase mb-4 border-b-2 border-gold pb-1">
+              What you actually get
+            </span>
+            <h2 className="text-3xl md:text-5xl font-bold mb-6 text-white">
+              We Don&apos;t Just Hand You a Binder. We Build It With You.
+            </h2>
+            <p className="text-white/75 text-base md:text-[17px] leading-relaxed mb-4">
+              The number one reason emerging franchisors fail isn&apos;t bad paperwork — it&apos;s lack of guidance. Most consulting firms operate on a &ldquo;delivery&rdquo; model: they drop a 300-page manual on your desk, wish you luck, and walk away with your check.
+            </p>
+            <p className="text-white/75 text-base md:text-[17px] leading-relaxed">
+              We operate on a &ldquo;partnership&rdquo; model. With our Navigator and Builder tiers you get structured, weekly coaching from someone who has spent 30 years inside the franchise industry. We review your work, answer your late-night questions, and hold you accountable to your launch timeline.
+            </p>
+            <div className="mt-8 italic text-xl md:text-2xl text-gold border-l-4 border-gold pl-6 py-4 font-light">
+              We don&apos;t just give you the map. We sit in the passenger seat and help you navigate.
             </div>
           </div>
         </div>
       </section>
 
-      {/* ===== 10. FOUNDER STORY ===== */}
+      {/* ===== 9. WHO THIS IS FOR (white bg + bolder colored cards) ===== */}
       <section className="bg-white py-24 md:py-28">
         <div className="max-w-[1200px] mx-auto px-8">
+          <div className="text-center mb-14">
+            <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase mb-4 border-b-2 border-gold pb-1">
+              The Right Fit
+            </span>
+            <h2 className="text-3xl md:text-5xl font-bold">
+              Is The Franchisor Blueprint Right for You?
+            </h2>
+          </div>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="relative p-10 md:p-12 rounded-2xl text-white overflow-hidden bg-gradient-to-br from-[#1f5d3a] to-[#2d8a55] shadow-[0_20px_50px_rgba(31,93,58,0.25)]">
+              <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-white/5 pointer-events-none" />
+              <div className="relative">
+                <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm text-white text-xs font-bold tracking-widest uppercase px-3 py-1.5 rounded-full mb-6">
+                  <CheckCircle2 size={14} /> A Fit
+                </div>
+                <h3 className="text-2xl md:text-3xl font-extrabold mb-7 text-white">
+                  This IS for you if...
+                </h3>
+                <ul className="list-none space-y-3.5">
+                  {yesList.map((item) => (
+                    <li key={item} className="flex gap-3 items-start text-[15px] text-white/95 leading-relaxed">
+                      <div className="flex-shrink-0 w-5 h-5 rounded-full bg-white/20 flex items-center justify-center mt-0.5">
+                        <CheckCircle2 className="text-white" size={14} />
+                      </div>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <div className="relative p-10 md:p-12 rounded-2xl overflow-hidden bg-gradient-to-br from-[#f5e8e8] to-[#fdf4f4] border border-[#e8d4d4]">
+              <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-[#8a3a3a]/5 pointer-events-none" />
+              <div className="relative">
+                <div className="inline-flex items-center gap-2 bg-[#8a3a3a]/10 text-[#8a3a3a] text-xs font-bold tracking-widest uppercase px-3 py-1.5 rounded-full mb-6">
+                  <XCircle size={14} /> Not a Fit
+                </div>
+                <h3 className="text-2xl md:text-3xl font-extrabold mb-7 text-[#8a3a3a]">
+                  This is NOT for you if...
+                </h3>
+                <ul className="list-none space-y-3.5">
+                  {noList.map((item) => (
+                    <li key={item} className="flex gap-3 items-start text-[15px] text-[#333] leading-relaxed">
+                      <div className="flex-shrink-0 w-5 h-5 rounded-full bg-[#8a3a3a]/15 flex items-center justify-center mt-0.5">
+                        <XCircle className="text-[#8a3a3a]" size={14} />
+                      </div>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== 10. FOUNDER STORY (cream bg makes portrait pop) ===== */}
+      <section className="bg-cream py-24 md:py-28 relative overflow-hidden">
+        <div
+          className="absolute -bottom-32 -left-32 w-[420px] h-[420px] rounded-full opacity-[0.05] pointer-events-none"
+          style={{ backgroundColor: "#1e3a5f" }}
+          aria-hidden
+        />
+        <div className="max-w-[1200px] mx-auto px-8 relative">
           <div className="grid md:grid-cols-[1fr_1.4fr] gap-10 md:gap-16 items-center">
             <div className="relative w-full aspect-[4/5] max-w-[320px] md:max-w-[420px] mx-auto rounded-2xl shadow-featured overflow-hidden bg-navy">
               <Image
@@ -448,12 +493,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== 11. FAQ ===== */}
-      <section className="bg-grey-1 py-24 md:py-28">
+      {/* ===== 11. FAQ (white bg + small gold detail) ===== */}
+      <section className="bg-white py-24 md:py-28">
         <div className="max-w-[1200px] mx-auto px-8">
-          <h2 className="text-3xl md:text-5xl font-bold text-center mb-12">
-            Frequently Asked Questions
-          </h2>
+          <div className="text-center mb-12">
+            <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase mb-4 border-b-2 border-gold pb-1">
+              Common Questions
+            </span>
+            <h2 className="text-3xl md:text-5xl font-bold">
+              Frequently Asked Questions
+            </h2>
+          </div>
           <Faq items={faqs} />
         </div>
       </section>
