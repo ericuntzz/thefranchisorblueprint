@@ -190,10 +190,16 @@ export default function Home() {
 
       {/* ===== 6. 9-DOCUMENT SYSTEM (cream warmth + lifted white cards) ===== */}
       <section className="bg-cream py-24 md:py-28 relative overflow-hidden">
-        {/* Subtle decorative arc */}
+        {/* Dot grid accent — top right */}
         <div
-          className="absolute -top-32 -right-32 w-[420px] h-[420px] rounded-full opacity-[0.05] pointer-events-none"
-          style={{ backgroundColor: "#1e3a5f" }}
+          className="absolute -top-20 -right-20 w-[520px] h-[520px] pointer-events-none"
+          style={{
+            backgroundImage: "radial-gradient(circle, #1e3a5f 1px, transparent 1px)",
+            backgroundSize: "30px 30px",
+            maskImage: "radial-gradient(circle at top right, black 10%, transparent 70%)",
+            WebkitMaskImage: "radial-gradient(circle at top right, black 10%, transparent 70%)",
+            opacity: 0.22,
+          }}
           aria-hidden
         />
         <div className="max-w-[1200px] mx-auto px-8 relative">
@@ -213,7 +219,7 @@ export default function Home() {
             {docs.map(({ icon: Icon, title, body }, i) => (
               <div
                 key={title}
-                className="group bg-white p-7 rounded-xl shadow-card flex gap-4 items-start hover:-translate-y-1 hover:shadow-card-hover transition-all border border-navy/[0.04]"
+                className="group bg-white p-7 rounded-xl shadow-[0_10px_30px_rgba(30,58,95,0.14)] flex gap-4 items-start hover:-translate-y-1 hover:shadow-[0_18px_42px_rgba(30,58,95,0.20)] transition-all border border-navy/10"
               >
                 <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-navy to-navy-light rounded-xl flex items-center justify-center text-gold group-hover:scale-105 transition-transform">
                   <Icon size={22} />
@@ -242,7 +248,7 @@ export default function Home() {
       {/* ===== 7. PRICING CARDS (cool tinted bg so white cards pop) ===== */}
       <section
         className="text-center py-24 md:py-28 relative overflow-hidden"
-        style={{ backgroundColor: "#eef1f6" }}
+        style={{ backgroundColor: "#e3e8f0" }}
       >
         {/* Faint dot-grid texture (very subtle) */}
         <div
@@ -270,7 +276,8 @@ export default function Home() {
           </h2>
           <div className="grid md:grid-cols-3 gap-7 items-stretch">
             {/* Tier 1 */}
-            <div className="bg-white rounded-2xl p-10 text-left flex flex-col shadow-[0_10px_30px_rgba(30,58,95,0.10)] hover:-translate-y-1 hover:shadow-[0_20px_45px_rgba(30,58,95,0.16)] transition-all">
+            <div className="bg-white rounded-2xl p-10 text-left flex flex-col border border-navy/10 shadow-[0_12px_36px_rgba(30,58,95,0.18)] hover:-translate-y-1 hover:shadow-[0_24px_50px_rgba(30,58,95,0.24)] transition-all relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gold" aria-hidden />
               <div className="text-[11px] font-bold tracking-[0.14em] uppercase text-gold-warm mb-2">Tier 1 — DIY</div>
               <h3 className="text-3xl font-bold mb-4">The Blueprint</h3>
               <div className="text-5xl font-extrabold text-navy leading-none mb-1 tracking-tight">$2,997</div>
@@ -321,7 +328,8 @@ export default function Home() {
             </div>
 
             {/* Tier 3 */}
-            <div className="bg-white rounded-2xl p-10 text-left flex flex-col shadow-[0_10px_30px_rgba(30,58,95,0.10)] hover:-translate-y-1 hover:shadow-[0_20px_45px_rgba(30,58,95,0.16)] transition-all">
+            <div className="bg-white rounded-2xl p-10 text-left flex flex-col border border-navy/10 shadow-[0_12px_36px_rgba(30,58,95,0.18)] hover:-translate-y-1 hover:shadow-[0_24px_50px_rgba(30,58,95,0.24)] transition-all relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-navy" aria-hidden />
               <div className="text-[11px] font-bold tracking-[0.14em] uppercase text-gold-warm mb-2">Tier 3 — Done-With-You</div>
               <h3 className="text-3xl font-bold mb-4">Builder</h3>
               <div className="text-5xl font-extrabold text-navy leading-none mb-1 tracking-tight">$29,500</div>
@@ -401,7 +409,17 @@ export default function Home() {
           </div>
           <div className="grid md:grid-cols-2 gap-8">
             <div className="relative p-10 md:p-12 rounded-2xl text-white overflow-hidden bg-gradient-to-br from-[#1f5d3a] to-[#2d8a55] shadow-[0_20px_50px_rgba(31,93,58,0.25)]">
-              <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-white/5 pointer-events-none" />
+              <div
+                className="absolute -top-8 -right-8 w-64 h-64 pointer-events-none"
+                style={{
+                  backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)",
+                  backgroundSize: "22px 22px",
+                  maskImage: "radial-gradient(circle at top right, black 10%, transparent 70%)",
+                  WebkitMaskImage: "radial-gradient(circle at top right, black 10%, transparent 70%)",
+                  opacity: 0.28,
+                }}
+                aria-hidden
+              />
               <div className="relative">
                 <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm text-white text-xs font-bold tracking-widest uppercase px-3 py-1.5 rounded-full mb-6">
                   <CheckCircle2 size={14} /> A Fit
@@ -422,7 +440,17 @@ export default function Home() {
               </div>
             </div>
             <div className="relative p-10 md:p-12 rounded-2xl overflow-hidden bg-gradient-to-br from-[#f5e8e8] to-[#fdf4f4] border border-[#e8d4d4]">
-              <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-[#8a3a3a]/5 pointer-events-none" />
+              <div
+                className="absolute -top-8 -right-8 w-64 h-64 pointer-events-none"
+                style={{
+                  backgroundImage: "radial-gradient(circle, #8a3a3a 1px, transparent 1px)",
+                  backgroundSize: "22px 22px",
+                  maskImage: "radial-gradient(circle at top right, black 10%, transparent 70%)",
+                  WebkitMaskImage: "radial-gradient(circle at top right, black 10%, transparent 70%)",
+                  opacity: 0.22,
+                }}
+                aria-hidden
+              />
               <div className="relative">
                 <div className="inline-flex items-center gap-2 bg-[#8a3a3a]/10 text-[#8a3a3a] text-xs font-bold tracking-widest uppercase px-3 py-1.5 rounded-full mb-6">
                   <XCircle size={14} /> Not a Fit
@@ -448,9 +476,16 @@ export default function Home() {
 
       {/* ===== 10. FOUNDER STORY (cream bg makes portrait pop) ===== */}
       <section className="bg-cream py-24 md:py-28 relative overflow-hidden">
+        {/* Dot grid accent — bottom left */}
         <div
-          className="absolute -bottom-32 -left-32 w-[420px] h-[420px] rounded-full opacity-[0.05] pointer-events-none"
-          style={{ backgroundColor: "#1e3a5f" }}
+          className="absolute -bottom-20 -left-20 w-[520px] h-[520px] pointer-events-none"
+          style={{
+            backgroundImage: "radial-gradient(circle, #1e3a5f 1px, transparent 1px)",
+            backgroundSize: "30px 30px",
+            maskImage: "radial-gradient(circle at bottom left, black 10%, transparent 70%)",
+            WebkitMaskImage: "radial-gradient(circle at bottom left, black 10%, transparent 70%)",
+            opacity: 0.22,
+          }}
           aria-hidden
         />
         <div className="max-w-[1200px] mx-auto px-8 relative">
