@@ -152,16 +152,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== 4. 3-STEP SOLUTION (dark navy + real gear background) ===== */}
-      <section
-        className="py-20 md:py-24"
-        style={{
-          backgroundImage: "url('/images/3step-bg.png')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundColor: "#cdcec9",
-        }}
-      >
+      {/* ===== 4. 3-STEP SOLUTION (clean warm grey, no pattern) ===== */}
+      <section className="py-20 md:py-24" style={{ backgroundColor: "#cdcec9" }}>
         <div className="max-w-[1300px] mx-auto px-6">
           <div className="bg-blueprint rounded-2xl px-6 md:px-16 py-16 md:py-20">
             <h2 className="text-gold text-3xl md:text-4xl font-bold mb-14 text-center max-w-[820px] mx-auto">
