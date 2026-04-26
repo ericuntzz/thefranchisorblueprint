@@ -12,12 +12,15 @@ import {
   Presentation,
   CheckCircle2,
   XCircle,
+  ShieldCheck,
 } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Faq } from "@/components/Faq";
 import { ClientLogos } from "@/components/ClientLogos";
 import { DeviceMockups } from "@/components/DeviceMockups";
+import { ComparisonTable } from "@/components/ComparisonTable";
+import { Testimonials } from "@/components/Testimonials";
 
 const docs = [
   { icon: ListChecks, title: "Fact-Finding Checklist", body: "150+ point audit to organize every detail of your business." },
@@ -93,8 +96,8 @@ export default function Home() {
           <h1 className="text-white font-bold text-4xl md:text-6xl leading-[1.1] tracking-tight max-w-[860px] mb-7">
             The Smartest, Most Affordable Path to Becoming a Franchisor
           </h1>
-          <p className="text-white/85 text-lg md:text-xl leading-relaxed max-w-[640px] mb-10 font-light">
-            Most consultants hand you a binder and disappear. We give you a complete, professional franchise system, along with 6 months of expert coaching to make sure you actually launch. All for a fraction of the cost of traditional firms.
+          <p className="text-white/85 text-lg md:text-xl leading-relaxed max-w-[620px] mb-10 font-light">
+            A complete franchise system plus 6 months of 1:1 coaching — for a fraction of what the big firms charge. Built so you actually launch, not just file paperwork.
           </p>
           <div className="flex flex-wrap gap-4">
             <Link
@@ -113,25 +116,29 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== 2. TRUST BAR ===== */}
+      {/* ===== 2. TRUST BAR (outcome-focused) ===== */}
       <div className="bg-navy text-white py-5">
         <div className="max-w-[1200px] mx-auto px-8 flex justify-center gap-x-12 gap-y-2 flex-wrap text-sm font-semibold tracking-wide text-center">
-          <span>9 Professional Documents</span>
+          <span>30+ Years in Franchising</span>
           <span className="hidden md:inline opacity-40">|</span>
-          <span>$33,500+ in Value</span>
+          <span>The Only Coach-Led System</span>
           <span className="hidden md:inline opacity-40">|</span>
-          <span>6 Months of Expert Coaching</span>
+          <span>Launch in 6 Months, Not 18+</span>
           <span className="hidden md:inline opacity-40">|</span>
-          <span>Fraction of Competitor Prices</span>
+          <span>Up to 90% Less Than Big Firms</span>
         </div>
       </div>
 
       {/* ===== 3. PROBLEM (yellow) ===== */}
       <section className="text-center py-24 md:py-28" style={{ backgroundColor: "#d8a936" }}>
         <div className="max-w-[1100px] mx-auto px-8">
-          <h2 className="text-navy text-3xl md:text-5xl font-bold mb-10 max-w-[800px] mx-auto">
+          <h2 className="text-navy text-3xl md:text-5xl font-bold mb-8 max-w-[800px] mx-auto">
             You&apos;ve Built Something Great. Now What?
           </h2>
+
+          <p className="text-navy/85 text-lg md:text-xl leading-relaxed max-w-[760px] mx-auto mb-12">
+            You&apos;ve got a profitable concept and customers who love your brand. You know franchising is the next move — but you&apos;re stuck between paying <strong>$80,000 to a big firm</strong> who hands you a binder and disappears, or trying to <strong>DIY a process you&apos;ve never done before</strong>.
+          </p>
 
           {/* Editorial photo */}
           <div className="relative w-full max-w-[860px] mx-auto aspect-[16/9] rounded-md overflow-hidden shadow-xl mb-12">
@@ -188,7 +195,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== 6. 9-DOCUMENT SYSTEM (cream warmth + lifted white cards) ===== */}
+      {/* ===== 5. 9-DOCUMENT SYSTEM (cream warmth + lifted white cards) ===== */}
       <section className="bg-cream py-24 md:py-28 relative overflow-hidden">
         {/* Dot grid accent — top right */}
         <div
@@ -245,7 +252,144 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== 7. PRICING CARDS (cool tinted bg so white cards pop) ===== */}
+      {/* ===== 6. COACHING DIFFERENCE (dark navy + device mockups of real deliverables) ===== */}
+      <section className="bg-blueprint text-white py-24 md:py-32 relative overflow-hidden">
+        {/* Soft gold radial glow */}
+        <div
+          className="absolute -left-32 top-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-20 blur-3xl pointer-events-none"
+          style={{ background: "radial-gradient(circle, #d4af37 0%, transparent 70%)" }}
+          aria-hidden
+        />
+        <div className="max-w-[1300px] mx-auto px-8 grid md:grid-cols-[1.1fr_1fr] gap-16 md:gap-20 items-center relative">
+          {/* Left: Device mockups */}
+          <div className="order-2 md:order-1">
+            <DeviceMockups />
+          </div>
+
+          {/* Right: Copy */}
+          <div className="order-1 md:order-2">
+            <span className="inline-block text-gold font-semibold text-xs tracking-[0.16em] uppercase mb-4 border-b-2 border-gold pb-1">
+              What you actually get
+            </span>
+            <h2 className="text-3xl md:text-5xl font-bold mb-6 text-white">
+              We Don&apos;t Just Hand You a Binder. We Build It With You.
+            </h2>
+            <p className="text-white/75 text-base md:text-[17px] leading-relaxed mb-4">
+              The number one reason emerging franchisors fail isn&apos;t bad paperwork — it&apos;s lack of guidance. Most consulting firms operate on a &ldquo;delivery&rdquo; model: they drop a 300-page manual on your desk, wish you luck, and walk away with your check.
+            </p>
+            <p className="text-white/75 text-base md:text-[17px] leading-relaxed">
+              We operate on a &ldquo;partnership&rdquo; model. With our Navigator and Builder tiers you get structured, weekly coaching from someone who has spent 30 years inside the franchise industry. We review your work, answer your late-night questions, and hold you accountable to your launch timeline.
+            </p>
+            <div className="mt-8 italic text-xl md:text-2xl text-gold border-l-4 border-gold pl-6 py-4 font-light">
+              We don&apos;t just give you the map. We sit in the passenger seat and help you navigate.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== 7. FOUNDER STORY (cream bg makes portrait pop) ===== */}
+      <section className="bg-cream py-24 md:py-28 relative overflow-hidden">
+        {/* Dot grid accent — bottom left */}
+        <div
+          className="absolute -bottom-20 -left-20 w-[520px] h-[520px] pointer-events-none"
+          style={{
+            backgroundImage: "radial-gradient(circle, #1e3a5f 1px, transparent 1px)",
+            backgroundSize: "30px 30px",
+            maskImage: "radial-gradient(circle at bottom left, black 10%, transparent 70%)",
+            WebkitMaskImage: "radial-gradient(circle at bottom left, black 10%, transparent 70%)",
+            opacity: 0.22,
+          }}
+          aria-hidden
+        />
+        <div className="max-w-[1200px] mx-auto px-8 relative">
+          <div className="grid md:grid-cols-[1fr_1.4fr] gap-10 md:gap-16 items-center">
+            <div className="relative w-full aspect-[4/5] max-w-[320px] md:max-w-[420px] mx-auto rounded-2xl shadow-featured overflow-hidden bg-navy">
+              <Image
+                src="/images/jason.png"
+                alt="Jason — Founder, The Franchisor Blueprint"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 320px, 420px"
+              />
+            </div>
+            <div>
+              <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.16em] uppercase mb-3 border-b-2 border-gold pb-1">
+                Meet your coach
+              </span>
+              <h2 className="text-3xl md:text-5xl font-bold mb-6">
+                30 Years in Franchising. Built for Founders Who Refuse to Wait.
+              </h2>
+              <p className="text-grey-3 text-base md:text-[17px] leading-relaxed mb-4">
+                Jason has spent three decades inside the franchise industry — building, scaling, and advising emerging brands. He&apos;s seen the same story hundreds of times: a great business owner with a profitable concept and a real shot at scaling, priced out of franchising by consulting firms charging $40k to $80k just for paperwork.
+              </p>
+              <p className="text-grey-3 text-base md:text-[17px] leading-relaxed mb-6">
+                The Franchisor Blueprint exists to change that. The same systems, documents, and strategies used by the big firms — packaged into an accessible, coach-led program for founders who deserve to scale.
+              </p>
+
+              {/* Credentials grid */}
+              <div className="grid grid-cols-3 gap-4 md:gap-6 mb-8 pt-6 border-t border-navy/10">
+                <div>
+                  <div className="font-display text-3xl md:text-4xl font-extrabold text-navy leading-none mb-1">30+</div>
+                  <div className="text-xs text-grey-3 font-semibold leading-tight">Years in the<br />franchise industry</div>
+                </div>
+                <div>
+                  <div className="font-display text-3xl md:text-4xl font-extrabold text-navy leading-none mb-1">100s</div>
+                  <div className="text-xs text-grey-3 font-semibold leading-tight">Brands advised<br />on franchising</div>
+                </div>
+                <div>
+                  <div className="font-display text-3xl md:text-4xl font-extrabold text-navy leading-none mb-1">9</div>
+                  <div className="text-xs text-grey-3 font-semibold leading-tight">Documents in<br />the system</div>
+                </div>
+              </div>
+
+              <Link
+                href="/about"
+                className="inline-block bg-transparent text-navy border-2 border-navy font-bold text-sm uppercase tracking-[0.1em] px-9 py-4 rounded-full hover:bg-navy hover:text-white transition-colors"
+              >
+                Read Jason&apos;s Story
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== 8. COMPARISON TABLE (white bg, anchors why we exist) ===== */}
+      <section className="bg-white py-24 md:py-28">
+        <div className="max-w-[1200px] mx-auto px-8">
+          <div className="text-center mb-14">
+            <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase mb-4 border-b-2 border-gold pb-1">
+              How We Compare
+            </span>
+            <h2 className="text-3xl md:text-5xl font-bold mb-5 max-w-[900px] mx-auto">
+              The Smarter Middle Path Between DIY and $80K Consultants
+            </h2>
+            <p className="text-lg text-grey-3 max-w-[760px] mx-auto">
+              Until now, founders had two choices: pay 5-figure firms for documents and figure execution out alone, or piece it together yourself and risk a costly misstep. We built the third option.
+            </p>
+          </div>
+          <ComparisonTable />
+          <div className="mt-8 text-center text-xs text-grey-4 max-w-[760px] mx-auto italic">
+            Pricing for traditional consulting firms based on publicly available industry data and reported ranges. Actual pricing varies by firm and engagement scope.
+          </div>
+        </div>
+      </section>
+
+      {/* ===== 9. TESTIMONIALS (light grey, social proof before pricing) ===== */}
+      <section className="bg-grey-1 py-24 md:py-28 relative overflow-hidden">
+        <div className="max-w-[1300px] mx-auto px-8 relative">
+          <div className="text-center mb-14">
+            <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase mb-4 border-b-2 border-gold pb-1">
+              Founders Who&apos;ve Done This
+            </span>
+            <h2 className="text-3xl md:text-5xl font-bold max-w-[860px] mx-auto">
+              Real Results from Real Founders
+            </h2>
+          </div>
+          <Testimonials />
+        </div>
+      </section>
+
+      {/* ===== 10. PRICING CARDS + GUARANTEE (cool tinted bg) ===== */}
       <section
         className="text-center py-24 md:py-28 relative overflow-hidden"
         style={{ backgroundColor: "#e3e8f0" }}
@@ -352,7 +496,22 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="mt-10 text-base text-grey-3">
+          {/* Guarantee badge */}
+          <div className="mt-12 mx-auto max-w-[760px] bg-white/80 backdrop-blur-sm border border-navy/10 rounded-2xl px-6 py-5 flex flex-col md:flex-row items-center gap-5 text-left shadow-[0_8px_24px_rgba(30,58,95,0.10)]">
+            <div className="flex-shrink-0 w-14 h-14 rounded-full bg-gradient-to-br from-navy to-navy-light flex items-center justify-center text-gold">
+              <ShieldCheck size={28} strokeWidth={2} />
+            </div>
+            <div>
+              <div className="text-navy font-extrabold text-base mb-0.5">
+                30-Day Satisfaction Guarantee on The Blueprint
+              </div>
+              <div className="text-grey-3 text-sm leading-relaxed">
+                Buy Tier 1 risk-free. If the system isn&apos;t what you expected, email us within 30 days for a full refund — no friction, no hassle. <span className="text-grey-4">Coaching tiers begin with a kickoff call to confirm fit before any work starts.</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 text-base text-grey-3">
             Not sure which is right for you? →{" "}
             <Link href="/assessment" className="text-navy font-bold underline">
               Take the free Franchise Readiness Assessment
@@ -361,42 +520,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== 8. COACHING DIFFERENCE (dark navy + device mockups of real deliverables) ===== */}
-      <section className="bg-blueprint text-white py-24 md:py-32 relative overflow-hidden">
-        {/* Soft gold radial glow */}
-        <div
-          className="absolute -left-32 top-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-20 blur-3xl pointer-events-none"
-          style={{ background: "radial-gradient(circle, #d4af37 0%, transparent 70%)" }}
-          aria-hidden
-        />
-        <div className="max-w-[1300px] mx-auto px-8 grid md:grid-cols-[1.1fr_1fr] gap-16 md:gap-20 items-center relative">
-          {/* Left: Device mockups */}
-          <div className="order-2 md:order-1">
-            <DeviceMockups />
-          </div>
-
-          {/* Right: Copy */}
-          <div className="order-1 md:order-2">
-            <span className="inline-block text-gold font-semibold text-xs tracking-[0.16em] uppercase mb-4 border-b-2 border-gold pb-1">
-              What you actually get
-            </span>
-            <h2 className="text-3xl md:text-5xl font-bold mb-6 text-white">
-              We Don&apos;t Just Hand You a Binder. We Build It With You.
-            </h2>
-            <p className="text-white/75 text-base md:text-[17px] leading-relaxed mb-4">
-              The number one reason emerging franchisors fail isn&apos;t bad paperwork — it&apos;s lack of guidance. Most consulting firms operate on a &ldquo;delivery&rdquo; model: they drop a 300-page manual on your desk, wish you luck, and walk away with your check.
-            </p>
-            <p className="text-white/75 text-base md:text-[17px] leading-relaxed">
-              We operate on a &ldquo;partnership&rdquo; model. With our Navigator and Builder tiers you get structured, weekly coaching from someone who has spent 30 years inside the franchise industry. We review your work, answer your late-night questions, and hold you accountable to your launch timeline.
-            </p>
-            <div className="mt-8 italic text-xl md:text-2xl text-gold border-l-4 border-gold pl-6 py-4 font-light">
-              We don&apos;t just give you the map. We sit in the passenger seat and help you navigate.
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== 9. WHO THIS IS FOR (white bg + bolder colored cards) ===== */}
+      {/* ===== 11. WHO THIS IS FOR (white bg + bolder colored cards) ===== */}
       <section className="bg-white py-24 md:py-28">
         <div className="max-w-[1200px] mx-auto px-8">
           <div className="text-center mb-14">
@@ -474,57 +598,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== 10. FOUNDER STORY (cream bg makes portrait pop) ===== */}
-      <section className="bg-cream py-24 md:py-28 relative overflow-hidden">
-        {/* Dot grid accent — bottom left */}
-        <div
-          className="absolute -bottom-20 -left-20 w-[520px] h-[520px] pointer-events-none"
-          style={{
-            backgroundImage: "radial-gradient(circle, #1e3a5f 1px, transparent 1px)",
-            backgroundSize: "30px 30px",
-            maskImage: "radial-gradient(circle at bottom left, black 10%, transparent 70%)",
-            WebkitMaskImage: "radial-gradient(circle at bottom left, black 10%, transparent 70%)",
-            opacity: 0.22,
-          }}
-          aria-hidden
-        />
-        <div className="max-w-[1200px] mx-auto px-8 relative">
-          <div className="grid md:grid-cols-[1fr_1.4fr] gap-10 md:gap-16 items-center">
-            <div className="relative w-full aspect-[4/5] max-w-[320px] md:max-w-[420px] mx-auto rounded-2xl shadow-featured overflow-hidden bg-navy">
-              <Image
-                src="/images/jason.png"
-                alt="Jason — Founder, The Franchisor Blueprint"
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 320px, 420px"
-              />
-            </div>
-            <div>
-              <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.16em] uppercase mb-3 border-b-2 border-gold pb-1">
-                Meet your coach
-              </span>
-              <h2 className="text-3xl md:text-5xl font-bold mb-6">
-                30 Years in Franchising. Built for Founders Who Refuse to Wait.
-              </h2>
-              <p className="text-grey-3 text-base md:text-[17px] leading-relaxed mb-4">
-                After three decades in the franchise industry, Jason watched the same story play out hundreds of times: a great business owner with a profitable concept, a loyal customer base, and a real shot at scaling — priced out of franchising by consulting firms charging $40k to $80k just for paperwork.
-              </p>
-              <p className="text-grey-3 text-base md:text-[17px] leading-relaxed mb-6">
-                The Franchisor Blueprint exists to change that. The same systems, documents, and strategies used by the big firms — packaged into an accessible, coach-led program for founders who deserve to scale.
-              </p>
-              <Link
-                href="/about"
-                className="inline-block bg-transparent text-navy border-2 border-navy font-bold text-sm uppercase tracking-[0.1em] px-9 py-4 rounded-full hover:bg-navy hover:text-white transition-colors"
-              >
-                Read Jason&apos;s Story
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== 11. FAQ (white bg + small gold detail) ===== */}
-      <section className="bg-white py-24 md:py-28">
+      {/* ===== 12. FAQ (white bg + small gold detail) ===== */}
+      <section className="bg-grey-1 py-24 md:py-28">
         <div className="max-w-[1200px] mx-auto px-8">
           <div className="text-center mb-12">
             <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase mb-4 border-b-2 border-gold pb-1">
@@ -538,7 +613,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== 12. FINAL CTA ===== */}
+      {/* ===== 13. FINAL CTA ===== */}
       <section className="bg-blueprint text-white text-center py-24 md:py-28 relative overflow-hidden">
         <div className="relative max-w-[1200px] mx-auto px-8">
           <h2 className="text-3xl md:text-6xl font-bold text-white mb-5">Ready to Scale Your Brand?</h2>
