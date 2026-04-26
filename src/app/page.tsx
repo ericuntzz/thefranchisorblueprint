@@ -247,22 +247,25 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== 7. PRICING CARDS (white + subtle dot grid + radial gold glow on Tier 2) ===== */}
-      <section className="bg-white text-center py-24 md:py-28 relative overflow-hidden">
-        {/* Dot-grid texture */}
+      {/* ===== 7. PRICING CARDS (cool tinted bg so white cards pop) ===== */}
+      <section
+        className="text-center py-24 md:py-28 relative overflow-hidden"
+        style={{ backgroundColor: "#eef1f6" }}
+      >
+        {/* Faint dot-grid texture (very subtle) */}
         <div
-          className="absolute inset-0 opacity-[0.35] pointer-events-none"
+          className="absolute inset-0 opacity-[0.25] pointer-events-none"
           style={{
             backgroundImage: "radial-gradient(circle, #1e3a5f 1px, transparent 1px)",
-            backgroundSize: "32px 32px",
-            maskImage: "radial-gradient(ellipse at center, black 30%, transparent 75%)",
-            WebkitMaskImage: "radial-gradient(ellipse at center, black 30%, transparent 75%)",
+            backgroundSize: "36px 36px",
+            maskImage: "radial-gradient(ellipse at center, black 20%, transparent 70%)",
+            WebkitMaskImage: "radial-gradient(ellipse at center, black 20%, transparent 70%)",
           }}
           aria-hidden
         />
-        {/* Gold glow behind featured tier */}
+        {/* Gold glow centered behind featured tier */}
         <div
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full opacity-[0.18] blur-3xl pointer-events-none"
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-[0.22] blur-3xl pointer-events-none"
           style={{ background: "radial-gradient(circle, #d4af37 0%, transparent 70%)" }}
           aria-hidden
         />
@@ -275,7 +278,7 @@ export default function Home() {
           </h2>
           <div className="grid md:grid-cols-3 gap-7 items-stretch">
             {/* Tier 1 */}
-            <div className="bg-white border border-[#e5e5e5] rounded-2xl p-10 text-left flex flex-col hover:-translate-y-1 hover:shadow-card-hover transition-all">
+            <div className="bg-white rounded-2xl p-10 text-left flex flex-col shadow-[0_10px_30px_rgba(30,58,95,0.10)] hover:-translate-y-1 hover:shadow-[0_20px_45px_rgba(30,58,95,0.16)] transition-all">
               <div className="text-[11px] font-bold tracking-[0.14em] uppercase text-gold-warm mb-2">Tier 1 — DIY</div>
               <h3 className="text-3xl font-bold mb-4">The Blueprint</h3>
               <div className="text-5xl font-extrabold text-navy leading-none mb-1 tracking-tight">$2,997</div>
@@ -298,7 +301,7 @@ export default function Home() {
             </div>
 
             {/* Tier 2 - Featured */}
-            <div className="bg-white rounded-2xl p-10 pt-10 text-left flex flex-col relative shadow-featured md:-translate-y-4 hover:md:-translate-y-5 transition-all">
+            <div className="bg-white rounded-2xl p-10 pt-10 text-left flex flex-col relative shadow-[0_24px_60px_rgba(30,58,95,0.28)] ring-1 ring-gold/30 md:-translate-y-4 hover:md:-translate-y-5 hover:shadow-[0_32px_72px_rgba(30,58,95,0.34)] transition-all">
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gold text-navy px-5 py-1.5 rounded-full text-[11px] font-extrabold tracking-[0.14em] whitespace-nowrap">
                 MOST POPULAR
               </div>
@@ -326,7 +329,7 @@ export default function Home() {
             </div>
 
             {/* Tier 3 */}
-            <div className="bg-white border border-[#e5e5e5] rounded-2xl p-10 text-left flex flex-col hover:-translate-y-1 hover:shadow-card-hover transition-all">
+            <div className="bg-white rounded-2xl p-10 text-left flex flex-col shadow-[0_10px_30px_rgba(30,58,95,0.10)] hover:-translate-y-1 hover:shadow-[0_20px_45px_rgba(30,58,95,0.16)] transition-all">
               <div className="text-[11px] font-bold tracking-[0.14em] uppercase text-gold-warm mb-2">Tier 3 — Done-With-You</div>
               <h3 className="text-3xl font-bold mb-4">Builder</h3>
               <div className="text-5xl font-extrabold text-navy leading-none mb-1 tracking-tight">$29,500</div>
