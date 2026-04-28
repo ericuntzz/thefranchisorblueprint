@@ -3,6 +3,7 @@ import type Stripe from "stripe";
 import { stripe, stripeEnv } from "@/lib/stripe";
 import {
   ensureUserAndPurchase,
+  markPurchaseRefunded,
   sendWelcomeMagicLinkEmail,
 } from "@/lib/fulfillment";
 
@@ -41,6 +42,14 @@ export async function POST(req: NextRequest) {
       if (userId && email) {
         await sendWelcomeMagicLinkEmail(email, req.nextUrl.origin);
       }
+      break;
+    }
+    case "charge.refunded": {
+      const charge = event.data.object;
+      console.log(
+        `[stripe] charge.refunded ${charge.id} pi=${charge.payment_intent} amount_refunded=${charge.amount_refunded}`,
+      );
+      await markPurchaseRefunded(charge);
       break;
     }
     case "checkout.session.async_payment_succeeded":

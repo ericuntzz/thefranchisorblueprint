@@ -27,6 +27,8 @@ export type Purchase = {
   amount_cents: number;
   currency: string;
   status: "paid" | "refunded";
+  refunded_at: string | null;
+  refund_amount_cents: number;
   created_at: string;
 };
 

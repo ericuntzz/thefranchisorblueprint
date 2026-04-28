@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { ArrowUpRight, Calendar, FileText, Sparkles } from "lucide-react";
+import { ArrowUpRight, Calendar, FileText, Sparkles, ShieldOff } from "lucide-react";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { capabilitiesForTier, CAPABILITIES } from "@/lib/capabilities";
 import type { Tier, Profile, Purchase } from "@/lib/supabase/types";
@@ -38,17 +38,25 @@ export default async function PortalDashboard() {
 
   const profile = profileData as Profile | null;
   const purchases = (purchasesData ?? []) as Purchase[];
+  const paidPurchases = purchases.filter((p) => p.status === "paid");
+  const refundedPurchases = purchases.filter((p) => p.status === "refunded");
+  const hasActiveAccess = paidPurchases.length > 0;
+  const firstName = profile?.full_name?.split(" ")[0] ?? null;
 
-  // Effective tier = highest tier across all paid purchases (or profile.tier as fallback)
-  const tier = (Math.max(
-    profile?.tier ?? 1,
-    ...purchases.filter((p) => p.status === "paid").map((p) => p.tier),
-    1,
-  ) as Tier);
+  // Effective tier — paid purchases are the only source of truth. profile.tier
+  // is no longer used here so a refund correctly downgrades / revokes access.
+  const tier = (
+    hasActiveAccess
+      ? (Math.max(...paidPurchases.map((p) => p.tier)) as Tier)
+      : 1
+  );
+
+  if (!hasActiveAccess) {
+    return <RevokedAccessView firstName={firstName} hadRefund={refundedPurchases.length > 0} />;
+  }
 
   const visibleCaps = capabilitiesForTier(tier);
   const lockedCaps = CAPABILITIES.filter((c) => c.minTier > tier);
-  const firstName = profile?.full_name?.split(" ")[0] ?? null;
 
   return (
     <>
@@ -177,5 +185,47 @@ export default async function PortalDashboard() {
         </div>
       </section>
     </>
+  );
+}
+
+function RevokedAccessView({
+  firstName,
+  hadRefund,
+}: {
+  firstName: string | null;
+  hadRefund: boolean;
+}) {
+  return (
+    <section className="py-16 md:py-24">
+      <div className="max-w-[640px] mx-auto px-6 md:px-8">
+        <div className="bg-white rounded-2xl border border-navy/10 shadow-[0_18px_40px_rgba(30,58,95,0.10)] p-8 md:p-12 text-center">
+          <div className="inline-flex w-14 h-14 rounded-full bg-cream items-center justify-center text-gold-warm mb-5">
+            <ShieldOff size={22} />
+          </div>
+          <h1 className="text-navy font-extrabold text-2xl md:text-3xl mb-3">
+            {firstName ? `Hi ${firstName}, your access is paused` : "Your access is paused"}
+          </h1>
+          <p className="text-grey-3 text-base leading-relaxed mb-7">
+            {hadRefund
+              ? "We've processed a refund on your purchase, so portal access has been turned off. If this is unexpected — or you'd like to talk through anything before deciding — we'd love to hear from you."
+              : "We don't see an active purchase on your account. If you bought recently and the portal hasn't caught up, give it a few minutes and refresh. Otherwise, our team is happy to help."}
+          </p>
+          <div className="flex flex-wrap gap-3 justify-center">
+            <Link
+              href="/programs/blueprint"
+              className="inline-block bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-7 py-3.5 rounded-full hover:bg-gold-dark transition-colors"
+            >
+              Re-purchase The Blueprint
+            </Link>
+            <a
+              href="mailto:team@thefranchisorblueprint.com"
+              className="inline-block bg-transparent text-navy border-2 border-navy font-bold text-sm uppercase tracking-[0.1em] px-7 py-3.5 rounded-full hover:bg-navy hover:text-white transition-colors"
+            >
+              Email our team
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }

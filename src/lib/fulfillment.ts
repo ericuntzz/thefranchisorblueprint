@@ -150,3 +150,47 @@ function parseTier(raw: string | undefined): Tier {
   if (n === 2 || n === 3) return n;
   return 1;
 }
+
+/**
+ * Marks the corresponding `purchases` row as refunded in response to a
+ * Stripe `charge.refunded` event. Looked up via stripe_payment_intent_id
+ * (the only stable link from a Charge back to our purchase row).
+ *
+ * Treats any refund (full or partial) as a full revocation for our access-
+ * gating purposes — a customer unhappy enough to refund any portion of a
+ * one-time digital purchase shouldn't keep the content. If we ever sell
+ * something where partial refunds are normal, revisit this.
+ */
+export async function markPurchaseRefunded(charge: Stripe.Charge): Promise<void> {
+  const piId =
+    typeof charge.payment_intent === "string"
+      ? charge.payment_intent
+      : charge.payment_intent?.id ?? null;
+  if (!piId) {
+    console.error(`[fulfillment] charge ${charge.id} has no payment_intent — can't link to purchase`);
+    return;
+  }
+
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("purchases")
+    .update({
+      status: "refunded",
+      refunded_at: new Date().toISOString(),
+      refund_amount_cents: charge.amount_refunded,
+    })
+    .eq("stripe_payment_intent_id", piId)
+    .select("id, user_id, tier");
+
+  if (error) {
+    console.error(`[fulfillment] mark refunded failed for pi=${piId}: ${error.message}`);
+    return;
+  }
+  if (!data || data.length === 0) {
+    console.warn(`[fulfillment] charge.refunded for unknown payment_intent ${piId} — nothing to update`);
+    return;
+  }
+  console.log(
+    `[fulfillment] marked refunded user=${data[0].user_id} tier=${data[0].tier} pi=${piId} amount_refunded=${charge.amount_refunded}`,
+  );
+}

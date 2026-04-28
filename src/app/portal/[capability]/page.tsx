@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { ArrowLeft, Download, FileText } from "lucide-react";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { getCapability, capabilitiesForTier } from "@/lib/capabilities";
-import type { Tier, Profile, Purchase } from "@/lib/supabase/types";
+import type { Tier, Purchase } from "@/lib/supabase/types";
 
 interface PageProps {
   params: Promise<{ capability: string }>;
@@ -32,23 +32,18 @@ export default async function CapabilityDetailPage({ params }: PageProps) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/portal/login");
 
-  const [{ data: profileData }, { data: purchasesData }] = await Promise.all([
-    supabase.from("profiles").select("*").eq("id", user.id).single(),
-    supabase
-      .from("purchases")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("status", "paid"),
-  ]);
+  const { data: purchasesData } = await supabase
+    .from("purchases")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("status", "paid");
 
-  const profile = profileData as Profile | null;
   const purchases = (purchasesData ?? []) as Purchase[];
 
-  const tier = (Math.max(
-    profile?.tier ?? 1,
-    ...purchases.map((p) => p.tier),
-    1,
-  ) as Tier);
+  // No active purchases → bounce to /portal which renders the revoked-access view.
+  if (purchases.length === 0) redirect("/portal");
+
+  const tier = (Math.max(...purchases.map((p) => p.tier), 1) as Tier);
 
   if (cap.minTier > tier) redirect("/portal");
 
