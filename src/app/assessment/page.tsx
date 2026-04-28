@@ -4,6 +4,9 @@ import { ClipboardCheck, Clock, BarChart3, FileText } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { PageHero } from "@/components/PageHero";
+import { JotformEmbed } from "@/components/JotformEmbed";
+
+const JOTFORM_ID = "261168244426053";
 
 export const metadata: Metadata = {
   title: "Free Franchise Readiness Assessment | The Franchisor Blueprint",
@@ -29,34 +32,21 @@ export default function AssessmentPage() {
         subtitle="A 2-minute, 10-question evaluation across the four dimensions that actually predict franchise success. You'll get an honest score and a tailored next-step recommendation."
       />
 
-      {/* ===== Pointerpro embed placeholder ===== */}
-      <section className="bg-white py-20 md:py-24">
-        <div className="max-w-[1100px] mx-auto px-8">
-          <div className="bg-grey-1 rounded-2xl border border-navy/10 p-8 md:p-12">
-            <div className="bg-white rounded-xl border-2 border-dashed border-navy/20 min-h-[480px] flex flex-col items-center justify-center text-center p-10">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-navy to-navy-light flex items-center justify-center text-gold mb-5">
-                <ClipboardCheck size={28} />
-              </div>
-              <div className="text-gold-warm font-bold text-xs tracking-[0.18em] uppercase mb-3">
-                Pointerpro Quiz Embed
-              </div>
-              <h2 className="text-navy font-bold text-2xl md:text-3xl mb-4 max-w-[520px]">
-                The 10-Question Franchise Readiness Quiz
-              </h2>
-              <p className="text-grey-3 max-w-[560px] mb-8 leading-relaxed">
-                Once Eric connects the Pointerpro account, the live quiz will load right here. The quiz takes about 2 minutes and emails you a personalized PDF with your score, your strongest readiness dimensions, and where you have gaps.
-              </p>
-              <a
-                href="mailto:hello@thefranchisorblueprint.com?subject=Franchise%20Readiness%20Assessment%20-%20Manual%20Request"
-                className="bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-8 py-4 rounded-full hover:bg-gold-dark transition-colors"
-              >
-                Email me the manual version
-              </a>
-              <p className="mt-5 text-xs text-grey-4 italic max-w-[420px]">
-                Wiring note: Pointerpro inline embed (or Typeform fallback) goes here.
-              </p>
-            </div>
-          </div>
+      {/* ===== Live Jotform assessment embed ===== */}
+      <section className="bg-white py-16 md:py-20">
+        <div className="max-w-[920px] mx-auto px-4 md:px-8">
+          <JotformEmbed formId={JOTFORM_ID} initialHeight={1100} />
+          <p className="mt-3 text-xs text-grey-4 text-center">
+            Trouble loading the form?{" "}
+            <a
+              href={`https://form.jotform.com/${JOTFORM_ID}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-navy font-semibold underline"
+            >
+              Open it in a new tab →
+            </a>
+          </p>
         </div>
       </section>
 

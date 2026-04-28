@@ -140,7 +140,7 @@ const tiers: Tier[] = [
       "First franchisee recruitment assistance",
       "Priority access to Jason directly",
     ],
-    cta: { label: "Book Your Fit Call", href: "/strategy-call", style: "navy" },
+    cta: { label: "Book Your Fit Call", href: "/strategy-call/builder", style: "navy" },
   },
 ];
 

@@ -11,6 +11,22 @@ export const metadata: Metadata = {
     "The complete franchisor operating system for the self-starter — nine production-ready frameworks. $2,997 one-time. 30-day satisfaction guarantee. Lifetime access to system updates.",
 };
 
+/**
+ * POST-PURCHASE ONBOARDING CALL (Tier 1 buyers only).
+ *
+ * This URL is NOT exposed on the public site. After successful Stripe
+ * checkout, the buyer should receive an email with this link to schedule
+ * their promised "60-Min White-Glove Onboarding Call."
+ *
+ * Wire this into the Stripe webhook + post-purchase email when the
+ * Stripe integration is built (TODO).
+ */
+const TIER_1_ONBOARDING_CALENDLY_URL =
+  "https://calendly.com/team-thefranchisorblueprint/60-minute-blueprint-onboarding";
+
+// Suppress unused-warning until the Stripe webhook consumes this.
+void TIER_1_ONBOARDING_CALENDLY_URL;
+
 const includes = [
   "Audit Your Business — 150+ point readiness checklist",
   "Build Your 12-Month Roadmap — full development Gantt chart",
@@ -79,14 +95,14 @@ export default function BlueprintProductPage() {
                 </div>
                 <div className="text-grey-4 text-sm mb-5">One-time payment · Instant access</div>
 
-                {/* TODO (Eric): wire up Stripe Payment Link or Checkout Session.
-                    Replace this <a> with the real Stripe URL. */}
-                <a
-                  href="#TODO-STRIPE-CHECKOUT"
-                  className="block w-full text-center bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-6 py-4 rounded-full hover:bg-gold-dark transition-colors"
-                >
-                  Buy Now
-                </a>
+                <form action="/api/checkout/blueprint" method="POST">
+                  <button
+                    type="submit"
+                    className="block w-full text-center bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-6 py-4 rounded-full hover:bg-gold-dark transition-colors cursor-pointer"
+                  >
+                    Buy Now
+                  </button>
+                </form>
                 <p className="text-center text-xs text-grey-4 italic mt-3">
                   Secure checkout via Stripe. Credit card or ACH.
                 </p>

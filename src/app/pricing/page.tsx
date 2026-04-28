@@ -133,7 +133,7 @@ export default function PricingPage() {
                 ))}
               </ul>
               <Link
-                href="/strategy-call"
+                href="/strategy-call/builder"
                 className="block w-full text-center bg-navy text-white font-bold text-sm uppercase tracking-[0.1em] px-6 py-4 rounded-full hover:bg-navy-dark transition-colors"
               >
                 Book Your Fit Call
