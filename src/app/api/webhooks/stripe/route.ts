@@ -8,6 +8,7 @@ import {
 } from "@/lib/fulfillment";
 import { TIERS, type TierId } from "@/lib/analytics";
 import { sendServerEvent, clientIdFor } from "@/lib/ga-measurement-protocol";
+import { acUpsertContact, AC_MASTER_LIST_ID } from "@/lib/activecampaign";
 
 /**
  * Map a Stripe Checkout Session metadata.product → our internal TierId.
@@ -55,6 +56,27 @@ export async function POST(req: NextRequest) {
       const email = session.customer_details?.email?.toLowerCase();
       if (userId && email) {
         await sendWelcomeMagicLinkEmail(email, req.nextUrl.origin);
+      }
+
+      // ─── ActiveCampaign: add buyer to Master list with tier tag ───────
+      // Fire-and-forget — never let CRM sync break the webhook.
+      try {
+        if (email) {
+          const tierId = tierFromSession(session);
+          // customer_details.name format is usually "First Last" — best-effort split
+          const fullName = session.customer_details?.name?.trim() ?? "";
+          const [firstName, ...rest] = fullName.split(/\s+/);
+          const lastName = rest.join(" ");
+          await acUpsertContact({
+            email,
+            firstName: firstName || undefined,
+            lastName: lastName || undefined,
+            listIds: AC_MASTER_LIST_ID ? [AC_MASTER_LIST_ID] : [],
+            tags: [`customer-${tierId}`, "source-stripe-purchase"],
+          });
+        }
+      } catch (err) {
+        console.error("[stripe] AC sync failed:", err);
       }
 
       // ─── GA4 server-side `purchase` event ─────────────────────────────
