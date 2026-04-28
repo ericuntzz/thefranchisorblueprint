@@ -4,6 +4,9 @@ import { Calendar, Clock, Shield, MessageCircle } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { PageHero } from "@/components/PageHero";
+import { CalendlyEmbed } from "@/components/CalendlyEmbed";
+
+const CALENDLY_URL = "https://calendly.com/team-thefranchisorblueprint/30-minute-discovery-call";
 
 export const metadata: Metadata = {
   title: "Book a Strategy Call | The Franchisor Blueprint",
@@ -58,31 +61,20 @@ export default function StrategyCallPage() {
               </div>
             </div>
 
-            {/* Right: Calendly placeholder */}
+            {/* Right: live Calendly embed */}
             <div>
-              <div className="bg-white rounded-xl border-2 border-dashed border-navy/20 aspect-[4/5] flex flex-col items-center justify-center text-center p-10">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-navy to-navy-light flex items-center justify-center text-gold mb-5">
-                  <Calendar size={28} />
-                </div>
-                <div className="text-gold-warm font-bold text-xs tracking-[0.18em] uppercase mb-3">
-                  Calendly Embed
-                </div>
-                <h3 className="text-navy font-bold text-xl mb-3 max-w-[260px]">
-                  Pick a time that works for you
-                </h3>
-                <p className="text-grey-3 text-sm mb-7 max-w-[280px]">
-                  Once Eric connects the Calendly account, this block becomes the live booking widget.
-                </p>
+              <CalendlyEmbed url={CALENDLY_URL} minHeight={760} />
+              <p className="mt-3 text-xs text-grey-4 text-center">
+                Trouble loading?{" "}
                 <a
-                  href="mailto:hello@thefranchisorblueprint.com?subject=Strategy%20Call%20Request"
-                  className="bg-gold text-navy font-bold text-xs uppercase tracking-[0.1em] px-6 py-3 rounded-full hover:bg-gold-dark transition-colors"
+                  href={CALENDLY_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-navy font-semibold underline"
                 >
-                  Email to book
+                  Open scheduler in a new tab →
                 </a>
-                <p className="mt-5 text-xs text-grey-4 italic max-w-[260px]">
-                  Wiring note: Calendly inline embed goes here. See public/scripts/calendly.js (TBD).
-                </p>
-              </div>
+              </p>
             </div>
           </div>
         </div>
