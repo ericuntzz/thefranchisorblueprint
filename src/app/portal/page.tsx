@@ -252,26 +252,28 @@ function ProgressMeter({
   total: number;
 }) {
   return (
-    <div className="bg-white">
-      <div className="flex items-baseline justify-between mb-2">
-        <div className="text-[11px] font-bold tracking-[0.14em] uppercase text-gold-warm">
+    <div className="bg-gradient-to-br from-navy to-navy-light text-white rounded-2xl px-6 md:px-8 py-6 md:py-7 shadow-[0_18px_40px_rgba(30,58,95,0.18)]">
+      <div className="flex items-baseline justify-between mb-3">
+        <div className="text-[11px] font-bold tracking-[0.16em] uppercase text-gold">
           % Franchise Ready
         </div>
-        <div className="text-navy font-extrabold text-2xl tabular-nums">
+        <div className="text-white font-extrabold text-3xl md:text-4xl tabular-nums leading-none">
           {percent}%
         </div>
       </div>
-      <div className="h-2.5 w-full bg-grey-1 rounded-full overflow-hidden">
+      <div
+        className="h-3 w-full bg-white/10 rounded-full overflow-hidden ring-1 ring-white/5"
+        role="progressbar"
+        aria-valuenow={percent}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      >
         <div
-          className="h-full bg-gradient-to-r from-gold to-gold-warm rounded-full transition-all"
+          className="h-full bg-gradient-to-r from-gold via-gold to-gold-warm rounded-full transition-all shadow-[0_0_12px_rgba(212,162,76,0.5)]"
           style={{ width: `${percent}%` }}
-          aria-valuenow={percent}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          role="progressbar"
         />
       </div>
-      <div className="text-grey-4 text-xs mt-2">
+      <div className="text-white/70 text-xs md:text-sm mt-3 font-medium">
         {completed} of {total} capabilities marked complete
       </div>
     </div>
@@ -293,25 +295,61 @@ function PhaseSection({
   completedSlugs: Set<string>;
   phaseDone: boolean;
 }) {
+  const completedInPhase = caps.filter((c) => completedSlugs.has(c.slug)).length;
   return (
-    <div>
-      <div className="flex items-baseline gap-3 mb-2">
-        <div className="text-[10px] font-bold tracking-[0.18em] uppercase text-gold-warm">
-          Phase {number}
-        </div>
-        {phaseDone && (
-          <div className="flex items-center gap-1 text-[10px] font-bold tracking-[0.16em] uppercase text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
-            <CheckCircle2 size={11} />
-            Phase complete
+    <div className="bg-white rounded-3xl border-2 border-navy/10 shadow-[0_8px_28px_rgba(30,58,95,0.08)] overflow-hidden">
+      {/* Top accent strip — distinguishes phase containers from each other and from the page background */}
+      <div
+        className={`h-1.5 ${
+          phaseDone
+            ? "bg-gradient-to-r from-green-400 via-green-500 to-green-400"
+            : "bg-gradient-to-r from-gold via-gold-warm to-gold"
+        }`}
+        aria-hidden
+      />
+
+      <div className="p-6 md:p-9">
+        {/* Phase header with numbered badge */}
+        <div className="flex items-start gap-4 mb-6 md:mb-7">
+          <div
+            className={`flex-shrink-0 w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center font-extrabold text-lg md:text-xl ring-4 transition-colors ${
+              phaseDone
+                ? "bg-green-100 text-green-700 ring-green-50"
+                : "bg-gradient-to-br from-navy to-navy-light text-gold ring-gold/15"
+            }`}
+            aria-hidden
+          >
+            {number}
           </div>
-        )}
-      </div>
-      <h2 className="text-navy font-bold text-2xl md:text-3xl mb-1">{label}</h2>
-      <p className="text-grey-3 text-base md:text-lg mb-6">{tagline}</p>
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {caps.map((cap) => (
-          <CapabilityCard key={cap.slug} cap={cap} completed={completedSlugs.has(cap.slug)} />
-        ))}
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-gold-warm">
+                Phase {number}
+              </span>
+              {phaseDone ? (
+                <div className="flex items-center gap-1 text-[10px] font-bold tracking-[0.16em] uppercase text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
+                  <CheckCircle2 size={11} />
+                  Phase complete
+                </div>
+              ) : (
+                <span className="text-[10px] font-semibold tracking-wider uppercase text-grey-4 bg-grey-1 px-2 py-0.5 rounded-full">
+                  {completedInPhase} of {caps.length} complete
+                </span>
+              )}
+            </div>
+            <h2 className="text-navy font-extrabold text-2xl md:text-3xl mb-1 leading-tight">
+              {label}
+            </h2>
+            <p className="text-grey-3 text-base md:text-lg">{tagline}</p>
+          </div>
+        </div>
+
+        {/* Capability cards */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+          {caps.map((cap) => (
+            <CapabilityCard key={cap.slug} cap={cap} completed={completedSlugs.has(cap.slug)} />
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -322,21 +360,27 @@ function CapabilityCard({ cap, completed }: { cap: Capability; completed: boolea
   return (
     <Link
       href={`/portal/${cap.slug}`}
-      className={`group bg-white rounded-2xl border p-6 transition-all flex flex-col ${
+      className={`group relative bg-white rounded-2xl border-2 p-5 md:p-6 transition-all flex flex-col ${
         completed
-          ? "border-green-300 shadow-[0_8px_20px_rgba(22,163,74,0.10)]"
-          : "border-navy/10 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(30,58,95,0.18)] hover:border-gold/40"
+          ? "border-green-300 bg-gradient-to-br from-white to-green-50/50 shadow-[0_4px_14px_rgba(22,163,74,0.10)]"
+          : "border-navy/15 shadow-[0_2px_10px_rgba(30,58,95,0.05)] hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(30,58,95,0.18)] hover:border-gold/50"
       }`}
     >
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           {completed ? (
-            <CheckCircle2 size={18} className="text-green-600" />
+            <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
+              <CheckCircle2 size={16} className="text-green-700" />
+            </div>
           ) : (
-            <Circle size={18} className="text-grey-3" />
+            <div className="w-6 h-6 rounded-full bg-grey-1 border-2 border-navy/15 flex items-center justify-center">
+              <span className="text-[10px] font-extrabold text-grey-4 tabular-nums">
+                {String(cap.number).padStart(2, "0")}
+              </span>
+            </div>
           )}
           <span className="text-[10px] font-bold tracking-[0.16em] uppercase text-gold-warm">
-            Capability {String(cap.number).padStart(2, "0")}
+            {completed ? `Capability ${String(cap.number).padStart(2, "0")}` : cap.verb}
           </span>
         </div>
         <ArrowUpRight
@@ -350,7 +394,7 @@ function CapabilityCard({ cap, completed }: { cap: Capability; completed: boolea
       <p className="text-grey-3 text-sm leading-relaxed flex-1 mb-4">
         {cap.description}
       </p>
-      <div className="flex items-center gap-2 text-[11px] text-grey-4 font-semibold uppercase tracking-wider">
+      <div className="flex items-center gap-2 text-[11px] text-grey-4 font-semibold uppercase tracking-wider pt-3 border-t border-navy/5">
         <FileText size={12} />
         <span>{cap.format}</span>
         {comingSoon && (
@@ -378,10 +422,10 @@ function FinalReadinessCard({ firstName }: { firstName: string | null }) {
             {firstName ? `${firstName}, you're franchise ready` : "You're franchise ready"}
           </h2>
           <p className="text-white/80 text-base md:text-lg max-w-[600px] mx-auto leading-relaxed mb-7">
-            Book a final 30-minute readiness review with Jason. He&apos;ll validate your work, flag anything risky before you file, and confirm you&apos;re ready to launch.
+            Book a final 60-minute readiness review with Jason. He&apos;ll validate your work, flag anything risky before you file, and confirm you&apos;re ready to launch.
           </p>
           <a
-            href="https://calendly.com/team-thefranchisorblueprint/30-minute-discovery-call"
+            href="https://calendly.com/team-thefranchisorblueprint/60-minute-final-readiness-review-coaching-call"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-9 py-4 rounded-full hover:bg-gold-dark transition-colors"
