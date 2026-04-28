@@ -1,16 +1,21 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import type { Metadata } from "next";
 import type Stripe from "stripe";
-import { CheckCircle2, Mail, Calendar, Receipt, CreditCard } from "lucide-react";
+import { CheckCircle2, Mail, Calendar, Receipt, CreditCard, ArrowRight } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { PageHero } from "@/components/PageHero";
 import { stripe } from "@/lib/stripe";
+import {
+  ensureUserAndPurchase,
+  generatePortalAccessUrl,
+} from "@/lib/fulfillment";
 
 export const metadata: Metadata = {
   title: "Welcome to The Blueprint | The Franchisor Blueprint",
   description:
-    "Your purchase is confirmed. Check your email for instant access and onboarding details.",
+    "Your purchase is confirmed. Access your portal directly or check your email for the sign-in link.",
   robots: { index: false, follow: false },
 };
 
@@ -27,39 +32,65 @@ type RetrievedSession = Stripe.Response<
   }
 >;
 
-async function loadOrder(sessionId: string | undefined) {
+async function loadSession(sessionId: string | undefined) {
   if (!sessionId?.startsWith("cs_")) return null;
   try {
     const session = (await stripe.checkout.sessions.retrieve(sessionId, {
       expand: ["line_items", "payment_intent.latest_charge"],
     })) as RetrievedSession;
     if (session.payment_status !== "paid") return null;
-    const line = session.line_items?.data[0];
-    const charge = session.payment_intent?.latest_charge;
-    return {
-      id: session.id,
-      productName: line?.description ?? "The Blueprint",
-      amount: ((session.amount_total ?? 0) / 100).toLocaleString("en-US", {
-        style: "currency",
-        currency: (session.currency ?? "usd").toUpperCase(),
-      }),
-      email: session.customer_details?.email ?? null,
-      name: session.customer_details?.name ?? null,
-      cardLast4: charge?.payment_method_details?.card?.last4 ?? null,
-      cardBrand: charge?.payment_method_details?.card?.brand ?? null,
-      created: new Date((session.created ?? 0) * 1000).toLocaleString("en-US", {
-        dateStyle: "long",
-        timeStyle: "short",
-      }),
-    };
+    return session;
   } catch {
     return null;
   }
 }
 
+function formatOrder(session: RetrievedSession) {
+  const line = session.line_items?.data[0];
+  const charge = session.payment_intent?.latest_charge;
+  return {
+    id: session.id,
+    productName: line?.description ?? "The Blueprint",
+    amount: ((session.amount_total ?? 0) / 100).toLocaleString("en-US", {
+      style: "currency",
+      currency: (session.currency ?? "usd").toUpperCase(),
+    }),
+    email: session.customer_details?.email ?? null,
+    name: session.customer_details?.name ?? null,
+    cardLast4: charge?.payment_method_details?.card?.last4 ?? null,
+    cardBrand: charge?.payment_method_details?.card?.brand ?? null,
+    created: new Date((session.created ?? 0) * 1000).toLocaleString("en-US", {
+      dateStyle: "long",
+      timeStyle: "short",
+    }),
+  };
+}
+
+async function getOrigin(): Promise<string> {
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  return host ? `${proto}://${host}` : "https://www.thefranchisorblueprint.com";
+}
+
 export default async function ThankYouPage({ searchParams }: PageProps) {
   const { session_id } = await searchParams;
-  const order = await loadOrder(session_id);
+  const session = await loadSession(session_id);
+
+  // If we have a paid session, run idempotent fulfillment + generate a one-click
+  // access URL. The Stripe webhook also fires this same code path; whichever
+  // wins the race, the second call is a no-op.
+  let portalAccessUrl: string | null = null;
+  if (session) {
+    const origin = await getOrigin();
+    await ensureUserAndPurchase(session);
+    const email = session.customer_details?.email?.toLowerCase();
+    if (email) {
+      portalAccessUrl = await generatePortalAccessUrl(email, origin);
+    }
+  }
+
+  const order = session ? formatOrder(session) : null;
 
   return (
     <>
@@ -68,7 +99,7 @@ export default async function ThankYouPage({ searchParams }: PageProps) {
       <PageHero
         eyebrow="You're In"
         title={order?.name ? `Welcome to The Blueprint, ${order.name.split(" ")[0]}` : "Welcome to The Blueprint"}
-        subtitle="Your purchase is confirmed. We're already prepping your onboarding."
+        subtitle="Your purchase is confirmed. Access your portal in one click below."
       />
 
       <section className="bg-white py-20 md:py-24">
@@ -80,9 +111,20 @@ export default async function ThankYouPage({ searchParams }: PageProps) {
             <h2 className="text-navy font-extrabold text-2xl md:text-3xl mb-3">
               Payment Received
             </h2>
-            <p className="text-grey-3 text-base md:text-lg leading-relaxed">
-              A receipt is on its way to your inbox from Stripe. Your access details and onboarding instructions will follow shortly from our team.
+            <p className="text-grey-3 text-base md:text-lg leading-relaxed mb-7">
+              {portalAccessUrl
+                ? "Your franchisor operating system is ready. Open your portal now to start exploring the nine capabilities."
+                : "A receipt is on its way to your inbox from Stripe. Your access details and onboarding instructions will follow shortly."}
             </p>
+            {portalAccessUrl && (
+              <a
+                href={portalAccessUrl}
+                className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-9 py-4 rounded-full hover:bg-gold-dark transition-colors"
+              >
+                Access your portal
+                <ArrowRight size={16} />
+              </a>
+            )}
           </div>
 
           {order && (
@@ -135,9 +177,9 @@ export default async function ThankYouPage({ searchParams }: PageProps) {
                 <Mail size={18} />
               </div>
               <div>
-                <h3 className="text-navy font-bold text-lg mb-1">Welcome email on the way</h3>
+                <h3 className="text-navy font-bold text-lg mb-1">Backup sign-in link in your inbox</h3>
                 <p className="text-grey-3 text-sm leading-relaxed">
-                  In the next few minutes you&apos;ll receive a confirmation with your next steps. If you don&apos;t see it, check your spam folder or email{" "}
+                  We&apos;ve also emailed you a sign-in link as a backup, in case you close this tab. Use either — both land you in the same portal. If you don&apos;t see it, check spam or email{" "}
                   <a href="mailto:team@thefranchisorblueprint.com" className="text-navy font-semibold underline">team@thefranchisorblueprint.com</a>.
                 </p>
               </div>
