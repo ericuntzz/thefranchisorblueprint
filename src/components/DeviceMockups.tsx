@@ -12,7 +12,7 @@ import { CheckSquare } from "lucide-react";
  */
 export function DeviceMockups() {
   return (
-    <div className="relative w-full max-w-[640px] mx-auto aspect-[4/3]">
+    <div className="relative w-full max-w-[640px] mx-auto aspect-[4/3] overflow-hidden px-2 sm:px-0">
       {/* iPad — back left, slightly rotated */}
       <div className="absolute left-0 top-[8%] w-[44%] -rotate-6 z-10 drop-shadow-[0_24px_40px_rgba(0,0,0,0.45)]">
         <div className="bg-[#1a1a1a] rounded-[14px] p-[6px]">

@@ -38,7 +38,7 @@ const docs = [
 
 const yesList = [
   "You have a successful business generating $500k–$5M+ in revenue.",
-  "You want to scale, but can't justify $75k+ in consulting fees.",
+  "You want to scale, but can't justify $40K–$80K in consulting fees.",
   "You are willing to do the work if you have the right guide.",
   "You want to retain control over your brand and culture.",
   "You value accountability and structured timelines.",
@@ -127,7 +127,7 @@ export default function Home() {
           <span className="hidden md:inline opacity-40">|</span>
           <span>Launch in 6 Months, Not 18+</span>
           <span className="hidden md:inline opacity-40">|</span>
-          <span>Up to 90% Less Than Big Firms</span>
+          <span>Up to 89% Less Than Big Firms</span>
         </div>
       </div>
 

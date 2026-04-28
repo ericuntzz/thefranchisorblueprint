@@ -105,7 +105,7 @@ export default function AboutPage() {
             Our Mission
           </span>
           <h2 className="text-3xl md:text-5xl font-bold mb-8">
-            Make professional franchise development accessible to every great business owner — not just those who can write a $75,000 check.
+            Make professional franchise development accessible to every great business owner — not just those who can write an $80,000 check.
           </h2>
           <p className="text-grey-3 text-lg md:text-xl leading-relaxed">
             We exist to democratize franchising. We believe that with the right tools and accountability, any proven business model can scale.

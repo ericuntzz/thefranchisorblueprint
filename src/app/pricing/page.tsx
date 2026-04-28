@@ -220,7 +220,7 @@ export default function PricingPage() {
             <div className="space-y-4">
               <div className="flex items-baseline justify-between border-b border-white/10 pb-3">
                 <span className="text-white/85 text-base">Initial franchise fee (revenue)</span>
-                <span className="text-white font-bold text-xl tabular-nums">+$40,000</span>
+                <span className="text-white font-bold text-xl tabular-nums">+$45,000</span>
               </div>
               <div className="flex items-baseline justify-between border-b border-white/10 pb-3">
                 <span className="text-white/85 text-base">Navigator program (cost)</span>
@@ -230,11 +230,11 @@ export default function PricingPage() {
                 <span className="text-gold font-bold text-base tracking-wide uppercase">
                   Net return on sale #1
                 </span>
-                <span className="text-gold font-extrabold text-3xl tabular-nums">$31,500</span>
+                <span className="text-gold font-extrabold text-3xl tabular-nums">$36,500</span>
               </div>
             </div>
             <p className="mt-8 pt-6 border-t border-white/10 text-white/70 text-sm leading-relaxed">
-              Plus ongoing royalties of approximately <strong className="text-white">$2,500/month per unit</strong>. Most franchisors break even on development costs in less than 12 months.
+              Plus <strong className="text-white">ongoing royalties on every unit you sell</strong>. Most franchisors recoup their entire program cost on Sale #1 and break even on total development costs (program + legal + filing) in less than 12 months.
             </p>
           </div>
         </div>

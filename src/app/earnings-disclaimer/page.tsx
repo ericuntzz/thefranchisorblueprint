@@ -33,7 +33,7 @@ export default function EarningsDisclaimerPage() {
 
       <h2>Example Calculations</h2>
       <p>
-        Example ROI calculations shown on our pricing page (such as the $40,000 first-franchise-fee scenario) are illustrative only and are based on industry-typical franchise fee ranges. Your actual results will vary based on your franchise fee structure, sales activity, royalty rates, marketing costs, and many other factors.
+        Example ROI calculations shown on our pricing page (such as the $45,000 first-franchise-fee scenario) are illustrative only and are based on industry-typical franchise fee ranges (typically $40,000–$50,000 for emerging brands). Your actual results will vary based on your franchise fee structure, sales activity, royalty rates, marketing costs, and many other factors.
       </p>
 
       <h2>Testimonials</h2>
