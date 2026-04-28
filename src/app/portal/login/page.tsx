@@ -1,8 +1,9 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Mail, Lock, ArrowRight } from "lucide-react";
+import { Mail, Lock } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
+import { SignInForm } from "./SignInForm";
 
 export const metadata: Metadata = {
   title: "Portal Login | The Franchisor Blueprint",
@@ -59,28 +60,9 @@ export default async function PortalLoginPage({ searchParams }: PageProps) {
                   </p>
                 </div>
               ) : (
-                <form action="/api/portal/request-link" method="POST" className="space-y-5">
-                  {next && <input type="hidden" name="next" value={next} />}
-                  <div>
-                    <label htmlFor="email" className="block text-navy text-sm font-semibold mb-2">
-                      Email address
-                    </label>
-                    <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      required
-                      autoComplete="email"
-                      placeholder="you@yourbusiness.com"
-                      className="w-full border border-navy/15 rounded-xl px-4 py-3 text-base text-navy placeholder:text-grey-4 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20 transition-all"
-                    />
-                    <p className="mt-2 text-xs text-grey-4">
-                      Use the email address you used to purchase. We&apos;ll send you a one-click sign-in link.
-                    </p>
-                  </div>
-
+                <>
                   {error === "no_account" ? (
-                    <div className="bg-cream border border-gold/40 rounded-xl px-5 py-4 text-sm">
+                    <div className="bg-cream border border-gold/40 rounded-xl px-5 py-4 text-sm mb-5">
                       <p className="text-navy font-bold mb-1">No purchase found for that email</p>
                       <p className="text-grey-3 leading-relaxed mb-3">
                         The portal is only available to customers who&apos;ve purchased The Blueprint. If you just bought, check your inbox for the welcome email — your access link is in there.
@@ -93,7 +75,7 @@ export default async function PortalLoginPage({ searchParams }: PageProps) {
                       </Link>
                     </div>
                   ) : error ? (
-                    <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-800">
+                    <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-800 mb-5">
                       {error === "invalid_link"
                         ? "That sign-in link has expired or already been used. Please request a new one below."
                         : error === "invalid_email"
@@ -104,14 +86,8 @@ export default async function PortalLoginPage({ searchParams }: PageProps) {
                     </div>
                   ) : null}
 
-                  <button
-                    type="submit"
-                    className="w-full flex items-center justify-center gap-2 bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-6 py-4 rounded-full hover:bg-gold-dark transition-colors cursor-pointer"
-                  >
-                    Send sign-in link
-                    <ArrowRight size={16} />
-                  </button>
-                </form>
+                  <SignInForm next={next} />
+                </>
               )}
             </div>
           </div>

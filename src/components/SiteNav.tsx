@@ -74,7 +74,7 @@ export function SiteNav() {
             <Link
               href="/portal/login"
               onClick={() => fireNav("Sign in", "/portal/login", "primary")}
-              className="text-navy text-[14px] font-semibold tracking-tight hover:text-gold transition-colors"
+              className="text-navy text-[15px] font-semibold tracking-tight hover:text-gold transition-colors"
             >
               Sign in
             </Link>
