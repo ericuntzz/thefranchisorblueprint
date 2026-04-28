@@ -65,6 +65,23 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  // Theme-aware favicons. The TFB mark is two-tone (royal blue + dark navy),
+  // which reads well on light tab strips but the navy half loses contrast on
+  // dark tab strips. The light variant uses the original mark; the dark
+  // variant has the navy strokes recolored to cream so the mark stays
+  // legible against dark browser chrome.
+  // - favicon.ico (multi-size 16/32/48/64) is auto-discovered from app/
+  //   and serves as the legacy fallback at /favicon.ico.
+  // - apple-icon.png is auto-discovered from app/ for iOS home-screen.
+  icons: {
+    icon: [
+      { url: "/icon-32.png", sizes: "32x32", type: "image/png", media: "(prefers-color-scheme: light)" },
+      { url: "/icon-dark-32.png", sizes: "32x32", type: "image/png", media: "(prefers-color-scheme: dark)" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png", media: "(prefers-color-scheme: light)" },
+      { url: "/icon-dark-192.png", sizes: "192x192", type: "image/png", media: "(prefers-color-scheme: dark)" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+  },
   // GSC + Bing verification — set these in Vercel env vars when GSC/Bing
   // request domain verification via meta tag.
   verification: {

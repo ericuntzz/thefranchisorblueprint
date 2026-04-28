@@ -55,9 +55,14 @@ export type Database = {
       };
       purchases: {
         Row: Purchase;
-        Insert: Omit<Purchase, "id" | "created_at"> & {
+        // Refund fields default to NULL / 0 in the database, so they must be
+        // optional on Insert. Otherwise the fulfillment code that creates a
+        // purchase at checkout time (before any refund) fails to type-check.
+        Insert: Omit<Purchase, "id" | "created_at" | "refunded_at" | "refund_amount_cents"> & {
           id?: string;
           created_at?: string;
+          refunded_at?: string | null;
+          refund_amount_cents?: number;
         };
         Update: Partial<Omit<Purchase, "id" | "user_id">>;
         Relationships: [];
