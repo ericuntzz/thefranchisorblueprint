@@ -8,20 +8,20 @@ import { PageHero } from "@/components/PageHero";
 export const metadata: Metadata = {
   title: "The Blueprint — DIY Franchise Kit ($2,997) | The Franchisor Blueprint",
   description:
-    "The complete 9-document franchise development system for the self-starter. $2,997 one-time. 30-day satisfaction guarantee. Lifetime access to system updates.",
+    "The complete franchisor operating system for the self-starter — nine production-ready frameworks. $2,997 one-time. 30-day satisfaction guarantee. Lifetime access to system updates.",
 };
 
 const includes = [
-  "Comprehensive Fact-Finding Checklist (150+ items)",
-  "12-Month Franchise Development Timeline (Gantt)",
-  "Investment Overview & Pro Forma Templates",
-  "Operations Manual Master Template (17 chapters)",
-  "Staff Training & Certification Program",
-  "FDD Explainer — All 23 Items decoded",
-  "Site Selection & Build-Out Guide",
-  "Franchisee Ideal Profile & Scoring Matrix",
-  "Discovery Day Presentation Deck (29 slides)",
-  "Implementation guides for every document",
+  "Audit Your Business — 150+ point readiness checklist",
+  "Build Your 12-Month Roadmap — full development Gantt chart",
+  "Model Your Unit Economics — pro forma templates for FDD Items 7 & 19",
+  "Codify Your Operations — 17-chapter, 100+ page Operations Manual template",
+  "Train Your Team to Replicate — staff training and certification modules",
+  "Decode the FDD — all 23 federal disclosure items in plain English",
+  "Score Real Estate Like a Franchisor — proprietary site selection scoring",
+  "Qualify Every Candidate — weighted franchisee scoring matrix",
+  "Close Discovery Day — 29-slide sales presentation deck",
+  "Implementation guides for every framework",
   "60-Minute white-glove onboarding strategy call",
   "30 days of email support",
   "Lifetime access to system updates",
@@ -35,7 +35,7 @@ export default function BlueprintProductPage() {
       <PageHero
         eyebrow="Tier 1 — DIY Kit"
         title="The Blueprint — $2,997"
-        subtitle="The complete 9-document franchise development system for the experienced entrepreneur who wants the tools but doesn't need the hand-holding. One-time payment, lifetime access."
+        subtitle="The complete franchisor operating system for the experienced entrepreneur who wants the frameworks but doesn't need the hand-holding. One-time payment, lifetime access."
       />
 
       {/* ===== Buy box + what's included ===== */}
@@ -94,7 +94,7 @@ export default function BlueprintProductPage() {
                 <div className="mt-6 pt-6 border-t border-navy/10 space-y-3">
                   <div className="flex items-start gap-3 text-sm text-grey-3">
                     <Zap className="flex-shrink-0 mt-0.5 text-gold" size={16} />
-                    <span>Instant access to all 9 documents</span>
+                    <span>Instant access to the complete operating system</span>
                   </div>
                   <div className="flex items-start gap-3 text-sm text-grey-3">
                     <Users className="flex-shrink-0 mt-0.5 text-gold" size={16} />

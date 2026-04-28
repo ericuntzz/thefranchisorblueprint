@@ -3,15 +3,15 @@ import { Check, X, Minus } from "lucide-react";
 type Cell = "yes" | "no" | "partial";
 
 const rows: { label: string; diy: Cell; consultant: Cell; tfb: Cell }[] = [
-  { label: "Complete 9-Document System", diy: "no", consultant: "yes", tfb: "yes" },
-  { label: "FDD Explainer (all 23 items decoded)", diy: "no", consultant: "partial", tfb: "yes" },
-  { label: "Operations Manual (17 chapters)", diy: "no", consultant: "yes", tfb: "yes" },
-  { label: "Site Selection Scoring System", diy: "no", consultant: "partial", tfb: "yes" },
-  { label: "Franchisee Scoring Matrix", diy: "no", consultant: "partial", tfb: "yes" },
-  { label: "Discovery Day Deck (29 slides)", diy: "no", consultant: "partial", tfb: "yes" },
+  { label: "Complete Franchisor Operating System", diy: "no", consultant: "yes", tfb: "yes" },
+  { label: "Decode the FDD (all 23 federal items)", diy: "no", consultant: "partial", tfb: "yes" },
+  { label: "Codify Your Operations (17-chapter manual)", diy: "no", consultant: "yes", tfb: "yes" },
+  { label: "Score Real Estate Like a Franchisor", diy: "no", consultant: "partial", tfb: "yes" },
+  { label: "Qualify Every Candidate (scoring matrix)", diy: "no", consultant: "partial", tfb: "yes" },
+  { label: "Close Discovery Day (29-slide deck)", diy: "no", consultant: "partial", tfb: "yes" },
   { label: "6-Month 1:1 Coaching Calls", diy: "no", consultant: "no", tfb: "yes" },
   { label: "Weekly Accountability + Milestones", diy: "no", consultant: "no", tfb: "yes" },
-  { label: "Document Review & Feedback", diy: "no", consultant: "no", tfb: "yes" },
+  { label: "Framework Review & Feedback", diy: "no", consultant: "no", tfb: "yes" },
   { label: "Attorney + CPA Referrals", diy: "no", consultant: "yes", tfb: "yes" },
   { label: "“Franchise Ready” Certification", diy: "no", consultant: "no", tfb: "yes" },
 ];

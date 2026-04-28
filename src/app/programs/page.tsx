@@ -21,54 +21,54 @@ import { ComparisonTable } from "@/components/ComparisonTable";
 export const metadata: Metadata = {
   title: "Programs | The Franchisor Blueprint | DIY, Coached & Done-With-You",
   description:
-    "Three ways to franchise your business: The Blueprint ($2,997 DIY), Navigator ($8,500 with 6-month coaching), or Builder ($29,500 done-with-you). All built on the same proven 9-document foundation.",
+    "Three ways to franchise your business: The Blueprint ($2,997 DIY), Navigator ($8,500 with 6-month coaching), or Builder ($29,500 done-with-you). All built on the same complete franchisor operating system — nine interlocking frameworks, $33,500+ in value.",
 };
 
 const docs = [
   {
     icon: ListChecks,
-    title: "Comprehensive Fact-Finding Checklist",
-    body: "A 150+ item audit that gathers every detail of your business so nothing is missed when we build your franchise system.",
+    title: "Audit Your Business",
+    body: "A 150+ item readiness audit covering every detail attorneys and franchisees will ask about — so nothing gets missed when we build your franchise system. Backed by the Comprehensive Fact-Finding Checklist.",
   },
   {
     icon: CalendarClock,
-    title: "12-Month Franchise Development Timeline",
+    title: "Build Your 12-Month Roadmap",
     body: "A Gantt chart that keeps your project on track, identifying critical paths and dependencies from day one to launch.",
   },
   {
     icon: DollarSign,
-    title: "Investment Overview & Pro Forma",
-    body: "Financial templates to calculate your Item 7 costs and Item 19 financial performance representations.",
+    title: "Model Your Unit Economics",
+    body: "Pro forma templates that calculate your FDD Item 7 startup costs and Item 19 financial performance representations — the numbers candidates evaluate before they sign.",
   },
   {
     icon: BookMarked,
-    title: "Operations Manual Master Template",
-    body: "A 17-chapter, 100+ page “bible” for your brand standards, daily operations, and procedures — the document franchisees live by.",
+    title: "Codify Your Operations",
+    body: "A 17-chapter, 100+ page Operations Manual template — the brand bible franchisees will live by every day.",
   },
   {
     icon: GraduationCap,
-    title: "Staff Training & Certification Program",
-    body: "Training modules and certification tracks so your franchisees can replicate your service quality from day one.",
+    title: "Train Your Team to Replicate",
+    body: "Staff training and certification modules so your franchisees can deliver your service quality from day one — without you in the room.",
   },
   {
     icon: ScrollText,
-    title: "FDD Explainer — All 23 Items",
-    body: "We decode the legal jargon so you understand exactly what you're promising in your Franchise Disclosure Document.",
+    title: "Decode the FDD",
+    body: "All 23 federal disclosure items decoded into plain English — you walk into your franchise attorney prepared, not lost.",
   },
   {
     icon: MapPin,
-    title: "Site Selection & Build-Out Guide",
-    body: "A proprietary scoring system to help franchisees evaluate real estate objectively — not by gut feel.",
+    title: "Score Real Estate Like a Franchisor",
+    body: "A proprietary scoring system that lets your franchisees evaluate real estate objectively — not by gut feel. Backed by the Site Selection & Build-Out Guide.",
   },
   {
     icon: Users,
-    title: "Franchisee Ideal Profile & Scoring Matrix",
-    body: "A weighted scoring tool to objectively qualify or disqualify potential franchisee candidates before you waste a Discovery Day.",
+    title: "Qualify Every Candidate",
+    body: "A weighted scoring matrix that lets you objectively qualify or disqualify potential franchisees before you waste a Discovery Day on the wrong fit.",
   },
   {
     icon: Presentation,
-    title: "Discovery Day Presentation Deck",
-    body: "A 29-slide sales presentation designed to convert qualified leads into franchise owners.",
+    title: "Close Discovery Day",
+    body: "A 29-slide sales presentation engineered to convert qualified leads into signed franchise owners.",
   },
 ];
 
@@ -93,11 +93,11 @@ const tiers: Tier[] = [
     priceSub: "One-time payment",
     bestFor: "Experienced entrepreneurs who want the tools but don't need the hand-holding.",
     description:
-      "You get the complete 9-document system with detailed instructional guides. We kick off with a 60-minute onboarding call to orient you to the materials. From there, you execute at your own pace.",
+      "You get the complete franchisor operating system with detailed implementation guides for every framework. We kick off with a 60-minute onboarding call to orient you to the materials. From there, you execute at your own pace.",
     features: [
-      "Full 9-Document System Access",
+      "The Complete Operating System (9 frameworks)",
       "60-Minute Onboarding Strategy Call",
-      "Self-Paced Implementation Guide",
+      "Self-Paced Implementation Guides",
       "30 Days of Email Support",
       "Lifetime access to system updates",
     ],
@@ -134,7 +134,7 @@ const tiers: Tier[] = [
       "We take the lead. We project-manage the entire build, handle vendor management, assist with your first franchisee recruitment, and provide a 12-month engagement.",
     features: [
       "Everything in Navigator",
-      "Done-With-You build of all 9 documents",
+      "Done-With-You build of all 9 frameworks",
       "12-month engagement",
       "Vendor & attorney coordination",
       "First franchisee recruitment assistance",
@@ -152,21 +152,21 @@ export default function ProgramsPage() {
       <PageHero
         eyebrow="Programs"
         title="Three Ways to Work Together"
-        subtitle="Whether you're a do-it-yourselfer or you need hands-on guidance, we have a path for you. All our programs are built on the same proven 9-document foundation."
+        subtitle="Whether you're a do-it-yourselfer or you need hands-on guidance, we have a path for you. All three programs are built on the same complete operating system — nine interlocking frameworks, one $33,500+ foundation."
       />
 
-      {/* ===== 9-Doc Detail ===== */}
+      {/* ===== Operating System Detail ===== */}
       <section className="bg-white py-24 md:py-28">
         <div className="max-w-[1200px] mx-auto px-8">
           <div className="text-center mb-14">
             <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase mb-4 border-b-2 border-gold pb-1">
               The Foundation
             </span>
-            <h2 className="text-3xl md:text-5xl font-bold mb-5 max-w-[860px] mx-auto">
-              Our 9-Document System — Included in Every Tier
+            <h2 className="text-3xl md:text-5xl font-bold mb-5 max-w-[900px] mx-auto">
+              The Complete Franchisor Operating System — Included in Every Tier
             </h2>
-            <p className="text-lg text-grey-3 max-w-[760px] mx-auto">
-              This is the intellectual property that powers your franchise. Every checklist, template, and guide you need to launch — production-ready from day one.
+            <p className="text-lg text-grey-3 max-w-[820px] mx-auto">
+              Nine interlocking frameworks that take you from &ldquo;I have a profitable business&rdquo; to &ldquo;I&apos;m ready to award my first franchise.&rdquo; Every audit, model, manual, and matrix is production-ready from day one.
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -180,7 +180,7 @@ export default function ProgramsPage() {
                 </div>
                 <div>
                   <div className="text-gold-warm font-semibold text-[11px] tracking-[0.14em] uppercase mb-1">
-                    Document {String(i + 1).padStart(2, "0")}
+                    Capability {String(i + 1).padStart(2, "0")}
                   </div>
                   <h3 className="text-base font-bold text-navy mb-1.5">{title}</h3>
                   <p className="text-grey-3 text-sm leading-relaxed">{body}</p>

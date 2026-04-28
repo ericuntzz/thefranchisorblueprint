@@ -47,7 +47,7 @@ export default function AboutPage() {
           <div className="relative w-full aspect-[4/5] max-w-[320px] md:max-w-[440px] mx-auto rounded-2xl shadow-featured overflow-hidden bg-navy">
             <Image
               src="/images/jason.png"
-              alt="Jason — Founder, The Franchisor Blueprint"
+              alt="Jason Stowe — Founder, The Franchisor Blueprint"
               fill
               className="object-cover"
               sizes="(max-width: 768px) 320px, 440px"
@@ -62,7 +62,7 @@ export default function AboutPage() {
             </h2>
             <div className="space-y-5 text-grey-3 text-base md:text-[17px] leading-relaxed">
               <p>
-                Hello, I&apos;m Jason. After three decades inside the franchise industry — building, scaling, and advising emerging brands — I noticed a disturbing trend. Great business owners with profitable concepts and loyal customers were being shut out of franchising. Not because their business wasn&apos;t ready, but because the entry fee was simply too high.
+                Hello, I&apos;m Jason Stowe. After three decades inside the franchise industry — building, scaling, and advising emerging brands — I noticed a disturbing trend. Great business owners with profitable concepts and loyal customers were being shut out of franchising. Not because their business wasn&apos;t ready, but because the entry fee was simply too high.
               </p>
               <p>
                 The traditional consulting firms wanted $80,000 just to get started. The budget-friendly options were templates pulled off the internet that offered no real protection or guidance. There was no middle ground for the successful small business owner who needed professional systems without the corporate price tag.

@@ -12,12 +12,12 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Franchise Your Business | The Franchisor Blueprint | Affordable Franchise Consulting",
   description:
-    "Stop overpaying for franchise development. Get the complete 9-document system plus 6 months of expert coaching for a fraction of the cost. Take the free Franchise Readiness Assessment.",
+    "Stop overpaying for franchise development. Get the complete franchisor operating system plus 6 months of 1:1 coaching for a fraction of the cost. Take the free Franchise Readiness Assessment.",
   metadataBase: new URL("https://thefranchisorblueprint.com"),
   openGraph: {
     title: "The Franchisor Blueprint",
     description:
-      "The smartest, most affordable path to becoming a franchisor. 9-document system + 6 months of expert coaching.",
+      "The smartest, most affordable path to becoming a franchisor. The complete franchisor operating system + 6 months of 1:1 coaching.",
     type: "website",
   },
 };

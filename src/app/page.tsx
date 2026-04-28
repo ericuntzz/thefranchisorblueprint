@@ -25,15 +25,15 @@ import { HowItWorks } from "@/components/HowItWorks";
 import { VideoPlayer } from "@/components/VideoPlayer";
 
 const docs = [
-  { icon: ListChecks, title: "Fact-Finding Checklist", body: "150+ point audit to organize every detail of your business." },
-  { icon: CalendarClock, title: "Development Timeline", body: "12-month Gantt chart roadmap to launch." },
-  { icon: DollarSign, title: "Investment Overview", body: "Professional financial pro forma templates (Item 7 + Item 19)." },
-  { icon: BookMarked, title: "Operations Manual", body: "17-chapter master template (100+ pages) — your brand bible." },
-  { icon: GraduationCap, title: "Staff Training Program", body: "Detailed training & certification modules." },
-  { icon: ScrollText, title: "FDD Explainer", body: "All 23 items decoded into plain English." },
-  { icon: MapPin, title: "Site Selection Guide", body: "Proprietary scoring system for evaluating real estate." },
-  { icon: Users, title: "Franchisee Scoring Matrix", body: "Qualify the right candidates instantly." },
-  { icon: Presentation, title: "Discovery Day Deck", body: "29-slide presentation to close franchise deals." },
+  { icon: ListChecks, title: "Audit Your Business", body: "150-point readiness audit covering every detail attorneys and franchisees will ask about." },
+  { icon: CalendarClock, title: "Build Your 12-Month Roadmap", body: "Gantt chart with the critical path from concept to first signed franchisee." },
+  { icon: DollarSign, title: "Model Your Unit Economics", body: "Pro forma templates for FDD Items 7 and 19 — the numbers candidates evaluate before they sign." },
+  { icon: BookMarked, title: "Codify Your Operations", body: "17-chapter, 100+ page Operations Manual template — the brand bible franchisees live by." },
+  { icon: GraduationCap, title: "Train Your Team to Replicate", body: "Staff training and certification modules so service quality stays consistent at every unit." },
+  { icon: ScrollText, title: "Decode the FDD", body: "All 23 federal disclosure items in plain English — walk into your franchise attorney prepared, not lost." },
+  { icon: MapPin, title: "Score Real Estate Like a Franchisor", body: "Proprietary scoring system for evaluating any location objectively before you sign a lease." },
+  { icon: Users, title: "Qualify Every Candidate", body: "Weighted franchisee scoring matrix — pick partners on data, not gut." },
+  { icon: Presentation, title: "Close Discovery Day", body: "29-slide sales presentation engineered to convert qualified leads into signed franchisees." },
 ];
 
 const yesList = [
@@ -71,7 +71,7 @@ const faqs = [
   },
   {
     q: "What happens right after I buy?",
-    a: "For The Blueprint: you'll receive instant access to all 9 documents, a tier-specific intake form, and a Calendly link to book your 30-minute white-glove onboarding call within the next 1–2 business days. For Navigator and Builder: every purchase begins with a kickoff call where we map your specific 6 or 12-month engagement before any work starts.",
+    a: "For The Blueprint: you'll receive instant access to the complete operating system, a tier-specific intake form, and a Calendly link to book your 30-minute white-glove onboarding call within the next 1–2 business days. For Navigator and Builder: every purchase begins with a kickoff call where we map your specific 6 or 12-month engagement before any work starts.",
   },
 ];
 
@@ -163,7 +163,7 @@ export default function Home() {
             </h2>
             <div className="grid md:grid-cols-3 gap-6">
               {[
-                { iconSrc: "/icons/step-1-system.png", n: "Step 1", t: "Get the System", b: "Skip the guesswork. We provide you with a complete, 9-document franchise development system valued at over $33,500. Every checklist, template, and guide you need is ready to go." },
+                { iconSrc: "/icons/step-1-system.png", n: "Step 1", t: "Get the System", b: "Skip the guesswork. You get the complete operating system for becoming a franchisor — every audit, model, manual, and matrix you need to launch, valued at over $33,500." },
                 { iconSrc: "/icons/step-2-coached.png", n: "Step 2", t: "Get Coached", b: "We don't disappear. For 6 months we work side by side with you through weekly coaching calls — holding you accountable and customizing the system to your specific brand." },
                 { iconSrc: "/icons/step-3-launch.png", n: "Step 3", t: "Launch", b: "Complete the program, finalize your FDD with your attorney, and launch your franchise sales with a professional \"Franchise Ready\" certification. Scale faster, smarter, and cheaper." },
               ].map(({ iconSrc, n, t, b }) => (
@@ -207,14 +207,14 @@ export default function Home() {
         <div className="max-w-[1200px] mx-auto px-8 relative">
           <div className="text-center mb-14">
             <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase mb-4 border-b-2 border-gold pb-1">
-              The Complete System
+              The Complete Operating System
             </span>
             <h2 className="text-3xl md:text-5xl font-bold mb-5 max-w-[900px] mx-auto">
-              Everything You Need to Franchise Your Business — In One Complete System
+              Everything You Need to Operate Like a National Franchisor
             </h2>
-            <p className="text-lg text-grey-3 max-w-[780px] mx-auto">
-              Other firms charge $40,000 to $80,000 for documents alone. We give you a complete professional system{" "}
-              <span className="text-gold-warm font-bold">valued at $33,500+</span> — plus the coaching to actually use it.
+            <p className="text-lg text-grey-3 max-w-[820px] mx-auto">
+              Nine interlocking frameworks that take you from &ldquo;I have a profitable business&rdquo; to &ldquo;I&apos;m ready to award my first franchise.&rdquo; Every audit, model, manual, and matrix is{" "}
+              <span className="text-gold-warm font-bold">production-ready from day one</span> — and valued at $33,500+ if you bought them separately. The big firms hand you these and disappear; we build them with you.
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -228,7 +228,7 @@ export default function Home() {
                 </div>
                 <div>
                   <div className="text-gold-warm font-semibold text-[11px] tracking-[0.14em] uppercase mb-1">
-                    Document {String(i + 1).padStart(2, "0")}
+                    Capability {String(i + 1).padStart(2, "0")}
                   </div>
                   <h3 className="text-base font-bold text-navy mb-1.5">{title}</h3>
                   <p className="text-grey-3 text-sm leading-relaxed">{body}</p>
@@ -319,7 +319,7 @@ export default function Home() {
             <div className="relative w-full aspect-[4/5] max-w-[320px] md:max-w-[420px] mx-auto rounded-2xl shadow-featured overflow-hidden bg-navy">
               <Image
                 src="/images/jason.png"
-                alt="Jason — Founder, The Franchisor Blueprint"
+                alt="Jason Stowe — Founder, The Franchisor Blueprint"
                 fill
                 className="object-cover"
                 sizes="(max-width: 768px) 320px, 420px"
@@ -333,7 +333,7 @@ export default function Home() {
                 30 Years in Franchising. Built for Founders Who Refuse to Wait.
               </h2>
               <p className="text-grey-3 text-base md:text-[17px] leading-relaxed mb-4">
-                Jason has spent three decades inside the franchise industry — building, scaling, and advising emerging brands. He&apos;s seen the same story hundreds of times: a great business owner with a profitable concept and a real shot at scaling, priced out of franchising by consulting firms charging $40k to $80k just for paperwork.
+                Jason Stowe has spent three decades inside the franchise industry — building, scaling, and advising emerging brands. He&apos;s seen the same story hundreds of times: a great business owner with a profitable concept and a real shot at scaling, priced out of franchising by consulting firms charging $40k to $80k just for paperwork.
               </p>
               <p className="text-grey-3 text-base md:text-[17px] leading-relaxed mb-6">
                 The Franchisor Blueprint exists to change that. The same systems, documents, and strategies used by the big firms — packaged into an accessible, coach-led program for founders who deserve to scale.
@@ -441,7 +441,7 @@ export default function Home() {
               <div className="text-grey-4 text-sm mb-5">One-time payment</div>
               <p className="text-grey-3 text-[15px] italic mb-6">For the self-starter who just needs the tools.</p>
               <ul className="list-none flex-1 mb-8 space-y-2">
-                {["Full 9-Document System", "60-Min White-Glove Onboarding Call", "30 Days Email Support"].map((f) => (
+                {["The Complete Operating System (9 frameworks)", "60-Min White-Glove Onboarding Call", "30 Days Email Support"].map((f) => (
                   <li key={f} className="text-sm text-[#333] flex gap-2.5 items-start">
                     <span className="flex-shrink-0 mt-2 w-1.5 h-1.5 rounded-full bg-gold" />
                     <span>{f}</span>

@@ -13,15 +13,15 @@ export const metadata: Metadata = {
 };
 
 const valueStack = [
-  { item: "Operations Manual Template (17 chapters)", value: "$10,000" },
-  { item: "Staff Training & Certification Program", value: "$5,000" },
-  { item: "FDD Explainer (all 23 items decoded)", value: "$5,000" },
-  { item: "Site Selection Scoring System", value: "$3,500" },
-  { item: "Discovery Day Presentation Deck", value: "$3,500" },
-  { item: "Franchisee Scoring Matrix", value: "$2,500" },
-  { item: "12-Month Development Timeline (Gantt)", value: "$1,500" },
-  { item: "Investment Overview & Pro Forma Templates", value: "$1,500" },
-  { item: "Comprehensive Fact-Finding Checklist", value: "$1,000" },
+  { item: "Codify Your Operations (17-chapter manual)", value: "$10,000" },
+  { item: "Train Your Team to Replicate (certification program)", value: "$5,000" },
+  { item: "Decode the FDD (all 23 federal items)", value: "$5,000" },
+  { item: "Score Real Estate Like a Franchisor (scoring system)", value: "$3,500" },
+  { item: "Close Discovery Day (29-slide deck)", value: "$3,500" },
+  { item: "Qualify Every Candidate (scoring matrix)", value: "$2,500" },
+  { item: "Build Your 12-Month Roadmap (Gantt chart)", value: "$1,500" },
+  { item: "Model Your Unit Economics (pro forma + Items 7/19)", value: "$1,500" },
+  { item: "Audit Your Business (150-point checklist)", value: "$1,000" },
 ];
 
 export default function PricingPage() {
@@ -51,9 +51,9 @@ export default function PricingPage() {
               <p className="text-grey-3 text-[15px] italic mb-6">For the self-starter who just needs the tools.</p>
               <ul className="list-none flex-1 mb-8 space-y-2">
                 {[
-                  "Full 9-Document System",
+                  "The Complete Operating System (9 frameworks)",
                   "60-Min White-Glove Onboarding Call",
-                  "Self-Paced Implementation Guide",
+                  "Self-Paced Implementation Guides",
                   "30 Days Email Support",
                 ].map((f) => (
                   <li key={f} className="text-sm text-[#333] flex gap-2.5 items-start">
