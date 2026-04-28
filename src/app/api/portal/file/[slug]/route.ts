@@ -69,10 +69,12 @@ export async function GET(
 
   // Use service-role client to mint a signed URL (storage RLS isn't yet on
   // — the bucket is private, signed URLs are how we gate access).
+  // Short TTL (2 min) — only the immediate redirect needs to work. Anything
+  // longer leaks via Office Online's caching of the URL it fetches.
   const admin = getSupabaseAdmin();
   const { data, error } = await admin.storage
     .from("deliverables")
-    .createSignedUrl(cap.storagePath, 60 * 60, {
+    .createSignedUrl(cap.storagePath, 120, {
       download: mode === "download" ? filename : false,
     });
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { getCapability } from "@/lib/capabilities";
+import type { Purchase, Tier } from "@/lib/supabase/types";
 
 export const runtime = "nodejs";
 
@@ -12,6 +13,10 @@ export const runtime = "nodejs";
  *
  * Single endpoint, single button per capability — server flips state and
  * redirects back. RLS on capability_progress enforces user_id = auth.uid().
+ *
+ * CSRF defense: SameSite=Lax cookies plus an explicit Origin header check
+ * (rejects POSTs from other origins even if browser SameSite handling is
+ * permissive).
  */
 export async function POST(
   req: NextRequest,
@@ -21,11 +26,34 @@ export async function POST(
   const cap = getCapability(slug);
   if (!cap) return NextResponse.json({ error: "Unknown capability" }, { status: 404 });
 
+  // Reject cross-origin form submissions
+  const origin = req.headers.get("origin");
+  if (origin && origin !== req.nextUrl.origin) {
+    return NextResponse.json({ error: "Cross-origin POST blocked" }, { status: 403 });
+  }
+
   const supabase = await getSupabaseServer();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+
+  // Guard: user must have a paid purchase that covers this capability's tier.
+  // Today every capability is minTier 1, but this check matters as soon as
+  // tier-gated content ships.
+  const { data: purchasesData } = await supabase
+    .from("purchases")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("status", "paid");
+  const purchases = (purchasesData ?? []) as Purchase[];
+  if (purchases.length === 0) {
+    return NextResponse.json({ error: "No active purchase" }, { status: 403 });
+  }
+  const userTier = Math.max(...purchases.map((p) => p.tier), 1) as Tier;
+  if (cap.minTier > userTier) {
+    return NextResponse.json({ error: "Tier required" }, { status: 403 });
+  }
 
   const form = await req.formData();
   const action = (form.get("action") || "").toString().toLowerCase();
@@ -57,6 +85,19 @@ export async function POST(
     return NextResponse.json({ error: "Bad action" }, { status: 400 });
   }
 
-  const referer = req.headers.get("referer") ?? `${req.nextUrl.origin}/portal/${slug}`;
-  return NextResponse.redirect(referer, 303);
+  // Validate referer is same-origin before bouncing back; fall back safely
+  // to /portal/{slug} otherwise.
+  const referer = req.headers.get("referer");
+  let redirectTo = `${req.nextUrl.origin}/portal/${slug}`;
+  if (referer) {
+    try {
+      const parsed = new URL(referer);
+      if (parsed.origin === req.nextUrl.origin) {
+        redirectTo = referer;
+      }
+    } catch {
+      // bad referer URL — keep the safe default
+    }
+  }
+  return NextResponse.redirect(redirectTo, 303);
 }

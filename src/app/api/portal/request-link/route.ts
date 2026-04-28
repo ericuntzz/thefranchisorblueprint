@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { safeNext } from "@/lib/safe-redirect";
 
 export const runtime = "nodejs";
 
@@ -8,7 +9,7 @@ export async function POST(req: NextRequest) {
   const emailRaw = form.get("email");
   const nextParam = form.get("next");
   const email = typeof emailRaw === "string" ? emailRaw.trim().toLowerCase() : "";
-  const next = typeof nextParam === "string" && nextParam.startsWith("/") ? nextParam : "/portal";
+  const next = safeNext(typeof nextParam === "string" ? nextParam : null);
 
   const loginUrl = new URL("/portal/login", req.nextUrl.origin);
 

@@ -54,10 +54,40 @@ export async function ensureUserAndPurchase(
       user_metadata: { full_name: fullName, source: "stripe_checkout" },
     });
     if (createErr || !created.user) {
-      console.error(`[fulfillment] auth.admin.createUser failed for ${email}: ${createErr?.message}`);
-      return null;
+      // Race: webhook + thank-you page can both reach this branch concurrently.
+      // The losing call gets "email_exists" / "User already registered" — recover
+      // by listing the user up by email rather than dropping the purchase.
+      const code = (createErr as { code?: string } | null)?.code;
+      const message = createErr?.message ?? "";
+      const isAlreadyRegistered =
+        code === "email_exists" ||
+        /already.*registered|user.*exists|email.*registered/i.test(message);
+      if (isAlreadyRegistered) {
+        const { data: existingByEmail } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("email", email)
+          .maybeSingle();
+        if (existingByEmail) {
+          userId = existingByEmail.id;
+        } else {
+          // Profile row not yet written by the other racer — try the auth API
+          // listing as a final fallback.
+          const { data: listed } = await supabase.auth.admin.listUsers({ page: 1, perPage: 50 });
+          const match = listed?.users?.find((u) => u.email?.toLowerCase() === email);
+          if (!match) {
+            console.error(`[fulfillment] race recovery failed for ${email}: ${message}`);
+            return null;
+          }
+          userId = match.id;
+        }
+      } else {
+        console.error(`[fulfillment] auth.admin.createUser failed for ${email}: ${message}`);
+        return null;
+      }
+    } else {
+      userId = created.user.id;
     }
-    userId = created.user.id;
   }
 
   // 2) upsert profile

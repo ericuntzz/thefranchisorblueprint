@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { safeNext } from "@/lib/safe-redirect";
 
 export const runtime = "nodejs";
+
+// Whitelist of OTP types we accept here. Other types (signup, recovery, etc.)
+// have their own flows we don't support — block them so a crafted ?type=
+// can't trigger an unintended verifyOtp branch.
+const ALLOWED_TYPES = new Set<EmailOtpType>(["magiclink", "email"]);
 
 /**
  * Verifies a server-issued magic link via the token_hash flow.
@@ -18,10 +24,9 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
   const tokenHash = searchParams.get("token_hash");
   const typeParam = searchParams.get("type");
-  const nextParam = searchParams.get("next");
-  const next = nextParam && nextParam.startsWith("/") ? nextParam : "/portal";
+  const next = safeNext(searchParams.get("next"));
 
-  if (!tokenHash || !typeParam) {
+  if (!tokenHash || !typeParam || !ALLOWED_TYPES.has(typeParam as EmailOtpType)) {
     return NextResponse.redirect(`${origin}/portal/login?error=invalid_link`);
   }
 

@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { safeNext } from "@/lib/safe-redirect";
 
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
   const code = searchParams.get("code");
-  const nextParam = searchParams.get("next");
-  const next =
-    nextParam && nextParam.startsWith("/") ? nextParam : "/portal";
+  const next = safeNext(searchParams.get("next"));
 
   if (!code) {
     return NextResponse.redirect(`${origin}/portal/login?error=invalid_link`);

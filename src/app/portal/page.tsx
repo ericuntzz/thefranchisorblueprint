@@ -56,7 +56,7 @@ export default async function PortalDashboard() {
     { data: purchasesData },
     { data: progressData },
   ] = await Promise.all([
-    supabase.from("profiles").select("*").eq("id", user.id).single(),
+    supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
     supabase
       .from("purchases")
       .select("*")
