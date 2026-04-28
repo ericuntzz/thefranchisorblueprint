@@ -134,13 +134,13 @@ export default function Home() {
           <h1 className="text-white font-bold text-4xl md:text-6xl leading-[1.1] tracking-tight max-w-[860px] mb-7">
             The Smartest, Most Affordable Path to Becoming a Franchisor
           </h1>
-          <p className="text-white/85 text-lg md:text-xl leading-relaxed max-w-[620px] mb-10 font-light">
-            A complete franchise system plus 6 months of 1:1 coaching — for a fraction of what the big firms charge. Built so you actually launch, not just file paperwork.
+          <p className="text-white/85 text-lg md:text-xl leading-relaxed max-w-[680px] mb-10 font-light">
+            A complete franchise system plus 6 months of 1:1 coaching, for a fraction of what the big firms charge. Built so you actually launch — not just file paperwork.
           </p>
           <div className="flex flex-wrap gap-4">
             <Link
               href="/assessment"
-              className="bg-navy text-white font-bold text-sm uppercase tracking-[0.1em] px-9 py-4 rounded-full hover:bg-navy-dark hover:-translate-y-0.5 hover:shadow-lg transition-all"
+              className="bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-9 py-4 rounded-full hover:bg-gold-dark hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(212,175,55,0.35)] transition-all"
             >
               Take the Free Assessment
             </Link>

@@ -108,8 +108,8 @@ export function ComparisonTable() {
       ))}
 
       {/* Footer summary row */}
-      <div className="grid grid-cols-[1.6fr_1fr_1fr_1fr] bg-navy/[0.04] border-t-2 border-navy/10">
-        <div className="px-6 py-5 md:px-8 md:py-6 text-sm md:text-[15px] text-navy font-extrabold uppercase tracking-wide">
+      <div className="grid grid-cols-[1.6fr_1fr_1fr_1fr] bg-navy/[0.04] border-t-2 border-navy/10 rounded-b-2xl">
+        <div className="px-6 py-5 md:px-8 md:py-6 text-sm md:text-[15px] text-navy font-extrabold uppercase tracking-wide rounded-bl-2xl">
           Time to Launch
         </div>
         <div className="px-2 py-5 md:py-6 text-center text-grey-3 text-sm font-bold border-l border-navy/10">
@@ -118,7 +118,7 @@ export function ComparisonTable() {
         <div className="px-2 py-5 md:py-6 text-center text-grey-3 text-sm font-bold border-l border-navy/10">
           12+ months
         </div>
-        <div className="px-2 py-5 md:py-6 text-center text-navy text-sm font-extrabold bg-navy/[0.06] border-l border-navy/10">
+        <div className="px-2 py-5 md:py-6 text-center text-navy text-sm font-extrabold bg-navy/[0.06] border-l border-navy/10 rounded-br-2xl">
           6 months
         </div>
       </div>

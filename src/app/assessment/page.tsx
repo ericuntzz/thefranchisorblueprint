@@ -11,7 +11,7 @@ const JOTFORM_ID = "261168244426053";
 export const metadata: Metadata = {
   title: "Free Franchise Readiness Assessment | The Franchisor Blueprint",
   description:
-    "Take our free 10-question Franchise Readiness Assessment and find out instantly whether your business is positioned to scale through franchising.",
+    "Take our free 15-question Franchise Readiness Assessment and find out in 5–7 minutes whether your business is positioned to scale through franchising.",
 };
 
 const dimensions = [
@@ -29,7 +29,7 @@ export default function AssessmentPage() {
       <PageHero
         eyebrow="Free Assessment"
         title="Is Your Business Franchise-Ready?"
-        subtitle="A 2-minute, 10-question evaluation across the four dimensions that actually predict franchise success. You'll get an honest score and a tailored next-step recommendation."
+        subtitle="A 15-question assessment across the four dimensions that actually predict franchise success. About 5–7 minutes. You'll get an honest score and a tailored next-step recommendation."
       />
 
       {/* ===== Live Jotform assessment embed ===== */}
