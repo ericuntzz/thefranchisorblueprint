@@ -39,9 +39,9 @@ export default function StrategyCallPage() {
               </h2>
               <ul className="space-y-4">
                 {[
-                  { Icon: MessageCircle, t: "First 10 min: You talk", d: "Tell us about your brand, your customers, where you are today." },
-                  { Icon: Shield, t: "Next 10 min: We evaluate", d: "We map your business against the franchise-ready bar. Real assessment, no fluff." },
-                  { Icon: Calendar, t: "Last 10 min: Recommendation", d: "We tell you which tier (if any) makes sense — or that you should wait. We mean it." },
+                  { Icon: MessageCircle, t: "First 10 min: We listen", d: "You walk us through the business — where it is now, where you want to take it, and what's in the way." },
+                  { Icon: Shield, t: "Next 10 min: We diagnose", d: "We hold your model up against the same criteria a franchise attorney and your first franchisees will run. Strengths, gaps, what attorneys ask first." },
+                  { Icon: Calendar, t: "Last 10 min: A clear next step", d: "Which tier fits, what to fix before franchising makes sense, or a straight “wait six months.” Whichever’s true." },
                 ].map(({ Icon, t, d }) => (
                   <li key={t} className="flex gap-4">
                     <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-navy to-navy-light flex items-center justify-center text-gold">
