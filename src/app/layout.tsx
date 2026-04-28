@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { JsonLd } from "@/components/JsonLd";
 import { organizationSchema, websiteSchema } from "@/lib/schema";
@@ -94,6 +95,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-white text-[#222]">
         {children}
         <Analytics />
+        <SpeedInsights />
 
         {/* GA4 — only loads if NEXT_PUBLIC_GA4_ID is set in Vercel */}
         {ga4Id && (

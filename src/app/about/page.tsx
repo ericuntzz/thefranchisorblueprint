@@ -5,6 +5,8 @@ import { Handshake, Eye, ShieldCheck } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { PageHero } from "@/components/PageHero";
+import { JsonLd } from "@/components/JsonLd";
+import { breadcrumbSchema, personJasonStoweSchema } from "@/lib/schema";
 
 export const metadata: Metadata = {
   title: "About | The Franchisor Blueprint | Franchise Development Experts",
@@ -33,6 +35,13 @@ const values = [
 export default function AboutPage() {
   return (
     <>
+      <JsonLd data={personJasonStoweSchema} />
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "Home", url: "/" },
+          { name: "About", url: "/about" },
+        ])}
+      />
       <SiteNav />
 
       <PageHero

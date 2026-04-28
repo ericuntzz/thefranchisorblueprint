@@ -5,6 +5,35 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { PageHero } from "@/components/PageHero";
 import { ComparisonTable } from "@/components/ComparisonTable";
+import { JsonLd } from "@/components/JsonLd";
+import { breadcrumbSchema, faqPageSchema, serviceSchema } from "@/lib/schema";
+
+const pricingFaqs = [
+  {
+    q: "Are legal fees included in the price?",
+    a: "No. You'll need to budget separately for a franchise attorney to file your FDD (typically $5,000–$15,000 depending on the attorney and number of states). We can refer you to several affordable, vetted franchise attorneys.",
+  },
+  {
+    q: "What if I need to pause my coaching?",
+    a: "We understand business happens. You can pause your Navigator coaching for up to 30 days, once during the program, at no cost.",
+  },
+  {
+    q: "Can I upgrade tiers later?",
+    a: "Yes. Start with The Blueprint and we'll credit your full $2,997 toward Navigator if you decide you want the coaching layer.",
+  },
+  {
+    q: "Are there any hidden fees or upsells?",
+    a: "No. The price you see is the price you pay. The only thing not included is your franchise attorney's filing fee, which is paid directly to your attorney — not to us.",
+  },
+  {
+    q: "What does it cost to franchise a business?",
+    a: "Traditional consulting firms charge $40,000–$80,000+ for documents alone with no ongoing coaching. The Franchisor Blueprint delivers the same complete operating system plus 6 months of 1:1 coaching for $2,997 (DIY) to $29,500 (done-with-you). Plan for an additional $5,000–$15,000 in franchise attorney fees regardless of which firm you choose.",
+  },
+  {
+    q: "What is the ROI on franchising?",
+    a: "Most clients recoup their entire program cost on the first franchise sale. Example: a typical initial franchise fee is $45,000; the Navigator program is $8,500; net return on the first sale is $36,500 — plus ongoing royalties on every unit. Most franchisors break even on total development costs in less than 12 months.",
+  },
+];
 
 export const metadata: Metadata = {
   title: "Pricing | The Franchisor Blueprint | Transparent Programs from $2,997",
@@ -27,6 +56,45 @@ const valueStack = [
 export default function PricingPage() {
   return (
     <>
+      <JsonLd data={faqPageSchema(pricingFaqs)} />
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "Home", url: "/" },
+          { name: "Pricing", url: "/pricing" },
+        ])}
+      />
+      <JsonLd
+        data={serviceSchema({
+          id: "the-blueprint",
+          name: "The Blueprint — DIY Franchise Development Kit ($2,997)",
+          description:
+            "Tier 1: complete 9-framework franchisor operating system. 60-min onboarding call. 30 days email support. Lifetime access to system updates.",
+          price: 2997,
+          url: "/programs/blueprint",
+        })}
+      />
+      <JsonLd
+        data={serviceSchema({
+          id: "navigator",
+          name: "Navigator — 6-Month Coached Franchise Development ($8,500)",
+          description:
+            "Tier 2: complete operating system plus 6 months of 1:1 weekly coaching, document review, milestone gates, attorney/CPA referrals, Franchise Ready certification.",
+          price: 8500,
+          url: "/pricing",
+          category: "Franchise development consulting with coaching",
+        })}
+      />
+      <JsonLd
+        data={serviceSchema({
+          id: "builder",
+          name: "Builder — Done-With-You Franchise Development ($29,500)",
+          description:
+            "Tier 3: 12-month done-with-you build. Vendor and attorney coordination. First franchisee recruitment assistance.",
+          price: 29500,
+          url: "/pricing",
+          category: "Franchise development done-with-you service",
+        })}
+      />
       <SiteNav />
 
       <PageHero

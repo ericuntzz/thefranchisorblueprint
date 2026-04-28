@@ -17,7 +17,7 @@ export function ClientLogos() {
         >
           <Image
             src={c.src}
-            alt={c.name}
+            alt={`${c.name} logo — a brand The Franchisor Blueprint has worked with`}
             width={200}
             height={100}
             className="max-h-full w-auto object-contain"

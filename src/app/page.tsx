@@ -23,6 +23,8 @@ import { ComparisonTable } from "@/components/ComparisonTable";
 import { Testimonials } from "@/components/Testimonials";
 import { HowItWorks } from "@/components/HowItWorks";
 import { VideoPlayer } from "@/components/VideoPlayer";
+import { JsonLd } from "@/components/JsonLd";
+import { faqPageSchema, serviceSchema } from "@/lib/schema";
 
 const docs = [
   { icon: ListChecks, title: "Audit Your Business", body: "150-point readiness audit covering every detail attorneys and franchisees will ask about." },
@@ -78,6 +80,40 @@ const faqs = [
 export default function Home() {
   return (
     <>
+      <JsonLd data={faqPageSchema(faqs)} />
+      <JsonLd
+        data={serviceSchema({
+          id: "navigator",
+          name: "Navigator — Franchise Development with 6-Month Coaching",
+          description:
+            "Tier 2: the complete 9-framework franchisor operating system plus 6 months of 1:1 weekly coaching with founder Jason Stowe. Document review, milestone gates, attorney + CPA referrals, and Franchise Ready certification on completion.",
+          price: 8500,
+          url: "/programs",
+          category: "Franchise development consulting with coaching",
+        })}
+      />
+      <JsonLd
+        data={serviceSchema({
+          id: "the-blueprint",
+          name: "The Blueprint — DIY Franchise Development Kit",
+          description:
+            "Tier 1: the complete 9-framework franchisor operating system. 60-minute white-glove onboarding call, 30 days of email support, lifetime access to system updates. For experienced operators who want the tools without the coaching.",
+          price: 2997,
+          url: "/programs/blueprint",
+          category: "Franchise development DIY kit",
+        })}
+      />
+      <JsonLd
+        data={serviceSchema({
+          id: "builder",
+          name: "Builder — Done-With-You Franchise Development",
+          description:
+            "Tier 3: 12-month done-with-you build of the entire franchise system. Vendor and attorney coordination, first franchisee recruitment assist, priority access to Jason directly. For established brands ready to scale fast.",
+          price: 29500,
+          url: "/programs",
+          category: "Franchise development done-with-you service",
+        })}
+      />
       <SiteNav />
 
       {/* ===== 1. HERO ===== */}

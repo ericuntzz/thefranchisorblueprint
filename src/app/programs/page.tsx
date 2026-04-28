@@ -17,6 +17,8 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { PageHero } from "@/components/PageHero";
 import { HowItWorks } from "@/components/HowItWorks";
 import { ComparisonTable } from "@/components/ComparisonTable";
+import { JsonLd } from "@/components/JsonLd";
+import { breadcrumbSchema, serviceSchema } from "@/lib/schema";
 
 export const metadata: Metadata = {
   title: "Programs | The Franchisor Blueprint | DIY, Coached & Done-With-You",
@@ -147,6 +149,44 @@ const tiers: Tier[] = [
 export default function ProgramsPage() {
   return (
     <>
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "Home", url: "/" },
+          { name: "Programs", url: "/programs" },
+        ])}
+      />
+      <JsonLd
+        data={serviceSchema({
+          id: "the-blueprint",
+          name: "The Blueprint — DIY Franchise Development Kit",
+          description:
+            "Tier 1: $2,997 one-time. The complete 9-framework franchisor operating system. 60-min onboarding call. 30-day satisfaction guarantee. Lifetime access to system updates. Best for experienced operators who want the tools but not the coaching.",
+          price: 2997,
+          url: "/programs/blueprint",
+        })}
+      />
+      <JsonLd
+        data={serviceSchema({
+          id: "navigator",
+          name: "Navigator — Franchise Development with 6-Month Coaching",
+          description:
+            "Tier 2: $8,500. Complete operating system + 24 weekly 1:1 coaching calls over 6 months + document review + monthly milestone gates + Franchise Ready certification. The only franchise development program with structured coaching.",
+          price: 8500,
+          url: "/programs",
+          category: "Franchise development consulting with coaching",
+        })}
+      />
+      <JsonLd
+        data={serviceSchema({
+          id: "builder",
+          name: "Builder — Done-With-You Franchise Development",
+          description:
+            "Tier 3: $29,500. 12-month done-with-you build of the entire franchise system. Vendor and attorney coordination. First franchisee recruitment assist. Priority access to founder Jason Stowe directly.",
+          price: 29500,
+          url: "/programs",
+          category: "Franchise development done-with-you service",
+        })}
+      />
       <SiteNav />
 
       <PageHero

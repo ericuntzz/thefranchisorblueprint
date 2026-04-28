@@ -1,0 +1,177 @@
+import { BlogPostHeader } from "@/components/BlogPostHeader";
+import { RelatedPosts } from "@/components/RelatedPosts";
+import { JsonLd } from "@/components/JsonLd";
+import { blogPostingSchema, faqPageSchema, breadcrumbSchema } from "@/lib/schema";
+import { getPost } from "@/lib/blog";
+
+export const post = getPost("is-my-business-ready-to-franchise");
+
+export const metadata = {
+  title: `${post.title} | The Franchisor Blueprint`,
+  description: post.excerpt,
+  alternates: { canonical: `/blog/${post.slug}` },
+  openGraph: {
+    title: post.title,
+    description: post.excerpt,
+    type: "article",
+    publishedTime: post.date,
+    authors: ["Jason Stowe"],
+  },
+};
+
+<JsonLd data={blogPostingSchema({
+  slug: post.slug,
+  title: post.title,
+  description: post.excerpt,
+  datePublished: post.date,
+  wordCount: 2100,
+})} />
+<JsonLd data={breadcrumbSchema([
+  { name: "Home", url: "/" },
+  { name: "Blog", url: "/blog" },
+  { name: post.title, url: `/blog/${post.slug}` },
+])} />
+<JsonLd data={faqPageSchema([
+  {
+    q: "Is my business ready to franchise?",
+    a: "A business is ready to franchise when it meets ten core criteria: (1) at least 2–3 years of consistent profitability with proven unit economics, (2) net unit-level margins of 15%+ to support a 6–8% royalty, (3) a documented Operations Manual or detailed SOPs, (4) a registered or pending trademark, (5) brand strength beyond the founder's personal network, (6) a structured employee training program, (7) an operation that can run when the owner isn't present, (8) access to $30K–$100K+ in capital for legal and development, (9) a clear understanding of the FDD, and (10) genuine commitment to the franchisor role versus the operator role. Most businesses are ready on 6–7 of the 10 — the path forward is closing those specific gaps, not waiting for perfection."
+  },
+  {
+    q: "How much revenue should my business have before I franchise?",
+    a: "Most successful franchise launches happen when the parent business is generating $500K–$5M in annual revenue with consistent year-over-year profitability. Below $500K and the unit economics often aren't proven enough for a franchisee to bet on. Above $5M is fine but you're past the typical inflection point. The exact number matters less than profitability — a $750K business with 22% net margins is more franchise-ready than a $4M business that's barely breaking even."
+  },
+  {
+    q: "How long should my business have been profitable before I franchise?",
+    a: "Aim for at least 2–3 years of consistent profitability before you franchise. One profitable year can be luck. Two profitable years means you've survived a normal business cycle. Three means your unit economics are proven, not just promising. The states that require an audit of your financials (e.g., New York) explicitly want multi-year track records."
+  },
+  {
+    q: "Do I need a registered trademark to franchise?",
+    a: "Yes — practically speaking. You can technically file your FDD with a 'common law' trademark (the TM symbol), but most franchise attorneys and savvy franchisee candidates will see this as a red flag. The franchise relationship is fundamentally a license to use your brand, so unprotected branding undermines the entire offer. Plan to file your trademark application before you begin FDD drafting (the application process takes 8–12 months on its own)."
+  },
+  {
+    q: "What if I'm only ready on a few of the criteria?",
+    a: "That's normal. Most founders we work with score in the middle range on the readiness assessment — strong on a few criteria, with real gaps on others. The path forward is to identify the specific gaps and close them, not to wait until you're perfect (you never will be). Our coaching tier exists specifically for this — a 6-month structured program that closes the gaps in parallel with building the franchise system itself."
+  },
+])} />
+
+<BlogPostHeader post={post} />
+
+<div className="max-w-[820px] mx-auto px-6 md:px-8 py-10 md:py-14">
+
+Most business owners ask "Should I franchise?" when the better question is "*Is my business ready* to franchise?" The first is about you. The second is about the system you've built — and it has measurable, non-negotiable answers.
+
+Here are the ten criteria a franchise attorney, a smart franchisee candidate, and your own future self will quietly run your business against. If you score 8+, you're ready. If you score 4–7, you're closing gaps. If you score below 4, your business is great but franchising is the wrong tool right now.
+
+(If you'd rather skip the read and get a personalized score, the free [Franchise Readiness Assessment](/assessment) does exactly this — 15 questions, 5 minutes, scored against these same criteria.)
+
+## The 10-point checklist
+
+### 1. Replicable business model
+
+The number-one franchise killer: a business that only works because *you* run it.
+
+Ask yourself: if I trained someone for 30 days and handed them the keys, could they hit 80% of my numbers within 90 days?
+
+If the answer is "no, because of [my relationships / my unique skill / how I personally handle X]" — that's not a franchise yet. It's a job you've made for yourself. Owner-dependent businesses can be wildly profitable, but they cannot be franchised without first being decoupled from the owner.
+
+**Ready signal:** Any trained person can run a unit using a written system, with you available for occasional questions but not daily decisions.
+
+### 2. 2–3+ years of consistent profitability
+
+Year one of any business is luck. Year two means you've survived a normal cycle. Year three means your unit economics are proven, not promising.
+
+States that require audited financials for franchise registration (New York is the strictest, but several others have similar provisions) explicitly want multi-year track records. Even in non-audit states, a franchisee evaluating your offer will want to see three years of numbers.
+
+**Ready signal:** 2–3 years minimum of consistent profitability with growing or stable margins. Not "the trend is up if you squint" — actually consistent.
+
+### 3. Documented Operations Manual or SOPs
+
+If your business operates from your head, your franchisees will operate from theirs — except they don't have your head. The result is brand inconsistency that kills franchise systems faster than anything else.
+
+A franchise-ready business has, at minimum, a 100+ page Operations Manual covering brand standards, daily operations, customer-facing service, vendor management, and emergency protocols. (Our [Tier 1 Blueprint](/programs/blueprint) gives you a 17-chapter master template — but somebody still has to fill it in.)
+
+**Ready signal:** A complete written manual, not a Google Doc with notes. Major workflows have step-by-step procedures a new employee could follow.
+
+### 4. Strong unit-level margins
+
+Franchising adds royalty cost (typically 6–8% of gross) on top of every other expense your franchisee already has. If your existing single-unit margins can't absorb that cost and still leave the franchisee with a respectable profit, the math doesn't work — and your candidates will notice.
+
+| Net margin (single unit) | What it means for franchising |
+|---|---|
+| **20%+** | Strong. Royalty fits comfortably. Franchisee still makes attractive returns. |
+| **15–19%** | Workable. Requires lean operations and strong franchisee selection. |
+| **10–14%** | Tight. The royalty becomes the difference between profit and pain. |
+| **Below 10%** | Not yet. Improve unit economics before franchising or your franchisees will fail. |
+
+**Ready signal:** 15%+ net margins at the unit level with documented unit economics.
+
+### 5. Registered (or filed) trademark
+
+Your trademark is what franchisees license. If your brand isn't trademark-protected, you're licensing nothing — and a competitor can take your name in any state where you don't operate.
+
+The USPTO trademark application process takes 8–12 months on its own. Filing before you begin FDD drafting is critical, because by the time your FDD is registered, your trademark application should be at least pending.
+
+**Ready signal:** Federally registered (the ® symbol) or actively pending. "TM" alone is a red flag to any franchise attorney.
+
+### 6. Brand presence beyond your personal network
+
+Franchisees are betting on the *brand* — not on you. If 90% of your customers come because they personally know you, your franchisee in the next state has nothing to inherit.
+
+This doesn't require national fame. It requires *transferable demand* — customers who walk in because of the brand, the location, the product, or the marketing. Not because they're your friends.
+
+**Ready signal:** Repeat customers, walk-ins, or marketing-driven leads make up the majority of your business. Your name isn't the brand.
+
+### 7. Operations that run without you
+
+Closely related to (#1) but more specific: can your business survive a 2-week vacation where you're completely unreachable?
+
+If the answer is "barely, and I'd come back to fires" — your franchisees will face the same fires, except *you* won't be there to put them out. The franchisor role is to design systems that contain those fires; the operator role is to fight them. Becoming a franchisor means moving from operator to system designer, and that shift is harder than most founders expect.
+
+**Ready signal:** A manager or system handles day-to-day operations. You check in, you don't run things.
+
+### 8. Capital for legal, development, and launch
+
+Franchising is not free. Real costs in 2026:
+
+- **Franchise development program:** $2,997–$29,500+ (or $40K–$80K+ at traditional firms)
+- **Franchise attorney:** $5,000–$15,000
+- **Trademark filing:** $800–$1,100 per class
+- **State registration fees:** $150–$750 per registration state
+- **Initial marketing materials:** $3,000–$10,000
+- **Working capital for the first 12 months as franchisor:** $30,000+ (for tooling, lead generation, and your own time)
+
+**Ready signal:** Access to $30K–$100K+ in capital allocated specifically for franchise development. (See our full breakdown: [The Real Cost of Franchising Your Business in 2026](/blog/the-real-cost-of-franchising-your-business).)
+
+### 9. Working knowledge of the FDD
+
+You don't need to be a lawyer. But you do need to understand the structure of the Franchise Disclosure Document — the 23 federal items that govern every franchise relationship in the U.S.
+
+Why? Because the FDD is built *from your business*. Your attorney will draft it, but you fill in 80% of the substance: territory rights, royalty structure, training programs, marketing fees, transfer rights, renewal provisions, dispute resolution. If you can't engage with these decisions, you'll either get an FDD that doesn't reflect what you actually want, or you'll spend a fortune in attorney hours figuring it out the hard way.
+
+**Ready signal:** You can name the major FDD items at a high level (Item 5 = franchise fee, Item 6 = ongoing fees, Item 7 = estimated initial investment, Item 19 = financial performance representations, etc.) and you've talked to a franchise attorney at least once.
+
+### 10. Genuine commitment to the franchisor role
+
+The brutal truth that most resources skip: being a franchisor is a *different job* than running your own business. As a franchisor your customers are franchisees, not end consumers. Your product is the system, not the service. Your KPIs shift from "customer satisfaction" to "franchisee profitability and brand consistency."
+
+Some operators love this transition. Some hate it. Some take 18 months to figure out which they are. The ones who succeed have done the honest gut check before they invest the development money.
+
+**Ready signal:** You can articulate, in your own words, why you want to be a franchisor — not just "to scale faster." You understand it's a different job and you genuinely want it.
+
+## Scoring
+
+| Criteria met | What it means |
+|---|---|
+| **8–10** | You're franchise-ready. Pick a development path and start the work. |
+| **5–7** | You have real potential and real gaps. The right structured program (with coaching) closes them in 6 months. This is the most common starting point. |
+| **0–4** | You have a great business that isn't ready to franchise *yet*. Spend 6–12 months closing the biggest gaps. Come back. |
+
+Most founders we work with score in the 5–7 range when they first call us — strong on margins and brand, weak on documentation and FDD knowledge. The good news: those gaps are exactly what a structured franchise development program closes. The bad news: closing them while *also* trying to run your existing business is hard, which is why most DIY franchising attempts stall around month three.
+
+If you want a personalized score across these ten criteria, take the [free 5-minute Franchise Readiness Assessment](/assessment) — same questions, scored automatically, with a tailored recommendation on which next step makes sense for your specific situation. Or [book a 30-minute strategy call](/strategy-call) and we'll walk through it live.
+
+Whatever you do, don't spend a dollar on franchise development until you can honestly answer all ten of these. The cheapest mistake in franchising is the one you make *before* you start spending.
+
+</div>
+
+<RelatedPosts currentSlug={post.slug} />

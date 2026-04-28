@@ -4,6 +4,8 @@ import { Check, ShieldCheck, Download, Zap, Users } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { PageHero } from "@/components/PageHero";
+import { JsonLd } from "@/components/JsonLd";
+import { breadcrumbSchema, productSchema } from "@/lib/schema";
 
 export const metadata: Metadata = {
   title: "The Blueprint — DIY Franchise Kit ($2,997) | The Franchisor Blueprint",
@@ -46,6 +48,23 @@ const includes = [
 export default function BlueprintProductPage() {
   return (
     <>
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "Home", url: "/" },
+          { name: "Programs", url: "/programs" },
+          { name: "The Blueprint", url: "/programs/blueprint" },
+        ])}
+      />
+      <JsonLd
+        data={productSchema({
+          id: "the-blueprint",
+          name: "The Blueprint — DIY Franchise Kit",
+          description:
+            "The complete 9-framework franchisor operating system: 150-point readiness checklist, 12-month development roadmap, 17-chapter Operations Manual template, FDD Explainer (all 23 federal items), site selection scoring, franchisee scoring matrix, Discovery Day presentation deck, and more. Includes 60-min onboarding call, 30 days email support, lifetime access to system updates, and a 30-day satisfaction guarantee.",
+          price: 2997,
+          url: "/programs/blueprint",
+        })}
+      />
       <SiteNav />
 
       <PageHero
