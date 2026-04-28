@@ -45,11 +45,17 @@ export function ComparisonTable() {
       <div className="md:hidden text-center text-xs text-grey-4 mb-3 italic">
         Swipe horizontally to see all columns →
       </div>
-      <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pb-2">
-        <div className="rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(30,58,95,0.18)] border border-navy/10 bg-white min-w-[680px]">
+      <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pt-4 pb-2">
+        {/*
+          We can't use `overflow-hidden` here because it would clip the
+          BEST VALUE badge that floats above the navy column. Instead, the
+          four corner cells get their own corner radii so the table still
+          reads as a single rounded card.
+        */}
+        <div className="rounded-2xl shadow-[0_20px_50px_rgba(30,58,95,0.18)] border border-navy/10 bg-white min-w-[680px]">
           {/* Header row */}
-          <div className="grid grid-cols-[1.6fr_1fr_1fr_1fr] bg-grey-1">
-        <div className="px-6 py-6 md:px-8 md:py-8" />
+          <div className="grid grid-cols-[1.6fr_1fr_1fr_1fr] bg-grey-1 rounded-t-2xl">
+        <div className="px-6 py-6 md:px-8 md:py-8 rounded-tl-2xl" />
         <div className="px-2 py-6 md:py-8 text-center border-l border-navy/10">
           <div className="text-[11px] font-bold tracking-[0.14em] uppercase text-grey-3 mb-2">
             DIY
@@ -64,8 +70,8 @@ export function ComparisonTable() {
           <div className="font-extrabold text-navy text-lg md:text-xl mb-1">Consulting Firms</div>
           <div className="text-grey-4 text-xs md:text-sm">$40,000 – $80,000+</div>
         </div>
-        <div className="px-2 py-6 md:py-8 text-center bg-navy text-white relative">
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gold text-navy px-3 py-1 rounded-full text-[10px] font-extrabold tracking-[0.14em] whitespace-nowrap">
+        <div className="px-2 py-6 md:py-8 text-center bg-navy text-white relative rounded-tr-2xl">
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gold text-navy px-3 py-1 rounded-full text-[10px] font-extrabold tracking-[0.14em] whitespace-nowrap shadow-[0_4px_10px_rgba(30,58,95,0.18)]">
             BEST VALUE
           </div>
           <div className="text-[11px] font-bold tracking-[0.14em] uppercase text-gold mb-2">

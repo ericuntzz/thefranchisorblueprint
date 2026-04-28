@@ -12,9 +12,12 @@ import { CheckSquare } from "lucide-react";
  */
 export function DeviceMockups() {
   return (
-    <div className="relative w-full max-w-[640px] mx-auto aspect-[4/3] overflow-hidden px-2 sm:px-0">
+    // No overflow-hidden — the rotated iPad's corners and the drop-shadows
+    // need to extend past the aspect-box. Generous side padding keeps the
+    // outer device edges away from the parent column.
+    <div className="relative w-full max-w-[640px] mx-auto aspect-[4/3] px-6 sm:px-8">
       {/* iPad — back left, slightly rotated */}
-      <div className="absolute left-0 top-[8%] w-[44%] -rotate-6 z-10 drop-shadow-[0_24px_40px_rgba(0,0,0,0.45)]">
+      <div className="absolute left-[4%] top-[8%] w-[44%] -rotate-6 z-10 drop-shadow-[0_24px_40px_rgba(0,0,0,0.45)]">
         <div className="bg-[#1a1a1a] rounded-[14px] p-[6px]">
           <div className="bg-white rounded-[10px] aspect-[3/4] overflow-hidden flex flex-col">
             {/* Discovery Day Deck mockup */}
