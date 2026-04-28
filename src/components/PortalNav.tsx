@@ -3,10 +3,14 @@ import Image from "next/image";
 import { LogOut } from "lucide-react";
 
 interface PortalNavProps {
+  displayName: string | null;
   email: string | null;
 }
 
-export function PortalNav({ email }: PortalNavProps) {
+export function PortalNav({ displayName, email }: PortalNavProps) {
+  // Prefer the customer's actual name; fall back to email if name isn't set yet
+  // (shouldn't happen post-purchase since Stripe captures name, but safe).
+  const label = displayName?.trim() || email || "";
   return (
     <nav className="bg-white border-b border-navy/10 sticky top-0 z-30">
       <div className="max-w-[1200px] mx-auto px-6 md:px-8 h-[72px] flex items-center justify-between">
@@ -27,8 +31,8 @@ export function PortalNav({ email }: PortalNavProps) {
         </Link>
 
         <div className="flex items-center gap-4">
-          {email && (
-            <span className="hidden md:inline text-grey-3 text-sm font-medium">{email}</span>
+          {label && (
+            <span className="hidden md:inline text-grey-3 text-sm font-medium">{label}</span>
           )}
           <form action="/api/portal/logout" method="POST">
             <button

@@ -35,6 +35,11 @@ export function SiteFooter() {
               <li><Link href="/strategy-call" className="hover:text-gold-warm transition-colors">Book a Call</Link></li>
               <li><Link href="/blog" className="hover:text-gold-warm transition-colors">Blog</Link></li>
               <li><Link href="/contact" className="hover:text-gold-warm transition-colors">Contact</Link></li>
+              <li>
+                <Link href="/portal/login" className="hover:text-gold-warm transition-colors font-semibold">
+                  Customer Portal →
+                </Link>
+              </li>
             </ul>
           </div>
           <div>

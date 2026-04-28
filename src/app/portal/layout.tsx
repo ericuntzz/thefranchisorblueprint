@@ -15,9 +15,17 @@ export default async function PortalLayout({ children }: { children: ReactNode }
     return <>{children}</>;
   }
 
+  // Pull the profile so we can show the customer's actual name in the nav
+  // instead of their email. Falls back to email if name isn't set.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", user.id)
+    .maybeSingle();
+
   return (
     <div className="min-h-screen flex flex-col bg-grey-1/40">
-      <PortalNav email={user.email ?? null} />
+      <PortalNav displayName={profile?.full_name ?? null} email={user.email ?? null} />
       <main className="flex-1">{children}</main>
     </div>
   );

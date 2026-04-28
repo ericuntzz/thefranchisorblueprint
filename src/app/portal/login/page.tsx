@@ -79,15 +79,30 @@ export default async function PortalLoginPage({ searchParams }: PageProps) {
                     </p>
                   </div>
 
-                  {error && (
+                  {error === "no_account" ? (
+                    <div className="bg-cream border border-gold/40 rounded-xl px-5 py-4 text-sm">
+                      <p className="text-navy font-bold mb-1">No purchase found for that email</p>
+                      <p className="text-grey-3 leading-relaxed mb-3">
+                        The portal is only available to customers who&apos;ve purchased The Blueprint. If you just bought, check your inbox for the welcome email — your access link is in there.
+                      </p>
+                      <Link
+                        href="/programs/blueprint"
+                        className="inline-flex items-center gap-1.5 text-navy font-semibold text-sm underline hover:text-gold-warm transition-colors"
+                      >
+                        Buy The Blueprint to get access →
+                      </Link>
+                    </div>
+                  ) : error ? (
                     <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-800">
                       {error === "invalid_link"
                         ? "That sign-in link has expired or already been used. Please request a new one below."
-                        : error === "no_account"
-                          ? "We don't have a purchase under that email. If you just bought, check your inbox for the welcome email — it has your access link."
-                          : "Something went wrong. Please try again."}
+                        : error === "invalid_email"
+                          ? "Please enter a valid email address."
+                          : error === "send_failed"
+                            ? "We couldn't send the sign-in email just now. Please try again in a moment."
+                            : "Something went wrong. Please try again."}
                     </div>
-                  )}
+                  ) : null}
 
                   <button
                     type="submit"

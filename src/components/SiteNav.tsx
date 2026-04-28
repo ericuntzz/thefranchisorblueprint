@@ -59,6 +59,14 @@ export function SiteNav() {
           ))}
           <li>
             <Link
+              href="/portal/login"
+              className="text-navy text-[14px] font-semibold tracking-tight hover:text-gold transition-colors"
+            >
+              Sign in
+            </Link>
+          </li>
+          <li>
+            <Link
               href="/strategy-call"
               className="bg-gold text-navy font-bold text-xs uppercase tracking-[0.12em] px-7 py-3.5 rounded-full hover:bg-gold-dark transition-colors"
             >
@@ -93,6 +101,14 @@ export function SiteNav() {
                 </Link>
               </li>
             ))}
+            <li>
+              <Link
+                href="/portal/login"
+                className="block py-4 text-navy text-base font-semibold hover:text-gold transition-colors border-b border-navy/10"
+              >
+                Sign in
+              </Link>
+            </li>
             <li className="pt-5">
               <Link
                 href="/strategy-call"

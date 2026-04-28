@@ -32,6 +32,12 @@ export type Purchase = {
   created_at: string;
 };
 
+export type CapabilityProgress = {
+  user_id: string;
+  capability_slug: string;
+  completed_at: string;
+};
+
 // Supabase JS v2 type inference requires this exact shape — including the
 // __InternalSupabase marker and the `{ [_ in never]: never }` empty-record
 // idiom for Views/Functions/Enums/CompositeTypes. Deviations cause every
@@ -65,6 +71,14 @@ export type Database = {
           refund_amount_cents?: number;
         };
         Update: Partial<Omit<Purchase, "id" | "user_id">>;
+        Relationships: [];
+      };
+      capability_progress: {
+        Row: CapabilityProgress;
+        Insert: Omit<CapabilityProgress, "completed_at"> & {
+          completed_at?: string;
+        };
+        Update: Partial<Omit<CapabilityProgress, "user_id" | "capability_slug">>;
         Relationships: [];
       };
     };
