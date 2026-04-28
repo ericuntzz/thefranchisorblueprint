@@ -6,6 +6,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { JsonLd } from "@/components/JsonLd";
 import { organizationSchema, websiteSchema } from "@/lib/schema";
+import { SITE_URL } from "@/lib/site";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -13,8 +14,6 @@ const inter = Inter({
   subsets: ["latin"],
   display: "swap",
 });
-
-const SITE_URL = "https://thefranchisorblueprint.com";
 
 export const metadata: Metadata = {
   title: "Franchise Your Business | The Franchisor Blueprint | Affordable Franchise Consulting",

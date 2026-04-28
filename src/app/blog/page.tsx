@@ -7,6 +7,7 @@ import { PageHero } from "@/components/PageHero";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbSchema } from "@/lib/schema";
 import { allPosts } from "@/lib/blog";
+import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Blog | The Franchisor Blueprint | Franchise Development Insights",
@@ -14,8 +15,6 @@ export const metadata: Metadata = {
     "Frameworks, walkthroughs, and case studies for founders serious about franchising. Written by Jason Stowe — 30+ years in franchise development.",
   alternates: { canonical: "/blog" },
 };
-
-const SITE_URL = "https://thefranchisorblueprint.com";
 
 export default function BlogPage() {
   const sortedPosts = [...allPosts].sort(

@@ -1,7 +1,6 @@
 import type { MetadataRoute } from "next";
 import { allPosts } from "@/lib/blog";
-
-const SITE_URL = "https://thefranchisorblueprint.com";
+import { SITE_URL } from "@/lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();

@@ -5,7 +5,7 @@
  * Reference: https://schema.org/, https://developers.google.com/search/docs/appearance/structured-data
  */
 
-const SITE_URL = "https://thefranchisorblueprint.com";
+import { SITE_URL } from "@/lib/site";
 
 // ─── Brand-level constants ──────────────────────────────────────────────────
 
