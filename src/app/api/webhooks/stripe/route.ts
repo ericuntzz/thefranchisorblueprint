@@ -6,6 +6,20 @@ import {
   markPurchaseRefunded,
   sendWelcomeMagicLinkEmail,
 } from "@/lib/fulfillment";
+import { TIERS, type TierId } from "@/lib/analytics";
+import { sendServerEvent, clientIdFor } from "@/lib/ga-measurement-protocol";
+
+/**
+ * Map a Stripe Checkout Session metadata.product → our internal TierId.
+ * Falls back to "the-blueprint" since that's currently the only Stripe-purchasable
+ * tier (Tier 2/3 are sold via consult call, not checkout).
+ */
+function tierFromSession(session: Stripe.Checkout.Session): TierId {
+  const p = session.metadata?.product?.toLowerCase();
+  if (p === "navigator") return "navigator";
+  if (p === "builder") return "builder";
+  return "the-blueprint";
+}
 
 export const runtime = "nodejs";
 
@@ -41,6 +55,41 @@ export async function POST(req: NextRequest) {
       const email = session.customer_details?.email?.toLowerCase();
       if (userId && email) {
         await sendWelcomeMagicLinkEmail(email, req.nextUrl.origin);
+      }
+
+      // ─── GA4 server-side `purchase` event ─────────────────────────────
+      // Fire-and-forget — never let analytics break the webhook.
+      try {
+        const tierId = tierFromSession(session);
+        const tier = TIERS[tierId];
+        const value = (session.amount_total ?? tier.price * 100) / 100;
+        const customerId =
+          (typeof session.customer === "string" ? session.customer : session.customer?.id) ??
+          session.id;
+        await sendServerEvent({
+          clientId: clientIdFor(customerId),
+          userId: userId ?? undefined,
+          event: {
+            name: "purchase",
+            params: {
+              transaction_id: session.id,
+              currency: "USD",
+              value,
+              items: [
+                {
+                  item_id: tier.item_id,
+                  item_name: tier.item_name,
+                  price: tier.price,
+                  quantity: 1,
+                  item_category: tier.item_category,
+                },
+              ],
+              customer_id: customerId,
+            },
+          },
+        });
+      } catch (err) {
+        console.error("[stripe] GA4 purchase event failed:", err);
       }
       break;
     }

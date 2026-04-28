@@ -7,6 +7,8 @@ import { PageHero } from "@/components/PageHero";
 import { ComparisonTable } from "@/components/ComparisonTable";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbSchema, faqPageSchema, serviceSchema } from "@/lib/schema";
+import { AnalyticsLink } from "@/components/AnalyticsLink";
+import { SectionViewTracker } from "@/components/SectionViewTracker";
 
 const pricingFaqs = [
   {
@@ -108,7 +110,17 @@ export default function PricingPage() {
         <div className="max-w-[1200px] mx-auto px-8">
           <div className="grid md:grid-cols-3 gap-7 items-stretch">
             {/* Tier 1 */}
-            <div className="bg-white rounded-2xl p-10 text-left flex flex-col border border-navy/10 shadow-[0_12px_36px_rgba(30,58,95,0.18)] hover:-translate-y-1 hover:shadow-[0_24px_50px_rgba(30,58,95,0.24)] transition-all relative overflow-hidden">
+            <SectionViewTracker
+              event="view_item"
+              params={{
+                item_id: "the-blueprint",
+                item_name: "The Blueprint",
+                price: 2997,
+                page_location: "pricing_page",
+              }}
+              className="h-full"
+            >
+            <div className="h-full bg-white rounded-2xl p-10 text-left flex flex-col border border-navy/10 shadow-[0_12px_36px_rgba(30,58,95,0.18)] hover:-translate-y-1 hover:shadow-[0_24px_50px_rgba(30,58,95,0.24)] transition-all relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-1 bg-gold" aria-hidden />
               <div className="text-[11px] font-bold tracking-[0.14em] uppercase text-gold-warm mb-2">
                 Tier 1 — DIY
@@ -130,16 +142,34 @@ export default function PricingPage() {
                   </li>
                 ))}
               </ul>
-              <Link
+              <AnalyticsLink
                 href="/programs/blueprint"
+                trackEvent="select_item"
+                trackParams={{
+                  item_id: "the-blueprint",
+                  item_name: "The Blueprint",
+                  price: 2997,
+                  cta_location: "pricing_page_card",
+                }}
                 className="block w-full text-center bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-6 py-4 rounded-full hover:bg-gold-dark transition-colors"
               >
                 Buy the Blueprint
-              </Link>
+              </AnalyticsLink>
             </div>
+            </SectionViewTracker>
 
             {/* Tier 2 */}
-            <div className="bg-white rounded-2xl p-10 pt-10 text-left flex flex-col relative shadow-[0_24px_60px_rgba(30,58,95,0.28)] ring-1 ring-gold/30 md:-translate-y-4 hover:md:-translate-y-5 transition-all">
+            <SectionViewTracker
+              event="view_item"
+              params={{
+                item_id: "navigator",
+                item_name: "Navigator",
+                price: 8500,
+                page_location: "pricing_page",
+              }}
+              className="h-full"
+            >
+            <div className="h-full bg-white rounded-2xl p-10 pt-10 text-left flex flex-col relative shadow-[0_24px_60px_rgba(30,58,95,0.28)] ring-1 ring-gold/30 md:-translate-y-4 hover:md:-translate-y-5 transition-all">
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gold text-navy px-5 py-1.5 rounded-full text-[11px] font-extrabold tracking-[0.14em] whitespace-nowrap">
                 MOST POPULAR
               </div>
@@ -168,16 +198,34 @@ export default function PricingPage() {
                   </li>
                 ))}
               </ul>
-              <Link
+              <AnalyticsLink
                 href="/strategy-call"
+                trackEvent="select_item"
+                trackParams={{
+                  item_id: "navigator",
+                  item_name: "Navigator",
+                  price: 8500,
+                  cta_location: "pricing_page_card",
+                }}
                 className="block w-full text-center bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-6 py-4 rounded-full hover:bg-gold-dark transition-colors"
               >
                 Talk to Us First
-              </Link>
+              </AnalyticsLink>
             </div>
+            </SectionViewTracker>
 
             {/* Tier 3 */}
-            <div className="bg-white rounded-2xl p-10 text-left flex flex-col border border-navy/10 shadow-[0_12px_36px_rgba(30,58,95,0.18)] hover:-translate-y-1 hover:shadow-[0_24px_50px_rgba(30,58,95,0.24)] transition-all relative overflow-hidden">
+            <SectionViewTracker
+              event="view_item"
+              params={{
+                item_id: "builder",
+                item_name: "Builder",
+                price: 29500,
+                page_location: "pricing_page",
+              }}
+              className="h-full"
+            >
+            <div className="h-full bg-white rounded-2xl p-10 text-left flex flex-col border border-navy/10 shadow-[0_12px_36px_rgba(30,58,95,0.18)] hover:-translate-y-1 hover:shadow-[0_24px_50px_rgba(30,58,95,0.24)] transition-all relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-1 bg-navy" aria-hidden />
               <div className="text-[11px] font-bold tracking-[0.14em] uppercase text-gold-warm mb-2">
                 Tier 3 — Done-With-You
@@ -200,13 +248,21 @@ export default function PricingPage() {
                   </li>
                 ))}
               </ul>
-              <Link
+              <AnalyticsLink
                 href="/strategy-call/builder"
+                trackEvent="select_item"
+                trackParams={{
+                  item_id: "builder",
+                  item_name: "Builder",
+                  price: 29500,
+                  cta_location: "pricing_page_card",
+                }}
                 className="block w-full text-center bg-navy text-white font-bold text-sm uppercase tracking-[0.1em] px-6 py-4 rounded-full hover:bg-navy-dark transition-colors"
               >
                 Book Your Fit Call
-              </Link>
+              </AnalyticsLink>
             </div>
+            </SectionViewTracker>
           </div>
         </div>
       </section>

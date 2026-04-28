@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
+import { track } from "@/lib/analytics";
 
 const links = [
   { href: "/programs", label: "Programs" },
@@ -11,6 +12,10 @@ const links = [
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];
+
+function fireNav(label: string, destination: string, type: "primary" | "mobile") {
+  track("nav_click", { nav_label: label, nav_destination: destination, nav_type: type });
+}
 
 export function SiteNav() {
   const [open, setOpen] = useState(false);
@@ -34,7 +39,14 @@ export function SiteNav() {
   return (
     <nav className="sticky top-0 z-50 border-b border-black/5" style={{ backgroundColor: "#ece9df" }}>
       <div className="max-w-[1400px] mx-auto px-6 md:px-8 py-3 flex items-center justify-between">
-        <Link href="/" className="flex items-center" onClick={() => setOpen(false)}>
+        <Link
+          href="/"
+          className="flex items-center"
+          onClick={() => {
+            fireNav("Logo (home)", "/", "primary");
+            setOpen(false);
+          }}
+        >
           <Image
             src="/logos/tfb-logo-color.png"
             alt="The Franchisor Blueprint"
@@ -51,6 +63,7 @@ export function SiteNav() {
             <li key={l.href}>
               <Link
                 href={l.href}
+                onClick={() => fireNav(l.label, l.href, "primary")}
                 className="text-navy text-[15px] font-semibold tracking-tight hover:text-gold transition-colors"
               >
                 {l.label}
@@ -60,6 +73,7 @@ export function SiteNav() {
           <li>
             <Link
               href="/portal/login"
+              onClick={() => fireNav("Sign in", "/portal/login", "primary")}
               className="text-navy text-[14px] font-semibold tracking-tight hover:text-gold transition-colors"
             >
               Sign in
@@ -68,6 +82,7 @@ export function SiteNav() {
           <li>
             <Link
               href="/strategy-call"
+              onClick={() => fireNav("Book a Call (nav CTA)", "/strategy-call", "primary")}
               className="bg-gold text-navy font-bold text-xs uppercase tracking-[0.12em] px-7 py-3.5 rounded-full hover:bg-gold-dark transition-colors"
             >
               Book a Call
@@ -95,6 +110,7 @@ export function SiteNav() {
               <li key={l.href}>
                 <Link
                   href={l.href}
+                  onClick={() => fireNav(l.label, l.href, "mobile")}
                   className="block py-4 text-navy text-base font-semibold hover:text-gold transition-colors border-b border-navy/10"
                 >
                   {l.label}
@@ -104,6 +120,7 @@ export function SiteNav() {
             <li>
               <Link
                 href="/portal/login"
+                onClick={() => fireNav("Sign in", "/portal/login", "mobile")}
                 className="block py-4 text-navy text-base font-semibold hover:text-gold transition-colors border-b border-navy/10"
               >
                 Sign in
@@ -112,6 +129,7 @@ export function SiteNav() {
             <li className="pt-5">
               <Link
                 href="/strategy-call"
+                onClick={() => fireNav("Book a Call (nav CTA)", "/strategy-call", "mobile")}
                 className="block w-full text-center bg-gold text-navy font-bold text-xs uppercase tracking-[0.12em] px-6 py-4 rounded-full hover:bg-gold-dark transition-colors"
               >
                 Book a Call

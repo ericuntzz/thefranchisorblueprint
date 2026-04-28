@@ -25,6 +25,7 @@ import { HowItWorks } from "@/components/HowItWorks";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { JsonLd } from "@/components/JsonLd";
 import { faqPageSchema, serviceSchema } from "@/lib/schema";
+import { AnalyticsLink } from "@/components/AnalyticsLink";
 
 const docs = [
   { icon: ListChecks, title: "Audit Your Business", body: "150-point readiness audit covering every detail attorneys and franchisees will ask about." },
@@ -484,12 +485,19 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
-              <Link
+              <AnalyticsLink
                 href="/programs/blueprint"
+                trackEvent="select_item"
+                trackParams={{
+                  item_id: "the-blueprint",
+                  item_name: "The Blueprint",
+                  price: 2997,
+                  cta_location: "homepage_pricing_card",
+                }}
                 className="block w-full text-center bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-6 py-4 rounded-full hover:bg-gold-dark transition-colors"
               >
                 Buy the Blueprint
-              </Link>
+              </AnalyticsLink>
             </div>
 
             {/* Tier 2 - Featured */}
@@ -512,12 +520,19 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
-              <Link
+              <AnalyticsLink
                 href="/strategy-call"
+                trackEvent="select_item"
+                trackParams={{
+                  item_id: "navigator",
+                  item_name: "Navigator",
+                  price: 8500,
+                  cta_location: "homepage_pricing_card",
+                }}
                 className="block w-full text-center bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-6 py-4 rounded-full hover:bg-gold-dark transition-colors"
               >
                 Talk to Us First
-              </Link>
+              </AnalyticsLink>
             </div>
 
             {/* Tier 3 */}
@@ -536,12 +551,19 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
-              <Link
+              <AnalyticsLink
                 href="/strategy-call/builder"
+                trackEvent="select_item"
+                trackParams={{
+                  item_id: "builder",
+                  item_name: "Builder",
+                  price: 29500,
+                  cta_location: "homepage_pricing_card",
+                }}
                 className="block w-full text-center bg-navy text-white font-bold text-sm uppercase tracking-[0.1em] px-6 py-4 rounded-full hover:bg-navy-dark transition-colors"
               >
                 Book Your Fit Call
-              </Link>
+              </AnalyticsLink>
             </div>
           </div>
 

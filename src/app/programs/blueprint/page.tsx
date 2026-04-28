@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { PageHero } from "@/components/PageHero";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbSchema, productSchema } from "@/lib/schema";
+import { BlueprintBuyButton } from "@/components/BlueprintBuyButton";
 
 export const metadata: Metadata = {
   title: "The Blueprint — DIY Franchise Kit ($2,997) | The Franchisor Blueprint",
@@ -114,14 +115,7 @@ export default function BlueprintProductPage() {
                 </div>
                 <div className="text-grey-4 text-sm mb-5">One-time payment · Instant access</div>
 
-                <form action="/api/checkout/blueprint" method="POST">
-                  <button
-                    type="submit"
-                    className="block w-full text-center bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-6 py-4 rounded-full hover:bg-gold-dark transition-colors cursor-pointer"
-                  >
-                    Buy Now
-                  </button>
-                </form>
+                <BlueprintBuyButton />
                 <p className="text-center text-xs text-grey-4 italic mt-3">
                   Secure checkout via Stripe. Credit card or ACH.
                 </p>

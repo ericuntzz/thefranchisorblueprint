@@ -19,6 +19,7 @@ import { HowItWorks } from "@/components/HowItWorks";
 import { ComparisonTable } from "@/components/ComparisonTable";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbSchema, serviceSchema } from "@/lib/schema";
+import { AnalyticsLink } from "@/components/AnalyticsLink";
 
 export const metadata: Metadata = {
   title: "Programs | The Franchisor Blueprint | DIY, Coached & Done-With-You",
@@ -74,7 +75,11 @@ const docs = [
   },
 ];
 
+type TierItemId = "the-blueprint" | "navigator" | "builder";
+
 type Tier = {
+  itemId: TierItemId;
+  itemPrice: number;
   badge?: string;
   eyebrow: string;
   name: string;
@@ -89,6 +94,8 @@ type Tier = {
 
 const tiers: Tier[] = [
   {
+    itemId: "the-blueprint",
+    itemPrice: 2997,
     eyebrow: "Tier 1 — DIY",
     name: "The Blueprint",
     price: "$2,997",
@@ -106,6 +113,8 @@ const tiers: Tier[] = [
     cta: { label: "Get the Blueprint", href: "/programs/blueprint", style: "gold" },
   },
   {
+    itemId: "navigator",
+    itemPrice: 8500,
     badge: "Most Popular",
     eyebrow: "Tier 2",
     name: "Navigator",
@@ -127,6 +136,8 @@ const tiers: Tier[] = [
     featured: true,
   },
   {
+    itemId: "builder",
+    itemPrice: 29500,
     eyebrow: "Tier 3 — Done-With-You",
     name: "Builder",
     price: "$29,500",
@@ -282,12 +293,19 @@ export default function ProgramsPage() {
                     {t.price}
                   </div>
                   <div className="text-grey-4 text-sm mb-6">{t.priceSub}</div>
-                  <Link
+                  <AnalyticsLink
                     href={t.cta.href}
+                    trackEvent="select_item"
+                    trackParams={{
+                      item_id: t.itemId,
+                      item_name: t.name,
+                      price: t.itemPrice,
+                      cta_location: "programs_page_card",
+                    }}
                     className={`block w-full text-center font-bold text-sm uppercase tracking-[0.1em] px-6 py-4 rounded-full transition-colors ${t.cta.style === "gold" ? "bg-gold text-navy hover:bg-gold-dark" : "bg-navy text-white hover:bg-navy-dark"}`}
                   >
                     {t.cta.label}
-                  </Link>
+                  </AnalyticsLink>
                   {t.featured && (
                     <p className="mt-4 text-center text-xs text-grey-3">
                       Engagements begin with a free fit call.
