@@ -1,9 +1,11 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { CheckCircle2, Mail, Calendar } from "lucide-react";
+import type Stripe from "stripe";
+import { CheckCircle2, Mail, Calendar, Receipt, CreditCard } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { PageHero } from "@/components/PageHero";
+import { stripe } from "@/lib/stripe";
 
 export const metadata: Metadata = {
   title: "Welcome to The Blueprint | The Franchisor Blueprint",
@@ -12,14 +14,60 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function ThankYouPage() {
+export const dynamic = "force-dynamic";
+
+interface PageProps {
+  searchParams: Promise<{ session_id?: string }>;
+}
+
+type RetrievedSession = Stripe.Response<
+  Stripe.Checkout.Session & {
+    line_items: Stripe.ApiList<Stripe.LineItem>;
+    payment_intent: Stripe.PaymentIntent & { latest_charge: Stripe.Charge };
+  }
+>;
+
+async function loadOrder(sessionId: string | undefined) {
+  if (!sessionId?.startsWith("cs_")) return null;
+  try {
+    const session = (await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ["line_items", "payment_intent.latest_charge"],
+    })) as RetrievedSession;
+    if (session.payment_status !== "paid") return null;
+    const line = session.line_items?.data[0];
+    const charge = session.payment_intent?.latest_charge;
+    return {
+      id: session.id,
+      productName: line?.description ?? "The Blueprint",
+      amount: ((session.amount_total ?? 0) / 100).toLocaleString("en-US", {
+        style: "currency",
+        currency: (session.currency ?? "usd").toUpperCase(),
+      }),
+      email: session.customer_details?.email ?? null,
+      name: session.customer_details?.name ?? null,
+      cardLast4: charge?.payment_method_details?.card?.last4 ?? null,
+      cardBrand: charge?.payment_method_details?.card?.brand ?? null,
+      created: new Date((session.created ?? 0) * 1000).toLocaleString("en-US", {
+        dateStyle: "long",
+        timeStyle: "short",
+      }),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export default async function ThankYouPage({ searchParams }: PageProps) {
+  const { session_id } = await searchParams;
+  const order = await loadOrder(session_id);
+
   return (
     <>
       <SiteNav />
 
       <PageHero
         eyebrow="You're In"
-        title="Welcome to The Blueprint"
+        title={order?.name ? `Welcome to The Blueprint, ${order.name.split(" ")[0]}` : "Welcome to The Blueprint"}
         subtitle="Your purchase is confirmed. We're already prepping your onboarding."
       />
 
@@ -37,15 +85,60 @@ export default function ThankYouPage() {
             </p>
           </div>
 
+          {order && (
+            <div className="bg-white border border-navy/10 rounded-2xl shadow-[0_8px_24px_rgba(30,58,95,0.06)] p-7 md:p-8 mb-10">
+              <div className="flex items-center gap-2 mb-5">
+                <Receipt size={18} className="text-gold" />
+                <h3 className="text-navy font-bold text-lg">Order Summary</h3>
+              </div>
+              <dl className="divide-y divide-navy/5 text-sm">
+                <div className="flex items-baseline justify-between py-3">
+                  <dt className="text-grey-3">Product</dt>
+                  <dd className="text-navy font-semibold text-right">{order.productName}</dd>
+                </div>
+                <div className="flex items-baseline justify-between py-3">
+                  <dt className="text-grey-3">Amount paid</dt>
+                  <dd className="text-navy font-extrabold text-base tabular-nums">{order.amount}</dd>
+                </div>
+                {order.email && (
+                  <div className="flex items-baseline justify-between py-3">
+                    <dt className="text-grey-3">Receipt sent to</dt>
+                    <dd className="text-navy font-mono text-xs md:text-sm break-all text-right">{order.email}</dd>
+                  </div>
+                )}
+                {order.cardLast4 && (
+                  <div className="flex items-baseline justify-between py-3">
+                    <dt className="text-grey-3">Payment method</dt>
+                    <dd className="text-navy text-right flex items-center gap-2 justify-end">
+                      <CreditCard size={14} className="text-grey-4" />
+                      <span className="capitalize">{order.cardBrand}</span>
+                      <span className="text-grey-4">••••</span>
+                      <span className="font-mono">{order.cardLast4}</span>
+                    </dd>
+                  </div>
+                )}
+                <div className="flex items-baseline justify-between py-3">
+                  <dt className="text-grey-3">Order ID</dt>
+                  <dd className="text-grey-4 font-mono text-[11px] md:text-xs break-all text-right">{order.id}</dd>
+                </div>
+                <div className="flex items-baseline justify-between py-3">
+                  <dt className="text-grey-3">Date</dt>
+                  <dd className="text-navy text-right">{order.created}</dd>
+                </div>
+              </dl>
+            </div>
+          )}
+
           <div className="space-y-5">
             <div className="bg-white border border-navy/10 rounded-2xl p-7 flex gap-4">
               <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-navy to-navy-light flex items-center justify-center text-gold">
                 <Mail size={18} />
               </div>
               <div>
-                <h3 className="text-navy font-bold text-lg mb-1">Check your email</h3>
+                <h3 className="text-navy font-bold text-lg mb-1">Welcome email on the way</h3>
                 <p className="text-grey-3 text-sm leading-relaxed">
-                  Within a few minutes you&apos;ll receive a welcome email with your access link to the complete operating system and the nine implementation guides.
+                  In the next few minutes you&apos;ll receive a confirmation with your next steps. If you don&apos;t see it, check your spam folder or email{" "}
+                  <a href="mailto:team@thefranchisorblueprint.com" className="text-navy font-semibold underline">team@thefranchisorblueprint.com</a>.
                 </p>
               </div>
             </div>
@@ -59,7 +152,7 @@ export default function ThankYouPage() {
                   Your 60-minute white-glove onboarding call
                 </h3>
                 <p className="text-grey-3 text-sm leading-relaxed">
-                  We&apos;ll reach out within 1–2 business days to schedule your kickoff call with Jason. You&apos;ll leave that call with a clear plan for your first 30 days.
+                  Our team will reach out personally within one business day to schedule your kickoff call with Jason. You&apos;ll leave that call with a clear plan for your first 30 days.
                 </p>
               </div>
             </div>
