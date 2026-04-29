@@ -155,6 +155,23 @@ export default function PricingPage() {
               >
                 Buy the Blueprint
               </AnalyticsLink>
+              <p className="text-center text-grey-4 text-xs italic mt-3">
+                <span className="font-semibold text-navy/70">+$2,000</span> to add 4 coaching calls (
+                <AnalyticsLink
+                  href="/programs/blueprint"
+                  trackEvent="select_item"
+                  trackParams={{
+                    item_id: "blueprint-plus",
+                    item_name: "Blueprint Plus",
+                    price: 4997,
+                    cta_location: "pricing_page_blueprint_plus_hint",
+                  }}
+                  className="text-gold-warm font-semibold underline hover:text-navy"
+                >
+                  Blueprint Plus, $4,997
+                </AnalyticsLink>
+                )
+              </p>
             </div>
             </SectionViewTracker>
 

@@ -48,7 +48,13 @@ export type GA4Event =
   | {
       name: "select_item";
       params: {
-        item_id: "the-blueprint" | "navigator" | "builder";
+        item_id:
+          | "the-blueprint"
+          | "blueprint-plus"
+          | "navigator"
+          | "builder"
+          | "sample-call"
+          | "phase-coaching";
         item_name: string;
         price: number;
         /** Where on the site this happened — "homepage_pricing_card", "pricing_page_card", "programs_page_card" */

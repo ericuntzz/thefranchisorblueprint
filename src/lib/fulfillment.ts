@@ -400,7 +400,11 @@ export async function markPurchaseRefunded(charge: Stripe.Charge): Promise<void>
     payload: {
       firstName: prof.full_name?.split(" ")[0] ?? null,
       refundedProductName: product.name,
-      navigatorUrl: "https://www.thefranchisorblueprint.com/programs",
+      // Plus product page (where they can paste WINBACK1K at Stripe checkout
+      // to get $1,000 off). The /programs/blueprint page hosts the inline
+      // upsell that toggles to Plus.
+      blueprintPlusUrl: "https://www.thefranchisorblueprint.com/programs/blueprint",
+      promoCode: "WINBACK1K",
     },
     sendAfter: new Date(Date.now() + 14 * 24 * 3600 * 1000),
     dedupeKey: `win-back:${refunded.user_id}:${refunded.id}`,

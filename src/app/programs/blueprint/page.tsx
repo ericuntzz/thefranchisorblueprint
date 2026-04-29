@@ -6,7 +6,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { PageHero } from "@/components/PageHero";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbSchema, productSchema } from "@/lib/schema";
-import { BlueprintBuyButton } from "@/components/BlueprintBuyButton";
+import { BlueprintUpsellBuyBox } from "@/components/BlueprintUpsellBuyBox";
 
 export const metadata: Metadata = {
   title: "The Blueprint — DIY Franchise Kit ($2,997) | The Franchisor Blueprint",
@@ -21,8 +21,9 @@ export const metadata: Metadata = {
  * checkout, the buyer should receive an email with this link to schedule
  * their promised "60-Min White-Glove Onboarding Call."
  *
- * Wire this into the Stripe webhook + post-purchase email when the
- * Stripe integration is built (TODO).
+ * The post-purchase email currently tells buyers the team will reach out
+ * within one business day; keep this URL private unless direct scheduling
+ * becomes part of the automated lifecycle.
  */
 const TIER_1_ONBOARDING_CALENDLY_URL =
   "https://calendly.com/team-thefranchisorblueprint/60-minute-blueprint-onboarding";
@@ -115,7 +116,7 @@ export default function BlueprintProductPage() {
                 </div>
                 <div className="text-grey-4 text-sm mb-5">One-time payment · Instant access</div>
 
-                <BlueprintBuyButton />
+                <BlueprintUpsellBuyBox />
                 <p className="text-center text-xs text-grey-4 italic mt-3">
                   Secure checkout via Stripe. Credit card or ACH.
                 </p>

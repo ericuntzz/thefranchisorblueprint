@@ -47,6 +47,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.redirect(loginUrl, 303);
   }
 
-  loginUrl.searchParams.set("sent", email);
+  loginUrl.searchParams.set("sent", "1");
   return NextResponse.redirect(loginUrl, 303);
 }

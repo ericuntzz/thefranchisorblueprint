@@ -6,20 +6,30 @@ import {
   markPurchaseRefunded,
   dispatchPostPurchaseLifecycle,
 } from "@/lib/fulfillment";
-import { TIERS, type TierId } from "@/lib/analytics";
 import { sendServerEvent, clientIdFor } from "@/lib/ga-measurement-protocol";
-import type { ProductSlug } from "@/lib/products";
+import { getProduct, type ProductSlug } from "@/lib/products";
 
 /**
- * Map a Stripe Checkout Session metadata.product → our internal TierId.
- * Falls back to "the-blueprint" since that's currently the only Stripe-purchasable
- * tier (Tier 2/3 are sold via consult call, not checkout).
+ * Map a Stripe Checkout Session metadata.product to a GA4 item. Falls back to
+ * Blueprint if metadata is missing so old sessions still track cleanly.
  */
-function tierFromSession(session: Stripe.Checkout.Session): TierId {
-  const p = session.metadata?.product?.toLowerCase();
-  if (p === "navigator") return "navigator";
-  if (p === "builder") return "builder";
-  return "the-blueprint";
+function itemFromSession(session: Stripe.Checkout.Session) {
+  const slug = (session.metadata?.product ?? "blueprint").toLowerCase();
+  const product = getProduct(slug) ?? getProduct("blueprint");
+  if (!product) {
+    return {
+      item_id: "blueprint",
+      item_name: "The Blueprint",
+      price: 2997,
+      item_category: "Tier 1",
+    };
+  }
+  return {
+    item_id: product.slug,
+    item_name: product.name,
+    price: product.priceCents / 100,
+    item_category: product.grantsTier ? `Tier ${product.grantsTier}` : "Add-on",
+  };
 }
 
 export const runtime = "nodejs";
@@ -78,9 +88,8 @@ export async function POST(req: NextRequest) {
       // ─── GA4 server-side `purchase` event ─────────────────────────────
       // Fire-and-forget — never let analytics break the webhook.
       try {
-        const tierId = tierFromSession(session);
-        const tier = TIERS[tierId];
-        const value = (session.amount_total ?? tier.price * 100) / 100;
+        const item = itemFromSession(session);
+        const value = (session.amount_total ?? item.price * 100) / 100;
         const customerId =
           (typeof session.customer === "string" ? session.customer : session.customer?.id) ??
           session.id;
@@ -95,11 +104,11 @@ export async function POST(req: NextRequest) {
               value,
               items: [
                 {
-                  item_id: tier.item_id,
-                  item_name: tier.item_name,
-                  price: tier.price,
+                  item_id: item.item_id,
+                  item_name: item.item_name,
+                  price: item.price,
                   quantity: 1,
-                  item_category: tier.item_category,
+                  item_category: item.item_category,
                 },
               ],
               customer_id: customerId,

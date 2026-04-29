@@ -79,9 +79,6 @@ export default function ContactPage() {
               </p>
             </div>
 
-            {/* TODO (Eric): wire this form to ActiveCampaign or your CRM. Currently
-                it submits to /api/contact (not implemented) — Next.js will return
-                a 404 until we add a route handler. */}
             <form
               action="/api/contact"
               method="POST"
