@@ -25,11 +25,11 @@ export async function GET(
   const { slug } = await params;
   const cap = getCapability(slug);
   if (!cap) {
-    return NextResponse.json({ error: "Unknown capability" }, { status: 404 });
+    return NextResponse.json({ error: "Unknown Mastery" }, { status: 404 });
   }
   if (!cap.storagePath) {
     return NextResponse.json(
-      { error: "This capability's content isn't available yet" },
+      { error: "This Mastery's content isn't available yet" },
       { status: 404 },
     );
   }
@@ -58,7 +58,7 @@ export async function GET(
   const userTier = Math.max(...purchases.map((p) => p.tier), 1) as Tier;
   if (cap.minTier > userTier) {
     return NextResponse.json(
-      { error: "Higher tier required for this capability" },
+      { error: "Higher tier required for this Mastery" },
       { status: 403 },
     );
   }

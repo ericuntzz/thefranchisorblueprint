@@ -526,7 +526,7 @@ function CapabilityCard({ cap, completed }: { cap: Capability; completed: boolea
             </div>
           )}
           <span className="text-[10px] font-bold tracking-[0.16em] uppercase text-gold-warm">
-            {completed ? `Capability ${String(cap.number).padStart(2, "0")}` : cap.verb}
+            {completed ? `Mastery ${String(cap.number).padStart(2, "0")}` : cap.verb}
           </span>
         </div>
         <ArrowUpRight

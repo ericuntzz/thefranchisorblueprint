@@ -231,7 +231,7 @@ export default function ProgramsPage() {
                 </div>
                 <div>
                   <div className="text-gold-warm font-semibold text-[11px] tracking-[0.14em] uppercase mb-1">
-                    Capability {String(i + 1).padStart(2, "0")}
+                    Mastery {String(i + 1).padStart(2, "0")}
                   </div>
                   <h3 className="text-base font-bold text-navy mb-1.5">{title}</h3>
                   <p className="text-grey-3 text-sm leading-relaxed">{body}</p>

@@ -54,7 +54,7 @@ export const PRODUCTS: Record<ProductSlug, Product> = {
     buyableDirectly: true,
     description: "The complete franchisor operating system — nine production-ready frameworks. DIY pace.",
     includes: [
-      "All 9 capability documents",
+      "All 9 Mastery frameworks",
       "60-minute white-glove onboarding call",
       "30 days of email support",
       "Lifetime access to system updates",

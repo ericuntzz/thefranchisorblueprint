@@ -95,7 +95,7 @@ export default async function CapabilityDetailPage({ params }: PageProps) {
 
   return (
     <>
-      {/* ===== Capability hero ===== */}
+      {/* ===== Mastery hero ===== */}
       <section className="bg-white border-b border-navy/5">
         <div className="max-w-[1200px] mx-auto px-6 md:px-8 py-10 md:py-14">
           <Link
@@ -109,7 +109,7 @@ export default async function CapabilityDetailPage({ params }: PageProps) {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-gold-warm border-b-2 border-gold pb-0.5">
-                  Capability {String(cap.number).padStart(2, "0")} · {cap.verb}
+                  Mastery {String(cap.number).padStart(2, "0")} · {cap.verb}
                 </span>
                 <span className="text-[10px] font-bold tracking-[0.16em] uppercase text-grey-4">
                   Phase {phaseInfo.number} — {phaseInfo.label}
@@ -217,7 +217,7 @@ export default async function CapabilityDetailPage({ params }: PageProps) {
               </div>
               <h2 className="text-navy font-bold text-xl mb-2">Coming online soon</h2>
               <p className="text-grey-3 text-sm md:text-base max-w-[520px] mx-auto leading-relaxed">
-                We&apos;re finalizing this capability with Jason. We&apos;ll email you the moment it&apos;s ready, and your onboarding call will cover the underlying frameworks in the meantime.
+                We&apos;re finalizing this Mastery with Jason. We&apos;ll email you the moment it&apos;s ready, and your onboarding call will cover the underlying frameworks in the meantime.
               </p>
             </div>
           )}
@@ -287,7 +287,7 @@ export default async function CapabilityDetailPage({ params }: PageProps) {
                 <h3 className="text-navy font-bold text-base mb-0.5">
                   {completed
                     ? "Marked complete"
-                    : "Done with this capability?"}
+                    : "Done with this Mastery?"}
                 </h3>
                 <p className="text-grey-3 text-sm">
                   {completed
@@ -296,7 +296,7 @@ export default async function CapabilityDetailPage({ params }: PageProps) {
                       : "You marked this complete."
                     : hasContent
                       ? "Tap below once you've filled in your version of the template."
-                      : "We'll email you when this capability ships — feel free to mark it complete then."}
+                      : "We'll email you when this Mastery ships — feel free to mark it complete then."}
                 </p>
               </div>
             </div>

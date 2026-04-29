@@ -271,7 +271,7 @@ function TopTierView({ firstName }: { firstName: string | null }) {
             {firstName ? `${firstName}, you're already at the top tier` : "You're already at the top tier"}
           </h1>
           <p className="text-grey-3 text-base mb-6">
-            You&apos;ve got Builder access — every capability, all coaching, the full done-with-you build. Add-on coaching credits are still available if you want more session time.
+            You&apos;ve got Builder access — every Mastery, all coaching, the full done-with-you build. Add-on coaching credits are still available if you want more session time.
           </p>
           <div className="flex flex-wrap gap-3 justify-center">
             <Link

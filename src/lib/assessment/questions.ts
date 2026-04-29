@@ -14,7 +14,7 @@
  * The micro-insight on each question (insight) is what fires between
  * questions to turn the assessment from a survey into a 5-minute consult
  * with Jason. Insights are written in mentor voice, anchored to a real
- * benchmark or a specific Capability that maps to the gap. Edit freely —
+ * benchmark or a specific Mastery that maps to the gap. Edit freely —
  * these are reviewable copy, not load-bearing.
  */
 
@@ -154,7 +154,7 @@ export const QUESTIONS: AssessmentQuestion[] = [
     insight: {
       A: "That's the foundation 80% of franchise candidates lack. Everything else gets easier from here.",
       B: "Owner-dependent steps are the #1 thing we fix in Phase 1 — Codify Your Operations is built for exactly this.",
-      C: "Replicability isn't intuition, it's a 17-chapter manual. Capability 04 (Codify Your Operations) handles this end-to-end.",
+      C: "Replicability isn't intuition, it's a 17-chapter manual. Mastery 04 (Codify Your Operations) handles this end-to-end.",
       D: "Honest answer. Most founders score themselves here on Q1. You can't franchise a business that depends on you — but the work to fix it is teachable.",
     },
   },
@@ -189,9 +189,9 @@ export const QUESTIONS: AssessmentQuestion[] = [
     ],
     insight: {
       A: "Rare. Most successful operators are still in the 'partially' camp when they decide to franchise.",
-      B: "You're further along than 70% of founders we talk to. Capability 04 turns 'mostly documented' into a 17-chapter franchisee-ready manual.",
+      B: "You're further along than 70% of founders we talk to. Mastery 04 turns 'mostly documented' into a 17-chapter franchisee-ready manual.",
       C: "Informal notes are a great starting point — that's the raw material we shape into a real Operations Manual in Phase 2.",
-      D: "You don't need to write it alone. Capability 04 gives you the 100+ page template; you fill in your business's specifics.",
+      D: "You don't need to write it alone. Mastery 04 gives you the 100+ page template; you fill in your business's specifics.",
     },
   },
   // ─── Category 2: Financials & Unit Economics ─────────────────────────────
@@ -209,7 +209,7 @@ export const QUESTIONS: AssessmentQuestion[] = [
     ],
     insight: {
       A: "Healthy. You can comfortably price a 6–8% royalty without crushing your franchisee's economics.",
-      B: "Workable. We'd model 5–6% royalty to keep franchisee profit attractive — Capability 03 (Model Your Unit Economics) runs the numbers.",
+      B: "Workable. We'd model 5–6% royalty to keep franchisee profit attractive — Mastery 03 (Model Your Unit Economics) runs the numbers.",
       C: "Tight. Below 15% margin means royalty design is the difference between a sellable franchise and a stalled one.",
       D: "Sub-10% margins make franchise math nearly impossible. The Blueprint's first 30 days are about getting unit economics right BEFORE the FDD work.",
     },
@@ -227,8 +227,8 @@ export const QUESTIONS: AssessmentQuestion[] = [
     ],
     insight: {
       A: "This is what FDD Item 19 wants. You're already doing the work most founders skip.",
-      B: "Refining this pro forma is exactly what Capability 03 (Model Your Unit Economics) is for — your draft + our template = FDD-ready.",
-      C: "Until candidates can see the math, they can't sign. Capability 03 builds the pro forma your franchise sales process will live or die on.",
+      B: "Refining this pro forma is exactly what Mastery 03 (Model Your Unit Economics) is for — your draft + our template = FDD-ready.",
+      C: "Until candidates can see the math, they can't sign. Mastery 03 builds the pro forma your franchise sales process will live or die on.",
       D: "Don't worry — most founders haven't built this yet. The Blueprint hands you the template; you plug in your numbers.",
     },
   },
@@ -266,7 +266,7 @@ export const QUESTIONS: AssessmentQuestion[] = [
       A: "Brand pull is what makes franchisee recruitment cheap. You're going to find people who already want to be you.",
       B: "Solid local recognition is what most successful first-time franchisors look like. Replicability matters more than scale right now.",
       C: "Early-stage is fine — you'll want a defensible brand voice, photography, and positioning before you ask someone to license it.",
-      D: "Brand definition is upstream of franchising. Capability 06 covers what franchisees need to feel they're buying into something real.",
+      D: "Brand definition is upstream of franchising. Mastery 06 covers what franchisees need to feel they're buying into something real.",
     },
   },
   // ─── Category 4: Systems & Operations ────────────────────────────────────
@@ -283,8 +283,8 @@ export const QUESTIONS: AssessmentQuestion[] = [
     ],
     insight: {
       A: "Comprehensive training is what lets your franchisee deliver your service quality from day one — that's the whole game.",
-      B: "Moderate is workable — Capability 05 (Train Your Team to Replicate) takes your current training and turns it into a certification curriculum a franchisee can run.",
-      C: "Shadowing doesn't transfer across state lines. Capability 05 builds the structured curriculum your franchisees need.",
+      B: "Moderate is workable — Mastery 05 (Train Your Team to Replicate) takes your current training and turns it into a certification curriculum a franchisee can run.",
+      C: "Shadowing doesn't transfer across state lines. Mastery 05 builds the structured curriculum your franchisees need.",
       D: "Most pre-franchise businesses train this way. The training program is one of the biggest deliverables of Tier 2 Navigator.",
     },
   },
@@ -302,7 +302,7 @@ export const QUESTIONS: AssessmentQuestion[] = [
     ],
     insight: {
       A: "This is the answer that makes franchising real. If your business runs without you, it can run for someone else.",
-      B: "Frequent check-ins usually trace to one or two undocumented decisions. Surfacing them is half the work of Capability 04.",
+      B: "Frequent check-ins usually trace to one or two undocumented decisions. Surfacing them is half the work of Mastery 04.",
       C: "Owner-dependence isn't a character flaw — it's a documentation gap. Solvable, but it's the gap to close FIRST.",
       D: "Honest answer. Franchising someone else's daily presence isn't possible — but the system that replaces your presence is exactly what we build.",
     },
@@ -359,9 +359,9 @@ export const QUESTIONS: AssessmentQuestion[] = [
     ],
     insight: {
       A: "Rare. You're already at the level most founders reach AFTER 30 days with us.",
-      B: "Solid foundation. Capability 06 (Decode the FDD) gets you through the remaining 19 items so you walk into your attorney prepared.",
-      C: "No problem — Capability 06 covers all 23 items in plain English. Most founders don't get past Item 7 without help; you'll skip that learning curve.",
-      D: "If this is news, you're in the right place — that's exactly what Capability 06 handles. You'll know what an FDD actually is by the end of week one.",
+      B: "Solid foundation. Mastery 06 (Decode the FDD) gets you through the remaining 19 items so you walk into your attorney prepared.",
+      C: "No problem — Mastery 06 covers all 23 items in plain English. Most founders don't get past Item 7 without help; you'll skip that learning curve.",
+      D: "If this is news, you're in the right place — that's exactly what Mastery 06 handles. You'll know what an FDD actually is by the end of week one.",
     },
   },
   {

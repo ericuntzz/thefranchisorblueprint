@@ -26,7 +26,7 @@ export async function POST(
 ) {
   const { slug } = await params;
   const cap = getCapability(slug);
-  if (!cap) return NextResponse.json({ error: "Unknown capability" }, { status: 404 });
+  if (!cap) return NextResponse.json({ error: "Unknown Mastery" }, { status: 404 });
 
   // Reject cross-origin form submissions
   const origin = req.headers.get("origin");
