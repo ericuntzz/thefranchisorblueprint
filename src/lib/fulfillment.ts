@@ -99,29 +99,33 @@ export async function ensureUserAndPurchase(
     }
   }
 
-  // 2) Compute the new effective tier — only INCREASE, never demote.
-  // For tier-granting products, we take max(currentTier, product.grantsTier).
-  // For non-tier products (sample-call, phase-coaching), tier stays the same.
-  let nextTier: Tier | null = null;
+  // 2) Read current tier so we can both (a) compute the upserted profile
+  // correctly and (b) avoid downgrading on add-on purchases.
+  const { data: existingProfile } = await supabase
+    .from("profiles")
+    .select("tier")
+    .eq("id", userId)
+    .maybeSingle();
+  const currentTier = (existingProfile?.tier ?? 1) as Tier;
+
+  // Compute the effective tier: never demote. Tier 2 buyer purchasing a
+  // sample-call (grantsTier === null) keeps tier=2; previously the upsert
+  // was passing tier=1 in that case and demoting them.
+  let nextTier: Tier;
   if (product.grantsTier !== null) {
-    const { data: existingProfile } = await supabase
-      .from("profiles")
-      .select("tier")
-      .eq("id", userId)
-      .maybeSingle();
-    const currentTier = (existingProfile?.tier ?? 1) as Tier;
     nextTier = Math.max(currentTier, product.grantsTier) as Tier;
+  } else {
+    nextTier = currentTier;
   }
 
-  // 3) Upsert profile with optional tier bump. Tier is required by the column
-  // (NOT NULL default 1); on first insert we use the new tier or 1, on subsequent
-  // upserts we only pass tier if it actually increased.
+  // 3) Upsert profile. Tier is now ALWAYS the max-of-current-and-new value,
+  // so non-tier products correctly preserve the customer's existing tier.
   const profileBase = {
     id: userId,
     email,
     full_name: fullName,
     stripe_customer_id: stripeCustomerId,
-    tier: (nextTier ?? 1) as Tier,
+    tier: nextTier,
   };
 
   const { error: profileErr } = await supabase
@@ -131,24 +135,28 @@ export async function ensureUserAndPurchase(
     console.error(`[fulfillment] profile upsert failed: ${profileErr.message}`);
   }
 
-  // 4) Bump coaching_credits separately (atomic increment)
+  // 4) Bump coaching_credits via atomic SQL function (race-safe; the previous
+  // SELECT-then-UPDATE could lose credits under concurrent purchases).
   if (product.grantsCoachingCalls > 0) {
-    const { data: prof } = await supabase
-      .from("profiles")
-      .select("coaching_credits")
-      .eq("id", userId)
-      .maybeSingle();
-    const newCredits = (prof?.coaching_credits ?? 0) + product.grantsCoachingCalls;
-    await supabase.from("profiles").update({ coaching_credits: newCredits }).eq("id", userId);
+    const { error: rpcErr } = await supabase.rpc("add_coaching_credits", {
+      uid: userId,
+      delta: product.grantsCoachingCalls,
+    });
+    if (rpcErr) {
+      console.error(`[fulfillment] add_coaching_credits failed: ${rpcErr.message}`);
+    }
   }
 
-  // 5) Insert purchase row
+  // 5) Insert purchase row.
+  // For tier-granting purchases, tier = grantsTier (what this purchase grants).
+  // For add-on purchases, tier = currentTier (no tier change).
+  const purchaseTier = (product.grantsTier ?? currentTier) as Tier;
   const { error: purchaseErr } = await supabase.from("purchases").insert({
     user_id: userId,
     stripe_session_id: session.id,
     stripe_payment_intent_id: paymentIntentId,
     product: product.slug,
-    tier: (nextTier ?? 1) as Tier,
+    tier: purchaseTier,
     amount_cents: session.amount_total ?? 0,
     currency: (session.currency ?? "usd").toLowerCase(),
     status: "paid",
@@ -168,6 +176,14 @@ export async function ensureUserAndPurchase(
 /**
  * Post-purchase lifecycle orchestration. Welcome email immediately, drip
  * emails scheduled into the queue. Called from the webhook after fulfillment.
+ *
+ * Behavior matrix:
+ *   blueprint, blueprint-plus → welcome email + Tier 1 offers + drip
+ *   navigator                 → welcome email + Tier 2 offers + drip
+ *   builder                   → welcome email (no upgrade — already top tier)
+ *   upgrade-1-2               → no welcome (already in portal) + Tier 2 offers + drip
+ *   upgrade-1-3, upgrade-2-3  → no welcome, no further offers (top tier)
+ *   sample-call, phase-coaching → no welcome (just a coaching add-on)
  */
 export async function dispatchPostPurchaseLifecycle(args: {
   userId: string;
@@ -180,64 +196,56 @@ export async function dispatchPostPurchaseLifecycle(args: {
   const product = getProduct(args.productSlug);
   if (!product) return;
 
-  // Add-on products (sample-call, phase-coaching) don't get a tier-style welcome.
-  // We could send a "thanks for your call" email later — for v1, no email.
-  const isLifecycleEligible =
-    product.grantsTier !== null && product.grantsCoachingCalls === 0
-      ? true // pure tier products (blueprint, navigator, builder)
-      : product.slug === "blueprint-plus";
-
-  if (!isLifecycleEligible) {
-    console.log(`[lifecycle] no welcome scheduled for ${product.slug} (add-on / upgrade)`);
-    // Still dispatch the win-back-eligible offers etc. for upgrade products
-    if (
-      product.slug === "upgrade-1-2" ||
-      product.slug === "upgrade-1-3" ||
-      product.slug === "upgrade-2-3"
-    ) {
-      // Upgrade purchases: customer is already logged in, no welcome email needed.
-      // We could send a confirmation email here as a v2 polish.
-    }
-    return;
-  }
-
   const firstName = args.fullName?.split(" ")[0] ?? null;
-  const amountFormatted = (args.amountCents / 100).toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-  });
+  const isUpgrade = args.productSlug.startsWith("upgrade-");
+  const isAddOn =
+    args.productSlug === "sample-call" || args.productSlug === "phase-coaching";
 
-  // ─── 1. Welcome email — immediate. Includes a magic-link to land them in /portal.
-  const supabase = getSupabaseAdmin();
-  const { data: linkResult, error: linkErr } = await supabase.auth.admin.generateLink({
-    type: "magiclink",
-    email: args.email,
-    options: { redirectTo: `${args.origin}/auth/confirm?next=/portal` },
-  });
-  if (linkErr || !linkResult.properties?.hashed_token) {
-    console.error(`[lifecycle] generateLink failed: ${linkErr?.message}`);
-    return;
+  // 1. Welcome email — for first-time tier purchases only. Upgrades and add-ons
+  // skip the welcome (customer is already logged in for those).
+  if (!isUpgrade && !isAddOn && product.grantsTier !== null) {
+    const amountFormatted = (args.amountCents / 100).toLocaleString("en-US", {
+      style: "currency",
+      currency: "USD",
+    });
+    const supabase = getSupabaseAdmin();
+    const { data: linkResult, error: linkErr } = await supabase.auth.admin.generateLink({
+      type: "magiclink",
+      email: args.email,
+      options: { redirectTo: `${args.origin}/auth/confirm?next=/portal` },
+    });
+    if (linkErr || !linkResult.properties?.hashed_token) {
+      console.error(`[lifecycle] generateLink failed: ${linkErr?.message}`);
+    } else {
+      const magicLink = new URL(`${args.origin}/auth/confirm`);
+      magicLink.searchParams.set("token_hash", linkResult.properties.hashed_token);
+      magicLink.searchParams.set("type", "magiclink");
+      magicLink.searchParams.set("next", "/portal");
+      await sendTemplate("welcome", args.email, {
+        firstName,
+        productName: product.name,
+        amountFormatted,
+        magicLink: magicLink.toString(),
+      });
+    }
   }
-  const magicLink = new URL(`${args.origin}/auth/confirm`);
-  magicLink.searchParams.set("token_hash", linkResult.properties.hashed_token);
-  magicLink.searchParams.set("type", "magiclink");
-  magicLink.searchParams.set("next", "/portal");
 
-  await sendTemplate("welcome", args.email, {
-    firstName,
-    productName: product.name,
-    amountFormatted,
-    magicLink: magicLink.toString(),
-  });
-
-  // ─── 2. Upgrade offers + drip emails (only for entry tiers, not for upgrades)
-  if (product.grantsTier === 1) {
+  // 2. Create upgrade offers + queue drip for the customer's NEW effective tier.
+  // The "effective tier" = the tier this product gets them to (or keeps them at).
+  // Add-ons (sample-call, phase-coaching) don't change tier, so we don't trigger
+  // a fresh offer cycle for them.
+  if (isAddOn) return;
+  const newTier = product.grantsTier;
+  if (newTier === 1) {
     await createUpgradeOffersForTier(args.userId, 1);
     await scheduleUpgradeDripT1(args, firstName);
-  } else if (product.grantsTier === 2) {
+  } else if (newTier === 2) {
+    // Both pure Navigator AND upgrade-1-2 land here — both should have a
+    // fresh 48hr promo to reach Builder.
     await createUpgradeOffersForTier(args.userId, 2);
     await scheduleUpgradeDripT2(args, firstName);
   }
+  // Tier 3 (builder, upgrade-1-3, upgrade-2-3) — no further upgrade path.
 }
 
 async function scheduleUpgradeDripT1(
@@ -397,17 +405,6 @@ export async function markPurchaseRefunded(charge: Stripe.Charge): Promise<void>
     sendAfter: new Date(Date.now() + 14 * 24 * 3600 * 1000),
     dedupeKey: `win-back:${refunded.user_id}:${refunded.id}`,
   });
-}
-
-/** Backwards-compat shim — kept so old webhook code doesn't break. */
-export async function sendWelcomeMagicLinkEmail(
-  email: string,
-  origin: string,
-): Promise<void> {
-  // Silent fallback: we now drive the welcome via dispatchPostPurchaseLifecycle.
-  // If anything still calls this, it's a no-op.
-  void email;
-  void origin;
 }
 
 /**

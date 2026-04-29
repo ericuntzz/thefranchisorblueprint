@@ -64,6 +64,8 @@ export type ScheduledEmail = {
   failure_reason: string | null;
   attempts: number;
   dedupe_key: string | null;
+  /** Set by claim_due_emails RPC — concurrency lock. Null = available. */
+  claimed_at: string | null;
   created_at: string;
 };
 
@@ -131,7 +133,13 @@ export type Database = {
         Row: ScheduledEmail;
         Insert: Omit<
           ScheduledEmail,
-          "id" | "created_at" | "sent_at" | "failed_at" | "failure_reason" | "attempts"
+          | "id"
+          | "created_at"
+          | "sent_at"
+          | "failed_at"
+          | "failure_reason"
+          | "attempts"
+          | "claimed_at"
         > & {
           id?: string;
           created_at?: string;
@@ -139,13 +147,23 @@ export type Database = {
           failed_at?: string | null;
           failure_reason?: string | null;
           attempts?: number;
+          claimed_at?: string | null;
         };
         Update: Partial<Omit<ScheduledEmail, "id">>;
         Relationships: [];
       };
     };
+    Functions: {
+      add_coaching_credits: {
+        Args: { uid: string; delta: number };
+        Returns: void;
+      };
+      claim_due_emails: {
+        Args: { batch_size?: number };
+        Returns: ScheduledEmail[];
+      };
+    };
     Views: { [_ in never]: never };
-    Functions: { [_ in never]: never };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };
   };

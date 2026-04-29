@@ -47,19 +47,25 @@ export async function enqueueEmail(args: {
 }
 
 /**
- * Pulls due emails (send_after <= now, not sent, not failed) for the cron
- * processor. Limits to a batch size to keep cron invocations fast.
+ * Atomically claims a batch of due emails for processing.
+ *
+ * Uses the public.claim_due_emails Postgres function (FOR UPDATE SKIP LOCKED
+ * + atomic UPDATE) so that two concurrent cron triggers (Vercel Cron AND
+ * Supabase pg_cron, in our case) never claim the same row. Without this,
+ * customers could receive the same drip email twice.
+ *
+ * A claimed row's claimed_at goes stale after 5 minutes; if a worker died
+ * mid-send, the row becomes claimable again on the next tick.
  */
 export async function fetchDueEmails(limit = 25): Promise<ScheduledEmail[]> {
   const supabase = getSupabaseAdmin();
-  const { data } = await supabase
-    .from("scheduled_emails")
-    .select("*")
-    .is("sent_at", null)
-    .is("failed_at", null)
-    .lte("send_after", new Date().toISOString())
-    .order("send_after", { ascending: true })
-    .limit(limit);
+  const { data, error } = await supabase.rpc("claim_due_emails", {
+    batch_size: limit,
+  });
+  if (error) {
+    console.error(`[email-queue] claim_due_emails failed: ${error.message}`);
+    return [];
+  }
   return (data ?? []) as ScheduledEmail[];
 }
 
