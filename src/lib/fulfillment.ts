@@ -48,17 +48,29 @@ export async function ensureUserAndPurchase(
 
   const supabase = getSupabaseAdmin();
 
-  // 1) get-or-create the auth user
-  let userId: string;
-  const { data: existing } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("email", email)
-    .maybeSingle();
-
-  if (existing) {
-    userId = existing.id;
-  } else {
+  // ─── 1. Get-or-create the auth user ──────────────────────────────────────
+  // Try stripe_customer_id first (unambiguous link to existing customer);
+  // fall back to email. This prevents fragmenting an existing customer
+  // across multiple Supabase accounts if Stripe's collected email differs
+  // (e.g., "Eric@…" vs "eric@…" — though we lowercase — or a typo).
+  let userId: string | null = null;
+  if (stripeCustomerId) {
+    const { data: byStripe } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("stripe_customer_id", stripeCustomerId)
+      .maybeSingle();
+    if (byStripe) userId = byStripe.id;
+  }
+  if (!userId) {
+    const { data: byEmail } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
+    if (byEmail) userId = byEmail.id;
+  }
+  if (!userId) {
     const { data: created, error: createErr } = await supabase.auth.admin.createUser({
       email,
       email_confirm: true,
@@ -99,58 +111,21 @@ export async function ensureUserAndPurchase(
     }
   }
 
-  // 2) Read current tier so we can both (a) compute the upserted profile
-  // correctly and (b) avoid downgrading on add-on purchases.
-  const { data: existingProfile } = await supabase
+  // ─── 2. Idempotency gate: INSERT the purchase row first ──────────────────
+  // The unique constraint on stripe_session_id means a re-run (e.g., webhook
+  // + thank-you page racing) gets a 23505 conflict. We use that as the
+  // signal "already fulfilled" — and skip every side effect below it.
+  // Previously side effects (especially add_coaching_credits) ran on every
+  // call, double-granting credits. The INSERT is now the SINGLE source of
+  // truth for "is this a fresh fulfillment or a replay?"
+  const { data: existingProfileForTier } = await supabase
     .from("profiles")
     .select("tier")
     .eq("id", userId)
     .maybeSingle();
-  const currentTier = (existingProfile?.tier ?? 1) as Tier;
-
-  // Compute the effective tier: never demote. Tier 2 buyer purchasing a
-  // sample-call (grantsTier === null) keeps tier=2; previously the upsert
-  // was passing tier=1 in that case and demoting them.
-  let nextTier: Tier;
-  if (product.grantsTier !== null) {
-    nextTier = Math.max(currentTier, product.grantsTier) as Tier;
-  } else {
-    nextTier = currentTier;
-  }
-
-  // 3) Upsert profile. Tier is now ALWAYS the max-of-current-and-new value,
-  // so non-tier products correctly preserve the customer's existing tier.
-  const profileBase = {
-    id: userId,
-    email,
-    full_name: fullName,
-    stripe_customer_id: stripeCustomerId,
-    tier: nextTier,
-  };
-
-  const { error: profileErr } = await supabase
-    .from("profiles")
-    .upsert(profileBase, { onConflict: "id" });
-  if (profileErr) {
-    console.error(`[fulfillment] profile upsert failed: ${profileErr.message}`);
-  }
-
-  // 4) Bump coaching_credits via atomic SQL function (race-safe; the previous
-  // SELECT-then-UPDATE could lose credits under concurrent purchases).
-  if (product.grantsCoachingCalls > 0) {
-    const { error: rpcErr } = await supabase.rpc("add_coaching_credits", {
-      uid: userId,
-      delta: product.grantsCoachingCalls,
-    });
-    if (rpcErr) {
-      console.error(`[fulfillment] add_coaching_credits failed: ${rpcErr.message}`);
-    }
-  }
-
-  // 5) Insert purchase row.
-  // For tier-granting purchases, tier = grantsTier (what this purchase grants).
-  // For add-on purchases, tier = currentTier (no tier change).
+  const currentTier = (existingProfileForTier?.tier ?? 1) as Tier;
   const purchaseTier = (product.grantsTier ?? currentTier) as Tier;
+
   const { error: purchaseErr } = await supabase.from("purchases").insert({
     user_id: userId,
     stripe_session_id: session.id,
@@ -161,11 +136,58 @@ export async function ensureUserAndPurchase(
     currency: (session.currency ?? "usd").toLowerCase(),
     status: "paid",
   });
-  if (purchaseErr && purchaseErr.code !== "23505") {
+
+  if (purchaseErr?.code === "23505") {
+    console.log(
+      `[fulfillment] session ${session.id} already fulfilled — idempotent skip (no double-credit, no double-redemption)`,
+    );
+    return userId;
+  }
+  if (purchaseErr) {
     console.error(`[fulfillment] purchase insert failed: ${purchaseErr.message}`);
+    // Couldn't even record the purchase — don't grant any side effects.
+    return userId;
   }
 
-  // 6) For upgrade products: mark the matching offer redeemed so it disappears from UI.
+  // ─── 3. New purchase recorded — run side effects ─────────────────────────
+  // From here down, we know this is the FIRST time we're processing this
+  // checkout session. Everything below MUST NOT be retried independently
+  // (no redirect, no manual replay) without first deleting the purchase row.
+
+  // 3a. Profile upsert: never demote tier; safe to run on retry too.
+  const nextTier =
+    product.grantsTier !== null
+      ? (Math.max(currentTier, product.grantsTier) as Tier)
+      : currentTier;
+  const { error: profileErr } = await supabase
+    .from("profiles")
+    .upsert(
+      {
+        id: userId,
+        email,
+        full_name: fullName,
+        stripe_customer_id: stripeCustomerId,
+        tier: nextTier,
+      },
+      { onConflict: "id" },
+    );
+  if (profileErr) {
+    console.error(`[fulfillment] profile upsert failed: ${profileErr.message}`);
+  }
+
+  // 3b. Atomic coaching credit grant.
+  if (product.grantsCoachingCalls > 0) {
+    const { error: rpcErr } = await supabase.rpc("add_coaching_credits", {
+      uid: userId,
+      delta: product.grantsCoachingCalls,
+    });
+    if (rpcErr) {
+      console.error(`[fulfillment] add_coaching_credits failed: ${rpcErr.message}`);
+    }
+  }
+
+  // 3c. Mark the corresponding upgrade offer redeemed (so it disappears
+  // from the upgrade page and isn't double-discounted).
   if (product.slug === "upgrade-1-2") await markOfferRedeemed(userId, 1, 2);
   if (product.slug === "upgrade-1-3") await markOfferRedeemed(userId, 1, 3);
   if (product.slug === "upgrade-2-3") await markOfferRedeemed(userId, 2, 3);

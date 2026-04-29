@@ -29,6 +29,7 @@ import {
   isPromoActive,
 } from "@/lib/upgrade-offers";
 import { OfferCountdown } from "@/components/OfferCountdown";
+import { getProduct, type ProductSlug } from "@/lib/products";
 import type {
   CapabilityProgress,
   Profile,
@@ -51,7 +52,12 @@ const TIER_LABELS: Record<Tier, string> = {
   3: "Builder",
 };
 
-export default async function PortalDashboard() {
+interface PortalPageProps {
+  searchParams: Promise<{ just_purchased?: string; session_id?: string }>;
+}
+
+export default async function PortalDashboard({ searchParams }: PortalPageProps) {
+  const { just_purchased: justPurchasedSlug } = await searchParams;
   const supabase = await getSupabaseServer();
   const {
     data: { user },
@@ -138,6 +144,14 @@ export default async function PortalDashboard() {
           <ProgressMeter percent={percentComplete} completed={completedCount} total={totalCount} />
         </div>
       </section>
+
+      {/* ===== "Just purchased" banner — appears once after upgrades/add-ons ===== */}
+      {justPurchasedSlug && (
+        <JustPurchasedBanner
+          productSlug={justPurchasedSlug as ProductSlug}
+          coachingCredits={profile?.coaching_credits ?? 0}
+        />
+      )}
 
       {/* ===== Active promo banner (subtle, only when 48hr promo is live) ===== */}
       {activePromo && tier < 3 && (
@@ -520,6 +534,62 @@ function ProjectPanel() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function JustPurchasedBanner({
+  productSlug,
+  coachingCredits,
+}: {
+  productSlug: ProductSlug;
+  coachingCredits: number;
+}) {
+  const product = getProduct(productSlug);
+  if (!product) return null;
+
+  // Build the right success message based on what they bought.
+  let title: string;
+  let body: string;
+  if (productSlug.startsWith("upgrade-")) {
+    title = `You're upgraded to ${product.grantsTier === 2 ? "Navigator" : "Builder"}`;
+    body =
+      product.grantsTier === 2
+        ? "All Navigator-level access + 24 coaching calls are now active. Your coaching team will reach out within one business day to schedule your first session."
+        : "All Builder access + done-with-you support are now active. Our concierge team will reach out within one business day.";
+  } else if (productSlug === "sample-call") {
+    title = "Coaching call added";
+    body = `You now have ${coachingCredits} coaching ${coachingCredits === 1 ? "credit" : "credits"}. Email team@thefranchisorblueprint.com to schedule.`;
+  } else if (productSlug === "phase-coaching") {
+    title = "6 coaching calls added";
+    body = `You now have ${coachingCredits} coaching ${coachingCredits === 1 ? "credit" : "credits"} in your account. Email team@thefranchisorblueprint.com to schedule your sessions.`;
+  } else {
+    title = `Welcome to ${product.name}`;
+    body = "Your purchase is confirmed. Everything's now active in your portal.";
+  }
+
+  return (
+    <section className="bg-gradient-to-r from-green-50 via-cream to-green-50 border-b border-green-300/40">
+      <div className="max-w-[1200px] mx-auto px-6 md:px-8 py-5">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-700">
+            <CheckCircle2 size={20} strokeWidth={2.5} />
+          </div>
+          <div className="flex-1 min-w-[260px]">
+            <div className="text-[10px] font-bold tracking-[0.16em] uppercase text-green-700 mb-0.5">
+              Purchase confirmed
+            </div>
+            <div className="text-navy font-bold text-base">{title}</div>
+            <div className="text-grey-3 text-sm">{body}</div>
+          </div>
+          <Link
+            href="/portal"
+            className="text-grey-4 hover:text-navy text-sm font-semibold underline"
+          >
+            Dismiss
+          </Link>
         </div>
       </div>
     </section>

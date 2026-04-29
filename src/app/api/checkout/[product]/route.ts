@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import type Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
 import { getProduct, priceIdFor, type ProductSlug } from "@/lib/products";
 import { getSupabaseServer } from "@/lib/supabase/server";
@@ -11,9 +12,25 @@ export const runtime = "nodejs";
  * Generic checkout entrypoint. Accepts any product slug and creates an
  * appropriate Stripe Checkout Session.
  *
- * For upgrade products, automatically applies the UPGRADE10 coupon if the
- * authenticated user has an active 48-hour promo offer. After the window,
- * the credit-forward base price is still valid (no coupon applied).
+ * Behavior matrix:
+ *
+ *   Anonymous visitor + Blueprint/Plus
+ *     → Stripe collects email; we pass customer_creation: 'always'.
+ *
+ *   Logged-in customer + add-on (sample-call, phase-coaching)
+ *     → reuse their existing Stripe customer ID so saved cards are pre-
+ *       filled. customer_email defaults from auth user. Returns to /portal.
+ *
+ *   Logged-in customer + upgrade (upgrade-1-2 etc.)
+ *     → same saved-card behavior; validates src tier matches current tier
+ *       (prevents revenue leak from crafted slugs); applies UPGRADE10
+ *       coupon if their 48hr promo is active. Returns to /portal.
+ *
+ * Stripe rejects allow_promotion_codes + discounts together — we only set
+ * one OR the other, never both.
+ *
+ * Stripe also rejects customer + customer_creation together — we use
+ * customer (saved-card flow) when we have one, customer_creation otherwise.
  */
 export async function POST(
   req: NextRequest,
@@ -32,77 +49,119 @@ export async function POST(
   }
 
   const origin = req.nextUrl.origin;
+  const isUpgrade = slug.startsWith("upgrade-");
+  const isAddOn = slug === "sample-call" || slug === "phase-coaching";
+  const requiresAuth = isUpgrade || isAddOn;
 
-  // For upgrade products: confirm the user is signed in, validate that the
-  // upgrade slug matches their actual current tier (a Tier 1 customer
-  // can NOT purchase upgrade-2-3 to skip the proper credit-forward fee),
-  // and check for an active 48hr promo offer to decide whether to apply the coupon.
-  let applyPromoCoupon = false;
+  // Auth check — for upgrades AND add-ons (both happen from inside the portal).
+  // For new tier purchases (Blueprint, Plus), the user may be anonymous.
   let userEmail: string | undefined;
-  if (slug.startsWith("upgrade-")) {
+  let stripeCustomerId: string | undefined;
+  let applyPromoCoupon = false;
+
+  if (requiresAuth) {
     const supabase = await getSupabaseServer();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       const loginUrl = new URL("/portal/login", origin);
-      loginUrl.searchParams.set("next", "/portal/upgrade");
+      loginUrl.searchParams.set(
+        "next",
+        isUpgrade ? "/portal/upgrade" : "/portal/coaching",
+      );
       return NextResponse.redirect(loginUrl, 303);
     }
     userEmail = user.email ?? undefined;
 
-    // Source-tier validation: prevents revenue leak from crafted upgrade
-    // slugs (e.g., a Tier 1 customer hitting /api/checkout/upgrade-2-3 to
-    // jump straight to Builder for $21,000 instead of $26,503).
-    const { data: purchasesData } = await supabase
-      .from("purchases")
-      .select("tier")
-      .eq("user_id", user.id)
-      .eq("status", "paid");
+    // Pull profile + purchases in one round trip for tier validation +
+    // saved-card lookup.
+    const [{ data: profile }, { data: purchasesData }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("stripe_customer_id")
+        .eq("id", user.id)
+        .maybeSingle(),
+      supabase
+        .from("purchases")
+        .select("tier")
+        .eq("user_id", user.id)
+        .eq("status", "paid"),
+    ]);
+    stripeCustomerId = profile?.stripe_customer_id ?? undefined;
     const purchases = (purchasesData ?? []) as { tier: number }[];
     if (purchases.length === 0) {
       return NextResponse.redirect(`${origin}/portal`, 303);
     }
     const currentTier = Math.max(...purchases.map((p) => p.tier), 1);
 
-    const [src, tgt] = parseUpgradeSlug(slug);
-    if (!src || !tgt || src !== currentTier || tgt <= currentTier) {
-      // Wrong source for this user, OR target isn't actually higher than current.
-      return NextResponse.redirect(`${origin}/portal/upgrade`, 303);
-    }
-    if ((src === 1 || src === 2) && (tgt === 2 || tgt === 3)) {
-      const offer = await getOfferFor(user.id, src, tgt);
-      applyPromoCoupon = isPromoActive(offer);
+    if (isUpgrade) {
+      const [src, tgt] = parseUpgradeSlug(slug);
+      if (!src || !tgt || src !== currentTier || tgt <= currentTier) {
+        // Wrong source for this user, OR target isn't actually higher.
+        return NextResponse.redirect(`${origin}/portal/upgrade`, 303);
+      }
+      if ((src === 1 || src === 2) && (tgt === 2 || tgt === 3)) {
+        const offer = await getOfferFor(user.id, src, tgt);
+        applyPromoCoupon = isPromoActive(offer);
+      }
     }
   }
 
-  const session = await stripe.checkout.sessions.create({
+  // Build session params, branching customer/email handling and promo handling
+  // to satisfy Stripe's mutual-exclusivity rules.
+  const successUrl = requiresAuth
+    ? `${origin}/portal?just_purchased=${slug}&session_id={CHECKOUT_SESSION_ID}`
+    : `${origin}/thank-you?session_id={CHECKOUT_SESSION_ID}`;
+  const cancelUrl = isUpgrade
+    ? `${origin}/portal/upgrade`
+    : isAddOn
+      ? `${origin}/portal/coaching`
+      : `${origin}/programs/blueprint`;
+
+  const sessionParams: Stripe.Checkout.SessionCreateParams = {
     mode: "payment",
-    line_items: [
-      {
-        price: priceIdFor(product.slug),
-        quantity: 1,
-      },
-    ],
-    success_url: `${origin}/thank-you?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: slug.startsWith("upgrade-")
-      ? `${origin}/portal/upgrade`
-      : slug === "sample-call" || slug === "phase-coaching"
-        ? `${origin}/portal/coaching`
-        // Until /programs/blueprint-plus exists, send Plus cancellers back
-        // to the standard Blueprint product page rather than 404ing them.
-        : `${origin}/programs/blueprint`,
-    allow_promotion_codes: !slug.startsWith("upgrade-"), // upgrades use programmatic coupon
+    line_items: [{ price: priceIdFor(product.slug), quantity: 1 }],
+    success_url: successUrl,
+    cancel_url: cancelUrl,
     billing_address_collection: "required",
-    customer_creation: "always",
-    customer_email: userEmail, // pre-fills for upgrade flows so users don't re-type
-    discounts: applyPromoCoupon
-      ? [{ coupon: process.env.STRIPE_COUPON_UPGRADE10 ?? "UPGRADE10" }]
-      : undefined,
     payment_intent_data: {
       description: product.name,
       metadata: { product: product.slug },
     },
     metadata: { product: product.slug },
-  });
+  };
+
+  // Customer handling (Stripe forbids `customer` + `customer_creation` together)
+  if (stripeCustomerId) {
+    // Returning customer — reuse their Stripe Customer so saved cards show.
+    sessionParams.customer = stripeCustomerId;
+    // Stripe ignores customer_email when customer is set; don't pass it.
+  } else {
+    sessionParams.customer_creation = "always";
+    if (userEmail) sessionParams.customer_email = userEmail;
+  }
+
+  // Promo handling (Stripe forbids `discounts` + `allow_promotion_codes` together).
+  // Upgrades that hit our promo window get a programmatic UPGRADE10 coupon.
+  // Public-facing purchases let customers paste promo codes (e.g. WINBACK1K).
+  if (applyPromoCoupon) {
+    sessionParams.discounts = [
+      { coupon: process.env.STRIPE_COUPON_UPGRADE10 ?? "UPGRADE10" },
+    ];
+  } else if (!isUpgrade) {
+    sessionParams.allow_promotion_codes = true;
+  }
+  // Else (upgrade with no active promo): neither flag — no promo path.
+
+  let session: Stripe.Checkout.Session;
+  try {
+    session = await stripe.checkout.sessions.create(sessionParams);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "unknown";
+    console.error(`[checkout/${slug}] Stripe error: ${message}`);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 
   if (!session.url) {
     return new Response("Stripe did not return a checkout URL", { status: 502 });
