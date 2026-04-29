@@ -7,6 +7,7 @@ import "./globals.css";
 import { JsonLd } from "@/components/JsonLd";
 import { organizationSchema, websiteSchema } from "@/lib/schema";
 import { SITE_URL } from "@/lib/site";
+import { AssessmentResumeBanner } from "@/components/AssessmentResumeBanner";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -110,6 +111,10 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col bg-white text-[#222]">
         {children}
+        {/* Floats above the page when an in-progress assessment cookie is
+            present (and the user isn't already on /assessment or /portal).
+            Self-hides otherwise — zero cost on most pageviews. */}
+        <AssessmentResumeBanner />
         <Analytics />
         <SpeedInsights />
 

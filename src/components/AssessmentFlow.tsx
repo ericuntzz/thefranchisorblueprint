@@ -148,6 +148,28 @@ export function AssessmentFlow({ source }: { source?: string }) {
   // to jump on every click. Stage cards now share a min-height so the
   // section anchor stays put as content swaps.)
 
+  // Tab-title nudge. While the user is mid-flow (answering a question or
+  // reading an insight) AND tabs away from us, swap the tab title to a
+  // "come back" prompt. Restored the moment they refocus the tab, and
+  // also restored on cleanup so the title is never left in a weird state
+  // if React unmounts mid-blur.
+  useEffect(() => {
+    const isMidFlow = stage.kind === "question" || stage.kind === "insight";
+    if (!isMidFlow) return;
+    if (typeof document === "undefined") return;
+    const original = document.title;
+    const nudgeTitle = "⏸ Resume your assessment";
+    const handle = () => {
+      document.title =
+        document.visibilityState === "hidden" ? nudgeTitle : original;
+    };
+    document.addEventListener("visibilitychange", handle);
+    return () => {
+      document.removeEventListener("visibilitychange", handle);
+      document.title = original;
+    };
+  }, [stage.kind]);
+
   // Send a single answer to the API. Retries once on a 404 by transparently
   // restarting the session — handles the case where the client's sessionId
   // doesn't exist on the server (deploy wiped state, browser was idle with
