@@ -1,16 +1,18 @@
 import Link from "next/link";
 import Image from "next/image";
-import { LogOut } from "lucide-react";
+import { LogOut, Sparkles } from "lucide-react";
+import type { Tier } from "@/lib/supabase/types";
 
 interface PortalNavProps {
   displayName: string | null;
   email: string | null;
+  /** Hide the Upgrade link for tier 3 (no higher to go). */
+  tier?: Tier;
 }
 
-export function PortalNav({ displayName, email }: PortalNavProps) {
-  // Prefer the customer's actual name; fall back to email if name isn't set yet
-  // (shouldn't happen post-purchase since Stripe captures name, but safe).
+export function PortalNav({ displayName, email, tier }: PortalNavProps) {
   const label = displayName?.trim() || email || "";
+  const showUpgrade = tier !== undefined && tier < 3;
   return (
     <nav className="bg-white border-b border-navy/10 sticky top-0 z-30">
       <div className="max-w-[1200px] mx-auto px-6 md:px-8 h-[72px] flex items-center justify-between">
@@ -30,7 +32,16 @@ export function PortalNav({ displayName, email }: PortalNavProps) {
           </div>
         </Link>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 md:gap-5">
+          {showUpgrade && (
+            <Link
+              href="/portal/upgrade"
+              className="hidden sm:inline-flex items-center gap-1.5 text-gold-warm hover:text-gold-dark text-sm font-bold tracking-tight transition-colors"
+            >
+              <Sparkles size={14} />
+              Upgrade
+            </Link>
+          )}
           {label && (
             <span className="hidden md:inline text-grey-3 text-sm font-medium">{label}</span>
           )}

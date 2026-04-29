@@ -38,6 +38,34 @@ export type CapabilityProgress = {
   completed_at: string;
 };
 
+export type UpgradeOffer = {
+  id: string;
+  user_id: string;
+  source_tier: 1 | 2;
+  target_tier: 2 | 3;
+  base_amount_cents: number;
+  promo_amount_cents: number;
+  promo_expires_at: string;
+  triggered_by: string;
+  redeemed_at: string | null;
+  created_at: string;
+};
+
+export type ScheduledEmail = {
+  id: string;
+  user_id: string | null;
+  recipient_email: string;
+  template: string;
+  payload: Record<string, unknown>;
+  send_after: string;
+  sent_at: string | null;
+  failed_at: string | null;
+  failure_reason: string | null;
+  attempts: number;
+  dedupe_key: string | null;
+  created_at: string;
+};
+
 // Supabase JS v2 type inference requires this exact shape — including the
 // __InternalSupabase marker and the `{ [_ in never]: never }` empty-record
 // idiom for Views/Functions/Enums/CompositeTypes. Deviations cause every
@@ -79,6 +107,32 @@ export type Database = {
           completed_at?: string;
         };
         Update: Partial<Omit<CapabilityProgress, "user_id" | "capability_slug">>;
+        Relationships: [];
+      };
+      upgrade_offers: {
+        Row: UpgradeOffer;
+        Insert: Omit<UpgradeOffer, "id" | "created_at" | "redeemed_at"> & {
+          id?: string;
+          created_at?: string;
+          redeemed_at?: string | null;
+        };
+        Update: Partial<Omit<UpgradeOffer, "id" | "user_id">>;
+        Relationships: [];
+      };
+      scheduled_emails: {
+        Row: ScheduledEmail;
+        Insert: Omit<
+          ScheduledEmail,
+          "id" | "created_at" | "sent_at" | "failed_at" | "failure_reason" | "attempts"
+        > & {
+          id?: string;
+          created_at?: string;
+          sent_at?: string | null;
+          failed_at?: string | null;
+          failure_reason?: string | null;
+          attempts?: number;
+        };
+        Update: Partial<Omit<ScheduledEmail, "id">>;
         Relationships: [];
       };
     };

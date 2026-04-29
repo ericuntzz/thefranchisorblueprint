@@ -7,6 +7,7 @@ import {
   Calendar,
   CheckCircle2,
   Circle,
+  Clock,
   FileText,
   ShieldOff,
   Sparkles,
@@ -23,11 +24,17 @@ import {
   type Capability,
   type CapabilityPhase,
 } from "@/lib/capabilities";
+import {
+  getActiveOffersForUser,
+  isPromoActive,
+} from "@/lib/upgrade-offers";
+import { OfferCountdown } from "@/components/OfferCountdown";
 import type {
   CapabilityProgress,
   Profile,
   Purchase,
   Tier,
+  UpgradeOffer,
 } from "@/lib/supabase/types";
 
 export const metadata: Metadata = {
@@ -91,6 +98,17 @@ export default async function PortalDashboard() {
   // First not-yet-completed capability in journey order — surfaced as "next step"
   const nextCapability = visibleCaps.find((c) => !completedSlugs.has(c.slug)) ?? null;
 
+  // Phase 1 complete = "Discover" phase done. This is the moment we surface
+  // the upgrade prompt prominently (per upgrade strategy).
+  const phase1Caps = phaseGroups.discover;
+  const phase1Done = phase1Caps.length > 0 && phase1Caps.every((c) => completedSlugs.has(c.slug));
+
+  // Active 48hr promo offer — surfaced via the inline UpgradeBanner component
+  const offers = tier < 3 ? await getActiveOffersForUser(user.id) : [];
+  const activePromo = offers
+    .filter((o) => isPromoActive(o))
+    .sort((a, b) => new Date(a.promo_expires_at).getTime() - new Date(b.promo_expires_at).getTime())[0] ?? null;
+
   return (
     <>
       {/* ===== Welcome ===== */}
@@ -120,6 +138,16 @@ export default async function PortalDashboard() {
           <ProgressMeter percent={percentComplete} completed={completedCount} total={totalCount} />
         </div>
       </section>
+
+      {/* ===== Active promo banner (subtle, only when 48hr promo is live) ===== */}
+      {activePromo && tier < 3 && (
+        <PromoBanner offer={activePromo} tier={tier} />
+      )}
+
+      {/* ===== Phase 1 complete → upgrade hero card (more prominent) ===== */}
+      {phase1Done && !isAllComplete && tier < 3 && (
+        <Phase1UpgradeHero firstName={firstName} tier={tier} />
+      )}
 
       {/* ===== Final readiness milestone ===== */}
       {isAllComplete && <FinalReadinessCard firstName={firstName} />}
@@ -490,6 +518,78 @@ function ProjectPanel() {
               <div className="text-grey-4 text-xs italic">
                 Project tools coming online soon
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PromoBanner({ offer, tier }: { offer: UpgradeOffer; tier: Tier }) {
+  const targetName = offer.target_tier === 2 ? "Navigator" : "Builder";
+  return (
+    <section className="bg-gradient-to-r from-navy via-navy-light to-navy text-white border-b border-gold/30">
+      <div className="max-w-[1200px] mx-auto px-6 md:px-8 py-4 flex flex-wrap items-center gap-4">
+        <Clock size={18} className="text-gold flex-shrink-0" />
+        <div className="flex-1 min-w-[260px]">
+          <div className="text-[10px] font-bold tracking-[0.16em] uppercase text-gold mb-0.5">
+            48-hour upgrade promo active
+          </div>
+          <div className="text-white text-sm md:text-base font-semibold">
+            10% off your upgrade to {targetName} ends in{" "}
+            <span className="text-gold font-bold tabular-nums">
+              <OfferCountdown expiresAt={offer.promo_expires_at} />
+            </span>
+          </div>
+        </div>
+        <Link
+          href="/portal/upgrade"
+          className="inline-flex items-center gap-1.5 bg-gold text-navy font-bold text-xs uppercase tracking-[0.1em] px-5 py-2.5 rounded-full hover:bg-gold-dark transition-colors"
+        >
+          See upgrade <ArrowRight size={13} />
+        </Link>
+      </div>
+      {/* Tier passthrough silence — used for type narrowing only */}
+      {tier === tier && null}
+    </section>
+  );
+}
+
+function Phase1UpgradeHero({ firstName, tier }: { firstName: string | null; tier: Tier }) {
+  const targetName = tier === 1 ? "Navigator" : "Builder";
+  return (
+    <section className="py-10 md:py-14 bg-cream border-b border-gold/30">
+      <div className="max-w-[1200px] mx-auto px-6 md:px-8">
+        <div className="bg-white rounded-2xl border-2 border-gold/30 shadow-[0_8px_28px_rgba(212,162,76,0.12)] p-7 md:p-9 flex flex-wrap items-start gap-5">
+          <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-navy to-navy-light flex items-center justify-center text-gold">
+            <Sparkles size={20} />
+          </div>
+          <div className="flex-1 min-w-[260px]">
+            <div className="text-[10px] font-bold tracking-[0.18em] uppercase text-gold-warm mb-2">
+              Phase 1 complete
+            </div>
+            <h2 className="text-navy font-extrabold text-xl md:text-2xl mb-2">
+              {firstName
+                ? `${firstName}, you've validated you're ready`
+                : "You've validated you're ready"}
+            </h2>
+            <p className="text-grey-3 text-base leading-relaxed mb-4">
+              The next phase (Architect) is where 80% of your time gets spent and where 1:1 coaching dramatically compresses the timeline. Want a coach for the hard parts?
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/portal/upgrade"
+                className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-7 py-3.5 rounded-full hover:bg-gold-dark transition-colors"
+              >
+                Upgrade to {targetName} <ArrowRight size={14} />
+              </Link>
+              <Link
+                href="/portal/coaching"
+                className="inline-flex items-center gap-2 bg-transparent text-navy border-2 border-navy/15 font-bold text-sm uppercase tracking-[0.1em] px-6 py-3.5 rounded-full hover:border-navy hover:bg-navy hover:text-white transition-colors"
+              >
+                Try a sample call
+              </Link>
             </div>
           </div>
         </div>

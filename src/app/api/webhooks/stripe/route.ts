@@ -4,11 +4,12 @@ import { stripe, stripeEnv } from "@/lib/stripe";
 import {
   ensureUserAndPurchase,
   markPurchaseRefunded,
-  sendWelcomeMagicLinkEmail,
+  dispatchPostPurchaseLifecycle,
 } from "@/lib/fulfillment";
 import { TIERS, type TierId } from "@/lib/analytics";
 import { sendServerEvent, clientIdFor } from "@/lib/ga-measurement-protocol";
 import { acUpsertContact, AC_MASTER_LIST_ID } from "@/lib/activecampaign";
+import type { ProductSlug } from "@/lib/products";
 
 /**
  * Map a Stripe Checkout Session metadata.product → our internal TierId.
@@ -55,7 +56,20 @@ export async function POST(req: NextRequest) {
       const userId = await ensureUserAndPurchase(session);
       const email = session.customer_details?.email?.toLowerCase();
       if (userId && email) {
-        await sendWelcomeMagicLinkEmail(email, req.nextUrl.origin);
+        // Fire welcome email + queue upgrade drip + create offers.
+        // Wrapped — lifecycle failure must never break webhook idempotency.
+        try {
+          await dispatchPostPurchaseLifecycle({
+            userId,
+            email,
+            fullName: session.customer_details?.name ?? null,
+            productSlug: ((session.metadata?.product ?? "blueprint").toLowerCase() as ProductSlug),
+            amountCents: session.amount_total ?? 0,
+            origin: req.nextUrl.origin,
+          });
+        } catch (err) {
+          console.error("[stripe] post-purchase lifecycle failed:", err);
+        }
       }
 
       // ─── ActiveCampaign: add buyer to Master list with tier tag ───────

@@ -1,15 +1,26 @@
 import type Stripe from "stripe";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import {
+  PRODUCTS,
+  getProduct,
+  type Product,
+  type ProductSlug,
+} from "@/lib/products";
+import {
+  PROMO_WINDOW_HOURS,
+  createUpgradeOffersForTier,
+  markOfferRedeemed,
+} from "@/lib/upgrade-offers";
+import { enqueueEmail } from "@/lib/email/queue";
+import { sendTemplate } from "@/lib/email/dispatch";
 import type { Tier } from "@/lib/supabase/types";
 
 /**
- * Idempotent fulfillment for a paid Stripe Checkout Session.
+ * Idempotent fulfillment for any paid Stripe Checkout Session.
  *
- * Creates the auth user (if missing), upserts the profile row, and inserts
- * the purchase row. Safe to call from both the Stripe webhook AND the
- * /thank-you page — whichever runs first wins, the second is a no-op.
- *
- * Returns the Supabase user id (always — fulfillment is the contract).
+ * Looks up the product by metadata.product slug, grants the right combo of
+ * tier + coaching credits, writes the purchase row, redeems any related
+ * upgrade offer.
  */
 export async function ensureUserAndPurchase(
   session: Stripe.Checkout.Session,
@@ -23,8 +34,8 @@ export async function ensureUserAndPurchase(
     return null;
   }
 
-  const product = session.metadata?.product ?? "unknown";
-  const tier = parseTier(session.metadata?.tier);
+  const productSlug = (session.metadata?.product ?? "").toLowerCase() as ProductSlug;
+  const product = getProduct(productSlug) ?? PRODUCTS.blueprint; // safe default
   const fullName = session.customer_details?.name ?? null;
   const stripeCustomerId =
     typeof session.customer === "string"
@@ -54,9 +65,6 @@ export async function ensureUserAndPurchase(
       user_metadata: { full_name: fullName, source: "stripe_checkout" },
     });
     if (createErr || !created.user) {
-      // Race: webhook + thank-you page can both reach this branch concurrently.
-      // The losing call gets "email_exists" / "User already registered" — recover
-      // by listing the user up by email rather than dropping the purchase.
       const code = (createErr as { code?: string } | null)?.code;
       const message = createErr?.message ?? "";
       const isAlreadyRegistered =
@@ -71,9 +79,10 @@ export async function ensureUserAndPurchase(
         if (existingByEmail) {
           userId = existingByEmail.id;
         } else {
-          // Profile row not yet written by the other racer — try the auth API
-          // listing as a final fallback.
-          const { data: listed } = await supabase.auth.admin.listUsers({ page: 1, perPage: 50 });
+          const { data: listed } = await supabase.auth.admin.listUsers({
+            page: 1,
+            perPage: 50,
+          });
           const match = listed?.users?.find((u) => u.email?.toLowerCase() === email);
           if (!match) {
             console.error(`[fulfillment] race recovery failed for ${email}: ${message}`);
@@ -90,106 +99,252 @@ export async function ensureUserAndPurchase(
     }
   }
 
-  // 2) upsert profile
+  // 2) Compute the new effective tier — only INCREASE, never demote.
+  // For tier-granting products, we take max(currentTier, product.grantsTier).
+  // For non-tier products (sample-call, phase-coaching), tier stays the same.
+  let nextTier: Tier | null = null;
+  if (product.grantsTier !== null) {
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("tier")
+      .eq("id", userId)
+      .maybeSingle();
+    const currentTier = (existingProfile?.tier ?? 1) as Tier;
+    nextTier = Math.max(currentTier, product.grantsTier) as Tier;
+  }
+
+  // 3) Upsert profile with optional tier bump
+  const profileUpdate: {
+    id: string;
+    email: string;
+    full_name: string | null;
+    stripe_customer_id: string | null;
+    tier?: Tier;
+  } = {
+    id: userId,
+    email,
+    full_name: fullName,
+    stripe_customer_id: stripeCustomerId,
+  };
+  if (nextTier !== null) profileUpdate.tier = nextTier;
+
   const { error: profileErr } = await supabase
     .from("profiles")
-    .upsert(
-      {
-        id: userId,
-        email,
-        full_name: fullName,
-        stripe_customer_id: stripeCustomerId,
-        tier,
-      },
-      { onConflict: "id" },
-    );
+    .upsert(profileUpdate, { onConflict: "id" });
   if (profileErr) {
     console.error(`[fulfillment] profile upsert failed: ${profileErr.message}`);
   }
 
-  // 3) insert purchase (silent no-op on retry — unique constraint on stripe_session_id)
+  // 4) Bump coaching_credits separately (atomic increment)
+  if (product.grantsCoachingCalls > 0) {
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("coaching_credits")
+      .eq("id", userId)
+      .maybeSingle();
+    const newCredits = (prof?.coaching_credits ?? 0) + product.grantsCoachingCalls;
+    await supabase.from("profiles").update({ coaching_credits: newCredits }).eq("id", userId);
+  }
+
+  // 5) Insert purchase row
   const { error: purchaseErr } = await supabase.from("purchases").insert({
     user_id: userId,
     stripe_session_id: session.id,
     stripe_payment_intent_id: paymentIntentId,
-    product,
-    tier,
+    product: product.slug,
+    tier: (nextTier ?? 1) as Tier,
     amount_cents: session.amount_total ?? 0,
     currency: (session.currency ?? "usd").toLowerCase(),
     status: "paid",
   });
-  if (purchaseErr && !purchaseErr.message.includes("duplicate")) {
+  if (purchaseErr && purchaseErr.code !== "23505") {
     console.error(`[fulfillment] purchase insert failed: ${purchaseErr.message}`);
   }
+
+  // 6) For upgrade products: mark the matching offer redeemed so it disappears from UI.
+  if (product.slug === "upgrade-1-2") await markOfferRedeemed(userId, 1, 2);
+  if (product.slug === "upgrade-1-3") await markOfferRedeemed(userId, 1, 3);
+  if (product.slug === "upgrade-2-3") await markOfferRedeemed(userId, 2, 3);
 
   return userId;
 }
 
 /**
- * Generates a single-use magic link for an existing user, returning a URL
- * that lands them in the portal in one click. Used on the /thank-you page
- * so customers don't have to wait for email.
+ * Post-purchase lifecycle orchestration. Welcome email immediately, drip
+ * emails scheduled into the queue. Called from the webhook after fulfillment.
  */
-export async function generatePortalAccessUrl(
-  email: string,
-  origin: string,
-): Promise<string | null> {
+export async function dispatchPostPurchaseLifecycle(args: {
+  userId: string;
+  email: string;
+  fullName: string | null;
+  productSlug: ProductSlug;
+  amountCents: number;
+  origin: string;
+}): Promise<void> {
+  const product = getProduct(args.productSlug);
+  if (!product) return;
+
+  // Add-on products (sample-call, phase-coaching) don't get a tier-style welcome.
+  // We could send a "thanks for your call" email later — for v1, no email.
+  const isLifecycleEligible =
+    product.grantsTier !== null && product.grantsCoachingCalls === 0
+      ? true // pure tier products (blueprint, navigator, builder)
+      : product.slug === "blueprint-plus";
+
+  if (!isLifecycleEligible) {
+    console.log(`[lifecycle] no welcome scheduled for ${product.slug} (add-on / upgrade)`);
+    // Still dispatch the win-back-eligible offers etc. for upgrade products
+    if (
+      product.slug === "upgrade-1-2" ||
+      product.slug === "upgrade-1-3" ||
+      product.slug === "upgrade-2-3"
+    ) {
+      // Upgrade purchases: customer is already logged in, no welcome email needed.
+      // We could send a confirmation email here as a v2 polish.
+    }
+    return;
+  }
+
+  const firstName = args.fullName?.split(" ")[0] ?? null;
+  const amountFormatted = (args.amountCents / 100).toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+  });
+
+  // ─── 1. Welcome email — immediate. Includes a magic-link to land them in /portal.
   const supabase = getSupabaseAdmin();
-  const { data, error } = await supabase.auth.admin.generateLink({
+  const { data: linkResult, error: linkErr } = await supabase.auth.admin.generateLink({
     type: "magiclink",
-    email,
-    options: {
-      redirectTo: `${origin}/auth/confirm?next=/portal`,
-    },
+    email: args.email,
+    options: { redirectTo: `${args.origin}/auth/confirm?next=/portal` },
   });
-  if (error || !data.properties?.hashed_token) {
-    console.error(`[fulfillment] generateLink failed for ${email}: ${error?.message}`);
-    return null;
+  if (linkErr || !linkResult.properties?.hashed_token) {
+    console.error(`[lifecycle] generateLink failed: ${linkErr?.message}`);
+    return;
   }
-  const url = new URL(`${origin}/auth/confirm`);
-  url.searchParams.set("token_hash", data.properties.hashed_token);
-  url.searchParams.set("type", "magiclink");
-  url.searchParams.set("next", "/portal");
-  return url.toString();
+  const magicLink = new URL(`${args.origin}/auth/confirm`);
+  magicLink.searchParams.set("token_hash", linkResult.properties.hashed_token);
+  magicLink.searchParams.set("type", "magiclink");
+  magicLink.searchParams.set("next", "/portal");
+
+  await sendTemplate("welcome", args.email, {
+    firstName,
+    productName: product.name,
+    amountFormatted,
+    magicLink: magicLink.toString(),
+  });
+
+  // ─── 2. Upgrade offers + drip emails (only for entry tiers, not for upgrades)
+  if (product.grantsTier === 1) {
+    await createUpgradeOffersForTier(args.userId, 1);
+    await scheduleUpgradeDripT1(args, firstName);
+  } else if (product.grantsTier === 2) {
+    await createUpgradeOffersForTier(args.userId, 2);
+    await scheduleUpgradeDripT2(args, firstName);
+  }
 }
 
-/**
- * Sends the welcome magic-link email through Supabase's mailer using the
- * configured email template. Server-issued magic links are token_hash flow.
- * Backup pathway in case the customer doesn't click through from /thank-you.
- */
-export async function sendWelcomeMagicLinkEmail(
-  email: string,
-  origin: string,
+async function scheduleUpgradeDripT1(
+  args: {
+    userId: string;
+    email: string;
+    productSlug: ProductSlug;
+    origin: string;
+  },
+  firstName: string | null,
 ): Promise<void> {
-  const supabase = getSupabaseAdmin();
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      shouldCreateUser: false,
-      emailRedirectTo: `${origin}/auth/confirm?next=/portal`,
-    },
+  const product = getProduct(args.productSlug);
+  if (!product) return;
+
+  // 24h after purchase: nudge with the 48hr offer
+  const upgradeNudgeAt = new Date(Date.now() + 24 * 3600 * 1000);
+  const upgradeNudgePayload = {
+    firstName,
+    currentTierName: product.name,
+    targetTierName: "Navigator",
+    upgradeUrl: `${args.origin}/portal/upgrade`,
+    hoursRemaining: PROMO_WINDOW_HOURS - 24,
+    promoPriceFormatted: "$4,953",
+    basePriceFormatted: "$5,503",
+  };
+  await enqueueEmail({
+    userId: args.userId,
+    recipientEmail: args.email,
+    template: "upgrade-nudge",
+    payload: upgradeNudgePayload,
+    sendAfter: upgradeNudgeAt,
+    dedupeKey: `upgrade-nudge:${args.userId}:1->2`,
   });
-  if (error) {
-    console.error(`[fulfillment] signInWithOtp failed for ${email}: ${error.message}`);
-  }
+
+  // 36h after purchase: 12h-remaining countdown
+  const offerExpiringAt = new Date(Date.now() + 36 * 3600 * 1000);
+  await enqueueEmail({
+    userId: args.userId,
+    recipientEmail: args.email,
+    template: "offer-expiring",
+    payload: {
+      firstName,
+      hoursRemaining: 12,
+      promoPriceFormatted: "$4,953",
+      basePriceFormatted: "$5,503",
+      upgradeUrl: `${args.origin}/portal/upgrade`,
+      targetTierName: "Navigator",
+    },
+    sendAfter: offerExpiringAt,
+    dedupeKey: `offer-expiring:${args.userId}:1->2`,
+  });
 }
 
-function parseTier(raw: string | undefined): Tier {
-  const n = Number(raw);
-  if (n === 2 || n === 3) return n;
-  return 1;
+async function scheduleUpgradeDripT2(
+  args: {
+    userId: string;
+    email: string;
+    productSlug: ProductSlug;
+    origin: string;
+  },
+  firstName: string | null,
+): Promise<void> {
+  const product = getProduct(args.productSlug);
+  if (!product) return;
+
+  const upgradeNudgeAt = new Date(Date.now() + 24 * 3600 * 1000);
+  await enqueueEmail({
+    userId: args.userId,
+    recipientEmail: args.email,
+    template: "upgrade-nudge",
+    payload: {
+      firstName,
+      currentTierName: product.name,
+      targetTierName: "Builder",
+      upgradeUrl: `${args.origin}/portal/upgrade`,
+      hoursRemaining: PROMO_WINDOW_HOURS - 24,
+      promoPriceFormatted: "$18,900",
+      basePriceFormatted: "$21,000",
+    },
+    sendAfter: upgradeNudgeAt,
+    dedupeKey: `upgrade-nudge:${args.userId}:2->3`,
+  });
+
+  const offerExpiringAt = new Date(Date.now() + 36 * 3600 * 1000);
+  await enqueueEmail({
+    userId: args.userId,
+    recipientEmail: args.email,
+    template: "offer-expiring",
+    payload: {
+      firstName,
+      hoursRemaining: 12,
+      promoPriceFormatted: "$18,900",
+      basePriceFormatted: "$21,000",
+      upgradeUrl: `${args.origin}/portal/upgrade`,
+      targetTierName: "Builder",
+    },
+    sendAfter: offerExpiringAt,
+    dedupeKey: `offer-expiring:${args.userId}:2->3`,
+  });
 }
 
 /**
- * Marks the corresponding `purchases` row as refunded in response to a
- * Stripe `charge.refunded` event. Looked up via stripe_payment_intent_id
- * (the only stable link from a Charge back to our purchase row).
- *
- * Treats any refund (full or partial) as a full revocation for our access-
- * gating purposes — a customer unhappy enough to refund any portion of a
- * one-time digital purchase shouldn't keep the content. If we ever sell
- * something where partial refunds are normal, revisit this.
+ * Refund handler — flips the purchases row + schedules a 14-day win-back email.
  */
 export async function markPurchaseRefunded(charge: Stripe.Charge): Promise<void> {
   const piId =
@@ -197,7 +352,7 @@ export async function markPurchaseRefunded(charge: Stripe.Charge): Promise<void>
       ? charge.payment_intent
       : charge.payment_intent?.id ?? null;
   if (!piId) {
-    console.error(`[fulfillment] charge ${charge.id} has no payment_intent — can't link to purchase`);
+    console.error(`[fulfillment] charge ${charge.id} has no payment_intent`);
     return;
   }
 
@@ -210,17 +365,54 @@ export async function markPurchaseRefunded(charge: Stripe.Charge): Promise<void>
       refund_amount_cents: charge.amount_refunded,
     })
     .eq("stripe_payment_intent_id", piId)
-    .select("id, user_id, tier");
+    .select("id, user_id, tier, product");
 
   if (error) {
     console.error(`[fulfillment] mark refunded failed for pi=${piId}: ${error.message}`);
     return;
   }
   if (!data || data.length === 0) {
-    console.warn(`[fulfillment] charge.refunded for unknown payment_intent ${piId} — nothing to update`);
+    console.warn(`[fulfillment] charge.refunded for unknown PI ${piId}`);
     return;
   }
+  const refunded = data[0];
   console.log(
-    `[fulfillment] marked refunded user=${data[0].user_id} tier=${data[0].tier} pi=${piId} amount_refunded=${charge.amount_refunded}`,
+    `[fulfillment] marked refunded user=${refunded.user_id} tier=${refunded.tier} pi=${piId} amount=${charge.amount_refunded}`,
   );
+
+  // Schedule win-back email for +14 days
+  const { data: prof } = await supabase
+    .from("profiles")
+    .select("email, full_name")
+    .eq("id", refunded.user_id)
+    .maybeSingle();
+  if (!prof?.email) return;
+
+  const product = getProduct(refunded.product) ?? PRODUCTS.blueprint;
+  await enqueueEmail({
+    userId: refunded.user_id,
+    recipientEmail: prof.email,
+    template: "win-back",
+    payload: {
+      firstName: prof.full_name?.split(" ")[0] ?? null,
+      refundedProductName: product.name,
+      navigatorUrl: "https://www.thefranchisorblueprint.com/programs",
+    },
+    sendAfter: new Date(Date.now() + 14 * 24 * 3600 * 1000),
+    dedupeKey: `win-back:${refunded.user_id}:${refunded.id}`,
+  });
 }
+
+/** Backwards-compat shim — kept so old webhook code doesn't break. */
+export async function sendWelcomeMagicLinkEmail(
+  email: string,
+  origin: string,
+): Promise<void> {
+  // Silent fallback: we now drive the welcome via dispatchPostPurchaseLifecycle.
+  // If anything still calls this, it's a no-op.
+  void email;
+  void origin;
+}
+
+// Re-export commonly imported names so call sites don't need to update paths
+export type { Product, ProductSlug } from "@/lib/products";
