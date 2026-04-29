@@ -7,7 +7,11 @@ import { PageHero } from "@/components/PageHero";
 import { AssessmentFlow } from "@/components/AssessmentFlow";
 
 export const metadata: Metadata = {
-  title: "Free Franchise Readiness Assessment | The Franchisor Blueprint",
+  // Distinguishing word first so the tab label survives truncation in
+  // narrow browser tabs ("Assessment …" reads cleanly; "Free Franchise…"
+  // doesn't tell the user what tab it is). Matches the pattern used on
+  // Pricing / Programs / The Blueprint product page.
+  title: "Assessment | The Franchisor Blueprint | Free Franchise Readiness Quiz",
   description:
     "Take our free 15-question Franchise Readiness Assessment and find out in 5–7 minutes whether your business is positioned to scale through franchising.",
 };

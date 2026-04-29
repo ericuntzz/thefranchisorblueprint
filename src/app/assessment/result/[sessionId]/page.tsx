@@ -50,7 +50,9 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: "Your Franchise Readiness Score | The Franchisor Blueprint",
+    // Lead with "Your Score" so the tab label is identifiable even when
+    // truncated. Matches the assessment page's title pattern.
+    title: "Your Score | The Franchisor Blueprint | Franchise Readiness Report",
     robots: { index: false, follow: false },
   };
 }
