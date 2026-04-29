@@ -42,6 +42,12 @@ const VALID_URGENCY = new Set([
 
 interface CompleteRequest {
   sessionId?: string;
+  /**
+   * Accepted but no longer enforced as a security gate. See /answer route
+   * for rationale — sessionId UUIDs are sufficient credentials here, and
+   * the token gate stays on the result page + PDF where personal info is
+   * exposed.
+   */
   resumeToken?: string;
   email?: string;
   firstName?: string;
@@ -62,9 +68,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid json" }, { status: 400 });
   }
 
-  const { sessionId, resumeToken } = body;
-  if (!sessionId || !resumeToken) {
-    return NextResponse.json({ error: "missing session credentials" }, { status: 400 });
+  const { sessionId } = body;
+  if (!sessionId) {
+    return NextResponse.json({ error: "missing session id" }, { status: 400 });
   }
   const email = (body.email ?? "").trim().toLowerCase();
   const firstName = (body.firstName ?? "").trim();
@@ -87,12 +93,14 @@ export async function POST(req: NextRequest) {
 
   const supabase = getSupabaseAdmin();
 
-  // Resume-token gate.
+  // Session lookup by ID only — see /answer route for rationale.
+  // The result-page URL we generate below STILL embeds the resume_token
+  // so the result page itself remains token-gated for personal-info
+  // protection.
   const { data: session } = await supabase
     .from("assessment_sessions")
     .select("*")
     .eq("id", sessionId)
-    .eq("resume_token", resumeToken)
     .maybeSingle();
   const owned = session as AssessmentSession | null;
   if (!owned) {
@@ -101,6 +109,9 @@ export async function POST(req: NextRequest) {
   if (owned.completed_at) {
     return NextResponse.json({ error: "session already completed" }, { status: 409 });
   }
+  // Use the existing token from the row for the result-page URL so the
+  // link remains valid even if the client has lost its in-memory copy.
+  const resumeToken = owned.resume_token ?? "";
 
   // Pull all responses; require all 15 to be present before completion.
   const { data: respData } = await supabase

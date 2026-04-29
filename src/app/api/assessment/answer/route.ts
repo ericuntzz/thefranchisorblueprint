@@ -17,6 +17,14 @@ export const runtime = "nodejs";
 
 interface AnswerRequest {
   sessionId?: string;
+  /**
+   * Token is accepted but no longer enforced as a security gate on this
+   * route. The sessionId itself is a v4 UUID (unguessable), and gating
+   * /answer on the token added a failure mode where any client/server
+   * state drift returned a 404 mid-quiz instead of just saving the
+   * answer. We still gate the result page + PDF download on the token —
+   * those expose personal info and warrant the extra check.
+   */
   resumeToken?: string;
   questionId?: string;
   answerValue?: string;
@@ -30,8 +38,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid json" }, { status: 400 });
   }
 
-  const { sessionId, resumeToken, questionId, answerValue } = body;
-  if (!sessionId || !resumeToken || !questionId || !answerValue) {
+  const { sessionId, questionId, answerValue } = body;
+  if (!sessionId || !questionId || !answerValue) {
     return NextResponse.json({ error: "missing required fields" }, { status: 400 });
   }
 
@@ -43,15 +51,18 @@ export async function POST(req: NextRequest) {
 
   const supabase = getSupabaseAdmin();
 
-  // Resume-token gate. Confirms the caller actually owns this session.
+  // Look up the session by ID only. If it doesn't exist (e.g. the client
+  // is holding a stale sessionId from a deploy that wiped the DB), tell
+  // the client to restart — the AssessmentFlow component handles 404 by
+  // starting a fresh session and re-submitting the answer transparently.
   const { data: session } = await supabase
     .from("assessment_sessions")
-    .select("*")
+    .select("id,completed_at")
     .eq("id", sessionId)
-    .eq("resume_token", resumeToken)
     .maybeSingle();
-  const owned = session as AssessmentSession | null;
+  const owned = session as Pick<AssessmentSession, "id" | "completed_at"> | null;
   if (!owned) {
+    console.warn(`[assessment/answer] session not found id=${sessionId}`);
     return NextResponse.json({ error: "session not found" }, { status: 404 });
   }
   if (owned.completed_at) {

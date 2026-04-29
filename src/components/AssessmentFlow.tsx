@@ -152,6 +152,32 @@ export function AssessmentFlow({ source }: { source?: string }) {
     }
   }, [stage]);
 
+  // Send a single answer to the API. Retries once on a 404 by transparently
+  // restarting the session — handles the case where the client's sessionId
+  // doesn't exist on the server (deploy wiped state, browser was idle with
+  // a stale session, etc). Returns the parsed insight if successful.
+  async function postAnswer(
+    s: SessionState,
+    question: AssessmentQuestion,
+    letter: AnswerLetter,
+  ): Promise<{ ok: true; insight: string | null } | { ok: false; status: number }> {
+    const res = await fetch("/api/assessment/answer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionId: s.sessionId,
+        resumeToken: s.resumeToken,
+        questionId: question.id,
+        answerValue: letter,
+      }),
+    });
+    if (res.ok) {
+      const data: { insight: string | null } = await res.json();
+      return { ok: true, insight: data.insight };
+    }
+    return { ok: false, status: res.status };
+  }
+
   async function answerQuestion(question: AssessmentQuestion, letter: AnswerLetter) {
     if (!session) return;
     setError(null);
@@ -160,28 +186,47 @@ export function AssessmentFlow({ source }: { source?: string }) {
       ...session,
       answers: { ...session.answers, [question.id]: letter },
     });
-    const res = await fetch("/api/assessment/answer", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sessionId: session.sessionId,
-        resumeToken: session.resumeToken,
-        questionId: question.id,
-        answerValue: letter,
-      }),
-    });
-    if (!res.ok) {
+
+    let result = await postAnswer(session, question, letter);
+
+    // Recovery path: server says our session doesn't exist. Spin up a fresh
+    // one and re-submit. The user never sees a failure — the click "just
+    // works" even if our local state has drifted from the server.
+    if (!result.ok && result.status === 404) {
+      try {
+        const startRes = await fetch("/api/assessment/start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ source: source ?? "answer_recovery" }),
+        });
+        if (startRes.ok) {
+          const fresh: { sessionId: string; resumeToken: string } = await startRes.json();
+          setResumeCookie(fresh.resumeToken);
+          const refreshed: SessionState = {
+            sessionId: fresh.sessionId,
+            resumeToken: fresh.resumeToken,
+            answers: { [question.id]: letter },
+          };
+          setSession(refreshed);
+          result = await postAnswer(refreshed, question, letter);
+        }
+      } catch {
+        /* fall through to the error UI below */
+      }
+    }
+
+    if (!result.ok) {
       setError("We couldn't save your answer. Please try again.");
       return;
     }
-    const data: { insight: string | null } = await res.json();
+
     const currentIndex = QUESTIONS.findIndex((q) => q.id === question.id);
     const nextIndex = currentIndex + 1;
-    if (data.insight) {
+    if (result.insight) {
       setStage({
         kind: "insight",
         questionIndex: currentIndex,
-        text: data.insight,
+        text: result.insight,
         nextIndex,
       });
     } else {
