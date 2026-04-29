@@ -24,17 +24,21 @@ export async function POST(req: NextRequest) {
   const email = String(form.get("email") ?? "").trim().toLowerCase();
   const firstName = String(form.get("firstName") ?? "").trim() || null;
   const lastName = String(form.get("lastName") ?? "").trim() || null;
+  // /contact is now support/admin-flavored: business + revenue dropped from
+  // the form (sales-intent visitors are routed to /strategy-call instead).
+  // The new "topic" field replaces "program" — we still persist into the
+  // existing program_interest column so we don't need a schema migration.
   const businessName = String(form.get("business") ?? "").trim() || null;
   const annualRevenue = String(form.get("revenue") ?? "").trim() || null;
-  const programInterest = String(form.get("program") ?? "").trim() || null;
+  const topic = String(form.get("topic") ?? form.get("program") ?? "").trim() || null;
   const message = String(form.get("message") ?? "").trim() || null;
 
-  // Basic validation: real-looking email + required fields. Bad submits get
-  // bounced back to the form with an error query param so we can show a banner.
+  // Basic validation: real-looking email + name + something to act on. We
+  // dropped the business-name requirement when /contact pivoted to support.
   if (!email || !email.includes("@")) {
     return NextResponse.redirect(new URL("/contact?error=email", req.url), 303);
   }
-  if (!firstName || !lastName || !businessName) {
+  if (!firstName || !lastName || !message) {
     return NextResponse.redirect(new URL("/contact?error=missing", req.url), 303);
   }
 
@@ -56,7 +60,7 @@ export async function POST(req: NextRequest) {
         last_name: lastName,
         business_name: businessName,
         annual_revenue: annualRevenue,
-        program_interest: programInterest,
+        program_interest: topic,
         message,
         ip,
         user_agent: userAgent,
@@ -101,7 +105,7 @@ export async function POST(req: NextRequest) {
         lastName,
         businessName,
         annualRevenue,
-        programInterest,
+        programInterest: topic,
         message,
         submittedAt: new Date().toISOString(),
         supabaseRowUrl: submissionId

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Calendar, Clock, Shield, MessageCircle } from "lucide-react";
+import { Calendar, Clock, Shield, MessageCircle, Mail } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { PageHero } from "@/components/PageHero";
@@ -104,6 +104,22 @@ export default function StrategyCallPage() {
             className="inline-block bg-transparent text-navy border-2 border-navy font-bold text-sm uppercase tracking-[0.1em] px-9 py-4 rounded-full hover:bg-navy hover:text-white transition-colors"
           >
             Take the Free Assessment
+          </Link>
+        </div>
+      </section>
+
+      {/* ===== Tertiary: have a question first? ===== */}
+      <section className="bg-grey-1 border-t border-navy/5 py-10">
+        <div className="max-w-[860px] mx-auto px-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5 text-center">
+          <Mail size={18} className="text-gold flex-shrink-0" />
+          <p className="text-grey-3 text-[15px]">
+            Have a question first? Not ready to book?
+          </p>
+          <Link
+            href="/contact"
+            className="text-navy font-semibold text-[15px] hover:text-gold transition-colors underline-offset-4 hover:underline"
+          >
+            Send us a message →
           </Link>
         </div>
       </section>

@@ -10,7 +10,10 @@ const links = [
   { href: "/programs", label: "Programs" },
   { href: "/pricing", label: "Pricing" },
   { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
+  // Contact intentionally absent — premium-coaching playbook keeps a single
+  // primary "talk to us" surface (`/strategy-call`). Contact moves to the
+  // footer for support / admin intent and as a "have a question first?"
+  // secondary path on /strategy-call.
 ];
 
 function fireNav(label: string, destination: string, type: "primary" | "mobile") {
