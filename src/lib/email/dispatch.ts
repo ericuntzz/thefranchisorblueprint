@@ -23,6 +23,24 @@ import {
   winBackText,
   type WinBackPayload,
 } from "./templates/win-back";
+import {
+  ContactFormConfirmationEmail,
+  contactFormConfirmationSubject,
+  contactFormConfirmationText,
+  type ContactFormConfirmationPayload,
+} from "./templates/contact-form-confirmation";
+import {
+  InternalLeadNotificationEmail,
+  internalLeadNotificationSubject,
+  internalLeadNotificationText,
+  type InternalLeadNotificationPayload,
+} from "./templates/internal-lead-notification";
+import {
+  NewsletterWelcomeEmail,
+  newsletterWelcomeSubject,
+  newsletterWelcomeText,
+  type NewsletterWelcomePayload,
+} from "./templates/newsletter-welcome";
 import { sendEmail } from "./send";
 
 /**
@@ -40,6 +58,9 @@ type TemplateRegistry = {
   "upgrade-nudge": UpgradeNudgePayload;
   "offer-expiring": OfferExpiringPayload;
   "win-back": WinBackPayload;
+  "contact-form-confirmation": ContactFormConfirmationPayload;
+  "internal-lead-notification": InternalLeadNotificationPayload;
+  "newsletter-welcome": NewsletterWelcomePayload;
 };
 
 export type TemplateName = keyof TemplateRegistry;
@@ -64,6 +85,21 @@ const REGISTRY = {
     Component: WinBackEmail,
     subject: winBackSubject,
     text: winBackText,
+  },
+  "contact-form-confirmation": {
+    Component: ContactFormConfirmationEmail,
+    subject: contactFormConfirmationSubject,
+    text: contactFormConfirmationText,
+  },
+  "internal-lead-notification": {
+    Component: InternalLeadNotificationEmail,
+    subject: internalLeadNotificationSubject,
+    text: internalLeadNotificationText,
+  },
+  "newsletter-welcome": {
+    Component: NewsletterWelcomeEmail,
+    subject: newsletterWelcomeSubject,
+    text: newsletterWelcomeText,
   },
 } as const;
 

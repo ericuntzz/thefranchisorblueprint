@@ -8,7 +8,6 @@ import {
 } from "@/lib/fulfillment";
 import { TIERS, type TierId } from "@/lib/analytics";
 import { sendServerEvent, clientIdFor } from "@/lib/ga-measurement-protocol";
-import { acUpsertContact, AC_MASTER_LIST_ID } from "@/lib/activecampaign";
 import type { ProductSlug } from "@/lib/products";
 
 /**
@@ -72,26 +71,9 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // ─── ActiveCampaign: add buyer to Master list with tier tag ───────
-      // Fire-and-forget — never let CRM sync break the webhook.
-      try {
-        if (email) {
-          const tierId = tierFromSession(session);
-          // customer_details.name format is usually "First Last" — best-effort split
-          const fullName = session.customer_details?.name?.trim() ?? "";
-          const [firstName, ...rest] = fullName.split(/\s+/);
-          const lastName = rest.join(" ");
-          await acUpsertContact({
-            email,
-            firstName: firstName || undefined,
-            lastName: lastName || undefined,
-            listIds: AC_MASTER_LIST_ID ? [AC_MASTER_LIST_ID] : [],
-            tags: [`customer-${tierId}`, "source-stripe-purchase"],
-          });
-        }
-      } catch (err) {
-        console.error("[stripe] AC sync failed:", err);
-      }
+      // (Buyer CRM tagging is handled internally — purchase row in Supabase
+      // is the source of truth; lifecycle emails are dispatched via the
+      // Resend queue from the post-purchase block above. No external CRM.)
 
       // ─── GA4 server-side `purchase` event ─────────────────────────────
       // Fire-and-forget — never let analytics break the webhook.

@@ -1,27 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
-import { acUpsertContact, AC_MASTER_LIST_ID, buildFieldValues } from "@/lib/activecampaign";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { enqueueEmail } from "@/lib/email/queue";
 
 export const runtime = "nodejs";
 
+const CALENDLY_DISCOVERY_URL =
+  "https://calendly.com/team-thefranchisorblueprint/30-minute-discovery-call";
+
+const INTERNAL_NOTIFICATION_EMAIL =
+  process.env.INTERNAL_NOTIFICATION_EMAIL ?? "team@thefranchisorblueprint.com";
+
 /**
- * Receives the /contact form POST. Pushes the submission into ActiveCampaign
- * (master list + tags), then 303-redirects the browser to the thank-you page.
+ * Receives the /contact form POST. Stores the submission in Supabase, fires
+ * two emails via the internal Resend queue:
+ *   1. autoresponder confirmation to the submitter
+ *   2. internal notification to the team inbox so Jason sees the lead
  *
- * Soft-fails: if AC isn't configured or the API call errors, we still
- * 303 to thank-you so the user isn't penalized — Eric checks server logs.
+ * Soft-fails on any individual step so the user always lands on the
+ * thank-you page — server logs surface anything that broke.
  */
 export async function POST(req: NextRequest) {
   const form = await req.formData();
   const email = String(form.get("email") ?? "").trim().toLowerCase();
-  const firstName = String(form.get("firstName") ?? "").trim();
-  const lastName = String(form.get("lastName") ?? "").trim();
-  const businessName = String(form.get("business") ?? "").trim();
-  const annualRevenue = String(form.get("revenue") ?? "").trim();
-  const programInterest = String(form.get("program") ?? "").trim();
-  const message = String(form.get("message") ?? "").trim();
+  const firstName = String(form.get("firstName") ?? "").trim() || null;
+  const lastName = String(form.get("lastName") ?? "").trim() || null;
+  const businessName = String(form.get("business") ?? "").trim() || null;
+  const annualRevenue = String(form.get("revenue") ?? "").trim() || null;
+  const programInterest = String(form.get("program") ?? "").trim() || null;
+  const message = String(form.get("message") ?? "").trim() || null;
 
-  // Basic validation: real email + required fields. Bad submits get bounced
-  // back to the form with an error query param so the page can show a banner.
+  // Basic validation: real-looking email + required fields. Bad submits get
+  // bounced back to the form with an error query param so we can show a banner.
   if (!email || !email.includes("@")) {
     return NextResponse.redirect(new URL("/contact?error=email", req.url), 303);
   }
@@ -29,32 +38,82 @@ export async function POST(req: NextRequest) {
     return NextResponse.redirect(new URL("/contact?error=missing", req.url), 303);
   }
 
-  // Map the program-interest dropdown string → the tier-tag form everyone else uses.
-  const interestTag = programInterest.includes("Blueprint")
-    ? "interest-blueprint"
-    : programInterest.includes("Navigator")
-      ? "interest-navigator"
-      : programInterest.includes("Builder")
-        ? "interest-builder"
-        : "interest-not-sure";
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
+  const userAgent = req.headers.get("user-agent") ?? null;
 
+  // 1) Persist the submission. If this fails we still continue to email
+  // dispatch so we don't drop the lead entirely — Eric's inbox is the
+  // safety net.
+  const supabase = getSupabaseAdmin();
+  let submissionId: string | null = null;
   try {
-    await acUpsertContact({
-      email,
-      firstName,
-      lastName,
-      fieldValues: buildFieldValues({
+    const { data, error } = await supabase
+      .from("contact_submissions")
+      .insert({
+        email,
+        first_name: firstName,
+        last_name: lastName,
+        business_name: businessName,
+        annual_revenue: annualRevenue,
+        program_interest: programInterest,
+        message,
+        ip,
+        user_agent: userAgent,
+        user_id: null,
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    submissionId = data.id;
+  } catch (err) {
+    console.error("[contact] supabase insert failed:", err);
+  }
+
+  // 2) Autoresponder to the submitter (immediate via dedupeKey; cron picks
+  // up + sends within 1 minute).
+  try {
+    await enqueueEmail({
+      recipientEmail: email,
+      template: "contact-form-confirmation",
+      payload: {
+        firstName,
+        messagePreview: message ? message.slice(0, 280) : null,
+        calendlyUrl: CALENDLY_DISCOVERY_URL,
+      },
+      dedupeKey: submissionId
+        ? `contact-form-confirmation:${submissionId}`
+        : `contact-form-confirmation:${email}:${Date.now()}`,
+    });
+  } catch (err) {
+    console.error("[contact] enqueue confirmation failed:", err);
+  }
+
+  // 3) Internal notification to the team inbox.
+  try {
+    await enqueueEmail({
+      recipientEmail: INTERNAL_NOTIFICATION_EMAIL,
+      template: "internal-lead-notification",
+      payload: {
+        source: "contact-form",
+        email,
+        firstName,
+        lastName,
         businessName,
         annualRevenue,
         programInterest,
         message,
-      }),
-      listIds: AC_MASTER_LIST_ID ? [AC_MASTER_LIST_ID] : [],
-      tags: ["source-contact-form", interestTag],
+        submittedAt: new Date().toISOString(),
+        supabaseRowUrl: submissionId
+          ? `https://supabase.com/dashboard/project/rrordqfdrdtbobmmkdss/editor?table=contact_submissions&filter=id.eq.${submissionId}`
+          : null,
+      },
+      dedupeKey: submissionId
+        ? `internal-lead-notification:${submissionId}`
+        : `internal-lead-notification:${email}:${Date.now()}`,
     });
   } catch (err) {
-    // Don't block the user — log and continue.
-    console.error("[contact] AC push failed:", err);
+    console.error("[contact] enqueue internal notification failed:", err);
   }
 
   return NextResponse.redirect(new URL("/contact/thank-you", req.url), 303);

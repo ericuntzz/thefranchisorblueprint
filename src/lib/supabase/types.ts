@@ -52,6 +52,31 @@ export type UpgradeOffer = {
   created_at: string;
 };
 
+export type ContactSubmission = {
+  id: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  business_name: string | null;
+  annual_revenue: string | null;
+  program_interest: string | null;
+  message: string | null;
+  ip: string | null;
+  user_agent: string | null;
+  user_id: string | null;
+  created_at: string;
+};
+
+export type NewsletterSubscriber = {
+  id: string;
+  email: string;
+  source: string;
+  unsubscribed_at: string | null;
+  ip: string | null;
+  user_agent: string | null;
+  created_at: string;
+};
+
 export type ScheduledEmail = {
   id: string;
   user_id: string | null;
@@ -127,6 +152,29 @@ export type Database = {
           redeemed_at?: string | null;
         };
         Update: Partial<Omit<UpgradeOffer, "id" | "user_id">>;
+        Relationships: [];
+      };
+      contact_submissions: {
+        Row: ContactSubmission;
+        Insert: Omit<ContactSubmission, "id" | "created_at"> & {
+          id?: string;
+          created_at?: string;
+        };
+        Update: Partial<Omit<ContactSubmission, "id">>;
+        Relationships: [];
+      };
+      newsletter_subscribers: {
+        Row: NewsletterSubscriber;
+        Insert: Omit<
+          NewsletterSubscriber,
+          "id" | "created_at" | "source" | "unsubscribed_at"
+        > & {
+          id?: string;
+          created_at?: string;
+          source?: string;
+          unsubscribed_at?: string | null;
+        };
+        Update: Partial<Omit<NewsletterSubscriber, "id">>;
         Relationships: [];
       };
       scheduled_emails: {
