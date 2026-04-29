@@ -4,9 +4,7 @@ import { ClipboardCheck, Clock, BarChart3, FileText } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { PageHero } from "@/components/PageHero";
-import { JotformEmbed } from "@/components/JotformEmbed";
-
-const JOTFORM_ID = "261168244426053";
+import { AssessmentFlow } from "@/components/AssessmentFlow";
 
 export const metadata: Metadata = {
   title: "Free Franchise Readiness Assessment | The Franchisor Blueprint",
@@ -32,22 +30,9 @@ export default function AssessmentPage() {
         subtitle="A 15-question assessment across the four dimensions that actually predict franchise success. About 5–7 minutes. You'll get an honest score and a tailored next-step recommendation."
       />
 
-      {/* ===== Live Jotform assessment embed ===== */}
-      <section className="bg-white py-16 md:py-20">
-        <div className="max-w-[920px] mx-auto px-4 md:px-8">
-          <JotformEmbed formId={JOTFORM_ID} initialHeight={1100} />
-          <p className="mt-3 text-xs text-grey-4 text-center">
-            Trouble loading the form?{" "}
-            <a
-              href={`https://form.jotform.com/${JOTFORM_ID}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-navy font-semibold underline"
-            >
-              Open it in a new tab →
-            </a>
-          </p>
-        </div>
+      {/* ===== In-house assessment flow (replaces the prior JotForm embed) ===== */}
+      <section className="bg-grey-1/40 py-12 md:py-16 border-y border-navy/5">
+        <AssessmentFlow source="assessment_page" />
       </section>
 
       {/* ===== What we measure ===== */}
