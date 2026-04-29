@@ -75,6 +75,7 @@ export async function POST(req: NextRequest) {
             productSlug: ((session.metadata?.product ?? "blueprint").toLowerCase() as ProductSlug),
             amountCents: session.amount_total ?? 0,
             origin: req.nextUrl.origin,
+            sessionId: session.id,
           });
         } catch (err) {
           console.error("[stripe] post-purchase lifecycle failed:", err);

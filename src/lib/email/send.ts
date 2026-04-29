@@ -18,6 +18,14 @@ export type SendArgs = {
   replyTo?: string;
   /** Optional tag for Resend dashboard analytics (e.g. "welcome", "upgrade-nudge"). */
   tag?: string;
+  /**
+   * If provided, Resend will treat duplicate sends with the same key as no-ops
+   * (returns the original send result). Critical for cron drip retries —
+   * if a worker dies between sending and marking sent, the row gets re-claimed
+   * after 5min; without an idempotency key, the customer would receive the
+   * email twice. With the key, Resend silently dedupes.
+   */
+  idempotencyKey?: string;
 };
 
 export type SendResult =
@@ -43,15 +51,18 @@ export async function sendEmail(args: SendArgs): Promise<SendResult> {
     args.replyTo ?? process.env.RESEND_REPLY_TO ?? undefined;
 
   try {
-    const result = await client.emails.send({
-      from,
-      to: args.to,
-      subject: args.subject,
-      html: args.html,
-      text: args.text,
-      ...(replyTo ? { replyTo } : {}),
-      ...(args.tag ? { tags: [{ name: "template", value: args.tag }] } : {}),
-    });
+    const result = await client.emails.send(
+      {
+        from,
+        to: args.to,
+        subject: args.subject,
+        html: args.html,
+        text: args.text,
+        ...(replyTo ? { replyTo } : {}),
+        ...(args.tag ? { tags: [{ name: "template", value: args.tag }] } : {}),
+      },
+      args.idempotencyKey ? { idempotencyKey: args.idempotencyKey } : undefined,
+    );
 
     if (result.error) {
       console.error(`[email] send to ${args.to} failed: ${result.error.message}`);

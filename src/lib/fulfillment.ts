@@ -214,6 +214,9 @@ export async function dispatchPostPurchaseLifecycle(args: {
   productSlug: ProductSlug;
   amountCents: number;
   origin: string;
+  /** Stripe session ID — used as the Resend idempotency key on the welcome
+   * email so a webhook retry can't deliver the same welcome twice. */
+  sessionId: string;
 }): Promise<void> {
   const product = getProduct(args.productSlug);
   if (!product) return;
@@ -243,12 +246,17 @@ export async function dispatchPostPurchaseLifecycle(args: {
       magicLink.searchParams.set("token_hash", linkResult.properties.hashed_token);
       magicLink.searchParams.set("type", "magiclink");
       magicLink.searchParams.set("next", "/portal");
-      await sendTemplate("welcome", args.email, {
-        firstName,
-        productName: product.name,
-        amountFormatted,
-        magicLink: magicLink.toString(),
-      });
+      await sendTemplate(
+        "welcome",
+        args.email,
+        {
+          firstName,
+          productName: product.name,
+          amountFormatted,
+          magicLink: magicLink.toString(),
+        },
+        { idempotencyKey: `welcome:${args.sessionId}` },
+      );
     }
   }
 

@@ -26,10 +26,15 @@ export async function GET(req: NextRequest) {
 
   for (const row of due) {
     try {
+      // Use the scheduled_emails.id as the Resend idempotency key. If a
+      // worker dies after sending but before marking sent, the row gets
+      // re-claimed after 5min — Resend will dedupe the second send so the
+      // customer doesn't receive the email twice.
       const result = await sendTemplate(
         row.template as TemplateName,
         row.recipient_email,
         row.payload as never,
+        { idempotencyKey: `scheduled:${row.id}` },
       );
       if (result.ok) {
         await markEmailSent(row.id);

@@ -108,11 +108,16 @@ const REGISTRY = {
  * (welcome on purchase) and the cron drip processor (scheduled emails).
  *
  * Returns the sendEmail result so callers can persist sent_at / failure.
+ *
+ * Pass `idempotencyKey` (typically the scheduled_emails.id from the queue,
+ * or a deterministic key for direct sends) to ensure a retry doesn't
+ * actually deliver the email twice — Resend dedupes server-side.
  */
 export async function sendTemplate<T extends TemplateName>(
   template: T,
   to: string,
   payload: TemplateRegistry[T],
+  options?: { idempotencyKey?: string },
 ) {
   const def = REGISTRY[template];
   if (!def) {
@@ -137,5 +142,6 @@ export async function sendTemplate<T extends TemplateName>(
     html,
     text,
     tag: template,
+    idempotencyKey: options?.idempotencyKey,
   });
 }
