@@ -77,6 +77,40 @@ export type NewsletterSubscriber = {
   created_at: string;
 };
 
+export type AssessmentBand =
+  | "franchise_ready"
+  | "nearly_there"
+  | "building_foundation"
+  | "early_stage";
+
+export type AssessmentSession = {
+  id: string;
+  user_id: string | null;
+  email: string | null;
+  first_name: string | null;
+  business_name: string | null;
+  annual_revenue: string | null;
+  urgency: string | null;
+  total_score: number | null;
+  band: AssessmentBand | null;
+  /** Per-category point totals keyed by category slug ('business_model' etc). */
+  category_scores: Record<string, number> | null;
+  started_at: string;
+  completed_at: string | null;
+  resume_token: string | null;
+  ip: string | null;
+  user_agent: string | null;
+  source: string | null;
+};
+
+export type AssessmentResponse = {
+  session_id: string;
+  question_id: string;
+  answer_value: string;
+  answer_score: number;
+  answered_at: string;
+};
+
 export type ScheduledEmail = {
   id: string;
   user_id: string | null;
@@ -175,6 +209,25 @@ export type Database = {
           unsubscribed_at?: string | null;
         };
         Update: Partial<Omit<NewsletterSubscriber, "id">>;
+        Relationships: [];
+      };
+      assessment_sessions: {
+        Row: AssessmentSession;
+        // Most fields default to null. started_at + id have DB defaults.
+        // Lead-capture fields and score fields are populated lazily.
+        Insert: Partial<Omit<AssessmentSession, "id" | "started_at">> & {
+          id?: string;
+          started_at?: string;
+        };
+        Update: Partial<Omit<AssessmentSession, "id">>;
+        Relationships: [];
+      };
+      assessment_responses: {
+        Row: AssessmentResponse;
+        Insert: Omit<AssessmentResponse, "answered_at"> & {
+          answered_at?: string;
+        };
+        Update: Partial<Omit<AssessmentResponse, "session_id" | "question_id">>;
         Relationships: [];
       };
       scheduled_emails: {
