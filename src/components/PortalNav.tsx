@@ -43,7 +43,13 @@ export function PortalNav({ displayName, email, tier }: PortalNavProps) {
             </Link>
           )}
           {label && (
-            <span className="hidden md:inline text-grey-3 text-sm font-medium">{label}</span>
+            <Link
+              href="/portal/account"
+              className="hidden md:inline text-grey-3 hover:text-navy text-sm font-medium transition-colors"
+              aria-label="Account settings"
+            >
+              {label}
+            </Link>
           )}
           <form action="/api/portal/logout" method="POST">
             <button

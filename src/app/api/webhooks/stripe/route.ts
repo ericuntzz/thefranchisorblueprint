@@ -64,6 +64,47 @@ export async function POST(req: NextRequest) {
       );
       const userId = await ensureUserAndPurchase(session);
       const email = session.customer_details?.email?.toLowerCase();
+
+      // ─── Email-divergence safety net ─────────────────────────────────
+      // The buy-box email gate runs Supabase precheck and stores the user-
+      // entered email in session metadata. Stripe lets the user override
+      // pre-filled emails on their hosted Checkout page, so the email we
+      // ultimately collect can differ from what the gate verified. If
+      // they differ, log + send Jason an internal alert. Don't block
+      // fulfillment (we have the money), just flag for review in case
+      // the divergence merged this purchase into someone else's account.
+      const prechecked = session.metadata?.prechecked_email?.toLowerCase();
+      if (prechecked && email && prechecked !== email) {
+        console.warn(
+          `[stripe] email divergence: precheck=${prechecked} stripe=${email} session=${session.id}`,
+        );
+        try {
+          const { enqueueEmail } = await import("@/lib/email/queue");
+          await enqueueEmail({
+            recipientEmail:
+              process.env.INTERNAL_NOTIFICATION_EMAIL ??
+              "team@thefranchisorblueprint.com",
+            template: "internal-lead-notification",
+            payload: {
+              source: "contact-form",
+              email: `⚠ EMAIL CHANGED AT CHECKOUT: precheck=${prechecked} → stripe=${email}`,
+              firstName: "ALERT",
+              lastName: "Email divergence",
+              businessName: `Stripe session ${session.id}`,
+              programInterest: session.metadata?.product ?? "unknown",
+              message:
+                `The buyer entered ${prechecked} on the buy-box gate (collision check passed) ` +
+                `but submitted ${email} at Stripe. Verify whether this should be flagged as a ` +
+                `potential account merge or if it's benign (e.g., they corrected a typo).`,
+              submittedAt: new Date().toISOString(),
+            },
+            dedupeKey: `email-divergence:${session.id}`,
+          });
+        } catch (alertErr) {
+          console.error("[stripe] failed to send divergence alert:", alertErr);
+        }
+      }
+
       if (userId && email) {
         // Fire welcome email + queue upgrade drip + create offers.
         // Wrapped — lifecycle failure must never break webhook idempotency.

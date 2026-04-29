@@ -53,6 +53,28 @@ export async function POST(
   const isAddOn = slug === "sample-call" || slug === "phase-coaching";
   const requiresAuth = isUpgrade || isAddOn;
 
+  // Anonymous (Blueprint / Plus) purchases route through the email-gate buy
+  // box, which posts the user-supplied email as form data. We pre-fill
+  // Stripe's email field with it AND store it in session metadata so the
+  // webhook can detect cases where the buyer overrides the pre-fill at
+  // Stripe (rare but possible — Stripe lets users change pre-filled emails).
+  let prechecedEmail: string | undefined;
+  if (!requiresAuth) {
+    try {
+      const form = await req.formData();
+      const raw = form.get("email");
+      if (typeof raw === "string") {
+        const candidate = raw.trim().toLowerCase();
+        if (candidate && candidate.includes("@") && candidate.length < 254) {
+          prechecedEmail = candidate;
+        }
+      }
+    } catch {
+      // Older buy-box clients (or direct API hits) won't send form data.
+      // Stripe will collect the email itself; safety net runs without it.
+    }
+  }
+
   // Auth check — for upgrades AND add-ons (both happen from inside the portal).
   // For new tier purchases (Blueprint, Plus), the user may be anonymous.
   let userEmail: string | undefined;
@@ -127,9 +149,18 @@ export async function POST(
     billing_address_collection: "required",
     payment_intent_data: {
       description: product.name,
-      metadata: { product: product.slug },
+      metadata: {
+        product: product.slug,
+        ...(prechecedEmail ? { prechecked_email: prechecedEmail } : {}),
+      },
     },
-    metadata: { product: product.slug },
+    metadata: {
+      product: product.slug,
+      // Webhook safety net: if `customer_details.email` at session-completion
+      // doesn't match this prechecked value, the user changed it on Stripe's
+      // side. Worth a heads-up to the team in case of silent collision.
+      ...(prechecedEmail ? { prechecked_email: prechecedEmail } : {}),
+    },
   };
 
   // Customer handling (Stripe forbids `customer` + `customer_creation` together)
@@ -139,7 +170,13 @@ export async function POST(
     // Stripe ignores customer_email when customer is set; don't pass it.
   } else {
     sessionParams.customer_creation = "always";
-    if (userEmail) sessionParams.customer_email = userEmail;
+    // Anonymous Blueprint/Plus purchase: pre-fill from the buy-box gate if
+    // we have it; otherwise let Stripe collect.
+    if (userEmail) {
+      sessionParams.customer_email = userEmail;
+    } else if (prechecedEmail) {
+      sessionParams.customer_email = prechecedEmail;
+    }
   }
 
   // Promo handling (Stripe forbids `discounts` + `allow_promotion_codes` together).

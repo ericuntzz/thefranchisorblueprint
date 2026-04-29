@@ -7,6 +7,7 @@ import { PageHero } from "@/components/PageHero";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbSchema, productSchema } from "@/lib/schema";
 import { BlueprintUpsellBuyBox } from "@/components/BlueprintUpsellBuyBox";
+import { getSupabaseServer } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "The Blueprint — DIY Franchise Kit ($2,997) | The Franchisor Blueprint",
@@ -47,7 +48,16 @@ const includes = [
   "Lifetime access to system updates",
 ];
 
-export default function BlueprintProductPage() {
+export default async function BlueprintProductPage() {
+  // If the visitor is already signed in to the portal, pre-fill their email
+  // in the buy-box gate so they don't have to type it again. (They can still
+  // overwrite it — buying for a spouse / client is a legitimate flow.)
+  const supabase = await getSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const signedInEmail = user?.email ?? null;
+
   return (
     <>
       <JsonLd
@@ -116,7 +126,7 @@ export default function BlueprintProductPage() {
                 </div>
                 <div className="text-grey-4 text-sm mb-5">One-time payment · Instant access</div>
 
-                <BlueprintUpsellBuyBox />
+                <BlueprintUpsellBuyBox signedInEmail={signedInEmail} />
                 <p className="text-center text-xs text-grey-4 italic mt-3">
                   Secure checkout via Stripe. Credit card or ACH.
                 </p>
