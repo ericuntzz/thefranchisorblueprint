@@ -36,7 +36,13 @@ export type Purchase = {
 export type CapabilityProgress = {
   user_id: string;
   capability_slug: string;
-  completed_at: string;
+  /** Set to a timestamp when the customer marked the capability complete.
+   *  Null means "viewed but not completed" (still in progress). */
+  completed_at: string | null;
+  /** First time the customer opened this capability. */
+  started_at: string | null;
+  /** Most-recent view. Used by the "stuck for 14+ days" nudges. */
+  last_viewed_at: string | null;
 };
 
 export type UpgradeOffer = {
@@ -186,8 +192,10 @@ export type Database = {
       };
       capability_progress: {
         Row: CapabilityProgress;
-        Insert: Omit<CapabilityProgress, "completed_at"> & {
-          completed_at?: string;
+        Insert: Omit<CapabilityProgress, "completed_at" | "started_at" | "last_viewed_at"> & {
+          completed_at?: string | null;
+          started_at?: string | null;
+          last_viewed_at?: string | null;
         };
         Update: Partial<Omit<CapabilityProgress, "user_id" | "capability_slug">>;
         Relationships: [];
@@ -300,6 +308,10 @@ export type Database = {
       clawback_unused_credits: {
         Args: { uid: string; grant_amount: number };
         Returns: number;
+      };
+      log_capability_view: {
+        Args: { uid: string; slug: string };
+        Returns: void;
       };
     };
     Views: { [_ in never]: never };

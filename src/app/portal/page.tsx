@@ -94,7 +94,12 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
   const tier = (Math.max(...paidPurchases.map((p) => p.tier)) as Tier);
   const visibleCaps = capabilitiesForTier(tier);
   const phaseGroups = capabilitiesByPhase(tier);
-  const completedSlugs = new Set(progress.map((p) => p.capability_slug));
+  // Updated: a row in capability_progress now means "viewed" (not necessarily
+  // "completed"). Use completed_at to determine actual completion.
+  const completedSlugs = new Set(
+    progress.filter((p) => p.completed_at).map((p) => p.capability_slug),
+  );
+  const startedSlugs = new Set(progress.map((p) => p.capability_slug));
   const completedCount = visibleCaps.filter((c) => completedSlugs.has(c.slug)).length;
   const totalCount = visibleCaps.length;
   const percentComplete = Math.round((completedCount / totalCount) * 100);
@@ -104,10 +109,39 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
   // First not-yet-completed capability in journey order — surfaced as "next step"
   const nextCapability = visibleCaps.find((c) => !completedSlugs.has(c.slug)) ?? null;
 
+  // The "current phase" is the phase containing the first not-yet-completed
+  // capability. Used for visual hierarchy (current = highlighted, completed
+  // = de-emphasized, future = dimmed).
+  const currentPhase: CapabilityPhase | null = nextCapability?.phase ?? null;
+  const phaseOrder: CapabilityPhase[] = ["discover", "architect", "activate", "acquire"];
+  function phaseState(phase: CapabilityPhase): "completed" | "current" | "future" {
+    const caps = phaseGroups[phase];
+    if (caps.length === 0) return "future";
+    const allDone = caps.every((c) => completedSlugs.has(c.slug));
+    if (allDone) return "completed";
+    if (phase === currentPhase) return "current";
+    // Phases before currentPhase that aren't all-done are still "current"-ish;
+    // phases after are future.
+    const currentIdx = currentPhase ? phaseOrder.indexOf(currentPhase) : 99;
+    return phaseOrder.indexOf(phase) < currentIdx ? "current" : "future";
+  }
+
   // Phase 1 complete = "Discover" phase done. This is the moment we surface
   // the upgrade prompt prominently (per upgrade strategy).
   const phase1Caps = phaseGroups.discover;
   const phase1Done = phase1Caps.length > 0 && phase1Caps.every((c) => completedSlugs.has(c.slug));
+
+  // First-run detection: a brand-new customer has zero capability rows AND
+  // zero completed slugs. We surface a dedicated "Day 1 — Start with Audit"
+  // hero in place of the standard "Your next move" CTA.
+  const isFirstRun = startedSlugs.size === 0 && completedCount === 0;
+
+  // Days since the customer joined (profile created_at). Used for the
+  // "Day X of your journey" marker in the hero.
+  const joinedAt = profile?.created_at ? new Date(profile.created_at) : null;
+  const daysSinceJoined = joinedAt
+    ? Math.max(1, Math.floor((Date.now() - joinedAt.getTime()) / (24 * 3600 * 1000)) + 1)
+    : null;
 
   // Active 48hr promo offer — surfaced via the inline UpgradeBanner component
   const offers = tier < 3 ? await getActiveOffersForUser(user.id) : [];
@@ -122,14 +156,29 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
         <div className="max-w-[1200px] mx-auto px-6 md:px-8 py-10 md:py-14">
           <div className="flex flex-wrap items-end justify-between gap-6 mb-8">
             <div>
-              <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase mb-3 border-b-2 border-gold pb-1">
-                Welcome to your portal
-              </span>
+              <div className="flex items-center gap-3 mb-3">
+                <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase border-b-2 border-gold pb-1">
+                  {isFirstRun ? "Day 1" : "Welcome to your portal"}
+                </span>
+                {daysSinceJoined !== null && !isFirstRun && (
+                  <span className="text-[11px] text-grey-4 font-semibold tracking-wider uppercase">
+                    Day {daysSinceJoined} of your journey
+                  </span>
+                )}
+              </div>
               <h1 className="text-3xl md:text-4xl font-bold text-navy">
-                {firstName ? `Welcome back, ${firstName}` : "Welcome back"}
+                {isFirstRun
+                  ? firstName
+                    ? `Welcome aboard, ${firstName}`
+                    : "Welcome aboard"
+                  : firstName
+                    ? `Welcome back, ${firstName}`
+                    : "Welcome back"}
               </h1>
               <p className="text-grey-3 text-base md:text-lg mt-2 max-w-[640px]">
-                Your franchisor operating system — {completedCount} of {totalCount} capabilities complete.
+                {isFirstRun
+                  ? "Your franchisor operating system — 9 capabilities, 4 phases. Start with the Audit (about 60 minutes) and you'll know whether your business is franchise-ready."
+                  : `Your franchisor operating system — ${completedCount} of ${totalCount} capabilities complete.`}
               </p>
             </div>
             <div className="flex items-stretch gap-3">
@@ -173,8 +222,13 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
       {/* ===== Final readiness milestone ===== */}
       {isAllComplete && <FinalReadinessCard firstName={firstName} />}
 
-      {/* ===== Next step CTA ===== */}
-      {!isAllComplete && nextCapability && (
+      {/* ===== Day 1 onboarding (first-time visitors only) ===== */}
+      {!isAllComplete && isFirstRun && nextCapability && (
+        <Day1OnboardingHero firstName={firstName} firstCap={nextCapability} />
+      )}
+
+      {/* ===== Next step CTA (returning customers) ===== */}
+      {!isAllComplete && !isFirstRun && nextCapability && (
         <section className="bg-cream border-b border-gold/20 py-7">
           <div className="max-w-[1200px] mx-auto px-6 md:px-8">
             <div className="flex flex-wrap items-center justify-between gap-4">
@@ -184,7 +238,7 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
                 </div>
                 <div>
                   <div className="text-[10px] font-bold tracking-[0.16em] uppercase text-gold-warm mb-1">
-                    Your next move
+                    {startedSlugs.has(nextCapability.slug) ? "Continue where you left off" : "Your next move"}
                   </div>
                   <div className="text-navy font-bold text-base md:text-lg">
                     {nextCapability.title}
@@ -210,6 +264,7 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
             const caps = phaseGroups[phaseKey];
             if (caps.length === 0) return null;
             const phaseDone = caps.every((c) => completedSlugs.has(c.slug));
+            const state = phaseState(phaseKey);
             return (
               <PhaseSection
                 key={phaseKey}
@@ -218,6 +273,7 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
                 tagline={phase.tagline}
                 caps={caps}
                 completedSlugs={completedSlugs}
+                state={state}
                 phaseDone={phaseDone}
               />
             );
@@ -336,6 +392,7 @@ function PhaseSection({
   caps,
   completedSlugs,
   phaseDone,
+  state,
 }: {
   number: number;
   label: string;
@@ -343,53 +400,93 @@ function PhaseSection({
   caps: Capability[];
   completedSlugs: Set<string>;
   phaseDone: boolean;
+  state: "completed" | "current" | "future";
 }) {
   const completedInPhase = caps.filter((c) => completedSlugs.has(c.slug)).length;
+
+  // Visual treatment per phase state — completed dims slightly, current
+  // gets a gold ring + "you are here" pill, future is faded.
+  const containerClass =
+    state === "completed"
+      ? "bg-white rounded-3xl border-2 border-green-200 shadow-[0_4px_18px_rgba(22,163,74,0.06)] overflow-hidden opacity-90"
+      : state === "current"
+        ? "bg-white rounded-3xl border-2 border-gold shadow-[0_12px_36px_rgba(212,162,76,0.18)] overflow-hidden ring-1 ring-gold/30"
+        : "bg-white/70 rounded-3xl border-2 border-navy/10 shadow-[0_4px_14px_rgba(30,58,95,0.04)] overflow-hidden opacity-75";
+
+  const stripClass =
+    state === "completed"
+      ? "bg-gradient-to-r from-green-400 via-green-500 to-green-400"
+      : state === "current"
+        ? "bg-gradient-to-r from-gold via-gold-warm to-gold"
+        : "bg-gradient-to-r from-navy/15 via-navy/25 to-navy/15";
+
+  const badgeClass =
+    state === "completed"
+      ? "bg-green-100 text-green-700 ring-green-50"
+      : state === "current"
+        ? "bg-gradient-to-br from-navy to-navy-light text-gold ring-gold/30"
+        : "bg-grey-1 text-grey-4 ring-grey-1/50";
+
   return (
-    <div className="bg-white rounded-3xl border-2 border-navy/10 shadow-[0_8px_28px_rgba(30,58,95,0.08)] overflow-hidden">
-      {/* Top accent strip — distinguishes phase containers from each other and from the page background */}
-      <div
-        className={`h-1.5 ${
-          phaseDone
-            ? "bg-gradient-to-r from-green-400 via-green-500 to-green-400"
-            : "bg-gradient-to-r from-gold via-gold-warm to-gold"
-        }`}
-        aria-hidden
-      />
+    <div className={containerClass}>
+      <div className={`h-1.5 ${stripClass}`} aria-hidden />
 
       <div className="p-6 md:p-9">
         {/* Phase header with numbered badge */}
         <div className="flex items-start gap-4 mb-6 md:mb-7">
           <div
-            className={`flex-shrink-0 w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center font-extrabold text-lg md:text-xl ring-4 transition-colors ${
-              phaseDone
-                ? "bg-green-100 text-green-700 ring-green-50"
-                : "bg-gradient-to-br from-navy to-navy-light text-gold ring-gold/15"
-            }`}
+            className={`flex-shrink-0 w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center font-extrabold text-lg md:text-xl ring-4 transition-colors ${badgeClass}`}
             aria-hidden
           >
-            {number}
+            {phaseDone ? <CheckCircle2 size={22} /> : number}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-1">
-              <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-gold-warm">
+              <span
+                className={`text-[10px] font-bold tracking-[0.18em] uppercase ${
+                  state === "future" ? "text-grey-4" : "text-gold-warm"
+                }`}
+              >
                 Phase {number}
               </span>
-              {phaseDone ? (
+              {state === "completed" && (
                 <div className="flex items-center gap-1 text-[10px] font-bold tracking-[0.16em] uppercase text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
                   <CheckCircle2 size={11} />
                   Phase complete
                 </div>
-              ) : (
+              )}
+              {state === "current" && (
+                <>
+                  <span className="text-[10px] font-bold tracking-[0.16em] uppercase text-navy bg-gold/20 px-2 py-0.5 rounded-full border border-gold/40">
+                    You are here
+                  </span>
+                  {completedInPhase > 0 && (
+                    <span className="text-[10px] font-semibold tracking-wider uppercase text-grey-4 bg-grey-1 px-2 py-0.5 rounded-full">
+                      {completedInPhase} of {caps.length}
+                    </span>
+                  )}
+                </>
+              )}
+              {state === "future" && (
                 <span className="text-[10px] font-semibold tracking-wider uppercase text-grey-4 bg-grey-1 px-2 py-0.5 rounded-full">
-                  {completedInPhase} of {caps.length} complete
+                  Coming up
                 </span>
               )}
             </div>
-            <h2 className="text-navy font-extrabold text-2xl md:text-3xl mb-1 leading-tight">
+            <h2
+              className={`font-extrabold text-2xl md:text-3xl mb-1 leading-tight ${
+                state === "future" ? "text-navy/70" : "text-navy"
+              }`}
+            >
               {label}
             </h2>
-            <p className="text-grey-3 text-base md:text-lg">{tagline}</p>
+            <p
+              className={`text-base md:text-lg ${
+                state === "future" ? "text-grey-4" : "text-grey-3"
+              }`}
+            >
+              {tagline}
+            </p>
           </div>
         </div>
 
@@ -539,6 +636,68 @@ function ProjectPanel() {
               <div className="text-grey-4 text-xs italic">
                 Project tools coming online soon
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Day1OnboardingHero({
+  firstName,
+  firstCap,
+}: {
+  firstName: string | null;
+  firstCap: Capability;
+}) {
+  return (
+    <section className="bg-gradient-to-br from-navy to-navy-light text-white py-10 md:py-14 border-b border-gold/30">
+      <div className="max-w-[1200px] mx-auto px-6 md:px-8">
+        <div className="grid md:grid-cols-[1.5fr_1fr] gap-8 md:gap-12 items-center">
+          <div>
+            <div className="text-[10px] font-bold tracking-[0.18em] uppercase text-gold mb-3 inline-block border-b-2 border-gold pb-1">
+              Day 1 — Start Here
+            </div>
+            <h2 className="text-white text-3xl md:text-4xl font-extrabold mb-4 leading-tight">
+              {firstName ? `${firstName}, your first 60 minutes` : "Your first 60 minutes"}
+            </h2>
+            <p className="text-white/85 text-base md:text-lg leading-relaxed mb-6">
+              Before anything else, run the <strong className="text-white">{firstCap.title}</strong>. It&apos;s a 150-point checklist that maps your business against the franchise-ready bar — and it&apos;s the one document that tells you whether you should keep going (or wait six months and fix some things first).
+            </p>
+            <div className="flex flex-wrap items-center gap-4">
+              <Link
+                href={`/portal/${firstCap.slug}`}
+                className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-9 py-4 rounded-full hover:bg-gold-dark transition-colors"
+              >
+                Start the {firstCap.verb} <ArrowRight size={16} />
+              </Link>
+              <span className="text-white/60 text-sm">~60 minutes</span>
+            </div>
+          </div>
+          <div className="hidden md:block">
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-7 backdrop-blur-sm">
+              <div className="text-[10px] font-bold tracking-[0.16em] uppercase text-gold mb-3">
+                What happens next
+              </div>
+              <ol className="space-y-3 text-white/85 text-sm leading-relaxed">
+                <li className="flex gap-3">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-gold/20 text-gold flex items-center justify-center text-[10px] font-bold">1</span>
+                  <span>Today: Run the Audit (~60 min)</span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-gold/20 text-gold flex items-center justify-center text-[10px] font-bold">2</span>
+                  <span>This week: Model your unit economics</span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-gold/20 text-gold flex items-center justify-center text-[10px] font-bold">3</span>
+                  <span>Within 1–2 days: Onboarding call with Jason</span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-gold/20 text-gold flex items-center justify-center text-[10px] font-bold">4</span>
+                  <span>Months 1–3: The Architect phase (the real work)</span>
+                </li>
+              </ol>
             </div>
           </div>
         </div>

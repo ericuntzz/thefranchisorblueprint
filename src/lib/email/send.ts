@@ -10,6 +10,16 @@ function getResend(): Resend | null {
   return _resend;
 }
 
+/** A binary or URL-referenced attachment. Resend supports both forms. */
+export type EmailAttachment = {
+  filename: string;
+  /** Base64-encoded content. Mutually exclusive with `path`. */
+  content?: string;
+  /** Public URL Resend will fetch. Mutually exclusive with `content`. */
+  path?: string;
+  contentType?: string;
+};
+
 export type SendArgs = {
   to: string;
   subject: string;
@@ -26,6 +36,8 @@ export type SendArgs = {
    * email twice. With the key, Resend silently dedupes.
    */
   idempotencyKey?: string;
+  /** Optional file attachments (e.g. branded PDF report for the assessment). */
+  attachments?: EmailAttachment[];
 };
 
 export type SendResult =
@@ -60,6 +72,9 @@ export async function sendEmail(args: SendArgs): Promise<SendResult> {
         text: args.text,
         ...(replyTo ? { replyTo } : {}),
         ...(args.tag ? { tags: [{ name: "template", value: args.tag }] } : {}),
+        ...(args.attachments && args.attachments.length > 0
+          ? { attachments: args.attachments }
+          : {}),
       },
       args.idempotencyKey ? { idempotencyKey: args.idempotencyKey } : undefined,
     );

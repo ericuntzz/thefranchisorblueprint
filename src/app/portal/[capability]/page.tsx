@@ -66,8 +66,22 @@ export default async function CapabilityDetailPage({ params }: PageProps) {
   const tier = (Math.max(...purchases.map((p) => p.tier), 1) as Tier);
   if (cap.minTier > tier) redirect("/portal");
 
-  const completed = !!progressData;
   const completion = (progressData ?? null) as CapabilityProgress | null;
+  const completed = !!completion?.completed_at;
+
+  // Fire-and-forget view log (records started_at on first view + bumps
+  // last_viewed_at on every view). Used by the "stuck for 14+ days"
+  // nudge below. Doesn't block render — if it fails, we log and move on.
+  void supabase.rpc("log_capability_view", { uid: user.id, slug }).then(({ error }) => {
+    if (error) console.error(`[portal] log_capability_view failed: ${error.message}`);
+  });
+
+  // For the stuck nudge: started >= 14 days ago AND not yet completed.
+  const isStuck =
+    !completed &&
+    completion?.started_at !== null &&
+    completion?.started_at !== undefined &&
+    Date.now() - new Date(completion.started_at).getTime() > 14 * 24 * 3600 * 1000;
 
   // Prev/next within the customer's accessible journey
   const allowed = capabilitiesForTier(tier);
@@ -209,6 +223,45 @@ export default async function CapabilityDetailPage({ params }: PageProps) {
           )}
         </div>
       </section>
+
+      {/* ===== Stuck-on-this-phase nudge (shows only when started ≥ 14d ago and not done) ===== */}
+      {isStuck && (
+        <section className="pb-6">
+          <div className="max-w-[1200px] mx-auto px-6 md:px-8">
+            <div className="bg-gradient-to-r from-cream to-white border-2 border-gold/40 rounded-2xl p-6 md:p-7 flex flex-wrap items-start gap-5 shadow-[0_4px_14px_rgba(212,162,76,0.10)]">
+              <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-navy to-navy-light flex items-center justify-center text-gold">
+                <PlayCircle size={18} />
+              </div>
+              <div className="flex-1 min-w-[260px]">
+                <div className="text-[10px] font-bold tracking-[0.18em] uppercase text-gold-warm mb-2">
+                  Want a coach for this phase?
+                </div>
+                <h3 className="text-navy font-bold text-lg mb-2">
+                  This is one of the harder ones — most customers add coaching here
+                </h3>
+                <p className="text-grey-3 text-sm leading-relaxed mb-4">
+                  You opened {cap.title} a while back. {phaseInfo.label} is where most
+                  founders rely on a coach the most. 6 calls focused on this phase, $1,500.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <Link
+                    href="/portal/coaching"
+                    className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-6 py-3 rounded-full hover:bg-gold-dark transition-colors"
+                  >
+                    Add phase coaching <ArrowRight size={14} />
+                  </Link>
+                  <a
+                    href="mailto:team@thefranchisorblueprint.com?subject=Help%20with%20{cap.title}"
+                    className="inline-flex items-center gap-2 text-navy font-semibold text-sm underline hover:text-gold-warm transition-colors"
+                  >
+                    Email a question instead
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ===== Completion toggle ===== */}
       <section className="pb-10 md:pb-14">

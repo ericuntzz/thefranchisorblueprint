@@ -20,6 +20,9 @@ import type {
 } from "@/lib/supabase/types";
 import { QUESTIONS } from "@/lib/assessment/questions";
 import { computeResult, toCategoryScoresJson } from "@/lib/assessment/scoring";
+import { sendTemplate } from "@/lib/email/dispatch";
+import { renderResultPdf } from "@/lib/assessment/pdf-report";
+import { SITE_URL } from "@/lib/site";
 
 export const runtime = "nodejs";
 
@@ -160,14 +163,94 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "could not finalize" }, { status: 500 });
   }
 
-  // Wave 3: queue the result email + branded PDF here. For now, just
-  // return the URL — the result page itself will trigger any deferred
-  // notifications when it loads (idempotent).
+  const relativeResultUrl = `/assessment/result/${sessionId}?token=${encodeURIComponent(resumeToken)}`;
+  const absoluteResultUrl = `${SITE_URL}${relativeResultUrl}`;
 
-  const resultUrl = `/assessment/result/${sessionId}?token=${encodeURIComponent(resumeToken)}`;
+  // ─── Customer-facing result email + branded PDF attachment ────────────
+  // Defensive: render + send is wrapped in try/catch so a transient
+  // email failure doesn't 500 the assessment submission. The result
+  // page is the primary delivery — email is the convenience copy.
+  void (async () => {
+    try {
+      const pdfBuffer = await renderResultPdf({
+        result,
+        firstName,
+        businessName,
+        generatedAt: new Date(),
+      });
+      const pdfBase64 = pdfBuffer.toString("base64");
+      const filename = `franchise-readiness-report-${firstName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")}.pdf`;
+      await sendTemplate(
+        "assessment-result",
+        email,
+        {
+          firstName,
+          totalScore: result.totalScore,
+          maxScore: result.maxScore,
+          bandTitle: result.bandTitle,
+          bandHeadline: result.bandHeadline,
+          bandSummary: result.bandSummary,
+          resultUrl: absoluteResultUrl,
+          primaryCtaLabel: result.recommendation.primary.label,
+          primaryCtaHref: result.recommendation.primary.href
+            ? `${SITE_URL}${result.recommendation.primary.href}`
+            : null,
+          rationale: result.recommendation.rationale,
+          categories: result.categories.map((c) => ({
+            title: c.title,
+            score: c.score,
+            max: c.max,
+            ratio: c.ratio,
+          })),
+          strongest: { title: result.strongest.title },
+          weakest: { title: result.weakest.title },
+        },
+        {
+          idempotencyKey: `assessment-result:${sessionId}`,
+          attachments: [
+            {
+              filename,
+              content: pdfBase64,
+              contentType: "application/pdf",
+            },
+          ],
+        },
+      );
+    } catch (err) {
+      console.error("[assessment/complete] result email failed", err);
+    }
+  })();
+
+  // ─── Internal lead notification (Jason's inbox) ───────────────────────
+  // Reuses the existing "internal-lead-notification" template the contact
+  // form + newsletter use, so all inbound leads aggregate in one place.
+  const internalEmail = process.env.INTERNAL_NOTIFICATION_EMAIL;
+  if (internalEmail) {
+    void sendTemplate(
+      "internal-lead-notification",
+      internalEmail,
+      {
+        leadType: "assessment",
+        email,
+        firstName,
+        businessName,
+        annualRevenue: annualRevenue || null,
+        urgency: urgency || null,
+        score: `${result.totalScore} / ${result.maxScore} — ${result.bandTitle}`,
+        message: `Recommendation: ${result.recommendation.primary.label}. Strongest: ${result.strongest.title}. Biggest gap: ${result.weakest.title}.`,
+        adminUrl: `${SITE_URL}${relativeResultUrl}`,
+      },
+      { idempotencyKey: `assessment-internal:${sessionId}` },
+    ).catch((err) => {
+      console.error("[assessment/complete] internal notify failed", err);
+    });
+  }
+
   return NextResponse.json({
     ok: true,
-    resultUrl,
+    resultUrl: relativeResultUrl,
     band,
     totalScore: result.totalScore,
   });

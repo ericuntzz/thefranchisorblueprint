@@ -41,7 +41,13 @@ import {
   newsletterWelcomeText,
   type NewsletterWelcomePayload,
 } from "./templates/newsletter-welcome";
-import { sendEmail } from "./send";
+import {
+  AssessmentResultEmail,
+  assessmentResultSubject,
+  assessmentResultText,
+  type AssessmentResultPayload,
+} from "./templates/assessment-result";
+import { sendEmail, type EmailAttachment } from "./send";
 
 /**
  * Maps each template name to:
@@ -61,6 +67,7 @@ type TemplateRegistry = {
   "contact-form-confirmation": ContactFormConfirmationPayload;
   "internal-lead-notification": InternalLeadNotificationPayload;
   "newsletter-welcome": NewsletterWelcomePayload;
+  "assessment-result": AssessmentResultPayload;
 };
 
 export type TemplateName = keyof TemplateRegistry;
@@ -101,6 +108,11 @@ const REGISTRY = {
     subject: newsletterWelcomeSubject,
     text: newsletterWelcomeText,
   },
+  "assessment-result": {
+    Component: AssessmentResultEmail,
+    subject: assessmentResultSubject,
+    text: assessmentResultText,
+  },
 } as const;
 
 /**
@@ -117,7 +129,7 @@ export async function sendTemplate<T extends TemplateName>(
   template: T,
   to: string,
   payload: TemplateRegistry[T],
-  options?: { idempotencyKey?: string },
+  options?: { idempotencyKey?: string; attachments?: EmailAttachment[] },
 ) {
   const def = REGISTRY[template];
   if (!def) {
@@ -143,5 +155,6 @@ export async function sendTemplate<T extends TemplateName>(
     text,
     tag: template,
     idempotencyKey: options?.idempotencyKey,
+    attachments: options?.attachments,
   });
 }
