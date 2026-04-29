@@ -42,12 +42,14 @@ const months = [
 export function HowItWorks() {
   return (
     <div className="relative">
-      {/* Vertical connector line on desktop */}
+      {/* Vertical connector line on desktop. Top/bottom match the row-relative
+          y-position of the centered timeline node so the line visually
+          terminates on the first and last node, not in empty space. */}
       <div
-        className="hidden md:block absolute left-1/2 top-8 bottom-8 w-0.5 -translate-x-1/2"
+        className="hidden md:block absolute left-1/2 top-10 bottom-10 w-0.5 -translate-x-1/2"
         style={{
           backgroundImage:
-            "linear-gradient(to bottom, transparent 0%, #d4af37 8%, #d4af37 92%, transparent 100%)",
+            "linear-gradient(to bottom, transparent 0%, #d4af37 4%, #d4af37 96%, transparent 100%)",
         }}
         aria-hidden
       />
@@ -57,9 +59,20 @@ export function HowItWorks() {
           const isEven = i % 2 === 0;
           return (
             <div key={m.n} className="relative">
-              {/* Center node on desktop */}
+              {/* ── Horizontal alignment baseline ─────────────────────────────
+                  All three desktop elements per row — the center node, the
+                  side icon, and the card's eyebrow ("Month X") — must share
+                  one Y line so the timeline reads as a clean horizontal
+                  beat per month. The node is `h-12` (48px) and lives at
+                  `top-6` (24px), so its center sits at y=48 inside the row.
+                  The icon container is `h-20` (80px) and uses `items-start`
+                  + `pt-2` (8px) → its center is also at y=48. The card has
+                  `p-7`/`p-8` which puts the eyebrow's vertical center at
+                  ~y=44–48. Visually: node, icon, eyebrow → all the same
+                  baseline.
+              ─────────────────────────────────────────────────────────────── */}
               <div
-                className="hidden md:flex absolute left-1/2 top-8 -translate-x-1/2 w-12 h-12 rounded-full bg-white border-4 border-gold items-center justify-center shadow-[0_4px_12px_rgba(30,58,95,0.18)] z-10"
+                className="hidden md:flex absolute left-1/2 top-6 -translate-x-1/2 w-12 h-12 rounded-full bg-white border-4 border-gold items-center justify-center shadow-[0_4px_12px_rgba(30,58,95,0.18)] z-10"
                 aria-hidden
               >
                 <span className="text-navy font-extrabold text-sm">{i + 1}</span>
@@ -85,9 +98,11 @@ export function HowItWorks() {
                   <p className="text-grey-3 text-[15px] leading-relaxed">{m.body}</p>
                 </div>
 
-                {/* Spacer + decorative icon column on desktop */}
+                {/* Decorative icon column. items-start + pt-2 puts the icon
+                    center at y=48 within the row, matching the timeline node
+                    center exactly (see baseline note above). */}
                 <div
-                  className={`hidden md:flex items-center ${isEven ? "" : "justify-end"}`}
+                  className={`hidden md:flex items-start pt-2 ${isEven ? "" : "justify-end"}`}
                 >
                   <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-navy to-navy-light flex items-center justify-center text-gold shadow-[0_10px_30px_rgba(30,58,95,0.18)]">
                     <m.Icon size={32} strokeWidth={1.5} />
