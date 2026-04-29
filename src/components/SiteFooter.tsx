@@ -9,8 +9,8 @@ export function SiteFooter() {
   return (
     <footer className="bg-cream text-navy/75 pt-16 pb-6 border-t-4 border-gold/60">
       <div className="max-w-[1200px] mx-auto px-8">
-        <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr] gap-12 pb-10 border-b border-navy/10">
-          <div>
+        <div className="grid grid-cols-2 md:grid-cols-[1.6fr_1fr_1fr_1fr_1fr] gap-x-8 gap-y-10 md:gap-12 pb-10 border-b border-navy/10">
+          <div className="col-span-2 md:col-span-1">
             <Image
               src="/logos/tfb-logo-color.png"
               alt="The Franchisor Blueprint"
@@ -24,16 +24,23 @@ export function SiteFooter() {
           </div>
           <div>
             <h4 className="text-navy text-xs font-extrabold tracking-widest uppercase mb-5 font-sans">
-              Navigate
+              Explore
             </h4>
             <ul className="space-y-2.5 list-none text-sm">
               <li><Link href="/" className="hover:text-gold-warm transition-colors">Home</Link></li>
               <li><Link href="/about" className="hover:text-gold-warm transition-colors">About</Link></li>
               <li><Link href="/programs" className="hover:text-gold-warm transition-colors">Programs</Link></li>
               <li><Link href="/pricing" className="hover:text-gold-warm transition-colors">Pricing</Link></li>
+              <li><Link href="/blog" className="hover:text-gold-warm transition-colors">Blog</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-navy text-xs font-extrabold tracking-widest uppercase mb-5 font-sans">
+              Get Started
+            </h4>
+            <ul className="space-y-2.5 list-none text-sm">
               <li><Link href="/assessment" className="hover:text-gold-warm transition-colors">Assessment</Link></li>
               <li><Link href="/strategy-call" className="hover:text-gold-warm transition-colors">Book a Call</Link></li>
-              <li><Link href="/blog" className="hover:text-gold-warm transition-colors">Blog</Link></li>
               <li><Link href="/contact" className="hover:text-gold-warm transition-colors">Contact</Link></li>
               <li>
                 <Link href="/portal/login" className="hover:text-gold-warm transition-colors font-semibold">
@@ -48,7 +55,7 @@ export function SiteFooter() {
             </h4>
             <ul className="space-y-2.5 list-none text-sm">
               <li>
-                <a href="mailto:hello@thefranchisorblueprint.com" className="hover:text-gold-warm transition-colors">
+                <a href="mailto:hello@thefranchisorblueprint.com" className="hover:text-gold-warm transition-colors break-words">
                   hello@thefranchisorblueprint.com
                 </a>
               </li>
