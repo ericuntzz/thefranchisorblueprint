@@ -13,6 +13,7 @@ export type Profile = {
   full_name: string | null;
   stripe_customer_id: string | null;
   tier: Tier;
+  coaching_credits: number;
   created_at: string;
   updated_at: string;
 };
@@ -80,9 +81,16 @@ export type Database = {
     Tables: {
       profiles: {
         Row: Profile;
-        Insert: Omit<Profile, "created_at" | "updated_at"> & {
+        // tier (default 1) and coaching_credits (default 0) are NOT NULL in
+        // the DB but DO have defaults — so they're optional on Insert.
+        Insert: Omit<
+          Profile,
+          "created_at" | "updated_at" | "tier" | "coaching_credits"
+        > & {
           created_at?: string;
           updated_at?: string;
+          tier?: Tier;
+          coaching_credits?: number;
         };
         Update: Partial<Omit<Profile, "id">>;
         Relationships: [];

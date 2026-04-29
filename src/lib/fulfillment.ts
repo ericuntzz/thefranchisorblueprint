@@ -113,24 +113,20 @@ export async function ensureUserAndPurchase(
     nextTier = Math.max(currentTier, product.grantsTier) as Tier;
   }
 
-  // 3) Upsert profile with optional tier bump
-  const profileUpdate: {
-    id: string;
-    email: string;
-    full_name: string | null;
-    stripe_customer_id: string | null;
-    tier?: Tier;
-  } = {
+  // 3) Upsert profile with optional tier bump. Tier is required by the column
+  // (NOT NULL default 1); on first insert we use the new tier or 1, on subsequent
+  // upserts we only pass tier if it actually increased.
+  const profileBase = {
     id: userId,
     email,
     full_name: fullName,
     stripe_customer_id: stripeCustomerId,
+    tier: (nextTier ?? 1) as Tier,
   };
-  if (nextTier !== null) profileUpdate.tier = nextTier;
 
   const { error: profileErr } = await supabase
     .from("profiles")
-    .upsert(profileUpdate, { onConflict: "id" });
+    .upsert(profileBase, { onConflict: "id" });
   if (profileErr) {
     console.error(`[fulfillment] profile upsert failed: ${profileErr.message}`);
   }
@@ -412,6 +408,32 @@ export async function sendWelcomeMagicLinkEmail(
   // If anything still calls this, it's a no-op.
   void email;
   void origin;
+}
+
+/**
+ * Generates a single-use magic-link URL for an existing user. Used on the
+ * /thank-you page so customers can land in /portal in one click without
+ * waiting for email. Returns null on any failure (caller renders fallback).
+ */
+export async function generatePortalAccessUrl(
+  email: string,
+  origin: string,
+): Promise<string | null> {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase.auth.admin.generateLink({
+    type: "magiclink",
+    email,
+    options: { redirectTo: `${origin}/auth/confirm?next=/portal` },
+  });
+  if (error || !data.properties?.hashed_token) {
+    console.error(`[fulfillment] generateLink failed for ${email}: ${error?.message}`);
+    return null;
+  }
+  const url = new URL(`${origin}/auth/confirm`);
+  url.searchParams.set("token_hash", data.properties.hashed_token);
+  url.searchParams.set("type", "magiclink");
+  url.searchParams.set("next", "/portal");
+  return url.toString();
 }
 
 // Re-export commonly imported names so call sites don't need to update paths

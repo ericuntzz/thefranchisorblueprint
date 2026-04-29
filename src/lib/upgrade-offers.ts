@@ -67,8 +67,8 @@ export async function createUpgradeOffersForTier(
  */
 export async function getOfferFor(
   userId: string,
-  sourceTier: Tier,
-  targetTier: Tier,
+  sourceTier: 1 | 2,
+  targetTier: 2 | 3,
 ): Promise<UpgradeOffer | null> {
   const supabase = getSupabaseAdmin();
   const { data } = await supabase
@@ -109,8 +109,8 @@ export function effectivePriceCents(offer: UpgradeOffer | null, fallbackCents: n
  */
 export async function markOfferRedeemed(
   userId: string,
-  sourceTier: Tier,
-  targetTier: Tier,
+  sourceTier: 1 | 2,
+  targetTier: 2 | 3,
 ): Promise<void> {
   const supabase = getSupabaseAdmin();
   const { error } = await supabase

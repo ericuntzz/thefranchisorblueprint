@@ -49,7 +49,7 @@ export async function POST(
     userEmail = user.email ?? undefined;
 
     const [src, tgt] = parseUpgradeSlug(slug);
-    if (src && tgt) {
+    if (src && tgt && (src === 1 || src === 2) && (tgt === 2 || tgt === 3)) {
       const offer = await getOfferFor(user.id, src, tgt);
       applyPromoCoupon = isPromoActive(offer);
     }
