@@ -14,7 +14,7 @@
  * shadows. See src/app/portal/[capability]/page.tsx for the reference.
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -99,7 +99,6 @@ export function AssessmentFlow({ source }: { source?: string }) {
     annualRevenue: "",
     urgency: "",
   });
-  const containerRef = useRef<HTMLDivElement | null>(null);
 
   // ─── Bootstrap: try to resume from cookie, otherwise show the intro ──────
   useEffect(() => {
@@ -145,12 +144,9 @@ export function AssessmentFlow({ source }: { source?: string }) {
     }
   }
 
-  // Auto-scroll to the top of the flow on stage transitions.
-  useEffect(() => {
-    if (stage.kind === "question" || stage.kind === "insight" || stage.kind === "lead_capture") {
-      containerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }, [stage]);
+  // (Auto-scroll on stage transition was removed — it was causing the page
+  // to jump on every click. Stage cards now share a min-height so the
+  // section anchor stays put as content swaps.)
 
   // Send a single answer to the API. Retries once on a 404 by transparently
   // restarting the session — handles the case where the client's sessionId
@@ -166,7 +162,10 @@ export function AssessmentFlow({ source }: { source?: string }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         sessionId: s.sessionId,
-        resumeToken: s.resumeToken,
+        // resumeToken intentionally omitted — the /answer API no longer
+        // gates on it (sessionId UUID is sufficient credential for a
+        // free assessment) and keeping it out of the body avoids
+        // confusing future readers about which fields are required.
         questionId: question.id,
         answerValue: letter,
       }),
@@ -259,7 +258,6 @@ export function AssessmentFlow({ source }: { source?: string }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         sessionId: session.sessionId,
-        resumeToken: session.resumeToken,
         email: lead.email,
         firstName: lead.firstName,
         businessName: lead.businessName,
@@ -279,52 +277,73 @@ export function AssessmentFlow({ source }: { source?: string }) {
   }
 
   // ─── Render ────────────────────────────────────────────────────────────
+  // Stage-key trick: every distinct stage gets a stable key so React
+  // remounts the inner card on transition, which re-fires the
+  // `tfb-stage-in` CSS animation. The error banner sits OUTSIDE the keyed
+  // wrapper so it doesn't re-animate on every navigation.
+  const stageKey =
+    stage.kind === "question"
+      ? `q-${stage.index}`
+      : stage.kind === "insight"
+        ? `i-${stage.questionIndex}`
+        : stage.kind;
+
   return (
-    <div ref={containerRef} className="max-w-[820px] mx-auto px-4 md:px-8">
+    <div className="max-w-[820px] mx-auto px-4 md:px-8">
       {error && (
         <div className="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
           {error}
         </div>
       )}
-      {stage.kind === "loading" && <LoadingCard />}
-      {stage.kind === "intro" && (
-        <IntroCard onStart={() => void resumeOrStart(null)} />
-      )}
-      {stage.kind === "question" && session && (
-        <QuestionCard
-          question={QUESTIONS[stage.index]}
-          index={stage.index}
-          total={QUESTIONS.length}
-          selected={session.answers[QUESTIONS[stage.index].id] ?? null}
-          onAnswer={(letter) => void answerQuestion(QUESTIONS[stage.index], letter)}
-          onBack={stage.index > 0 ? goBack : null}
-        />
-      )}
-      {stage.kind === "insight" && (
-        <InsightCard
-          text={stage.text}
-          onContinue={() => advanceFrom(stage.nextIndex)}
-          progress={(stage.questionIndex + 1) / QUESTIONS.length}
-        />
-      )}
-      {stage.kind === "lead_capture" && (
-        <LeadCaptureCard
-          values={lead}
-          setValues={setLead}
-          onBack={goBack}
-          onSubmit={submitLead}
-        />
-      )}
-      {stage.kind === "submitting" && <SubmittingCard />}
+      <div key={stageKey} className="tfb-stage-in">
+        {stage.kind === "loading" && <LoadingCard />}
+        {stage.kind === "intro" && (
+          <IntroCard onStart={() => void resumeOrStart(null)} />
+        )}
+        {stage.kind === "question" && session && (
+          <QuestionCard
+            question={QUESTIONS[stage.index]}
+            index={stage.index}
+            total={QUESTIONS.length}
+            selected={session.answers[QUESTIONS[stage.index].id] ?? null}
+            onAnswer={(letter) => void answerQuestion(QUESTIONS[stage.index], letter)}
+            onBack={stage.index > 0 ? goBack : null}
+          />
+        )}
+        {stage.kind === "insight" && (
+          <InsightCard
+            text={stage.text}
+            onContinue={() => advanceFrom(stage.nextIndex)}
+            progress={(stage.questionIndex + 1) / QUESTIONS.length}
+          />
+        )}
+        {stage.kind === "lead_capture" && (
+          <LeadCaptureCard
+            values={lead}
+            setValues={setLead}
+            onBack={goBack}
+            onSubmit={submitLead}
+          />
+        )}
+        {stage.kind === "submitting" && <SubmittingCard />}
+      </div>
     </div>
   );
 }
 
 // ─── Sub-components (kept in-file; this is the primary surface) ───────────
 
+// Shared sizing constants. Every stage card uses these so the section
+// reserves the same vertical space regardless of which stage is active —
+// no "page jumps" when the user clicks an answer or the Continue button.
+const CARD_BASE =
+  "bg-white rounded-2xl border border-navy/10 shadow-[0_30px_60px_rgba(30,58,95,0.16),0_8px_18px_rgba(30,58,95,0.06)] min-h-[560px] md:min-h-[620px]";
+
 function LoadingCard() {
   return (
-    <div className="bg-white rounded-2xl border border-navy/10 shadow-[0_18px_40px_rgba(30,58,95,0.08)] p-10 md:p-14 text-center">
+    <div
+      className={`${CARD_BASE} p-10 md:p-14 text-center flex flex-col items-center justify-center`}
+    >
       <div className="inline-flex w-12 h-12 rounded-xl bg-cream items-center justify-center text-gold-warm mb-4">
         <Sparkles size={20} />
       </div>
@@ -335,7 +354,9 @@ function LoadingCard() {
 
 function IntroCard({ onStart }: { onStart: () => void }) {
   return (
-    <div className="bg-white rounded-2xl border border-navy/10 shadow-[0_18px_40px_rgba(30,58,95,0.08)] p-10 md:p-14 text-center">
+    <div
+      className={`${CARD_BASE} p-10 md:p-14 text-center flex flex-col items-center justify-center`}
+    >
       <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase mb-4 border-b-2 border-gold pb-1">
         15 questions · 5–7 minutes
       </span>
@@ -394,7 +415,7 @@ function QuestionCard({
   const category = CATEGORY_BY_SLUG[question.category];
   const progress = (index + 1) / total;
   return (
-    <div className="bg-white rounded-2xl border border-navy/10 shadow-[0_18px_40px_rgba(30,58,95,0.08)] p-7 md:p-12">
+    <div className={`${CARD_BASE} p-7 md:p-12 flex flex-col`}>
       <ProgressBar
         progress={progress}
         label={`Question ${index + 1} of ${total} · ${category.shortLabel}`}
@@ -467,7 +488,9 @@ function InsightCard({
   progress: number;
 }) {
   return (
-    <div className="bg-cream rounded-2xl border border-gold/30 shadow-[0_18px_40px_rgba(30,58,95,0.08)] p-7 md:p-10">
+    <div
+      className="bg-cream rounded-2xl border border-gold/30 shadow-[0_30px_60px_rgba(30,58,95,0.16),0_8px_18px_rgba(30,58,95,0.06)] min-h-[560px] md:min-h-[620px] p-7 md:p-10 flex flex-col"
+    >
       <ProgressBar progress={progress} label="Quick beat from Jason" />
       <div className="flex gap-4">
         <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-navy to-navy-light flex items-center justify-center text-gold">
@@ -514,7 +537,7 @@ function LeadCaptureCard({
   }, [values]);
 
   return (
-    <div className="bg-white rounded-2xl border border-navy/10 shadow-[0_18px_40px_rgba(30,58,95,0.08)] p-7 md:p-12">
+    <div className={`${CARD_BASE} p-7 md:p-12`}>
       <div className="text-center mb-7">
         <div className="inline-flex w-12 h-12 rounded-xl bg-cream items-center justify-center text-gold-warm mb-3">
           <CheckCircle2 size={20} />
@@ -632,7 +655,9 @@ function LeadCaptureCard({
 
 function SubmittingCard() {
   return (
-    <div className="bg-white rounded-2xl border border-navy/10 shadow-[0_18px_40px_rgba(30,58,95,0.08)] p-10 md:p-14 text-center">
+    <div
+      className={`${CARD_BASE} p-10 md:p-14 text-center flex flex-col items-center justify-center`}
+    >
       <div className="inline-flex w-12 h-12 rounded-xl bg-gradient-to-br from-navy to-navy-light items-center justify-center text-gold mb-4">
         <Sparkles size={20} className="animate-pulse" />
       </div>

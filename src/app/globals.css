@@ -33,6 +33,33 @@ html {
   scroll-behavior: smooth;
 }
 
+/* ─── Assessment flow stage transition ────────────────────────────────────
+ * Plays on every stage change in the AssessmentFlow component. The previous
+ * card is removed on remount (key changes), so we only animate the
+ * incoming view — fade + slide-in-from-right gives a polished "swipe"
+ * feel without a JS animation library. Respects prefers-reduced-motion.
+ */
+@keyframes tfb-stage-in {
+  0% {
+    opacity: 0;
+    transform: translate3d(28px, 0, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+.tfb-stage-in {
+  animation: tfb-stage-in 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tfb-stage-in {
+    animation: none;
+  }
+}
+
 @layer base {
   body {
     background: #ffffff;

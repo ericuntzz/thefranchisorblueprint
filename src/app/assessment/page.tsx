@@ -30,8 +30,10 @@ export default function AssessmentPage() {
         subtitle="A 15-question assessment across the four dimensions that actually predict franchise success. About 5–7 minutes. You'll get an honest score and a tailored next-step recommendation."
       />
 
-      {/* ===== In-house assessment flow (replaces the prior JotForm embed) ===== */}
-      <section className="bg-grey-1/40 py-12 md:py-16 border-y border-navy/5">
+      {/* ===== In-house assessment flow (replaces the prior JotForm embed) =====
+          Cream section background so the white assessment card pops with a
+          real drop-shadow instead of disappearing into the page bg. */}
+      <section className="bg-cream py-16 md:py-24">
         <AssessmentFlow source="assessment_page" />
       </section>
 
