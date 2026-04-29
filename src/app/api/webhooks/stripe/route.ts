@@ -82,6 +82,38 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      // ─── Defensive: handle out-of-order events ───────────────────────
+      // Stripe doesn't strictly guarantee event ordering on retries. If
+      // charge.refunded arrived BEFORE checkout.session.completed for
+      // this session, the refund handler bailed (no purchase row yet).
+      // Now that the purchase row exists, re-check the charge's refund
+      // status and apply if needed. Cheap call, only paid for one round-
+      // trip per checkout.
+      try {
+        if (session.payment_intent) {
+          const piId =
+            typeof session.payment_intent === "string"
+              ? session.payment_intent
+              : session.payment_intent.id;
+          const pi = await stripe.paymentIntents.retrieve(piId, {
+            expand: ["latest_charge"],
+          });
+          const charge = pi.latest_charge;
+          if (
+            charge &&
+            typeof charge !== "string" &&
+            (charge.amount_refunded ?? 0) > 0
+          ) {
+            console.log(
+              `[stripe] out-of-order reconciliation: PI ${piId} already refunded — applying`,
+            );
+            await markPurchaseRefunded(charge);
+          }
+        }
+      } catch (err) {
+        console.error("[stripe] post-fulfillment refund check failed:", err);
+      }
+
       // (Buyer CRM tagging is handled internally — purchase row in Supabase
       // is the source of truth; lifecycle emails are dispatched via the
       // Resend queue from the post-purchase block above. No external CRM.)

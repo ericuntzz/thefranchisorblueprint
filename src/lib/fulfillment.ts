@@ -378,7 +378,9 @@ async function scheduleUpgradeDripT2(
 }
 
 /**
- * Refund handler — flips the purchases row + schedules a 14-day win-back email.
+ * Refund handler — flips the purchases row, claws back unused coaching
+ * credits (from the refunded purchase only), and schedules a 14-day
+ * win-back email.
  */
 export async function markPurchaseRefunded(charge: Stripe.Charge): Promise<void> {
   const piId =
@@ -391,6 +393,30 @@ export async function markPurchaseRefunded(charge: Stripe.Charge): Promise<void>
   }
 
   const supabase = getSupabaseAdmin();
+
+  // Read the purchase BEFORE updating, so we can:
+  //   (a) tell whether it was already refunded (idempotency)
+  //   (b) figure out how many coaching credits to claw back
+  const { data: existing } = await supabase
+    .from("purchases")
+    .select("id, user_id, tier, product, status")
+    .eq("stripe_payment_intent_id", piId)
+    .maybeSingle();
+
+  if (!existing) {
+    // Out-of-order delivery: charge.refunded arrived before
+    // checkout.session.completed. The defensive sweep in the webhook
+    // handler will re-check on session completion. Silent skip here.
+    console.warn(
+      `[fulfillment] charge.refunded for unknown PI ${piId} — likely out-of-order; will reconcile on session completion`,
+    );
+    return;
+  }
+  if (existing.status === "refunded") {
+    console.log(`[fulfillment] purchase ${existing.id} already refunded — idempotent skip`);
+    return;
+  }
+
   const { data, error } = await supabase
     .from("purchases")
     .update({
@@ -398,21 +424,39 @@ export async function markPurchaseRefunded(charge: Stripe.Charge): Promise<void>
       refunded_at: new Date().toISOString(),
       refund_amount_cents: charge.amount_refunded,
     })
-    .eq("stripe_payment_intent_id", piId)
+    .eq("id", existing.id)
     .select("id, user_id, tier, product");
 
-  if (error) {
-    console.error(`[fulfillment] mark refunded failed for pi=${piId}: ${error.message}`);
-    return;
-  }
-  if (!data || data.length === 0) {
-    console.warn(`[fulfillment] charge.refunded for unknown PI ${piId}`);
+  if (error || !data || data.length === 0) {
+    console.error(`[fulfillment] mark refunded failed for pi=${piId}: ${error?.message ?? "no rows"}`);
     return;
   }
   const refunded = data[0];
   console.log(
     `[fulfillment] marked refunded user=${refunded.user_id} tier=${refunded.tier} pi=${piId} amount=${charge.amount_refunded}`,
   );
+
+  // Clawback unused coaching credits from this refunded purchase only.
+  // The clawback_unused_credits SQL function deducts min(grant, balance)
+  // — so a customer who used some credits before refunding keeps the used
+  // ones, but loses the unused ones. Fair to both parties.
+  const refundedProduct = getProduct(refunded.product) ?? PRODUCTS.blueprint;
+  if (refundedProduct.grantsCoachingCalls > 0) {
+    const { data: clawedBack, error: clawErr } = await supabase.rpc(
+      "clawback_unused_credits",
+      {
+        uid: refunded.user_id,
+        grant_amount: refundedProduct.grantsCoachingCalls,
+      },
+    );
+    if (clawErr) {
+      console.error(`[fulfillment] credit clawback failed: ${clawErr.message}`);
+    } else {
+      console.log(
+        `[fulfillment] clawed back ${clawedBack ?? 0} of ${refundedProduct.grantsCoachingCalls} unused coaching credits from refunded ${refundedProduct.slug}`,
+      );
+    }
+  }
 
   // Schedule win-back email for +14 days
   const { data: prof } = await supabase

@@ -73,14 +73,16 @@ export default async function UpgradePage() {
         <div className="max-w-[1200px] mx-auto px-6 md:px-8 py-10 md:py-14">
           <Link
             href="/portal"
-            className="inline-flex items-center gap-1.5 text-grey-3 hover:text-navy text-sm font-semibold mb-6 transition-colors"
+            className="inline-flex items-center gap-1.5 text-grey-3 hover:text-navy text-sm font-semibold mb-6 transition-colors w-fit"
           >
             <ArrowLeft size={14} />
             Back to portal
           </Link>
-          <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase mb-3 border-b-2 border-gold pb-1">
-            Upgrade your tier
-          </span>
+          <div>
+            <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase mb-3 border-b-2 border-gold pb-1">
+              Upgrade your tier
+            </span>
+          </div>
           <h1 className="text-3xl md:text-4xl font-bold text-navy mb-3">
             {firstName ? `Move further, ${firstName}` : "Move further"}
           </h1>

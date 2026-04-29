@@ -132,11 +132,14 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
                 Your franchisor operating system — {completedCount} of {totalCount} capabilities complete.
               </p>
             </div>
-            <div className="bg-cream rounded-xl px-5 py-4 border border-gold/30">
-              <div className="text-[10px] font-bold tracking-[0.16em] uppercase text-gold-warm mb-1">
-                Your access tier
+            <div className="flex items-stretch gap-3">
+              <div className="bg-cream rounded-xl px-5 py-4 border border-gold/30">
+                <div className="text-[10px] font-bold tracking-[0.16em] uppercase text-gold-warm mb-1">
+                  Your access tier
+                </div>
+                <div className="text-navy font-bold text-base">{TIER_LABELS[tier]}</div>
               </div>
-              <div className="text-navy font-bold text-base">{TIER_LABELS[tier]}</div>
+              <CoachingCreditsChip credits={profile?.coaching_credits ?? 0} tier={tier} />
             </div>
           </div>
 
@@ -160,7 +163,11 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
 
       {/* ===== Phase 1 complete → upgrade hero card (more prominent) ===== */}
       {phase1Done && !isAllComplete && tier < 3 && (
-        <Phase1UpgradeHero firstName={firstName} tier={tier} />
+        <Phase1UpgradeHero
+          firstName={firstName}
+          tier={tier}
+          coachingCredits={profile?.coaching_credits ?? 0}
+        />
       )}
 
       {/* ===== Final readiness milestone ===== */}
@@ -626,8 +633,34 @@ function PromoBanner({ offer, tier }: { offer: UpgradeOffer; tier: Tier }) {
   );
 }
 
-function Phase1UpgradeHero({ firstName, tier }: { firstName: string | null; tier: Tier }) {
-  const targetName = tier === 1 ? "Navigator" : "Builder";
+function Phase1UpgradeHero({
+  firstName,
+  tier,
+  coachingCredits,
+}: {
+  firstName: string | null;
+  tier: Tier;
+  coachingCredits: number;
+}) {
+  // Tier 3 customers don't get an upgrade hero — they're at the top.
+  if (tier >= 3) return null;
+
+  const isTier1 = tier === 1;
+  const targetName = isTier1 ? "Navigator" : "Builder";
+
+  // Tier-specific copy + secondary CTA. Tier 1 buyers don't have any
+  // coaching credits yet, so the secondary CTA points at /portal/coaching
+  // where they can pick from sample call ($97) or phase coaching ($1,500).
+  // Tier 2 buyers DO have credits — push them toward booking instead of
+  // buying more coaching.
+  const headline = firstName
+    ? `${firstName}, you've validated you're ready`
+    : "You've validated you're ready";
+
+  const body = isTier1
+    ? "The next phase (Architect) is where 80% of your time gets spent and where 1:1 coaching dramatically compresses the timeline. Want a coach for the hard parts?"
+    : `You've got ${coachingCredits} coaching ${coachingCredits === 1 ? "call" : "calls"} included. Architect is where most Navigator customers use them — book your first session for this phase.`;
+
   return (
     <section className="py-10 md:py-14 bg-cream border-b border-gold/30">
       <div className="max-w-[1200px] mx-auto px-6 md:px-8">
@@ -640,13 +673,9 @@ function Phase1UpgradeHero({ firstName, tier }: { firstName: string | null; tier
               Phase 1 complete
             </div>
             <h2 className="text-navy font-extrabold text-xl md:text-2xl mb-2">
-              {firstName
-                ? `${firstName}, you've validated you're ready`
-                : "You've validated you're ready"}
+              {headline}
             </h2>
-            <p className="text-grey-3 text-base leading-relaxed mb-4">
-              The next phase (Architect) is where 80% of your time gets spent and where 1:1 coaching dramatically compresses the timeline. Want a coach for the hard parts?
-            </p>
+            <p className="text-grey-3 text-base leading-relaxed mb-4">{body}</p>
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/portal/upgrade"
@@ -654,17 +683,63 @@ function Phase1UpgradeHero({ firstName, tier }: { firstName: string | null; tier
               >
                 Upgrade to {targetName} <ArrowRight size={14} />
               </Link>
-              <Link
-                href="/portal/coaching"
-                className="inline-flex items-center gap-2 bg-transparent text-navy border-2 border-navy/15 font-bold text-sm uppercase tracking-[0.1em] px-6 py-3.5 rounded-full hover:border-navy hover:bg-navy hover:text-white transition-colors"
-              >
-                Try a sample call
-              </Link>
+              {isTier1 ? (
+                <Link
+                  href="/portal/coaching"
+                  className="inline-flex items-center gap-2 bg-transparent text-navy border-2 border-navy/15 font-bold text-sm uppercase tracking-[0.1em] px-6 py-3.5 rounded-full hover:border-navy hover:bg-navy hover:text-white transition-colors"
+                >
+                  Add coaching <ArrowRight size={14} />
+                </Link>
+              ) : (
+                <Link
+                  href="/portal/coaching/schedule"
+                  className="inline-flex items-center gap-2 bg-transparent text-navy border-2 border-navy/15 font-bold text-sm uppercase tracking-[0.1em] px-6 py-3.5 rounded-full hover:border-navy hover:bg-navy hover:text-white transition-colors"
+                >
+                  Schedule a coaching call <ArrowRight size={14} />
+                </Link>
+              )}
             </div>
           </div>
         </div>
       </div>
     </section>
+  );
+}
+
+/**
+ * Compact chip that lives next to the access-tier badge on the dashboard.
+ * Shows the customer's available coaching credits and links to either:
+ *   - the coaching purchase page (if they have 0 — encourages add-on)
+ *   - the coaching schedule page (if they have ≥ 1 — encourages booking)
+ */
+function CoachingCreditsChip({ credits, tier }: { credits: number; tier: Tier }) {
+  // Tier 3 customers always get coaching included — chip would feel weird
+  // for them. (We can revisit this once we have actual Tier 3 buyers.)
+  if (tier >= 3 && credits === 0) return null;
+
+  const hasCredits = credits > 0;
+  const href = hasCredits ? "/portal/coaching/schedule" : "/portal/coaching";
+  return (
+    <Link
+      href={href}
+      className={`group rounded-xl px-5 py-4 border transition-colors ${
+        hasCredits
+          ? "bg-white border-navy/15 hover:border-gold/50"
+          : "bg-grey-1/40 border-navy/10 hover:border-navy/25"
+      }`}
+    >
+      <div className="text-[10px] font-bold tracking-[0.16em] uppercase text-gold-warm mb-1">
+        Coaching credits
+      </div>
+      <div className="flex items-baseline gap-2">
+        <div className="text-navy font-bold text-base tabular-nums">
+          {credits}
+        </div>
+        <div className="text-[11px] text-grey-4 group-hover:text-navy transition-colors">
+          {hasCredits ? "→ Book a call" : "→ Add coaching"}
+        </div>
+      </div>
+    </Link>
   );
 }
 

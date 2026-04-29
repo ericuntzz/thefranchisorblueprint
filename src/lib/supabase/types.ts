@@ -128,6 +128,20 @@ export type ScheduledEmail = {
   created_at: string;
 };
 
+export type CoachingSession = {
+  id: string;
+  user_id: string;
+  calendly_event_uri: string | null;
+  calendly_invitee_uri: string | null;
+  calendly_event_type_uri: string | null;
+  scheduled_at: string;
+  status: "scheduled" | "completed" | "canceled" | "no_show";
+  notes: string | null;
+  created_at: string;
+  canceled_at: string | null;
+  completed_at: string | null;
+};
+
 // Supabase JS v2 type inference requires this exact shape — including the
 // __InternalSupabase marker and the `{ [_ in never]: never }` empty-record
 // idiom for Views/Functions/Enums/CompositeTypes. Deviations cause every
@@ -176,6 +190,22 @@ export type Database = {
           completed_at?: string;
         };
         Update: Partial<Omit<CapabilityProgress, "user_id" | "capability_slug">>;
+        Relationships: [];
+      };
+      coaching_sessions: {
+        Row: CoachingSession;
+        Insert: Omit<
+          CoachingSession,
+          "id" | "created_at" | "canceled_at" | "completed_at" | "status" | "notes"
+        > & {
+          id?: string;
+          created_at?: string;
+          canceled_at?: string | null;
+          completed_at?: string | null;
+          status?: CoachingSession["status"];
+          notes?: string | null;
+        };
+        Update: Partial<Omit<CoachingSession, "id">>;
         Relationships: [];
       };
       upgrade_offers: {
@@ -262,6 +292,14 @@ export type Database = {
       claim_due_emails: {
         Args: { batch_size?: number };
         Returns: ScheduledEmail[];
+      };
+      debit_coaching_credit: {
+        Args: { uid: string };
+        Returns: boolean;
+      };
+      clawback_unused_credits: {
+        Args: { uid: string; grant_amount: number };
+        Returns: number;
       };
     };
     Views: { [_ in never]: never };
