@@ -14,6 +14,10 @@ export type Profile = {
   stripe_customer_id: string | null;
   tier: Tier;
   coaching_credits: number;
+  /** Customer's website. Captured at assessment or post-purchase, scraped
+   *  by the website pre-fill service to seed brand_voice + business_overview
+   *  Memory chapters before the customer even starts voice intake. */
+  website_url: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -95,6 +99,9 @@ export type AssessmentSession = {
   email: string | null;
   first_name: string | null;
   business_name: string | null;
+  /** Captured during assessment so the agentic-portal scraper has a head start
+   *  by the time the customer purchases. */
+  website_url: string | null;
   annual_revenue: string | null;
   urgency: string | null;
   total_score: number | null;
@@ -134,6 +141,49 @@ export type ScheduledEmail = {
   created_at: string;
 };
 
+/**
+ * Per-user directory of structured business knowledge. One row per
+ * (user, file_slug). content_md is *both* the agent's source of truth AND
+ * the live draft of the corresponding chapter that compiles into the
+ * customer's Franchisor Blueprint export bundle.
+ *
+ * See `src/lib/memory/files.ts` for the canonical list of file_slug values.
+ */
+export type CustomerMemory = {
+  user_id: string;
+  file_slug: string;
+  content_md: string;
+  confidence: "verified" | "inferred" | "draft";
+  last_updated_by: "agent" | "user" | "jason" | "scraper";
+  created_at: string;
+  updated_at: string;
+};
+
+/**
+ * Per-claim audit trail. Every meaningful assertion in a customer_memory
+ * file ties back to a row here so the on-hover provenance UI can show the
+ * customer where the claim came from. claim_id is an anchor embedded in
+ * the markdown (e.g. `<!-- claim:para-3 -->`).
+ */
+export type CustomerMemoryProvenance = {
+  id: string;
+  user_id: string;
+  file_slug: string;
+  claim_id: string;
+  source_type:
+    | "voice_session"
+    | "upload"
+    | "form"
+    | "agent_inference"
+    | "jason_playbook"
+    | "research"
+    | "assessment"
+    | "scraper";
+  source_ref: string | null;
+  source_excerpt: string | null;
+  created_at: string;
+};
+
 export type CoachingSession = {
   id: string;
   user_id: string;
@@ -164,16 +214,42 @@ export type Database = {
         Row: Profile;
         // tier (default 1) and coaching_credits (default 0) are NOT NULL in
         // the DB but DO have defaults — so they're optional on Insert.
+        // website_url defaults to NULL.
         Insert: Omit<
           Profile,
-          "created_at" | "updated_at" | "tier" | "coaching_credits"
+          "created_at" | "updated_at" | "tier" | "coaching_credits" | "website_url"
         > & {
           created_at?: string;
           updated_at?: string;
           tier?: Tier;
           coaching_credits?: number;
+          website_url?: string | null;
         };
         Update: Partial<Omit<Profile, "id">>;
+        Relationships: [];
+      };
+      customer_memory: {
+        Row: CustomerMemory;
+        // content_md, confidence, last_updated_by all have DB defaults; only
+        // user_id + file_slug are strictly required on insert. created_at
+        // and updated_at are managed by the DB.
+        Insert: Pick<CustomerMemory, "user_id" | "file_slug"> & {
+          content_md?: string;
+          confidence?: CustomerMemory["confidence"];
+          last_updated_by?: CustomerMemory["last_updated_by"];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<CustomerMemory, "user_id" | "file_slug" | "created_at">>;
+        Relationships: [];
+      };
+      customer_memory_provenance: {
+        Row: CustomerMemoryProvenance;
+        Insert: Omit<CustomerMemoryProvenance, "id" | "created_at"> & {
+          id?: string;
+          created_at?: string;
+        };
+        Update: Partial<Omit<CustomerMemoryProvenance, "id" | "user_id">>;
         Relationships: [];
       };
       purchases: {
@@ -311,6 +387,23 @@ export type Database = {
       };
       log_capability_view: {
         Args: { uid: string; slug: string };
+        Returns: void;
+      };
+      upsert_memory_with_provenance: {
+        Args: {
+          p_user_id: string;
+          p_file_slug: string;
+          p_content_md: string;
+          p_confidence: CustomerMemory["confidence"];
+          p_last_updated_by: CustomerMemory["last_updated_by"];
+          /** JSON array of { claim_id, source_type, source_ref, source_excerpt } */
+          p_provenance: Array<{
+            claim_id: string;
+            source_type: CustomerMemoryProvenance["source_type"];
+            source_ref: string | null;
+            source_excerpt: string | null;
+          }> | null;
+        };
         Returns: void;
       };
     };

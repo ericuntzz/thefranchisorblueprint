@@ -52,12 +52,40 @@ interface CompleteRequest {
   email?: string;
   firstName?: string;
   businessName?: string;
+  /**
+   * Optional. Captured for the agentic-portal pre-fill scrape (Phase 1
+   * of the agentic-portal buildout). The lead-capture UI doesn't ask for
+   * this yet — the field is here so adding it later is a UI-only change.
+   */
+  websiteUrl?: string;
   annualRevenue?: string;
   urgency?: string;
 }
 
 function isValidEmail(s: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+}
+
+/**
+ * Light-touch normalization for an optional website field. We accept what
+ * the customer types (`thefranchisorblueprint.com`, `www.x.com`,
+ * `https://x.com/foo`), strip whitespace, prepend `https://` when no scheme
+ * is given, and validate it parses as a URL. Returns null if the input is
+ * empty or unparseable — we'd rather drop a malformed value than let it
+ * poison the scrape pipeline downstream.
+ */
+function normalizeWebsiteUrl(input: string | undefined): string | null {
+  const raw = (input ?? "").trim();
+  if (!raw) return null;
+  const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+  try {
+    const u = new URL(withScheme);
+    // Reject the trivial `https://` no-host case.
+    if (!u.hostname || !u.hostname.includes(".")) return null;
+    return u.toString();
+  } catch {
+    return null;
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -75,6 +103,7 @@ export async function POST(req: NextRequest) {
   const email = (body.email ?? "").trim().toLowerCase();
   const firstName = (body.firstName ?? "").trim();
   const businessName = (body.businessName ?? "").trim() || null;
+  const websiteUrl = normalizeWebsiteUrl(body.websiteUrl);
   const annualRevenue = (body.annualRevenue ?? "").trim();
   const urgency = (body.urgency ?? "").trim();
 
@@ -160,6 +189,7 @@ export async function POST(req: NextRequest) {
       email,
       first_name: firstName,
       business_name: businessName,
+      website_url: websiteUrl,
       annual_revenue: annualRevenue || null,
       urgency: urgency || null,
       total_score: result.totalScore,
