@@ -38,6 +38,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# supabase CLI link state — local only, contains project ref + cached creds
+supabase/.temp/
+supabase/.branches/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
