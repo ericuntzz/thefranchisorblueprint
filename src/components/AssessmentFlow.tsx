@@ -69,6 +69,7 @@ interface LeadCaptureForm {
   firstName: string;
   email: string;
   businessName: string;
+  websiteUrl: string;
   annualRevenue: string;
   urgency: string;
 }
@@ -96,6 +97,7 @@ export function AssessmentFlow({ source }: { source?: string }) {
     firstName: "",
     email: "",
     businessName: "",
+    websiteUrl: "",
     annualRevenue: "",
     urgency: "",
   });
@@ -283,6 +285,9 @@ export function AssessmentFlow({ source }: { source?: string }) {
         email: lead.email,
         firstName: lead.firstName,
         businessName: lead.businessName,
+        // Captured here so the agentic-portal pre-fill scrape (Phase 1)
+        // has a head start by the time the customer purchases. Optional.
+        websiteUrl: lead.websiteUrl,
         annualRevenue: lead.annualRevenue,
         urgency: lead.urgency,
       }),
@@ -612,6 +617,15 @@ function LeadCaptureCard({
             onChange={(e) => setValues({ ...values, businessName: e.target.value })}
             className="w-full bg-white border border-navy/15 rounded-xl px-4 py-3 text-[15px] text-navy focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition-colors"
             placeholder="Optional — helps us personalize the call"
+          />
+        </Field>
+        <Field label="Website">
+          <input
+            type="url"
+            value={values.websiteUrl}
+            onChange={(e) => setValues({ ...values, websiteUrl: e.target.value })}
+            className="w-full bg-white border border-navy/15 rounded-xl px-4 py-3 text-[15px] text-navy focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition-colors"
+            placeholder="yourbrand.com (optional — speeds up your portal pre-fill if you join)"
           />
         </Field>
         <div className="grid md:grid-cols-2 gap-4">

@@ -181,12 +181,33 @@ function parseDraftWithProvenance(text: string): {
   const match = text.match(fenceRegex);
 
   if (!match) {
-    // No provenance block — return the chapter as-is and warn. Caller
-    // can decide whether to retry or accept a sourceless draft.
+    // No JSON block — fall back to extracting any <!-- claim:X --> anchors
+    // the model embedded inline. Each anchor becomes a stub provenance row
+    // with source_type=agent_inference; the customer still sees a "show
+    // provenance" button and the audit trail lists what the model thought
+    // was a meaningful claim, even if the source attribution is generic.
+    // This is the v1 tradeoff: the model sometimes forgets the JSON block
+    // when it's deep in drafting prose; the embedded anchors are easier
+    // for it to remember.
     console.warn(
-      "[agent/draft] No trailing JSON provenance block found in draft. Returning empty provenance.",
+      "[agent/draft] No trailing JSON provenance block — falling back to anchor extraction.",
     );
-    return { contentMd: text.trim(), provenance: [] };
+    const anchorRe = /<!--\s*claim:([^\s>-][^>]*?)\s*-->/g;
+    const seen = new Set<string>();
+    const provenance: ProvenanceEntry[] = [];
+    let m: RegExpExecArray | null;
+    while ((m = anchorRe.exec(text)) !== null) {
+      const claimId = m[1].trim();
+      if (!claimId || seen.has(claimId)) continue;
+      seen.add(claimId);
+      provenance.push({
+        claimId,
+        sourceType: "agent_inference",
+        sourceRef: null,
+        sourceExcerpt: null,
+      });
+    }
+    return { contentMd: text.trim(), provenance };
   }
 
   const contentMd = text.slice(0, match.index).trim();

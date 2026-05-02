@@ -6,7 +6,7 @@
 
 ## 1. Vision & North Star
 
-**What TFB sells in this world:** *"A living Franchisor Blueprint that compiles itself from your business and exports as the deliverables an attorney needs."* Not a course. Not 9 PDFs. One document that grows section by section as the customer feeds it information through voice, document upload, and conversational chat with the in-product Jason agent.
+**What TFB sells in this world:** *"A living Franchisor Blueprint that compiles itself from your business and exports as the deliverables an attorney needs."* Not a course. One document that grows section by section as the customer feeds it information through voice, document upload, and conversational chat with the in-product Jason agent.
 
 **What the agent replaces:** Today, Jason and his team interview the customer, the customer fills out worksheets, and Jason's team manually researches the market, drafts polished prose, and assembles the deliverable bundle (see `/Users/fin/My Drive/The Franchisor Blueprint/High Point Coffee/` for the canonical example output). The agent replaces that entire back-of-house workflow. Jason's involvement at higher tiers becomes review/refinement, not from-scratch authoring.
 
@@ -265,7 +265,7 @@ const draft = await draftChapter({
 
 ## 6. Phase plan
 
-Each phase commits to `main` with hidden routes (e.g. `/portal/_lab/*`) so deploys never surface half-built UI. Once a phase is verified, the new surface is promoted into the main portal navigation.
+Each phase commits to `main` with hidden routes (e.g. `/portal/lab/*`) so deploys never surface half-built UI. Once a phase is verified, the new surface is promoted into the main portal navigation.
 
 ### ✅ Phase 0 — Foundation *(this session)*
 
@@ -283,7 +283,7 @@ Each phase commits to `main` with hidden routes (e.g. `/portal/_lab/*`) so deplo
 
 - Website-URL field added to assessment + post-purchase form
 - Website scrape service (Playwright + Cheerio + Claude reads home/about page)
-- Voice intake UI under `/portal/_lab/intake` (MediaRecorder + Whisper)
+- Voice intake UI under `/portal/lab/intake` (MediaRecorder + Whisper)
 - First chapter draft pipeline: **Brand & Story** chapter, drafted from voice + scrape
 - Provenance hover system (invisible until hovered/clicked)
 - Alive UI patterns:
@@ -351,7 +351,7 @@ Each phase commits to `main` with hidden routes (e.g. `/portal/_lab/*`) so deplo
 | `src/lib/agent/*.ts` | Agent runtime: SDK client, prompts, drafting, chat, voice, scrape. All server-side only. |
 | `src/lib/memory/*.ts` | Memory CRUD + provenance helpers. Used by both agent code and UI server components. |
 | `src/lib/calc/*.ts` | Deterministic math (FDD totals, royalty calc, financial model). NEVER call an LLM from here. |
-| `src/app/portal/_lab/*` | Hidden routes for in-progress phases. Promoted to `/portal/*` when stable. |
+| `src/app/portal/lab/*` | Hidden routes for in-progress phases. Promoted to `/portal/*` when stable. |
 | `src/app/api/agent/*` | Agent API endpoints (chat, draft, intake). Streaming via Web Streams API. |
 | `supabase/migrations/00NN_*.sql` | Numbered, comment-heavy. Continue from 0010. |
 

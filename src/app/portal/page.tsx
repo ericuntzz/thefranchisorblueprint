@@ -29,6 +29,7 @@ import {
   isPromoActive,
 } from "@/lib/upgrade-offers";
 import { OfferCountdown } from "@/components/OfferCountdown";
+import { JasonChatDock } from "@/components/agent/JasonChatDock";
 import { getProduct, type ProductSlug } from "@/lib/products";
 import type {
   CapabilityProgress,
@@ -343,7 +344,53 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
           </div>
         </div>
       </section>
+
+      {/* ===== Lab discovery (hidden in-progress surfaces) ===== */}
+      {/* This card is intentionally subtle — it links to the in-development
+          agentic-portal flows so we (Eric + Jason + early test customers)
+          can exercise them. Remove or promote once Phase 1 lands on the
+          main portal. */}
+      <LabDiscovery />
+
+      <JasonChatDock pageContext="/portal (dashboard)" firstName={firstName} />
     </>
+  );
+}
+
+function LabDiscovery() {
+  return (
+    <section className="bg-cream border-t border-navy/10">
+      <div className="max-w-[1200px] mx-auto px-6 md:px-8 py-8">
+        <div className="rounded-2xl border-2 border-dashed border-gold/40 bg-gradient-to-br from-cream to-white px-6 md:px-8 py-6 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.18em] text-gold-warm font-bold mb-1">
+              In development · early access
+            </div>
+            <div className="text-navy font-bold text-lg">
+              Try the new agentic flow
+            </div>
+            <p className="text-grey-3 text-sm mt-1 max-w-[520px]">
+              Drop your website URL and the agent learns your brand and
+              concept story before you say a word.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/portal/lab/intake"
+              className="inline-flex items-center gap-2 bg-navy text-cream font-bold text-xs uppercase tracking-[0.1em] px-5 py-3 rounded-full hover:bg-navy-light transition-colors"
+            >
+              Open intake <ArrowUpRight size={13} />
+            </Link>
+            <Link
+              href="/portal/lab/blueprint"
+              className="inline-flex items-center gap-2 bg-transparent text-navy border-2 border-navy font-bold text-xs uppercase tracking-[0.1em] px-5 py-3 rounded-full hover:bg-navy hover:text-cream transition-colors"
+            >
+              Open Blueprint <ArrowUpRight size={13} />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
