@@ -90,6 +90,12 @@ export function DraftWithJasonModal({
   const [uploadErr, setUploadErr] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitErr, setSubmitErr] = useState<string | null>(null);
+  // Wall-clock time when the customer pressed "Start drafting." Drives
+  // the phased-progress view so its phase indicators advance over time
+  // even though we don't get real-time progress signals from the
+  // synchronous /api/agent/draft endpoint. Will be replaced by real
+  // job phases once the background-job refactor lands.
+  const [submittingStartedAt, setSubmittingStartedAt] = useState<number | null>(null);
   // True while a draggable file is hovering the dropzone. Used to highlight
   // the border + background so the customer gets immediate visual feedback
   // that the area is "armed."
@@ -200,8 +206,9 @@ export function DraftWithJasonModal({
   }
 
   async function confirm() {
-    setSubmitting(true);
     setSubmitErr(null);
+    setSubmittingStartedAt(Date.now());
+    setSubmitting(true);
     try {
       await onConfirm({
         extraContext: extraContext.trim(),
@@ -271,14 +278,22 @@ export function DraftWithJasonModal({
             </button>
           </div>
           <p className="text-grey-3 text-sm mt-2">
-            Anything else Jason should know before drafting? Add notes, drop in
-            references, or pick from what you&apos;ve already uploaded.
+            {submitting
+              ? "Sit tight. We'll keep you posted as Jason works through your context."
+              : "Anything else Jason should know before drafting? Add notes, drop in references, or pick from what you've already uploaded."}
           </p>
         </div>
 
+        {submitting && submittingStartedAt !== null && (
+          <DraftingProgressView startedAt={submittingStartedAt} />
+        )}
+
         {/* Body — scrollable so long attachment lists don't blow out
-            the viewport. */}
-        <div className="px-5 sm:px-6 py-5 space-y-5 overflow-y-auto">
+            the viewport. Hidden while a draft is in flight; the
+            DraftingProgressView replaces it with phased progress. */}
+        <div
+          className={`px-5 sm:px-6 py-5 space-y-5 overflow-y-auto ${submitting ? "hidden" : ""}`}
+        >
           {/* Free-form instruction */}
           <div>
             <label className="block text-[11px] uppercase tracking-[0.16em] text-gold-warm font-bold mb-2">
@@ -427,33 +442,30 @@ export function DraftWithJasonModal({
           )}
         </div>
 
-        {/* Footer */}
-        <div className="px-5 sm:px-6 py-4 border-t border-navy/5 bg-cream/20 flex items-center justify-end gap-2 rounded-b-2xl">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={submitting || uploading}
-            className="text-grey-3 hover:text-navy font-semibold text-sm px-4 py-2 transition-colors disabled:opacity-50"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={confirm}
-            disabled={submitting || uploading}
-            className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-xs uppercase tracking-[0.1em] px-6 py-3 rounded-full hover:bg-gold-dark disabled:opacity-50 transition-colors"
-          >
-            {submitting ? (
-              <>
-                <Loader2 size={13} className="animate-spin" /> Drafting…
-              </>
-            ) : (
-              <>
-                <Sparkles size={13} /> Start drafting
-              </>
-            )}
-          </button>
-        </div>
+        {/* Footer — hidden during draft submission so the
+            DraftingProgressView is the visual focal point. The
+            controls below are inert anyway while submitting=true,
+            and removing them removes a competing visual element. */}
+        {!submitting && (
+          <div className="px-5 sm:px-6 py-4 border-t border-navy/5 bg-cream/20 flex items-center justify-end gap-2 rounded-b-2xl">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={uploading}
+              className="text-grey-3 hover:text-navy font-semibold text-sm px-4 py-2 transition-colors disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={confirm}
+              disabled={uploading}
+              className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-xs uppercase tracking-[0.1em] px-6 py-3 rounded-full hover:bg-gold-dark disabled:opacity-50 transition-colors"
+            >
+              <Sparkles size={13} /> Start drafting
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -469,6 +481,132 @@ function setEqualsByMembership<T>(set: Set<T>, members: T[]): boolean {
   if (set.size !== members.length) return false;
   for (const m of members) if (!set.has(m)) return false;
   return true;
+}
+
+/**
+ * Phased progress surface shown while a draft is in flight.
+ *
+ * The /api/agent/draft endpoint is currently synchronous — it doesn't
+ * stream phase events back. We compensate by mapping wall-clock time
+ * to a believable phase progression based on observed Opus draft
+ * timings:
+ *
+ *   0–6s     Reading your Memory
+ *   6–14s    Reviewing references
+ *   14s+     Drafting your chapter (held until completion)
+ *
+ * When the background-job refactor lands (chapter_draft_jobs table +
+ * worker writing real `phase` values), this component swaps to read
+ * those values via polling — same UI, real signals.
+ *
+ * UX rationale: the prior "Drafting…" pill at the bottom of the modal
+ * gave the customer no signal of progress over a 30–90 second wait,
+ * which lengthened perceived time and pulled them toward refresh-the-
+ * page. Phased copy is lower-stress because every few seconds
+ * something visibly changes — even if the underlying signal is timed
+ * rather than measured.
+ */
+function DraftingProgressView({ startedAt }: { startedAt: number }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 500);
+    return () => clearInterval(id);
+  }, []);
+  const elapsedSec = Math.max(0, (now - startedAt) / 1000);
+
+  const phases: Array<{ id: string; label: string; startsAt: number }> = [
+    { id: "reading", label: "Reading your Memory", startsAt: 0 },
+    { id: "reviewing", label: "Reviewing your references", startsAt: 6 },
+    { id: "drafting", label: "Drafting your chapter", startsAt: 14 },
+  ];
+
+  const phaseStatus: Array<"done" | "active" | "pending"> = phases.map(
+    (p, i) => {
+      const next = phases[i + 1];
+      // Last phase stays "active" indefinitely — the request will
+      // resolve and the modal will close before this misleads anyone.
+      if (next && elapsedSec >= next.startsAt) return "done";
+      if (elapsedSec >= p.startsAt) return "active";
+      return "pending";
+    },
+  );
+
+  // Friendly elapsed display: "0:34". Resets on remount, which is
+  // what we want — each draft attempt starts at zero.
+  const mm = Math.floor(elapsedSec / 60);
+  const ss = Math.floor(elapsedSec % 60).toString().padStart(2, "0");
+  const elapsedLabel = `${mm}:${ss}`;
+
+  return (
+    <div className="px-5 sm:px-7 py-7 sm:py-9 flex flex-col items-center text-center">
+      {/* Animated icon — gold sparkle inside a soft halo */}
+      <div className="relative w-16 h-16 mb-4">
+        <div
+          className="absolute inset-0 rounded-full bg-gold/15 animate-ping"
+          aria-hidden
+          style={{ animationDuration: "2s" }}
+        />
+        <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-navy to-navy-light flex items-center justify-center text-gold shadow-md">
+          <Sparkles size={26} className="animate-pulse" style={{ animationDuration: "1.6s" }} />
+        </div>
+      </div>
+
+      <h3 className="text-navy font-extrabold text-lg sm:text-xl leading-tight mb-1">
+        Jason is drafting your chapter
+      </h3>
+      <p className="text-grey-3 text-sm sm:text-[15px] mb-6 max-w-[420px]">
+        This typically takes 30–90 seconds. Feel free to keep this open — we&apos;ll show you what&apos;s happening as it goes.
+      </p>
+
+      {/* Phased checklist */}
+      <ul className="w-full max-w-[360px] space-y-2.5 mb-5">
+        {phases.map((p, i) => {
+          const status = phaseStatus[i];
+          return (
+            <li
+              key={p.id}
+              className={`flex items-center gap-3 rounded-lg px-4 py-2.5 border transition-colors ${
+                status === "active"
+                  ? "bg-gold/10 border-gold/30"
+                  : status === "done"
+                    ? "bg-cream/40 border-navy/5"
+                    : "bg-grey-1 border-transparent"
+              }`}
+            >
+              <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
+                {status === "done" ? (
+                  <CheckSquare size={18} className="text-emerald-600" />
+                ) : status === "active" ? (
+                  <Loader2 size={16} className="animate-spin text-gold-warm" />
+                ) : (
+                  <Square size={16} className="text-grey-4" />
+                )}
+              </span>
+              <span
+                className={`text-sm font-semibold ${
+                  status === "active"
+                    ? "text-navy"
+                    : status === "done"
+                      ? "text-navy/70"
+                      : "text-grey-4"
+                }`}
+              >
+                {p.label}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+
+      <div className="flex items-center gap-3 text-xs text-grey-4">
+        <span className="tabular-nums font-semibold text-navy/60">{elapsedLabel}</span>
+        <span aria-hidden>·</span>
+        <span className="italic">
+          Don&apos;t refresh — your draft is on the way.
+        </span>
+      </div>
+    </div>
+  );
 }
 
 function AttachmentCheckRow({

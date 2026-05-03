@@ -12,7 +12,13 @@ import type { ChapterAttachment, Purchase } from "@/lib/supabase/types";
 import type { MemoryFileSlug } from "@/lib/memory/files";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+// Opus chapter drafts run 30-90s typically, but customers with rich
+// Memory + multiple cross-chapter attachments can push toward 2-3 min.
+// 300s is the Vercel Pro serverless ceiling — anything longer than that
+// is a 504 regardless. The proper fix is the background-job refactor
+// (chapter_draft_jobs table + worker) — this is the safe ceiling until
+// that ships.
+export const maxDuration = 300;
 
 /**
  * POST /api/agent/draft
