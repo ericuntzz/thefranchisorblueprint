@@ -13,10 +13,20 @@
  */
 
 import { useState } from "react";
-import { ArrowRight, Clock, Loader2, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, Clock, Loader2, Pencil, ShieldCheck, Sparkles } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { CustomerMemoryProvenance } from "@/lib/supabase/types";
+import { type ChapterSchema, type FieldDef } from "@/lib/memory/schemas";
+import { isValidMemoryFileSlug } from "@/lib/memory/files";
+import {
+  computeAllFormulas,
+  hasCalc,
+  type MemoryFieldsMap,
+} from "@/lib/calc";
+import { ChapterFieldEditor } from "./ChapterFieldEditor";
+
+type FieldValue = string | number | boolean | string[] | null;
 
 type Props = {
   slug: string;
@@ -26,6 +36,24 @@ type Props = {
   lastUpdatedBy: "agent" | "user" | "jason" | "scraper" | null;
   updatedAt: string | null;
   provenance: CustomerMemoryProvenance[];
+  /** Structured fields for THIS chapter. Empty object if none yet. */
+  fields: Record<string, FieldValue>;
+  /** Cross-chapter field state — for computed-field formulas. */
+  otherChaptersFields: MemoryFieldsMap;
+  /**
+   * The chapter's field schema (from src/lib/memory/schemas.ts). Null
+   * when the chapter has no schema yet (e.g. brand_voice — deferred to
+   * Phase 1.5b). Null = render prose only, no field editor.
+   */
+  schema: ChapterSchema | null;
+  /**
+   * Server action to save field changes. Called by the editor's onSave.
+   * Receives `{ slug, changes }` and persists via writeMemoryFields.
+   */
+  saveFields: (args: {
+    slug: string;
+    changes: Record<string, FieldValue>;
+  }) => Promise<void>;
 };
 
 export function ChapterCard({
@@ -36,10 +64,15 @@ export function ChapterCard({
   lastUpdatedBy,
   updatedAt,
   provenance,
+  fields,
+  otherChaptersFields,
+  schema,
+  saveFields,
 }: Props) {
   const [drafting, setDrafting] = useState(false);
   const [draftError, setDraftError] = useState<string | null>(null);
   const [showProvenance, setShowProvenance] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   async function draftThis() {
     setDrafting(true);
@@ -64,44 +97,91 @@ export function ChapterCard({
     }
   }
 
-  const isEmpty = !contentMd.trim();
+  const isEmpty = !contentMd.trim() && Object.keys(fields).length === 0;
+  const filledFieldCount = countFilledFields(fields, schema);
+
+  // Edit mode: replace the chapter body with the field editor. The
+  // header + confidence pill stay so the customer keeps spatial
+  // context. Save commits via server action; cancel discards.
+  async function handleSaveFields(changes: Record<string, FieldValue>) {
+    if (!isValidMemoryFileSlug(slug)) {
+      throw new Error(`Unknown chapter: ${slug}`);
+    }
+    await saveFields({ slug, changes });
+    setEditing(false);
+    // Server action revalidates /portal/lab/blueprint, so a soft
+    // navigation will show the new state. Force a window reload to
+    // be safe — same pattern as Draft / Redraft.
+    if (typeof window !== "undefined") window.location.reload();
+  }
 
   return (
     <article id={`chapter-${slug}`} className="rounded-2xl border border-navy/10 bg-white p-6 md:p-8 scroll-mt-20">
       <header className="mb-4 flex items-start justify-between gap-3">
         <div>
           <div className="text-[10px] uppercase tracking-[0.18em] text-gold-warm font-bold mb-1">
-            Chapter · <span className="font-mono">{slug}</span>
+            <span className="font-mono">{slug}</span>
+            {schema && filledFieldCount.total > 0 && !editing && (
+              <span className="ml-2 text-grey-4 normal-case tracking-normal">
+                — {filledFieldCount.filled} of {filledFieldCount.total} filled
+              </span>
+            )}
           </div>
           <h2 className="text-navy font-extrabold text-xl md:text-2xl leading-tight">
             {title}
           </h2>
+          {schema && editing && (
+            <p className="text-grey-3 text-sm mt-2 max-w-[640px]">
+              {schema.description}
+            </p>
+          )}
         </div>
         <ConfidencePill confidence={confidence} />
       </header>
 
-      {isEmpty ? (
+      {editing && schema ? (
+        <ChapterFieldEditor
+          schema={schema}
+          initialFields={fields}
+          otherChaptersFields={otherChaptersFields}
+          onSave={handleSaveFields}
+          onCancel={() => setEditing(false)}
+        />
+      ) : isEmpty ? (
         <div className="rounded-xl border border-dashed border-navy/15 bg-grey-1 px-5 py-8 text-center">
           <p className="text-grey-3 text-sm mb-4">
             This chapter is empty. Jason can take a first pass from everything
-            you&apos;ve given the system so far.
+            you&apos;ve given the system so far — or you can fill in the
+            details yourself.
           </p>
-          <button
-            type="button"
-            onClick={draftThis}
-            disabled={drafting}
-            className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-xs uppercase tracking-[0.1em] px-5 py-3 rounded-full hover:bg-gold-dark disabled:opacity-50 transition-colors"
-          >
-            {drafting ? (
-              <>
-                <Loader2 size={13} className="animate-spin" /> Drafting…
-              </>
-            ) : (
-              <>
-                <Sparkles size={13} /> Draft with Jason <ArrowRight size={12} />
-              </>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={draftThis}
+              disabled={drafting}
+              className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-xs uppercase tracking-[0.1em] px-5 py-3 rounded-full hover:bg-gold-dark disabled:opacity-50 transition-colors"
+            >
+              {drafting ? (
+                <>
+                  <Loader2 size={13} className="animate-spin" /> Drafting…
+                </>
+              ) : (
+                <>
+                  <Sparkles size={13} /> Draft with Jason <ArrowRight size={12} />
+                </>
+              )}
+            </button>
+            {schema && (
+              <button
+                type="button"
+                onClick={() => setEditing(true)}
+                disabled={drafting}
+                className="inline-flex items-center gap-2 bg-transparent text-navy border-2 border-navy font-bold text-xs uppercase tracking-[0.1em] px-5 py-3 rounded-full hover:bg-navy hover:text-cream disabled:opacity-50 transition-colors"
+              >
+                <Pencil size={13} /> Fill in directly
+              </button>
             )}
-          </button>
+          </div>
           {drafting && (
             <p className="mt-3 text-xs text-grey-4 italic">
               Jason is reading your full Memory and writing a chapter from
@@ -233,6 +313,15 @@ export function ChapterCard({
                     : `Show provenance (${provenance.length})`}
                 </button>
               )}
+              {schema && (
+                <button
+                  type="button"
+                  onClick={() => setEditing(true)}
+                  className="inline-flex items-center gap-1 text-grey-3 hover:text-navy font-semibold transition-colors"
+                >
+                  <Pencil size={11} /> Edit fields
+                </button>
+              )}
               <button
                 type="button"
                 onClick={draftThis}
@@ -337,3 +426,32 @@ function formatRelative(iso: string): string {
   if (day < 30) return `${day} day${day === 1 ? "" : "s"} ago`;
   return new Date(iso).toLocaleDateString();
 }
+
+/**
+ * Count how many non-advanced, non-computed fields have been filled in.
+ * Used to render the "X of Y filled" microcopy under the chapter title.
+ * Computed fields don't count (they're derived); advanced fields don't
+ * count toward the "primary" total (they're hidden by default).
+ */
+function countFilledFields(
+  fields: Record<string, FieldValue>,
+  schema: ChapterSchema | null,
+): { filled: number; total: number } {
+  if (!schema) return { filled: 0, total: 0 };
+  let filled = 0;
+  let total = 0;
+  for (const fd of schema.fields) {
+    if (fd.advanced) continue;
+    if (hasCalc(schema.slug, fd.name)) continue;
+    total += 1;
+    const v = fields[fd.name];
+    if (v == null) continue;
+    if (typeof v === "string" && v.trim() === "") continue;
+    if (Array.isArray(v) && v.length === 0) continue;
+    filled += 1;
+  }
+  return { filled, total };
+}
+
+// Re-export for parents that don't already import these.
+export type { FieldDef } from "@/lib/memory/schemas";

@@ -147,12 +147,44 @@ export type ScheduledEmail = {
  * the live draft of the corresponding chapter that compiles into the
  * customer's Franchisor Blueprint export bundle.
  *
- * See `src/lib/memory/files.ts` for the canonical list of file_slug values.
+ * `fields` is the structured-data layer added in Phase 1.5a — typed
+ * values per chapter, keyed by field name. The schema lives in
+ * `src/lib/memory/schemas.ts`. The actual values are JSON-serializable:
+ * strings, numbers, booleans, and `string[]` for lists. Empty/unknown
+ * values are stored as `null` (not undefined) so the diff stays
+ * meaningful — a field set to null was deliberately cleared; a missing
+ * key was never touched.
+ *
+ * `field_status` is parallel jsonb keyed by the same field names;
+ * each value is `{ source, updated_at, note? }`. Records where each
+ * field's value came from (voice_session, scraper, user_typed, etc.).
+ *
+ * See `src/lib/memory/files.ts` for the canonical list of file_slug values
+ * and `src/lib/memory/schemas.ts` for the per-chapter field schemas.
  */
 export type CustomerMemory = {
   user_id: string;
   file_slug: string;
   content_md: string;
+  /** Structured field values per chapter. See `ChapterFields` in schemas.ts. */
+  fields: Record<string, string | number | boolean | string[] | null>;
+  /** Per-field provenance metadata. See `ChapterFieldStatus` in schemas.ts. */
+  field_status: Record<
+    string,
+    {
+      source:
+        | "voice_session"
+        | "upload"
+        | "form"
+        | "agent_inference"
+        | "research"
+        | "scraper"
+        | "user_correction"
+        | "user_typed";
+      updated_at: string;
+      note?: string;
+    }
+  >;
   confidence: "verified" | "inferred" | "draft";
   last_updated_by: "agent" | "user" | "jason" | "scraper";
   created_at: string;
@@ -230,11 +262,13 @@ export type Database = {
       };
       customer_memory: {
         Row: CustomerMemory;
-        // content_md, confidence, last_updated_by all have DB defaults; only
-        // user_id + file_slug are strictly required on insert. created_at
-        // and updated_at are managed by the DB.
+        // content_md, confidence, last_updated_by, fields, field_status
+        // all have DB defaults; only user_id + file_slug are strictly
+        // required on insert. created_at + updated_at are managed by DB.
         Insert: Pick<CustomerMemory, "user_id" | "file_slug"> & {
           content_md?: string;
+          fields?: CustomerMemory["fields"];
+          field_status?: CustomerMemory["field_status"];
           confidence?: CustomerMemory["confidence"];
           last_updated_by?: CustomerMemory["last_updated_by"];
           created_at?: string;

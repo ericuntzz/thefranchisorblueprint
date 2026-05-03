@@ -184,6 +184,112 @@ export async function userEditMemoryFile(args: {
 }
 
 /**
+ * Write a batch of field values for a single chapter. Replaces the
+ * `fields` jsonb wholesale (after merging with what's already there)
+ * and updates `field_status` for each field that changed.
+ *
+ * Use this from the form-save path (server action). The shape mirrors
+ * what the editor UI sends: `{ fieldName: value }` for changes,
+ * `source` describing where the values came from (`user_typed` for
+ * the customer's form, `agent_inference` / `scraper` / etc. for
+ * agent-driven writes).
+ *
+ * `null` values are stored explicitly (cleared field, not "never set").
+ * Fields not in the input are left untouched.
+ */
+export async function writeMemoryFields(args: {
+  userId: string;
+  slug: MemoryFileSlug;
+  /** Field name → new value. `null` means cleared. */
+  changes: Record<string, string | number | boolean | string[] | null>;
+  /** Where these values came from. Determines `field_status[name].source`. */
+  source: CustomerMemory["field_status"][string]["source"];
+  /** Optional human-readable note attached to every changed field. */
+  note?: string;
+}): Promise<void> {
+  if (!isValidMemoryFileSlug(args.slug)) {
+    throw new Error(`Unknown memory file slug: ${args.slug}`);
+  }
+  const supabase = getSupabaseAdmin();
+
+  // Read-modify-write: pull the existing row, merge fields, write back.
+  // Postgres jsonb has merge operators (`||`) but we want to update
+  // field_status entries surgically per changed field, so the JS-side
+  // merge is cleaner than a single CTE.
+  const { data: existing } = await supabase
+    .from("customer_memory")
+    .select("fields, field_status")
+    .eq("user_id", args.userId)
+    .eq("file_slug", args.slug)
+    .maybeSingle();
+
+  const currentFields =
+    (existing?.fields as CustomerMemory["fields"] | null) ?? {};
+  const currentStatus =
+    (existing?.field_status as CustomerMemory["field_status"] | null) ?? {};
+
+  const nextFields: CustomerMemory["fields"] = { ...currentFields };
+  const nextStatus: CustomerMemory["field_status"] = { ...currentStatus };
+  const now = new Date().toISOString();
+
+  for (const [name, value] of Object.entries(args.changes)) {
+    nextFields[name] = value;
+    nextStatus[name] = {
+      source: args.source,
+      updated_at: now,
+      ...(args.note ? { note: args.note } : {}),
+    };
+  }
+
+  const { error } = await supabase.from("customer_memory").upsert(
+    {
+      user_id: args.userId,
+      file_slug: args.slug,
+      fields: nextFields,
+      field_status: nextStatus,
+      // last_updated_by reflects who DROVE the change. The agent
+      // pipeline overrides this when calling from agent code. For
+      // user form submits, "user" is correct.
+      last_updated_by: args.source === "user_typed" ? "user" : "agent",
+    },
+    { onConflict: "user_id,file_slug" },
+  );
+  if (error) {
+    console.error(`[memory] writeMemoryFields failed:`, error.message);
+    throw new Error(`Memory field write failed: ${error.message}`);
+  }
+}
+
+/**
+ * Read just the structured-fields layer for one chapter. Returns null
+ * if the chapter has no row yet (every field is empty).
+ */
+export async function readMemoryFields(
+  userId: string,
+  slug: MemoryFileSlug,
+): Promise<{
+  fields: CustomerMemory["fields"];
+  fieldStatus: CustomerMemory["field_status"];
+} | null> {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("customer_memory")
+    .select("fields, field_status")
+    .eq("user_id", userId)
+    .eq("file_slug", slug)
+    .maybeSingle();
+  if (error) {
+    console.error(`[memory] readMemoryFields(${slug}) failed:`, error.message);
+    throw new Error(`Memory read failed: ${error.message}`);
+  }
+  if (!data) return null;
+  return {
+    fields: (data.fields ?? {}) as CustomerMemory["fields"],
+    fieldStatus: (data.field_status ?? {}) as CustomerMemory["field_status"],
+  };
+}
+
+/**
  * Read the provenance entries for one chapter — used by the on-hover UI
  * to surface "where did this come from?" tooltips.
  */

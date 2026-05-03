@@ -11,10 +11,13 @@ import {
   type Purchase,
 } from "@/lib/supabase/types";
 import { MEMORY_FILES, MEMORY_FILE_TITLES } from "@/lib/memory/files";
+import { getChapterSchema } from "@/lib/memory/schemas";
+import type { MemoryFieldsMap } from "@/lib/calc";
 import { ChapterCard } from "@/components/agent/ChapterCard";
 import { JasonChatDock } from "@/components/agent/JasonChatDock";
 import { TypedHeading } from "@/components/agent/TypedHeading";
 import { SiteFooter } from "@/components/SiteFooter";
+import { saveMemoryFields } from "./actions";
 
 export const metadata: Metadata = {
   title: "Your Franchisor Blueprint | The Franchisor Blueprint",
@@ -75,10 +78,28 @@ export default async function BlueprintLabPage() {
   }
 
   // Quick stats for the hero — how far along is the Blueprint?
-  const filledCount = MEMORY_FILES.filter(
-    (s) => (memoryBySlug.get(s)?.content_md ?? "").trim().length > 0,
-  ).length;
+  // A chapter "counts" as filled if it has prose OR any structured
+  // fields populated (Phase 1.5a — fields can exist without prose).
+  const filledCount = MEMORY_FILES.filter((s) => {
+    const row = memoryBySlug.get(s);
+    if (!row) return false;
+    if (row.content_md && row.content_md.trim().length > 0) return true;
+    if (row.fields && Object.keys(row.fields).length > 0) return true;
+    return false;
+  }).length;
   const pct = Math.round((filledCount / MEMORY_FILES.length) * 100);
+
+  // Build a cross-chapter fields map so ChapterCard can pass it down
+  // to the field editor for cross-chapter computed-field formulas
+  // (e.g. franchisee_profile.minimum_liquid_capital_dollars derives
+  // from unit_economics.initial_investment_high_dollars).
+  const allFields: MemoryFieldsMap = {};
+  for (const [slug, row] of memoryBySlug) {
+    allFields[slug as keyof MemoryFieldsMap] = (row.fields ?? {}) as Record<
+      string,
+      string | number | boolean | string[] | null
+    >;
+  }
 
   return (
     <>
@@ -177,9 +198,25 @@ export default async function BlueprintLabPage() {
                 const row = memoryBySlug.get(slug);
                 const provenance = provenanceBySlug.get(slug) ?? [];
                 const content = row?.content_md ?? "";
-                const confidence = !content.trim()
-                  ? ("empty" as const)
-                  : (row?.confidence ?? "draft");
+                const fields = (row?.fields ?? {}) as Record<
+                  string,
+                  string | number | boolean | string[] | null
+                >;
+                const hasFields = Object.keys(fields).length > 0;
+                const confidence =
+                  !content.trim() && !hasFields
+                    ? ("empty" as const)
+                    : (row?.confidence ?? "draft");
+                const schema = getChapterSchema(slug);
+                // Other chapters' fields, excluding self — passed to the
+                // editor so cross-chapter computed formulas can resolve.
+                const otherChaptersFields: MemoryFieldsMap = {};
+                for (const [otherSlug, otherFields] of Object.entries(allFields)) {
+                  if (otherSlug !== slug) {
+                    otherChaptersFields[otherSlug as keyof MemoryFieldsMap] =
+                      otherFields;
+                  }
+                }
                 return (
                   <ChapterCard
                     key={slug}
@@ -190,6 +227,10 @@ export default async function BlueprintLabPage() {
                     lastUpdatedBy={row?.last_updated_by ?? null}
                     updatedAt={row?.updated_at ?? null}
                     provenance={provenance}
+                    fields={fields}
+                    otherChaptersFields={otherChaptersFields}
+                    schema={schema}
+                    saveFields={saveMemoryFields}
                   />
                 );
               })}
