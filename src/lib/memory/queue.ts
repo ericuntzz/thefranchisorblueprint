@@ -57,10 +57,18 @@ export type QueueItem = {
 export function computeQuestionQueue(
   memory: MemoryFieldsMap,
 ): QueueItem[] {
-  const required: QueueItem[] = [];
-  const optional: QueueItem[] = [];
+  const out: QueueItem[] = [];
 
+  // Walk phases in canonical order. WITHIN a phase, push every
+  // required item first (in chapter+schema order), then every
+  // optional item. This keeps phase boundaries intact so the
+  // QuestionQueueClient's "you're entering Economics" intro lands at
+  // the right moment — earlier passes interleaved phases by sorting
+  // all-required before all-optional, which broke the phase progress
+  // counter and the "last question of Discover" footer.
   for (const phase of PHASES) {
+    const phaseRequired: QueueItem[] = [];
+    const phaseOptional: QueueItem[] = [];
     for (const slug of phase.slugs) {
       const schema = CHAPTER_SCHEMAS[slug];
       if (!schema) continue; // brand_voice etc. — no schema yet
@@ -85,14 +93,14 @@ export function computeQuestionQueue(
           fieldDef: fd,
           isRequired: !!fd.required,
         };
-        if (fd.required) required.push(item);
-        else optional.push(item);
+        if (fd.required) phaseRequired.push(item);
+        else phaseOptional.push(item);
       }
     }
+    out.push(...phaseRequired, ...phaseOptional);
   }
 
-  // Required first (in phase order), then optional (also phase order).
-  return [...required, ...optional];
+  return out;
 }
 
 /** Total queue summary for the Command Center hero. */

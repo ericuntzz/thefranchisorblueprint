@@ -100,21 +100,34 @@ export function computeChapterReadiness(
     const allRequiredFilled =
       totalRequired > 0 && filledRequired === totalRequired;
 
+    // State decision tree, in order:
+    //   1. verified  → green (customer signed off, regardless of fill).
+    //   2. nothing started → gray.
+    //   3. everything required filled AND has prose → green
+    //      (attorney-ready subject to verify pass).
+    //   4. everything required filled (but no prose yet) → amber
+    //      (ready to draft; no blockers).
+    //   5. inferred OR (hasProse + some fields) → amber (agent did
+    //      a pass; needs confirmation but isn't blocking).
+    //   6. started but missing required inputs → red.
+    //
+    // Earlier version skipped case (4) — chapters with all required
+    // fields filled but no prose yet were rendering RED. That was
+    // misleading: the customer had answered everything that's
+    // actionable but the indicator screamed "blocking."
     let state: ReadinessState;
-    if (
-      confidence === "verified" ||
-      (allRequiredFilled && hasProse)
-    ) {
+    if (confidence === "verified") {
       state = "green";
-    } else if (confidence === "inferred" || (hasProse && filledAll > 0)) {
-      // Agent has done a pass and there's some structured data — needs
-      // customer confirmation but isn't blocking.
-      state = "amber";
-    } else if (filledAll > 0 || hasProse) {
-      // Started but missing required inputs.
-      state = "red";
-    } else {
+    } else if (filledAll === 0 && !hasProse) {
       state = "gray";
+    } else if (allRequiredFilled && hasProse) {
+      state = "green";
+    } else if (allRequiredFilled) {
+      state = "amber";
+    } else if (confidence === "inferred" || (hasProse && filledAll > 0)) {
+      state = "amber";
+    } else {
+      state = "red";
     }
 
     out[slug] = {
