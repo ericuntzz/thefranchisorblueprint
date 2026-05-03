@@ -262,7 +262,14 @@ export function ChapterCard({
         )
       ) : (
         <>
-          <div className="chapter-prose text-navy/90 leading-relaxed">
+          {/* `group` + `relative` host the centered hover-only "Edit
+              prose" affordance below. The whole prose area becomes a
+              click target for editing — hover anywhere over the
+              chapter and the pill appears in the middle of the visible
+              text. Footer no longer carries an Edit-prose button: the
+              hover affordance is more discoverable and matches the
+              Notion / Linear inline-edit pattern. */}
+          <div className="relative group chapter-prose text-navy/90 leading-relaxed">
             <NeedsInputProse
               md={contentMd
                 // Drop claim anchors (they're stored in customer_memory_provenance).
@@ -278,6 +285,23 @@ export function ChapterCard({
                 schema ? () => setEditing(true) : undefined
               }
             />
+            {/* Hover-only edit affordance. The wrapper is pointer-
+                events-none so it never blocks text selection; only the
+                button itself accepts clicks. The cream backdrop is
+                very faint so it doesn't fight the prose for attention
+                until the customer is actively reaching for an edit. */}
+            <div
+              aria-hidden={!editingProse}
+              className="absolute inset-0 flex items-start justify-center pt-[20%] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 bg-cream/30 backdrop-blur-[1px] rounded-lg"
+            >
+              <button
+                type="button"
+                onClick={() => setEditingProse(true)}
+                className="pointer-events-auto inline-flex items-center gap-2 bg-navy text-cream font-bold text-xs uppercase tracking-[0.1em] px-5 py-3 rounded-full hover:bg-gold hover:text-navy shadow-lg transition-colors"
+              >
+                <Type size={13} /> Edit text
+              </button>
+            </div>
           </div>
           <style jsx>{`
             .chapter-prose {
@@ -377,13 +401,8 @@ export function ChapterCard({
                     : `Show provenance (${provenance.length})`}
                 </button>
               )}
-              <button
-                type="button"
-                onClick={() => setEditingProse(true)}
-                className="inline-flex items-center gap-1 text-grey-3 hover:text-navy font-semibold transition-colors"
-              >
-                <Type size={11} /> Edit prose
-              </button>
+              {/* "Edit prose" lives on the prose itself as a hover
+                  affordance — see the prose container above. */}
               {schema && (
                 <button
                   type="button"
