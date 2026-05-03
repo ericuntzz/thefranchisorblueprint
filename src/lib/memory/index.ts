@@ -15,6 +15,7 @@
 import "server-only";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import type {
+  ChapterAttachment,
   CustomerMemory,
   CustomerMemoryProvenance,
 } from "@/lib/supabase/types";
@@ -357,6 +358,91 @@ export async function readMemoryFields(
     fields: (data.fields ?? {}) as CustomerMemory["fields"],
     fieldStatus: (data.field_status ?? {}) as CustomerMemory["field_status"],
   };
+}
+
+/**
+ * Read the per-chapter attachments list. Returns an empty array when
+ * the chapter has no row yet or no attachments. Order matches the
+ * stored array (insertion order = newest at the end).
+ */
+export async function readAttachments(
+  userId: string,
+  slug: MemoryFileSlug,
+): Promise<ChapterAttachment[]> {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("customer_memory")
+    .select("attachments")
+    .eq("user_id", userId)
+    .eq("file_slug", slug)
+    .maybeSingle();
+  if (error) {
+    console.error(`[memory] readAttachments(${slug}) failed:`, error.message);
+    throw new Error(`Attachments read failed: ${error.message}`);
+  }
+  return ((data?.attachments ?? []) as ChapterAttachment[]) ?? [];
+}
+
+/**
+ * Append one attachment to a chapter. Creates the chapter row if it
+ * doesn't exist yet (so attaching is allowed before any prose has
+ * been drafted). Atomic at the row level — concurrent appends to the
+ * same chapter race in JS, but our UI surfaces are single-customer-
+ * per-chapter so the practical risk is nil.
+ */
+export async function appendAttachment(args: {
+  userId: string;
+  slug: MemoryFileSlug;
+  attachment: ChapterAttachment;
+}): Promise<void> {
+  if (!isValidMemoryFileSlug(args.slug)) {
+    throw new Error(`Unknown memory file slug: ${args.slug}`);
+  }
+  const supabase = getSupabaseAdmin();
+  const existing = await readAttachments(args.userId, args.slug);
+  const next = [...existing, args.attachment];
+  const { error } = await supabase.from("customer_memory").upsert(
+    {
+      user_id: args.userId,
+      file_slug: args.slug,
+      attachments: next,
+    },
+    { onConflict: "user_id,file_slug" },
+  );
+  if (error) {
+    console.error(`[memory] appendAttachment failed:`, error.message);
+    throw new Error(`Attachment write failed: ${error.message}`);
+  }
+}
+
+/**
+ * Remove an attachment by its id. Returns the removed entry (so the
+ * caller can also delete the underlying storage object) or null if
+ * no match.
+ */
+export async function deleteAttachment(args: {
+  userId: string;
+  slug: MemoryFileSlug;
+  attachmentId: string;
+}): Promise<ChapterAttachment | null> {
+  if (!isValidMemoryFileSlug(args.slug)) {
+    throw new Error(`Unknown memory file slug: ${args.slug}`);
+  }
+  const supabase = getSupabaseAdmin();
+  const existing = await readAttachments(args.userId, args.slug);
+  const removed = existing.find((a) => a.id === args.attachmentId) ?? null;
+  if (!removed) return null;
+  const next = existing.filter((a) => a.id !== args.attachmentId);
+  const { error } = await supabase
+    .from("customer_memory")
+    .update({ attachments: next })
+    .eq("user_id", args.userId)
+    .eq("file_slug", args.slug);
+  if (error) {
+    console.error(`[memory] deleteAttachment failed:`, error.message);
+    throw new Error(`Attachment delete failed: ${error.message}`);
+  }
+  return removed;
 }
 
 /**

@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
+  type ChapterAttachment,
   type CustomerMemory,
   type CustomerMemoryProvenance,
   type Profile,
@@ -227,6 +228,7 @@ export default async function BlueprintLabPage() {
                     lastUpdatedBy={row?.last_updated_by ?? null}
                     updatedAt={row?.updated_at ?? null}
                     provenance={provenance}
+                    attachments={(row?.attachments ?? []) as ChapterAttachment[]}
                     fields={fields}
                     otherChaptersFields={otherChaptersFields}
                     schema={schema}

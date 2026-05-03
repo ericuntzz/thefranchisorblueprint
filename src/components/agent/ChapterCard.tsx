@@ -29,7 +29,11 @@ import {
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import type { CustomerMemoryProvenance } from "@/lib/supabase/types";
+import type {
+  ChapterAttachment,
+  CustomerMemoryProvenance,
+} from "@/lib/supabase/types";
+import { ChapterAttachments } from "./ChapterAttachments";
 import { type ChapterSchema, type FieldDef } from "@/lib/memory/schemas";
 import { isValidMemoryFileSlug } from "@/lib/memory/files";
 import {
@@ -49,6 +53,8 @@ type Props = {
   lastUpdatedBy: "agent" | "user" | "jason" | "scraper" | null;
   updatedAt: string | null;
   provenance: CustomerMemoryProvenance[];
+  /** Per-chapter attachments (files + links). */
+  attachments: ChapterAttachment[];
   /** Structured fields for THIS chapter. Empty object if none yet. */
   fields: Record<string, FieldValue>;
   /** Cross-chapter field state — for computed-field formulas. */
@@ -83,6 +89,7 @@ export function ChapterCard({
   lastUpdatedBy,
   updatedAt,
   provenance,
+  attachments,
   fields,
   otherChaptersFields,
   schema,
@@ -433,6 +440,14 @@ export function ChapterCard({
             <p className="mt-3 text-xs text-red-700">{draftError}</p>
           )}
         </>
+      )}
+      {/* Attachments live below all branches except the active editors —
+          they're chapter-scoped material the customer adds to enrich
+          Jason's drafting context, not part of the field/prose edit
+          flow. Hidden during active edit sessions to keep the surface
+          focused. */}
+      {!editing && !editingProse && (
+        <ChapterAttachments slug={slug} attachments={attachments} />
       )}
     </article>
   );

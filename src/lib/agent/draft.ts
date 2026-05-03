@@ -26,9 +26,11 @@ import {
 } from "@/lib/memory/files";
 import {
   getMemorySnapshotForPrompt,
+  readAttachments,
   readMemoryFile,
   type ProvenanceEntry,
 } from "@/lib/memory";
+import type { ChapterAttachment } from "@/lib/supabase/types";
 import {
   hasLockedSpans,
   lockedSpansMissing,
@@ -85,12 +87,17 @@ export async function draftChapter(args: {
   const { userId, slug, instruction } = args;
   const effort = args.effort ?? EFFORT_FOR_DRAFT;
 
-  const [{ systemPrompt, groundingMessage }, memorySnapshot, existingChapter] =
-    await Promise.all([
-      buildDraftContext(slug),
-      getMemorySnapshotForPrompt(userId),
-      readMemoryFile(userId, slug),
-    ]);
+  const [
+    { systemPrompt, groundingMessage },
+    memorySnapshot,
+    existingChapter,
+    attachments,
+  ] = await Promise.all([
+    buildDraftContext(slug),
+    getMemorySnapshotForPrompt(userId),
+    readMemoryFile(userId, slug),
+    readAttachments(userId, slug),
+  ]);
 
   // If the chapter already has user-locked spans (the customer has
   // hand-edited prose at some point), we MUST preserve them verbatim
@@ -145,7 +152,7 @@ export async function draftChapter(args: {
       },
       {
         type: "text",
-        text: `Now draft the **${chapterTitle}** (\`${slug}\`) chapter.\n\nDrafting instruction:\n${instruction}${lockPreservationInstruction ? `\n\n${lockPreservationInstruction}` : ""}\n\nFormat requirements:\n- Output the chapter as polished markdown.\n- Embed claim anchors as HTML comments: \`<!-- claim:short-id -->\` immediately before each meaningfully sourced paragraph or numeric assertion. Keep the IDs short and unique within the chapter.\n- After the chapter body, output a fenced \`\`\`json block named \`provenance\` containing an array of objects of the form: \`{ "claim_id": "...", "source_type": "voice_session|upload|form|agent_inference|jason_playbook|research|assessment|scraper", "source_ref": "...", "source_excerpt": "..." }\`. One entry per claim_id used in the chapter. Use \`agent_inference\` for any claim derived from other Memory content vs. directly stated by the customer.\n- Where you don't have enough information, leave a clearly marked \`[NEEDS INPUT: short description]\` block — don't fabricate.\n\nDraft the chapter now.`,
+        text: `Now draft the **${chapterTitle}** (\`${slug}\`) chapter.\n\nDrafting instruction:\n${instruction}${lockPreservationInstruction ? `\n\n${lockPreservationInstruction}` : ""}${attachments.length > 0 ? `\n\n${formatAttachmentsForPrompt(attachments)}` : ""}\n\nFormat requirements:\n- Output the chapter as polished markdown.\n- Embed claim anchors as HTML comments: \`<!-- claim:short-id -->\` immediately before each meaningfully sourced paragraph or numeric assertion. Keep the IDs short and unique within the chapter.\n- After the chapter body, output a fenced \`\`\`json block named \`provenance\` containing an array of objects of the form: \`{ "claim_id": "...", "source_type": "voice_session|upload|form|agent_inference|jason_playbook|research|assessment|scraper", "source_ref": "...", "source_excerpt": "..." }\`. One entry per claim_id used in the chapter. Use \`agent_inference\` for any claim derived from other Memory content vs. directly stated by the customer.\n- Where you don't have enough information, leave a clearly marked \`[NEEDS INPUT: short description]\` block — don't fabricate.\n\nDraft the chapter now.`,
       },
     ],
   });
@@ -311,6 +318,31 @@ function parseDraftWithProvenance(text: string): {
   }
 
   return { contentMd, provenance };
+}
+
+/**
+ * Render the customer-attached references (files + links) into a prompt
+ * block. Includes the label, kind, source ref, and the excerpt the
+ * uploader pipeline captured (text-file content, scraped link text, or
+ * a placeholder for opaque files like PDFs we don't yet parse).
+ *
+ * The block is wrapped in <chapter_attachments> so Opus sees it as
+ * structured input distinct from Memory. This is what powers the "I
+ * uploaded our training manual — use it when drafting" workflow.
+ */
+function formatAttachmentsForPrompt(attachments: ChapterAttachment[]): string {
+  const blocks = attachments.map((a, i) => {
+    const head = `${i + 1}. [${a.kind === "file" ? "FILE" : "LINK"}] ${a.label}${a.kind === "link" ? `  (${a.ref})` : ""}`;
+    const excerpt = a.excerpt
+      ? `\n   Excerpt:\n   ${a.excerpt.replace(/\n/g, "\n   ")}`
+      : "";
+    return `${head}${excerpt}`;
+  });
+  return `<chapter_attachments>
+The customer has attached ${attachments.length} reference${attachments.length === 1 ? "" : "s"} to this chapter to help you draft. Use them as primary source material when relevant.
+
+${blocks.join("\n\n")}
+</chapter_attachments>`;
 }
 
 /**

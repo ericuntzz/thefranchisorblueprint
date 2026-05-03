@@ -187,8 +187,33 @@ export type CustomerMemory = {
   >;
   confidence: "verified" | "inferred" | "draft";
   last_updated_by: "agent" | "user" | "jason" | "scraper";
+  /** Per-chapter attachments (files + links) the customer added to
+   *  enrich the agent's drafting context. See migration 0012 for shape. */
+  attachments: ChapterAttachment[];
   created_at: string;
   updated_at: string;
+};
+
+/**
+ * One per-chapter attachment. Files live in the customer-uploads
+ * storage bucket; links are external URLs we may have lightly scraped
+ * for an excerpt. Both surface in the chapter card and feed into
+ * Opus's draft prompt as additional context.
+ */
+export type ChapterAttachment = {
+  id: string;
+  kind: "file" | "link";
+  /** Storage object path for files; absolute https URL for links. */
+  ref: string;
+  /** Display name — original filename, scraped page title, or user-typed label. */
+  label: string;
+  mime_type: string | null;
+  size_bytes: number | null;
+  /** Short text snippet (~2KB) the agent reads. For text files this is
+   *  the file content prefix; for links it's the scraped page text;
+   *  for opaque files (PDF/DOCX/images) it's a placeholder. */
+  excerpt: string | null;
+  created_at: string;
 };
 
 /**
@@ -271,6 +296,7 @@ export type Database = {
           field_status?: CustomerMemory["field_status"];
           confidence?: CustomerMemory["confidence"];
           last_updated_by?: CustomerMemory["last_updated_by"];
+          attachments?: CustomerMemory["attachments"];
           created_at?: string;
           updated_at?: string;
         };
