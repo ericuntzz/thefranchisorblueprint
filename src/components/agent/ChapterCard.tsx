@@ -25,7 +25,6 @@ import {
   Pencil,
   ShieldCheck,
   Sparkles,
-  Type,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -41,6 +40,7 @@ import {
   hasCalc,
   type MemoryFieldsMap,
 } from "@/lib/calc";
+import { parseSections } from "@/lib/memory/sections";
 import { ChapterFieldEditor } from "./ChapterFieldEditor";
 
 type FieldValue = string | number | boolean | string[] | null;
@@ -74,11 +74,17 @@ type Props = {
     changes: Record<string, FieldValue>;
   }) => Promise<void>;
   /**
-   * Server action to save the chapter's prose body. Called by the
-   * inline prose editor. Wraps the saved text in a user-locked span so
-   * future Opus redrafts preserve it verbatim.
+   * Server action to save one section's edits. Called by SectionBlock
+   * when the customer hits Save inside an inline section editor.
+   * Splices the new body into content_md at the given index and wraps
+   * it in a user-locked span.
    */
-  saveProse: (args: { slug: string; contentMd: string }) => Promise<void>;
+  saveSection: (args: {
+    slug: string;
+    sectionIndex: number;
+    body: string;
+    heading?: string | null;
+  }) => Promise<void>;
 };
 
 export function ChapterCard({
@@ -94,14 +100,13 @@ export function ChapterCard({
   otherChaptersFields,
   schema,
   saveFields,
-  saveProse,
+  saveSection,
 }: Props) {
   const [drafting, setDrafting] = useState(false);
   const [draftError, setDraftError] = useState<string | null>(null);
   const [insufficientCtx, setInsufficientCtx] = useState<string | null>(null);
   const [showProvenance, setShowProvenance] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [editingProse, setEditingProse] = useState(false);
 
   async function draftThis() {
     setDrafting(true);
@@ -187,14 +192,7 @@ export function ChapterCard({
         <ConfidencePill confidence={confidence} />
       </header>
 
-      {editingProse ? (
-        <ChapterProseEditor
-          slug={slug}
-          contentMd={contentMd}
-          saveProse={saveProse}
-          onCancel={() => setEditingProse(false)}
-        />
-      ) : editing && schema ? (
+      {editing && schema ? (
         <ChapterFieldEditor
           schema={schema}
           initialFields={fields}
@@ -262,46 +260,19 @@ export function ChapterCard({
         )
       ) : (
         <>
-          {/* `group` + `relative` host the centered hover-only "Edit
-              prose" affordance below. The whole prose area becomes a
-              click target for editing — hover anywhere over the
-              chapter and the pill appears in the middle of the visible
-              text. Footer no longer carries an Edit-prose button: the
-              hover affordance is more discoverable and matches the
-              Notion / Linear inline-edit pattern. */}
-          <div className="relative group chapter-prose text-navy/90 leading-relaxed">
-            <NeedsInputProse
-              md={contentMd
-                // Drop claim anchors (they're stored in customer_memory_provenance).
-                .replace(/<!--\s*claim:[^>]*-->/g, "")
-                // Drop the trailing ```json provenance``` fenced block
-                // when the agent included it. Provenance is rendered in
-                // the dedicated panel below — leaving the raw JSON in
-                // the prose makes the chapter unreadable AND blew out the
-                // page width via the un-wrappable `<code>` block.
-                .replace(/```json(?:\s*provenance)?\s*\n[\s\S]*?\n```\s*$/i, "")
-                .trim()}
-              onFillFields={
-                schema ? () => setEditing(true) : undefined
-              }
+          {/* Per-section render: each `## heading` slice becomes its
+              own block with its own hover-edit affordance. Editing one
+              section leaves the others rendered as polished prose, so
+              the customer never sees the whole chapter as one
+              raw-markdown textarea (Eric: "feels like editing a
+              codebase"). The chapter-wide overlay is gone. */}
+          <div className="chapter-prose text-navy/90 leading-relaxed">
+            <ChapterSections
+              slug={slug}
+              contentMd={contentMd}
+              saveSection={saveSection}
+              onFillFields={schema ? () => setEditing(true) : undefined}
             />
-            {/* Hover-only edit affordance. The wrapper is pointer-
-                events-none so it never blocks text selection; only the
-                button itself accepts clicks. The cream backdrop is
-                very faint so it doesn't fight the prose for attention
-                until the customer is actively reaching for an edit. */}
-            <div
-              aria-hidden={!editingProse}
-              className="absolute inset-0 flex items-start justify-center pt-[20%] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 bg-cream/30 backdrop-blur-[1px] rounded-lg"
-            >
-              <button
-                type="button"
-                onClick={() => setEditingProse(true)}
-                className="pointer-events-auto inline-flex items-center gap-2 bg-navy text-cream font-bold text-xs uppercase tracking-[0.1em] px-5 py-3 rounded-full hover:bg-gold hover:text-navy shadow-lg transition-colors"
-              >
-                <Type size={13} /> Edit text
-              </button>
-            </div>
           </div>
           <style jsx>{`
             .chapter-prose {
@@ -460,12 +431,13 @@ export function ChapterCard({
           )}
         </>
       )}
-      {/* Attachments live below all branches except the active editors —
-          they're chapter-scoped material the customer adds to enrich
-          Jason's drafting context, not part of the field/prose edit
-          flow. Hidden during active edit sessions to keep the surface
-          focused. */}
-      {!editing && !editingProse && (
+      {/* Attachments live below all branches except the active field
+          editor — they're chapter-scoped material the customer adds
+          to enrich Jason's drafting context. Per-section prose edits
+          happen inline inside ChapterSections, so attachments stay
+          visible during them; only the field editor swaps the whole
+          surface and hides this. */}
+      {!editing && (
         <ChapterAttachments slug={slug} attachments={attachments} />
       )}
     </article>
@@ -846,41 +818,94 @@ function countFilledFields(
 }
 
 /**
- * Inline-prose editor. The customer types directly into the chapter
- * narrative; on save, the entire body is wrapped in a user-locked span
- * so future Opus redrafts preserve it verbatim.
+ * Per-section render. Splits the chapter at every `##` heading and
+ * renders each slice as its own SectionBlock, so the customer can
+ * hover any one section and click an inline "Edit" pill to edit JUST
+ * that section — without the rest of the chapter falling apart into
+ * raw markdown around them.
  *
- * v1 model is whole-chapter lock: every byte the textarea contains on
- * save becomes "the customer's words". Opus on a redraft can append
- * new sections but won't paraphrase or shorten anything. v2 will
- * add paragraph-level locking via diff so the agent can re-do
- * untouched paragraphs while leaving edited ones alone.
- *
- * The textarea shows the markdown WITHOUT the lock-marker syntax —
- * the markers are an implementation detail; the customer sees and
- * edits clean prose.
+ * The chapter content_md is the source of truth; sections are a UI
+ * presentation. Section identity is index-based on save (server uses
+ * the same parser to splice the new content in). A chapter with no
+ * `##` headings yields a single section, and editing it behaves like
+ * the previous chapter-wide editor.
  */
-function ChapterProseEditor({
+function ChapterSections({
   slug,
   contentMd,
-  saveProse,
-  onCancel,
+  saveSection,
+  onFillFields,
 }: {
   slug: string;
   contentMd: string;
-  saveProse: (args: { slug: string; contentMd: string }) => Promise<void>;
-  onCancel: () => void;
+  saveSection: (args: {
+    slug: string;
+    sectionIndex: number;
+    body: string;
+    heading?: string | null;
+  }) => Promise<void>;
+  onFillFields?: () => void;
 }) {
-  // Show the customer the prose without the locked-span markers (and
-  // without trailing JSON provenance + claim anchors — those are
-  // bookkeeping, not editable content).
-  const initial = contentMd
-    .replace(/<!--\s*user-locked:[a-z0-9]+\s*-->\n?/gi, "")
-    .replace(/<!--\s*\/user-locked:[a-z0-9]+\s*-->\n?/gi, "")
+  // Strip bookkeeping (claim anchors, trailing provenance JSON) before
+  // parsing so the section view is reading-grade clean, but DO preserve
+  // user-locked markers — SectionBlock decides how to render them.
+  const cleaned = contentMd
     .replace(/<!--\s*claim:[^>]*-->/g, "")
     .replace(/```json(?:\s*provenance)?\s*\n[\s\S]*?\n```\s*$/i, "")
     .trim();
-  const [draft, setDraft] = useState(initial);
+  const sections = parseSections(cleaned);
+
+  return (
+    <>
+      {sections.map((s, i) => (
+        <SectionBlock
+          key={i}
+          slug={slug}
+          sectionIndex={i}
+          heading={s.heading}
+          body={s.body}
+          saveSection={saveSection}
+          onFillFields={onFillFields}
+        />
+      ))}
+    </>
+  );
+}
+
+/**
+ * One slice of the chapter, with its own hover-edit affordance.
+ *
+ * Default state: render heading + body as polished prose (NeedsInputProse
+ * for locked spans + [NEEDS INPUT] callouts).
+ *
+ * Editing state: heading stays as a label; body becomes a textarea
+ * pre-filled with the strip-of-markers source. Save calls the
+ * server-side `saveSection` action, which wraps the new body in a
+ * fresh user-locked span and splices it back into content_md.
+ */
+function SectionBlock({
+  slug,
+  sectionIndex,
+  heading,
+  body,
+  saveSection,
+  onFillFields,
+}: {
+  slug: string;
+  sectionIndex: number;
+  heading: string | null;
+  body: string;
+  saveSection: (args: {
+    slug: string;
+    sectionIndex: number;
+    body: string;
+    heading?: string | null;
+  }) => Promise<void>;
+  onFillFields?: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draftBody, setDraftBody] = useState(stripBodyForEditing(body));
+  const [draftHeading, setDraftHeading] = useState(heading ?? "");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -888,7 +913,17 @@ function ChapterProseEditor({
     setSaving(true);
     setErr(null);
     try {
-      await saveProse({ slug, contentMd: draft });
+      await saveSection({
+        slug,
+        sectionIndex,
+        body: draftBody,
+        heading:
+          heading == null
+            ? undefined
+            : draftHeading.trim() && draftHeading !== heading
+              ? draftHeading
+              : undefined,
+      });
       if (typeof window !== "undefined") window.location.reload();
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Save failed");
@@ -896,56 +931,104 @@ function ChapterProseEditor({
     }
   }
 
-  return (
-    <div className="space-y-3">
-      <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 text-xs text-emerald-900 flex items-start gap-2">
-        <Lock size={12} className="mt-0.5 flex-shrink-0" />
-        <span>
-          <strong className="font-semibold">Your words are locked.</strong>{" "}
-          Whatever you save here will be preserved verbatim — Jason can append
-          new sections later, but won&apos;t change your text.
-        </span>
-      </div>
-      <textarea
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        rows={Math.max(12, draft.split("\n").length + 2)}
-        className="w-full rounded-lg border border-navy/15 bg-white px-3 py-2 text-[14px] text-navy font-sans leading-relaxed focus:border-gold focus:ring-2 focus:ring-gold/20 outline-none transition resize-y min-h-[240px]"
-        placeholder="Type your chapter here. Markdown is supported (# headings, **bold**, - lists, [links](url))…"
-      />
-      {err && (
-        <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-800">
-          {err}
+  if (editing) {
+    return (
+      <div className="my-4 rounded-xl border-2 border-gold/60 bg-cream/40 p-4 space-y-3">
+        {heading != null && (
+          <input
+            type="text"
+            value={draftHeading}
+            onChange={(e) => setDraftHeading(e.target.value)}
+            className="w-full rounded-lg border border-navy/15 bg-white px-3 py-2 text-[15px] font-bold text-navy placeholder-grey-4 focus:border-gold focus:ring-2 focus:ring-gold/20 outline-none transition"
+            placeholder="## Section heading"
+          />
+        )}
+        <textarea
+          value={draftBody}
+          onChange={(e) => setDraftBody(e.target.value)}
+          rows={Math.max(6, draftBody.split("\n").length + 1)}
+          className="w-full rounded-lg border border-navy/15 bg-white px-3 py-2 text-[14px] text-navy leading-relaxed focus:border-gold focus:ring-2 focus:ring-gold/20 outline-none transition resize-y"
+          placeholder="Type this section. Markdown supported (**bold**, - lists, [links](url))…"
+          autoFocus
+        />
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 text-[11px] text-emerald-700">
+            <Lock size={11} /> Your words are locked once saved — Jason
+            won&apos;t rewrite them.
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setEditing(false);
+                setDraftBody(stripBodyForEditing(body));
+                setDraftHeading(heading ?? "");
+                setErr(null);
+              }}
+              disabled={saving}
+              className="text-grey-3 hover:text-navy font-semibold text-xs px-3 py-1.5 transition-colors disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={onSave}
+              disabled={saving || draftBody === stripBodyForEditing(body)}
+              className="inline-flex items-center gap-1.5 bg-gold text-navy font-bold text-[10px] uppercase tracking-[0.1em] px-4 py-2 rounded-full hover:bg-gold-dark disabled:opacity-50 transition-colors"
+            >
+              {saving ? (
+                <>
+                  <Loader2 size={11} className="animate-spin" /> Saving…
+                </>
+              ) : (
+                <>Save section</>
+              )}
+            </button>
+          </div>
         </div>
-      )}
-      <div className="flex items-center justify-end gap-2 pt-1">
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={saving}
-          className="text-grey-3 hover:text-navy font-semibold text-sm px-4 py-2 transition-colors disabled:opacity-50"
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          onClick={onSave}
-          disabled={saving || draft.trim() === initial.trim()}
-          className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-xs uppercase tracking-[0.1em] px-6 py-3 rounded-full hover:bg-gold-dark disabled:opacity-50 transition-colors"
-        >
-          {saving ? (
-            <>
-              <Loader2 size={13} className="animate-spin" /> Saving…
-            </>
-          ) : (
-            <>
-              Save prose <ArrowRight size={12} />
-            </>
-          )}
-        </button>
+        {err && (
+          <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-800">
+            {err}
+          </div>
+        )}
       </div>
+    );
+  }
+
+  // Render mode: prose + hover-revealed Edit pill in the top-right.
+  // The pill is small + corner-pinned (vs the chapter-wide
+  // center-overlay approach) so it doesn't obscure the content while
+  // hovering and keeps multi-section chapters readable.
+  return (
+    <div className="relative group/sec my-2 -mx-2 px-2 py-1 rounded-lg transition-colors hover:bg-cream/40">
+      {heading && (
+        <NeedsInputProse md={heading} onFillFields={onFillFields} />
+      )}
+      {body.trim() && (
+        <NeedsInputProse md={body} onFillFields={onFillFields} />
+      )}
+      <button
+        type="button"
+        onClick={() => setEditing(true)}
+        className="absolute top-2 right-2 inline-flex items-center gap-1.5 bg-navy text-cream font-bold text-[10px] uppercase tracking-[0.1em] px-3 py-1.5 rounded-full hover:bg-gold hover:text-navy shadow-sm opacity-0 group-hover/sec:opacity-100 transition-opacity"
+        title="Edit this section"
+      >
+        <Pencil size={10} /> Edit
+      </button>
     </div>
   );
+}
+
+/**
+ * Strip user-locked markers (but keep the inner text) for display in
+ * the editing textarea. The customer types clean text; the server
+ * re-wraps on save. Lock IDs are an implementation detail.
+ */
+function stripBodyForEditing(body: string): string {
+  return body
+    .replace(/<!--\s*user-locked:[a-z0-9]+\s*-->\n?/gi, "")
+    .replace(/<!--\s*\/user-locked:[a-z0-9]+\s*-->\n?/gi, "")
+    .trim();
 }
 
 // Re-export for parents that don't already import these.

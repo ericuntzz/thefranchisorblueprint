@@ -17,9 +17,10 @@
 import { revalidatePath } from "next/cache";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { writeMemoryFields } from "@/lib/memory";
+import { readMemoryFile, writeMemoryFields } from "@/lib/memory";
 import { isValidMemoryFileSlug } from "@/lib/memory/files";
 import { stripLockMarkers, wrapAsLocked } from "@/lib/memory/locks";
+import { replaceSection } from "@/lib/memory/sections";
 import type { Purchase } from "@/lib/supabase/types";
 
 type FieldValue = string | number | boolean | string[] | null;
@@ -134,6 +135,81 @@ export async function saveChapterProse(args: {
   );
   if (error) {
     console.error("[actions] saveChapterProse failed:", error.message);
+    throw new Error(`Save failed: ${error.message}`);
+  }
+
+  revalidatePath("/portal/lab/blueprint");
+}
+
+/**
+ * Save a single section's edits — the per-section flavor of the
+ * inline-prose path. Splices the new body (and optionally an updated
+ * heading) into the chapter's content_md at the specified section
+ * index, wraps the new body in a user-locked span so future Opus
+ * redrafts preserve it verbatim, and persists.
+ *
+ * Identifies the section by index, not by heading text — the customer
+ * is allowed to rename a heading without breaking the persistence
+ * link. If the index is out of range (chapter shape changed under us),
+ * the action throws and the client surfaces a "save failed, reload"
+ * message.
+ */
+export async function saveChapterSection(args: {
+  slug: string;
+  sectionIndex: number;
+  /** New body markdown (heading line excluded). Will be re-wrapped in
+   *  a fresh user-locked span; any pre-existing markers are stripped. */
+  body: string;
+  /** Optional new heading line including the `##` markup. Pass to
+   *  rename the heading; omit to keep the original. Pass `null` to
+   *  un-head a section (rare). */
+  heading?: string | null;
+}): Promise<void> {
+  if (!isValidMemoryFileSlug(args.slug)) {
+    throw new Error(`Unknown chapter: ${args.slug}`);
+  }
+
+  const supabase = await getSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not signed in.");
+
+  const { data: purchasesData } = await supabase
+    .from("purchases")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("status", "paid")
+    .limit(1);
+  const purchases = (purchasesData ?? []) as Purchase[];
+  if (purchases.length === 0) throw new Error("No active purchase.");
+
+  const existing = await readMemoryFile(user.id, args.slug);
+  const previousContent = existing?.content_md ?? "";
+
+  // Strip lock markers from the user-supplied body (they're typing
+  // clean text, not the marker syntax) and wrap as a single fresh
+  // locked span so future redrafts preserve it.
+  const cleanedBody = stripLockMarkers(args.body).trim();
+  const wrappedBody = cleanedBody.length > 0 ? wrapAsLocked(cleanedBody) : "";
+
+  const nextContent = replaceSection(previousContent, args.sectionIndex, {
+    heading: args.heading,
+    body: wrappedBody,
+  });
+
+  const admin = getSupabaseAdmin();
+  const { error } = await admin.from("customer_memory").upsert(
+    {
+      user_id: user.id,
+      file_slug: args.slug,
+      content_md: nextContent,
+      last_updated_by: "user",
+    },
+    { onConflict: "user_id,file_slug" },
+  );
+  if (error) {
+    console.error("[actions] saveChapterSection failed:", error.message);
     throw new Error(`Save failed: ${error.message}`);
   }
 
