@@ -190,7 +190,9 @@ function DesktopTable() {
 // that the reader scrolls past for verification rather than evaluation.
 function MobileStack() {
   return (
-    <div className="md:hidden flex flex-col gap-5 pt-4">
+    // pt-6 reserves clear space above the first card for the BEST VALUE
+    // ribbon (which floats -3 above its card via absolute positioning).
+    <div className="md:hidden flex flex-col gap-5 pt-6">
       {PLANS.map((plan) => (
         <PlanCard key={plan.key} plan={plan} />
       ))}
@@ -201,18 +203,24 @@ function MobileStack() {
 function PlanCard({ plan }: { plan: PlanMeta }) {
   const isFeatured = plan.key === "tfb";
   return (
-    <div
-      className={`rounded-2xl border overflow-hidden ${
-        isFeatured
-          ? "border-navy/10 shadow-[0_20px_50px_rgba(30,58,95,0.18)] bg-white relative"
-          : "border-navy/10 shadow-[0_8px_24px_rgba(30,58,95,0.06)] bg-white"
-      }`}
-    >
+    // The wrapper is the positioning anchor for the BEST VALUE ribbon.
+    // The badge has to live OUTSIDE the rounded card because the card uses
+    // `overflow-hidden` to clip the navy header's corners cleanly — and that
+    // same overflow-hidden was clipping the badge's top half. Lifting the
+    // badge into this wrapper sidesteps the clip without losing the corner.
+    <div className="relative">
       {isFeatured && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gold text-navy px-3 py-1 rounded-full text-[10px] font-extrabold tracking-[0.14em] whitespace-nowrap shadow-[0_4px_10px_rgba(30,58,95,0.18)] z-10">
           BEST VALUE
         </div>
       )}
+      <div
+        className={`rounded-2xl border overflow-hidden ${
+          isFeatured
+            ? "border-navy/10 shadow-[0_20px_50px_rgba(30,58,95,0.18)] bg-white"
+            : "border-navy/10 shadow-[0_8px_24px_rgba(30,58,95,0.06)] bg-white"
+        }`}
+      >
 
       {/* Plan header */}
       <div
@@ -287,6 +295,7 @@ function PlanCard({ plan }: { plan: PlanMeta }) {
         >
           {plan.timeToLaunch}
         </span>
+      </div>
       </div>
     </div>
   );
