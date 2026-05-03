@@ -12,11 +12,12 @@
  * polished document, not an audit trail.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   AlertCircle,
   ArrowRight,
+  ChevronRight,
   Clock,
   Globe,
   Lock,
@@ -818,17 +819,18 @@ function countFilledFields(
 }
 
 /**
- * Per-section render. Splits the chapter at every `##` heading and
- * renders each slice as its own SectionBlock, so the customer can
- * hover any one section and click an inline "Edit" pill to edit JUST
- * that section — without the rest of the chapter falling apart into
- * raw markdown around them.
+ * Per-section render with FAQ-style collapse.
  *
- * The chapter content_md is the source of truth; sections are a UI
- * presentation. Section identity is index-based on save (server uses
- * the same parser to splice the new content in). A chapter with no
- * `##` headings yields a single section, and editing it behaves like
- * the previous chapter-wide editor.
+ * Splits the chapter at every `##` heading; each headed section starts
+ * collapsed and expands when the customer clicks its heading row. Only
+ * one section is open at a time — opening another collapses the prior
+ * (Eric: "auto collapse when another section opens up"). Section 0
+ * (anything before the first heading) is always visible, since there's
+ * no clickable heading to toggle it.
+ *
+ * Edit-mode lifts up here too: starting an edit on section i implicitly
+ * opens it and closes any other open section so the editor has visual
+ * space.
  */
 function ChapterSections({
   slug,
@@ -847,13 +849,33 @@ function ChapterSections({
   onFillFields?: () => void;
 }) {
   // Strip bookkeeping (claim anchors, trailing provenance JSON) before
-  // parsing so the section view is reading-grade clean, but DO preserve
-  // user-locked markers — SectionBlock decides how to render them.
+  // parsing so the section view is reading-grade clean. User-locked
+  // markers stay intact — SectionBlock decides how to render them.
   const cleaned = contentMd
     .replace(/<!--\s*claim:[^>]*-->/g, "")
     .replace(/```json(?:\s*provenance)?\s*\n[\s\S]*?\n```\s*$/i, "")
     .trim();
   const sections = parseSections(cleaned);
+
+  // Open & edit indices live up here so the FAQ-collapse rule (only
+  // one open at a time) is enforced across siblings. `null` = all
+  // headed sections collapsed; section 0 (no heading) ignores this and
+  // always renders.
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+  const startEdit = (i: number) => {
+    setEditingIndex(i);
+    setOpenIndex(i); // editing implies open
+  };
+  const cancelEdit = () => setEditingIndex(null);
+  const toggleOpen = (i: number) => {
+    // Toggling another section while one is being edited cancels the
+    // edit (any unsaved changes are discarded). v1 simplification —
+    // a "discard unsaved?" warning is a nice-to-have.
+    setEditingIndex(null);
+    setOpenIndex((prev) => (prev === i ? null : i));
+  };
 
   return (
     <>
@@ -864,6 +886,11 @@ function ChapterSections({
           sectionIndex={i}
           heading={s.heading}
           body={s.body}
+          isOpen={s.heading == null || openIndex === i}
+          isEditing={editingIndex === i}
+          onToggle={() => toggleOpen(i)}
+          onStartEdit={() => startEdit(i)}
+          onCancelEdit={cancelEdit}
           saveSection={saveSection}
           onFillFields={onFillFields}
         />
@@ -873,21 +900,30 @@ function ChapterSections({
 }
 
 /**
- * One slice of the chapter, with its own hover-edit affordance.
+ * One slice of the chapter.
  *
- * Default state: render heading + body as polished prose (NeedsInputProse
- * for locked spans + [NEEDS INPUT] callouts).
+ * Three render states:
+ *   1. Collapsed (only when `heading != null` and `!isOpen`):
+ *      heading row only, with chevron + needs-input badge if any
+ *      [NEEDS INPUT] prompts are inside. Click anywhere on the row
+ *      to expand.
+ *   2. Open + reading: heading + body as polished prose, hover
+ *      reveals an "Edit" pill in the top-right.
+ *   3. Open + editing: heading input + body textarea + save/cancel.
  *
- * Editing state: heading stays as a label; body becomes a textarea
- * pre-filled with the strip-of-markers source. Save calls the
- * server-side `saveSection` action, which wraps the new body in a
- * fresh user-locked span and splices it back into content_md.
+ * Section 0 (heading=null) has only states 2 and 3 — it's the
+ * always-visible intro region.
  */
 function SectionBlock({
   slug,
   sectionIndex,
   heading,
   body,
+  isOpen,
+  isEditing,
+  onToggle,
+  onStartEdit,
+  onCancelEdit,
   saveSection,
   onFillFields,
 }: {
@@ -895,6 +931,11 @@ function SectionBlock({
   sectionIndex: number;
   heading: string | null;
   body: string;
+  isOpen: boolean;
+  isEditing: boolean;
+  onToggle: () => void;
+  onStartEdit: () => void;
+  onCancelEdit: () => void;
   saveSection: (args: {
     slug: string;
     sectionIndex: number;
@@ -903,11 +944,23 @@ function SectionBlock({
   }) => Promise<void>;
   onFillFields?: () => void;
 }) {
-  const [editing, setEditing] = useState(false);
   const [draftBody, setDraftBody] = useState(stripBodyForEditing(body));
   const [draftHeading, setDraftHeading] = useState(heading ?? "");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  // Reset local draft state when the parent forces this section out
+  // of edit mode (e.g. customer opened another section while
+  // mid-edit) OR when the underlying body/heading changes (after a
+  // server reload). Without this, re-opening the editor would show
+  // stale typed text instead of the current canonical content.
+  useEffect(() => {
+    if (!isEditing) {
+      setDraftBody(stripBodyForEditing(body));
+      setDraftHeading(heading ?? "");
+      setErr(null);
+    }
+  }, [isEditing, body, heading]);
 
   async function onSave() {
     setSaving(true);
@@ -931,7 +984,8 @@ function SectionBlock({
     }
   }
 
-  if (editing) {
+  // EDIT MODE -----------------------------------------------------------
+  if (isEditing) {
     return (
       <div className="my-4 rounded-xl border-2 border-gold/60 bg-cream/40 p-4 space-y-3">
         {heading != null && (
@@ -960,7 +1014,7 @@ function SectionBlock({
             <button
               type="button"
               onClick={() => {
-                setEditing(false);
+                onCancelEdit();
                 setDraftBody(stripBodyForEditing(body));
                 setDraftHeading(heading ?? "");
                 setErr(null);
@@ -995,26 +1049,77 @@ function SectionBlock({
     );
   }
 
-  // Render mode: prose + hover-revealed Edit pill in the top-right.
-  // The pill is small + corner-pinned (vs the chapter-wide
-  // center-overlay approach) so it doesn't obscure the content while
-  // hovering and keeps multi-section chapters readable.
+  // READING MODE — for unheaded section 0, just render body + hover-edit
+  // pill. There's no toggle row.
+  if (heading == null) {
+    return (
+      <div className="relative group/sec my-2 -mx-2 px-2 py-1 rounded-lg transition-colors hover:bg-cream/40">
+        {body.trim() && (
+          <NeedsInputProse md={body} onFillFields={onFillFields} />
+        )}
+        <button
+          type="button"
+          onClick={onStartEdit}
+          className="absolute top-2 right-2 inline-flex items-center gap-1.5 bg-navy text-cream font-bold text-[10px] uppercase tracking-[0.1em] px-3 py-1.5 rounded-full hover:bg-gold hover:text-navy shadow-sm opacity-0 group-hover/sec:opacity-100 transition-opacity"
+          title="Edit this section"
+        >
+          <Pencil size={10} /> Edit
+        </button>
+      </div>
+    );
+  }
+
+  // READING MODE — headed section, FAQ-style toggle.
+  const headingText = heading.replace(/^##\s+/, "");
+  const needsInputCount = (body.match(/\[NEEDS INPUT:/gi) ?? []).length;
   return (
-    <div className="relative group/sec my-2 -mx-2 px-2 py-1 rounded-lg transition-colors hover:bg-cream/40">
-      {heading && (
-        <NeedsInputProse md={heading} onFillFields={onFillFields} />
+    <div className="my-1 border-b border-navy/5 last:border-b-0">
+      {/* Toggle row — full-width clickable. The Edit pill is layered
+          on top in the open state so it doesn't double-trigger the
+          toggle when clicked. */}
+      <div className="relative group/sec">
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={isOpen}
+          className="w-full flex items-center gap-2 py-2 text-left hover:text-gold transition-colors"
+        >
+          <ChevronRight
+            size={14}
+            className={`text-grey-3 flex-shrink-0 transition-transform ${
+              isOpen ? "rotate-90" : ""
+            }`}
+          />
+          <span className="font-bold text-navy text-[15px] flex-1">
+            {headingText}
+          </span>
+          {needsInputCount > 0 && !isOpen && (
+            <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+              <AlertCircle size={9} />
+              {needsInputCount} needs input
+            </span>
+          )}
+        </button>
+        {isOpen && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onStartEdit();
+            }}
+            className="absolute top-1.5 right-0 inline-flex items-center gap-1.5 bg-navy text-cream font-bold text-[10px] uppercase tracking-[0.1em] px-3 py-1.5 rounded-full hover:bg-gold hover:text-navy shadow-sm opacity-0 group-hover/sec:opacity-100 transition-opacity"
+            title="Edit this section"
+          >
+            <Pencil size={10} /> Edit
+          </button>
+        )}
+      </div>
+      {/* Body — only rendered when expanded. */}
+      {isOpen && body.trim() && (
+        <div className="pb-3 pl-6">
+          <NeedsInputProse md={body} onFillFields={onFillFields} />
+        </div>
       )}
-      {body.trim() && (
-        <NeedsInputProse md={body} onFillFields={onFillFields} />
-      )}
-      <button
-        type="button"
-        onClick={() => setEditing(true)}
-        className="absolute top-2 right-2 inline-flex items-center gap-1.5 bg-navy text-cream font-bold text-[10px] uppercase tracking-[0.1em] px-3 py-1.5 rounded-full hover:bg-gold hover:text-navy shadow-sm opacity-0 group-hover/sec:opacity-100 transition-opacity"
-        title="Edit this section"
-      >
-        <Pencil size={10} /> Edit
-      </button>
     </div>
   );
 }
