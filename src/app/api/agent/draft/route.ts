@@ -5,6 +5,7 @@ import {
   hasSufficientMemoryForDraft,
   isValidMemoryFileSlug,
   upsertMemoryWithProvenance,
+  writeMemoryFields,
 } from "@/lib/memory";
 import type { Purchase } from "@/lib/supabase/types";
 
@@ -114,6 +115,26 @@ export async function POST(req: NextRequest) {
         lastUpdatedBy: "agent",
         provenance: result.provenance,
       });
+      // Persist the structured fields Opus extracted from its own
+      // draft so "Edit fields" never opens blank when there's a real
+      // chapter on the page. source="agent_inference" so the audit
+      // log distinguishes these from values the customer typed.
+      if (Object.keys(result.extractedFields).length > 0) {
+        try {
+          await writeMemoryFields({
+            userId: user.id,
+            slug: body.slug,
+            changes: result.extractedFields,
+            source: "agent_inference",
+          });
+        } catch (err) {
+          // Non-fatal: prose is the primary deliverable.
+          console.error(
+            "[agent/draft] writeMemoryFields failed (non-fatal):",
+            err instanceof Error ? err.message : err,
+          );
+        }
+      }
     }
     return NextResponse.json({
       ok: true,
@@ -121,6 +142,7 @@ export async function POST(req: NextRequest) {
       persisted: persist,
       contentMd: result.contentMd,
       provenanceCount: result.provenance.length,
+      extractedFieldCount: Object.keys(result.extractedFields).length,
       usage: result.usage,
     });
   } catch (err) {

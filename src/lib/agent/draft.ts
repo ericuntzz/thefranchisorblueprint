@@ -35,12 +35,22 @@ import {
   parseLockedSpans,
   spliceMissingLocksBack,
 } from "@/lib/memory/locks";
+import { extractFieldsFromContent } from "./extract-fields";
+
+type FieldValue = string | number | boolean | string[] | null;
 
 export type DraftResult = {
   /** The drafted markdown (with embedded `<!-- claim:X -->` anchors). */
   contentMd: string;
   /** Per-claim provenance the caller persists into customer_memory_provenance. */
   provenance: ProvenanceEntry[];
+  /**
+   * Structured field values extracted from the draft. Caller persists
+   * via `writeMemoryFields` with source="agent_inference" so the
+   * editor's "Edit fields" view is pre-populated with what Opus
+   * inferred — never blank when there's a real draft on the page.
+   */
+  extractedFields: Record<string, FieldValue>;
   /** Token usage for cost tracking. */
   usage: {
     inputTokens: number;
@@ -178,9 +188,26 @@ export async function draftChapter(args: {
     }
   }
 
+  // Extract structured field values from the freshly-drafted content
+  // so the editor's "Edit fields" view shows what Opus inferred. Best-
+  // effort: extraction failure is logged but doesn't fail the draft.
+  let extractedFields: Record<string, FieldValue> = {};
+  try {
+    extractedFields = await extractFieldsFromContent({
+      slug,
+      content: contentMd,
+    });
+  } catch (err) {
+    console.error(
+      `[agent/draft] field extraction failed for ${slug} (non-fatal):`,
+      err instanceof Error ? err.message : err,
+    );
+  }
+
   return {
     contentMd,
     provenance,
+    extractedFields,
     usage: {
       inputTokens: response.usage.input_tokens,
       outputTokens: response.usage.output_tokens,

@@ -20,7 +20,11 @@ import {
   EFFORT_FOR_CHAT,
   getAnthropic,
 } from "./anthropic";
-import { upsertMemoryWithProvenance } from "@/lib/memory";
+import {
+  upsertMemoryWithProvenance,
+  writeMemoryFields,
+} from "@/lib/memory";
+import { extractFieldsFromContent } from "./extract-fields";
 
 /**
  * Lightweight, polite fetch with a sensible UA, a timeout, and a body
@@ -325,6 +329,48 @@ CRITICAL OUTPUT RULES:
       lastUpdatedBy: "scraper",
       provenance: [homeProvenance, ...aboutProvenance],
     });
+
+    // Extract structured field values too. Eric's feedback: opening
+    // "Edit fields" on a scraped chapter should show the facts the
+    // scrape inferred (founder, locations, year founded, etc.) — not
+    // a blank form. Source = "scraper" so the field-status audit log
+    // reflects where the values came from. Best-effort: if extraction
+    // fails or returns nothing, the prose still ships.
+    try {
+      const sourceMaterial = [
+        businessOverviewSummary,
+        brandVoiceSummary,
+        artifacts.title ? `Site title: ${artifacts.title}` : "",
+        artifacts.metaDescription
+          ? `Meta description: ${artifacts.metaDescription}`
+          : "",
+        `Home page text:\n${artifacts.homeText}`,
+        artifacts.aboutText ? `About page text:\n${artifacts.aboutText}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n\n");
+
+      const extracted = await extractFieldsFromContent({
+        slug: "business_overview",
+        content: businessOverviewSummary,
+        contextNotes: sourceMaterial,
+      });
+      if (Object.keys(extracted).length > 0) {
+        await writeMemoryFields({
+          userId: args.userId,
+          slug: "business_overview",
+          changes: extracted,
+          source: "scraper",
+        });
+      }
+    } catch (err) {
+      // Field extraction is best-effort. Log and move on so the prose
+      // (which is the customer-visible artifact) still lands.
+      console.error(
+        "[scrape] business_overview field extraction failed (non-fatal):",
+        err instanceof Error ? err.message : err,
+      );
+    }
   }
 
   return { artifacts, brandVoiceSummary, businessOverviewSummary };
