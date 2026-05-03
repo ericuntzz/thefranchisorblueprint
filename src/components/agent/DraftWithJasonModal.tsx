@@ -304,7 +304,7 @@ export function DraftWithJasonModal({
               onDragOver={onDragOver}
               onDragLeave={onDragLeave}
               onDrop={onDrop}
-              className={`flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-1 sm:gap-2 rounded-lg border-2 border-dashed px-4 py-3 text-xs cursor-pointer transition-colors ${
+              className={`flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-1.5 sm:gap-3 rounded-lg border-2 border-dashed px-5 py-5 sm:py-6 text-sm cursor-pointer transition-colors ${
                 dragActive
                   ? "border-gold bg-gold/15 ring-2 ring-gold/30"
                   : "border-navy/20 bg-cream/30 hover:border-gold hover:bg-gold/5"
@@ -314,28 +314,30 @@ export function DraftWithJasonModal({
             >
               {uploading ? (
                 <>
-                  <Loader2 size={16} className="animate-spin text-gold-warm" />
-                  <span className="text-navy font-semibold">Uploading…</span>
+                  <Loader2 size={20} className="animate-spin text-gold-warm" />
+                  <span className="text-navy font-semibold text-[15px]">
+                    Uploading…
+                  </span>
                 </>
               ) : dragActive ? (
-                <span className="inline-flex items-center gap-2">
-                  <Upload size={16} className="text-gold flex-shrink-0" />
-                  <span className="text-navy font-bold">
+                <span className="inline-flex items-center gap-2.5">
+                  <Upload size={20} className="text-gold flex-shrink-0" />
+                  <span className="text-navy font-bold text-[15px]">
                     Release to upload
                   </span>
                 </span>
               ) : (
                 <>
-                  <span className="inline-flex items-center gap-2">
+                  <span className="inline-flex items-center gap-2.5">
                     <Upload
-                      size={16}
+                      size={20}
                       className="text-gold-warm flex-shrink-0"
                     />
-                    <span className="text-navy font-semibold">
+                    <span className="text-navy font-semibold text-[15px]">
                       Drop a file or click to choose
                     </span>
                   </span>
-                  <span className="text-grey-4 sm:before:content-['—_'] sm:before:mr-0.5">
+                  <span className="text-grey-4 text-xs sm:text-[13px] sm:before:content-['—_'] sm:before:mr-0.5">
                     auto-attached + pre-selected below
                   </span>
                 </>
