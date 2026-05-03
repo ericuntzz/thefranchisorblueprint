@@ -19,11 +19,13 @@ import {
   ArrowRight,
   Clock,
   Globe,
+  Lock,
   Loader2,
   MessageCircle,
   Pencil,
   ShieldCheck,
   Sparkles,
+  Type,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -65,6 +67,12 @@ type Props = {
     slug: string;
     changes: Record<string, FieldValue>;
   }) => Promise<void>;
+  /**
+   * Server action to save the chapter's prose body. Called by the
+   * inline prose editor. Wraps the saved text in a user-locked span so
+   * future Opus redrafts preserve it verbatim.
+   */
+  saveProse: (args: { slug: string; contentMd: string }) => Promise<void>;
 };
 
 export function ChapterCard({
@@ -79,12 +87,14 @@ export function ChapterCard({
   otherChaptersFields,
   schema,
   saveFields,
+  saveProse,
 }: Props) {
   const [drafting, setDrafting] = useState(false);
   const [draftError, setDraftError] = useState<string | null>(null);
   const [insufficientCtx, setInsufficientCtx] = useState<string | null>(null);
   const [showProvenance, setShowProvenance] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [editingProse, setEditingProse] = useState(false);
 
   async function draftThis() {
     setDrafting(true);
@@ -170,7 +180,14 @@ export function ChapterCard({
         <ConfidencePill confidence={confidence} />
       </header>
 
-      {editing && schema ? (
+      {editingProse ? (
+        <ChapterProseEditor
+          slug={slug}
+          contentMd={contentMd}
+          saveProse={saveProse}
+          onCancel={() => setEditingProse(false)}
+        />
+      ) : editing && schema ? (
         <ChapterFieldEditor
           schema={schema}
           initialFields={fields}
@@ -353,6 +370,13 @@ export function ChapterCard({
                     : `Show provenance (${provenance.length})`}
                 </button>
               )}
+              <button
+                type="button"
+                onClick={() => setEditingProse(true)}
+                className="inline-flex items-center gap-1 text-grey-3 hover:text-navy font-semibold transition-colors"
+              >
+                <Type size={11} /> Edit prose
+              </button>
               {schema && (
                 <button
                   type="button"
@@ -548,25 +572,44 @@ function NeedsInputProse({
   md: string;
   onFillFields?: () => void;
 }) {
-  // Tolerant pattern: `[NEEDS INPUT:` ... `]`. Doesn't match nested
-  // brackets, but the agent's outputs don't use those inside the prompt
-  // text — confirmed by inspecting a dozen sample drafts.
-  const re = /\[NEEDS INPUT:\s*([^\]]+)\]/g;
-  const parts: Array<
-    { kind: "md"; text: string } | { kind: "needs"; prompt: string }
-  > = [];
-  let last = 0;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(md)) !== null) {
-    if (m.index > last) parts.push({ kind: "md", text: md.slice(last, m.index) });
-    parts.push({ kind: "needs", prompt: m[1].trim() });
-    last = m.index + m[0].length;
-  }
-  if (last < md.length) parts.push({ kind: "md", text: md.slice(last) });
+  // Two patterns to recognize, in priority order:
+  //
+  //   1. `<!-- user-locked:ID -->...<!-- /user-locked:ID -->` — text
+  //      the customer hand-authored. Renders with a subtle left rule
+  //      and a tiny "Locked" indicator so they can see at a glance
+  //      what's theirs vs what's Jason's.
+  //
+  //   2. `[NEEDS INPUT: ...]` — gaps Jason noted while drafting.
+  //      Renders as the amber callout (NeedsInputCallout).
+  //
+  // Order matters because a locked span could theoretically contain a
+  // [NEEDS INPUT] (the user typed one in) — we want the lock to win
+  // and render the inner text as prose, not extract it as a prompt.
+  type Part =
+    | { kind: "md"; text: string }
+    | { kind: "needs"; prompt: string }
+    | { kind: "locked"; text: string; id: string };
+  const parts: Part[] = [];
 
-  // No prompts → just render the whole thing as a single ReactMarkdown
-  // pass (cheaper, no risk of split artefacts).
-  if (!parts.some((p) => p.kind === "needs")) {
+  const lockRe =
+    /<!--\s*user-locked:([a-z0-9]+)\s*-->([\s\S]*?)<!--\s*\/user-locked:\1\s*-->/gi;
+  let cursor = 0;
+  let lm: RegExpExecArray | null;
+  while ((lm = lockRe.exec(md)) !== null) {
+    if (lm.index > cursor)
+      pushNonLocked(parts, md.slice(cursor, lm.index));
+    parts.push({ kind: "locked", id: lm[1], text: lm[2].trim() });
+    cursor = lm.index + lm[0].length;
+  }
+  if (cursor < md.length) pushNonLocked(parts, md.slice(cursor));
+
+  // No special parts at all → single ReactMarkdown pass (cheapest,
+  // no split artefacts).
+  if (
+    parts.length === 1 &&
+    parts[0].kind === "md" &&
+    !parts.some((p) => p.kind !== "md")
+  ) {
     return (
       <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml={true}>
         {md}
@@ -576,9 +619,9 @@ function NeedsInputProse({
 
   return (
     <>
-      {parts.map((p, i) =>
-        p.kind === "md" ? (
-          p.text.trim() ? (
+      {parts.map((p, i) => {
+        if (p.kind === "md") {
+          return p.text.trim() ? (
             <ReactMarkdown
               key={i}
               remarkPlugins={[remarkGfm]}
@@ -586,16 +629,66 @@ function NeedsInputProse({
             >
               {p.text}
             </ReactMarkdown>
-          ) : null
-        ) : (
-          <NeedsInputCallout
-            key={i}
-            prompt={p.prompt}
-            onFillFields={onFillFields}
-          />
-        ),
-      )}
+          ) : null;
+        }
+        if (p.kind === "needs") {
+          return (
+            <NeedsInputCallout
+              key={i}
+              prompt={p.prompt}
+              onFillFields={onFillFields}
+            />
+          );
+        }
+        return <UserLockedBlock key={i} text={p.text} />;
+      })}
     </>
+  );
+}
+
+/**
+ * Helper: a chunk of markdown that is NOT inside a user-locked span
+ * gets further split on `[NEEDS INPUT: ...]` patterns. Locked content
+ * is intentionally NOT split that way — locked text reads as the
+ * customer's words, full stop.
+ */
+function pushNonLocked(
+  parts: Array<
+    | { kind: "md"; text: string }
+    | { kind: "needs"; prompt: string }
+    | { kind: "locked"; text: string; id: string }
+  >,
+  md: string,
+) {
+  const needsRe = /\[NEEDS INPUT:\s*([^\]]+)\]/g;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = needsRe.exec(md)) !== null) {
+    if (m.index > last) parts.push({ kind: "md", text: md.slice(last, m.index) });
+    parts.push({ kind: "needs", prompt: m[1].trim() });
+    last = m.index + m[0].length;
+  }
+  if (last < md.length) parts.push({ kind: "md", text: md.slice(last) });
+}
+
+/**
+ * Renders a user-locked span. Subtle emerald left rule + small "Your
+ * words" badge in the corner. The visual cue is intentionally quiet
+ * (you're meant to read the prose, not constantly notice the chrome)
+ * but distinct enough that the customer can see what's theirs vs
+ * what's Jason's at a glance.
+ */
+function UserLockedBlock({ text }: { text: string }) {
+  return (
+    <div className="my-3 relative rounded-r-lg border-l-2 border-emerald-400/70 bg-emerald-50/30 pl-4 pr-3 py-2 group">
+      <div className="absolute -top-2 left-3 inline-flex items-center gap-1 text-[9px] uppercase tracking-[0.14em] font-bold text-emerald-700 bg-white px-1.5 py-0.5 rounded">
+        <Lock size={9} />
+        Your words
+      </div>
+      <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml={true}>
+        {text}
+      </ReactMarkdown>
+    </div>
   );
 }
 
@@ -716,6 +809,109 @@ function countFilledFields(
     filled += 1;
   }
   return { filled, total };
+}
+
+/**
+ * Inline-prose editor. The customer types directly into the chapter
+ * narrative; on save, the entire body is wrapped in a user-locked span
+ * so future Opus redrafts preserve it verbatim.
+ *
+ * v1 model is whole-chapter lock: every byte the textarea contains on
+ * save becomes "the customer's words". Opus on a redraft can append
+ * new sections but won't paraphrase or shorten anything. v2 will
+ * add paragraph-level locking via diff so the agent can re-do
+ * untouched paragraphs while leaving edited ones alone.
+ *
+ * The textarea shows the markdown WITHOUT the lock-marker syntax —
+ * the markers are an implementation detail; the customer sees and
+ * edits clean prose.
+ */
+function ChapterProseEditor({
+  slug,
+  contentMd,
+  saveProse,
+  onCancel,
+}: {
+  slug: string;
+  contentMd: string;
+  saveProse: (args: { slug: string; contentMd: string }) => Promise<void>;
+  onCancel: () => void;
+}) {
+  // Show the customer the prose without the locked-span markers (and
+  // without trailing JSON provenance + claim anchors — those are
+  // bookkeeping, not editable content).
+  const initial = contentMd
+    .replace(/<!--\s*user-locked:[a-z0-9]+\s*-->\n?/gi, "")
+    .replace(/<!--\s*\/user-locked:[a-z0-9]+\s*-->\n?/gi, "")
+    .replace(/<!--\s*claim:[^>]*-->/g, "")
+    .replace(/```json(?:\s*provenance)?\s*\n[\s\S]*?\n```\s*$/i, "")
+    .trim();
+  const [draft, setDraft] = useState(initial);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function onSave() {
+    setSaving(true);
+    setErr(null);
+    try {
+      await saveProse({ slug, contentMd: draft });
+      if (typeof window !== "undefined") window.location.reload();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Save failed");
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 text-xs text-emerald-900 flex items-start gap-2">
+        <Lock size={12} className="mt-0.5 flex-shrink-0" />
+        <span>
+          <strong className="font-semibold">Your words are locked.</strong>{" "}
+          Whatever you save here will be preserved verbatim — Jason can append
+          new sections later, but won&apos;t change your text.
+        </span>
+      </div>
+      <textarea
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        rows={Math.max(12, draft.split("\n").length + 2)}
+        className="w-full rounded-lg border border-navy/15 bg-white px-3 py-2 text-[14px] text-navy font-sans leading-relaxed focus:border-gold focus:ring-2 focus:ring-gold/20 outline-none transition resize-y min-h-[240px]"
+        placeholder="Type your chapter here. Markdown is supported (# headings, **bold**, - lists, [links](url))…"
+      />
+      {err && (
+        <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-800">
+          {err}
+        </div>
+      )}
+      <div className="flex items-center justify-end gap-2 pt-1">
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={saving}
+          className="text-grey-3 hover:text-navy font-semibold text-sm px-4 py-2 transition-colors disabled:opacity-50"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={saving || draft.trim() === initial.trim()}
+          className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-xs uppercase tracking-[0.1em] px-6 py-3 rounded-full hover:bg-gold-dark disabled:opacity-50 transition-colors"
+        >
+          {saving ? (
+            <>
+              <Loader2 size={13} className="animate-spin" /> Saving…
+            </>
+          ) : (
+            <>
+              Save prose <ArrowRight size={12} />
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  );
 }
 
 // Re-export for parents that don't already import these.

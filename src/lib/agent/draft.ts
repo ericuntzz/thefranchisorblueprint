@@ -26,8 +26,15 @@ import {
 } from "@/lib/memory/files";
 import {
   getMemorySnapshotForPrompt,
+  readMemoryFile,
   type ProvenanceEntry,
 } from "@/lib/memory";
+import {
+  hasLockedSpans,
+  lockedSpansMissing,
+  parseLockedSpans,
+  spliceMissingLocksBack,
+} from "@/lib/memory/locks";
 
 export type DraftResult = {
   /** The drafted markdown (with embedded `<!-- claim:X -->` anchors). */
@@ -68,10 +75,23 @@ export async function draftChapter(args: {
   const { userId, slug, instruction } = args;
   const effort = args.effort ?? EFFORT_FOR_DRAFT;
 
-  const [{ systemPrompt, groundingMessage }, memorySnapshot] = await Promise.all([
-    buildDraftContext(slug),
-    getMemorySnapshotForPrompt(userId),
-  ]);
+  const [{ systemPrompt, groundingMessage }, memorySnapshot, existingChapter] =
+    await Promise.all([
+      buildDraftContext(slug),
+      getMemorySnapshotForPrompt(userId),
+      readMemoryFile(userId, slug),
+    ]);
+
+  // If the chapter already has user-locked spans (the customer has
+  // hand-edited prose at some point), we MUST preserve them verbatim
+  // through the redraft. Build an explicit instruction for Opus and
+  // post-validate after the response.
+  const previousContent = existingChapter?.content_md ?? "";
+  const previousLocks = previousContent ? parseLockedSpans(previousContent) : [];
+  const lockPreservationInstruction =
+    previousLocks.length > 0
+      ? buildLockPreservationInstruction(previousContent, previousLocks)
+      : null;
 
   const chapterTitle = MEMORY_FILE_TITLES[slug];
   const client = getAnthropic();
@@ -115,7 +135,7 @@ export async function draftChapter(args: {
       },
       {
         type: "text",
-        text: `Now draft the **${chapterTitle}** (\`${slug}\`) chapter.\n\nDrafting instruction:\n${instruction}\n\nFormat requirements:\n- Output the chapter as polished markdown.\n- Embed claim anchors as HTML comments: \`<!-- claim:short-id -->\` immediately before each meaningfully sourced paragraph or numeric assertion. Keep the IDs short and unique within the chapter.\n- After the chapter body, output a fenced \`\`\`json block named \`provenance\` containing an array of objects of the form: \`{ "claim_id": "...", "source_type": "voice_session|upload|form|agent_inference|jason_playbook|research|assessment|scraper", "source_ref": "...", "source_excerpt": "..." }\`. One entry per claim_id used in the chapter. Use \`agent_inference\` for any claim derived from other Memory content vs. directly stated by the customer.\n- Where you don't have enough information, leave a clearly marked \`[NEEDS INPUT: short description]\` block — don't fabricate.\n\nDraft the chapter now.`,
+        text: `Now draft the **${chapterTitle}** (\`${slug}\`) chapter.\n\nDrafting instruction:\n${instruction}${lockPreservationInstruction ? `\n\n${lockPreservationInstruction}` : ""}\n\nFormat requirements:\n- Output the chapter as polished markdown.\n- Embed claim anchors as HTML comments: \`<!-- claim:short-id -->\` immediately before each meaningfully sourced paragraph or numeric assertion. Keep the IDs short and unique within the chapter.\n- After the chapter body, output a fenced \`\`\`json block named \`provenance\` containing an array of objects of the form: \`{ "claim_id": "...", "source_type": "voice_session|upload|form|agent_inference|jason_playbook|research|assessment|scraper", "source_ref": "...", "source_excerpt": "..." }\`. One entry per claim_id used in the chapter. Use \`agent_inference\` for any claim derived from other Memory content vs. directly stated by the customer.\n- Where you don't have enough information, leave a clearly marked \`[NEEDS INPUT: short description]\` block — don't fabricate.\n\nDraft the chapter now.`,
       },
     ],
   });
@@ -138,7 +158,25 @@ export async function draftChapter(args: {
   const fullText = textBlocks.join("\n");
 
   // Parse the markdown body and the trailing ```json provenance block.
-  const { contentMd, provenance } = parseDraftWithProvenance(fullText);
+  const parsed = parseDraftWithProvenance(fullText);
+  let contentMd = parsed.contentMd;
+  const provenance = parsed.provenance;
+
+  // Post-validate: every user-locked span from the prior version must
+  // exist verbatim in the redraft. If Opus dropped any (it sometimes
+  // happens despite the explicit instruction), splice them back in
+  // under a "Restored from your prior edits" footer rather than
+  // silently losing the customer's words.
+  if (previousLocks.length > 0) {
+    const missing = lockedSpansMissing(previousContent, contentMd);
+    if (missing.length > 0) {
+      console.warn(
+        `[agent/draft] Opus dropped ${missing.length} user-locked span(s) on redraft of ${slug}; splicing them back.`,
+        { ids: missing.map((s) => s.id) },
+      );
+      contentMd = spliceMissingLocksBack(contentMd, missing);
+    }
+  }
 
   return {
     contentMd,
@@ -246,4 +284,52 @@ function parseDraftWithProvenance(text: string): {
   }
 
   return { contentMd, provenance };
+}
+
+/**
+ * Build the prompt fragment that tells Opus how to handle existing
+ * user-locked spans on a redraft. Inlines the prior chapter content so
+ * the model sees both the locked text it must preserve AND the
+ * surrounding agent prose it can rewrite.
+ *
+ * Why so explicit: the marker convention is unusual, and Opus's
+ * default instinct on a "redraft this chapter" prompt is to rewrite
+ * everything. Without an unambiguous instruction it will paraphrase
+ * the customer's words. We post-validate as a safety net, but the
+ * goal is to never need the splice.
+ */
+function buildLockPreservationInstruction(
+  previousContent: string,
+  locks: Array<{ id: string; text: string }>,
+): string {
+  const lockSummary = locks
+    .map(
+      (s, i) =>
+        `${i + 1}. id="${s.id}" — ${s.text.slice(0, 140).replace(/\n/g, " ")}${s.text.length > 140 ? "…" : ""}`,
+    )
+    .join("\n");
+  return `<existing_chapter_with_user_edits>
+The customer has hand-edited this chapter previously. Their exact words are wrapped in HTML-comment markers like:
+
+  <!-- user-locked:abc123 -->
+  …customer's words…
+  <!-- /user-locked:abc123 -->
+
+There ${locks.length === 1 ? "is" : "are"} ${locks.length} locked span${locks.length === 1 ? "" : "s"} in the existing draft:
+${lockSummary}
+
+HARD RULE: Every locked span (markers + content) must appear in your output, byte-for-byte identical to what's below. You may:
+  • Rewrite or replace any prose that is NOT inside locked markers.
+  • Add new sections before, between, or after locked spans.
+  • Move a locked span to a more appropriate place in the chapter — but the markers and the text inside them stay intact.
+
+You may NOT:
+  • Paraphrase, shorten, or expand text inside the markers.
+  • Drop any locked span.
+  • Modify the marker IDs.
+
+Here is the existing draft with the locked markers shown:
+
+${previousContent}
+</existing_chapter_with_user_edits>`;
 }

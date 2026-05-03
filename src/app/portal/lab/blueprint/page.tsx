@@ -17,7 +17,7 @@ import { ChapterCard } from "@/components/agent/ChapterCard";
 import { JasonChatDock } from "@/components/agent/JasonChatDock";
 import { TypedHeading } from "@/components/agent/TypedHeading";
 import { SiteFooter } from "@/components/SiteFooter";
-import { saveMemoryFields } from "./actions";
+import { saveChapterProse, saveMemoryFields } from "./actions";
 
 export const metadata: Metadata = {
   title: "Your Franchisor Blueprint | The Franchisor Blueprint",
@@ -231,6 +231,7 @@ export default async function BlueprintLabPage() {
                     otherChaptersFields={otherChaptersFields}
                     schema={schema}
                     saveFields={saveMemoryFields}
+                    saveProse={saveChapterProse}
                   />
                 );
               })}

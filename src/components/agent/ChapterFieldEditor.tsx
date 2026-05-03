@@ -380,7 +380,7 @@ function FieldControl({
           type={fieldDef.type === "email" ? "email" : fieldDef.type === "url" ? "url" : "text"}
           value={(value as string) ?? ""}
           onChange={(e) => onChange(e.target.value || null)}
-          placeholder={fieldDef.placeholder}
+          placeholder={placeholderFor(fieldDef.placeholder)}
           required={fieldDef.required}
           className={inputClass}
         />
@@ -392,7 +392,7 @@ function FieldControl({
         <textarea
           value={(value as string) ?? ""}
           onChange={(e) => onChange(e.target.value || null)}
-          placeholder={fieldDef.placeholder}
+          placeholder={placeholderFor(fieldDef.placeholder)}
           required={fieldDef.required}
           rows={4}
           className={`${inputClass} resize-y min-h-[88px]`}
@@ -410,7 +410,7 @@ function FieldControl({
           min={fieldDef.min}
           max={fieldDef.max}
           onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
-          placeholder={fieldDef.placeholder}
+          placeholder={placeholderFor(fieldDef.placeholder)}
           required={fieldDef.required}
           className={inputClass}
         />
@@ -430,7 +430,7 @@ function FieldControl({
             step="any"
             min={0}
             onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
-            placeholder={fieldDef.placeholder}
+            placeholder={placeholderFor(fieldDef.placeholder)}
             required={fieldDef.required}
             className={`${inputClass} pl-7 tabular-nums`}
           />
@@ -449,7 +449,7 @@ function FieldControl({
             min={fieldDef.min ?? 0}
             max={fieldDef.max ?? 100}
             onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
-            placeholder={fieldDef.placeholder}
+            placeholder={placeholderFor(fieldDef.placeholder)}
             required={fieldDef.required}
             className={`${inputClass} pr-8 tabular-nums`}
           />
@@ -470,7 +470,7 @@ function FieldControl({
           min={1900}
           max={new Date().getFullYear() + 5}
           onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
-          placeholder={fieldDef.placeholder}
+          placeholder={placeholderFor(fieldDef.placeholder)}
           required={fieldDef.required}
           className={`${inputClass} tabular-nums`}
         />
@@ -502,7 +502,7 @@ function FieldControl({
             type="text"
             value={(value as string) ?? ""}
             onChange={(e) => onChange(e.target.value || null)}
-            placeholder={fieldDef.placeholder ?? "#1E3A5F"}
+            placeholder={placeholderFor(fieldDef.placeholder) ?? "#1E3A5F"}
             className={`${inputClass} flex-1 font-mono text-sm uppercase`}
           />
         </div>
@@ -574,7 +574,7 @@ function FieldControl({
               .filter(Boolean);
             onChange(next.length > 0 ? next : null);
           }}
-          placeholder={fieldDef.placeholder}
+          placeholder={placeholderFor(fieldDef.placeholder)}
           rows={isLong ? 6 : 3}
           className={`${inputClass} resize-y ${isLong ? "min-h-[140px]" : "min-h-[72px]"}`}
         />
@@ -587,8 +587,28 @@ function FieldControl({
 // Helpers
 // ---------------------------------------------------------------------------
 
+// `placeholder:italic` is the visual cue that distinguishes example
+// text from real values. Eric's feedback: placeholder strings like
+// "Cypress Lane is a small-town third-wave coffee shop…" read like
+// populated data and made the editor feel pre-filled when it wasn't.
+// Italic + lighter grey + "e.g." prefix (added by `placeholderFor`)
+// solves the misread.
 const inputClass =
-  "w-full rounded-lg border border-navy/15 bg-white px-3 py-2 text-[14px] text-navy placeholder-grey-4 focus:border-gold focus:ring-2 focus:ring-gold/20 outline-none transition";
+  "w-full rounded-lg border border-navy/15 bg-white px-3 py-2 text-[14px] text-navy placeholder-grey-4 placeholder:italic focus:border-gold focus:ring-2 focus:ring-gold/20 outline-none transition";
+
+/**
+ * Prepend "e.g. " to a placeholder string so the customer can never
+ * mistake an example for a real value. Idempotent — leaves strings
+ * already prefixed with "e.g.", "ex.", "example", etc. alone, and
+ * leaves null/undefined as-is.
+ */
+function placeholderFor(p: string | undefined): string | undefined {
+  if (!p) return p;
+  const trimmed = p.trimStart();
+  // Already prefixed in some form? Don't double-up.
+  if (/^(e\.?g\.?|ex\.?|example[s:]?|sample:?)\s/i.test(trimmed)) return p;
+  return `e.g. ${p}`;
+}
 
 function shallowEqual(a: FieldValue, b: FieldValue): boolean {
   if (a === b) return true;
