@@ -1,0 +1,293 @@
+import { BlogPostHeader } from "@/components/BlogPostHeader";
+import { RelatedPosts } from "@/components/RelatedPosts";
+import { JsonLd } from "@/components/JsonLd";
+import { blogPostingSchema, faqPageSchema, breadcrumbSchema } from "@/lib/schema";
+import { getPost } from "@/lib/blog";
+
+export const post = getPost("franchise-disclosure-document-explained");
+
+export const metadata = {
+  title: `${post.title} | The Franchisor Blueprint`,
+  description: post.excerpt,
+  alternates: { canonical: `/blog/${post.slug}` },
+  openGraph: {
+    title: post.title,
+    description: post.excerpt,
+    type: "article",
+    publishedTime: post.date,
+    authors: ["Jason Stowe"],
+  },
+};
+
+<JsonLd data={blogPostingSchema({ slug: post.slug, title: post.title, description: post.excerpt, datePublished: post.date, wordCount: 2400 })} />
+<JsonLd data={breadcrumbSchema([
+  { name: "Home", url: "/" },
+  { name: "Blog", url: "/blog" },
+  { name: post.title, url: `/blog/${post.slug}` },
+])} />
+<JsonLd data={faqPageSchema([
+  {
+    q: "What is a Franchise Disclosure Document (FDD)?",
+    a: "A Franchise Disclosure Document (FDD) is a legal document that the FTC's Franchise Rule (16 CFR 436) requires every franchisor to deliver to a prospective franchisee at least 14 calendar days before the franchisee signs an agreement or pays any money. It contains 23 federally mandated disclosure items covering the franchisor, the franchise system, the financial obligations, and any litigation history."
+  },
+  {
+    q: "Is the FDD legally required to franchise a business in the United States?",
+    a: "Yes. Under the FTC Franchise Rule, you cannot offer or sell a franchise in the United States without delivering a current, compliant FDD to the prospect. Failure to deliver an FDD or providing a materially false one carries federal civil penalties and exposes the franchisor to private lawsuits and rescission rights."
+  },
+  {
+    q: "How many items are in an FDD?",
+    a: "An FDD contains exactly 23 numbered items, plus a cover page, a state cover sheet, the franchise agreement and exhibits, and required receipts. Items 1 through 23 cover everything from the franchisor's background (Items 1-4) through fees and obligations (Items 5-9), territory and IP (Items 10-13), litigation and bankruptcy (Items 3-4), financial performance (Item 19), and audited financial statements (Item 21)."
+  },
+  {
+    q: "How long does it take to prepare an FDD?",
+    a: "A first-time franchisor working with an experienced franchise attorney typically needs 60 to 120 days to draft an initial FDD. The timeline depends on how complete your business documentation is going in. If you arrive with a finished operations manual, defined unit economics, and a clear franchise structure, the legal drafting moves quickly. If your attorney has to extract everything from scratch, plan for 90 days minimum."
+  },
+  {
+    q: "How much does it cost to prepare an FDD?",
+    a: "Franchise attorney fees for preparing a first FDD typically range from $5,000 to $15,000 depending on attorney rates and how prepared your business documentation is. That's separate from any franchise development consulting (typically $2,997 to $80,000+ depending on which firm you use). Multi-state registration adds $150 to $750 per state plus annual renewals."
+  },
+  {
+    q: "Do I need to register my FDD in every state?",
+    a: "No. Most states accept franchise sales under federal FTC disclosure rules without separate registration. Fifteen 'registration states' require filing the FDD with a state regulator before any sales activity in that state: California, Hawaii, Illinois, Indiana, Maryland, Michigan, Minnesota, New York, North Dakota, Rhode Island, South Dakota, Virginia, Washington, and Wisconsin. A handful of additional states require notice filings or business-opportunity exemptions. Your franchise attorney maps the specific filings to your state strategy."
+  },
+])} />
+
+<BlogPostHeader post={post} />
+
+<div className="max-w-[820px] mx-auto px-6 md:px-8 py-10 md:py-14">
+
+If you're seriously thinking about franchising your business, the Franchise Disclosure Document — the FDD — is the document that decides whether you're actually allowed to sell a single franchise.
+
+Most founders I work with have heard of the FDD but couldn't tell you what's in it, what's required vs. optional, or who actually writes it. That's understandable. The FDD lives at the intersection of federal regulation, state law, accounting, and marketing strategy — and most of the writing about it on the internet is either a marketing pitch from a consultant or a dense legal explainer that assumes you already speak franchise law.
+
+This is the version I wish had existed when I started. Plain English. All 23 items. What each one is for, why it matters to candidates, and where founders most often get it wrong.
+
+## TL;DR — the 90-second version
+
+- The FDD is a legally required disclosure document. The FTC's Franchise Rule (16 CFR Part 436) makes it federal law to deliver one at least 14 calendar days before a prospect signs or pays.
+- It contains **23 numbered items** plus exhibits (the franchise agreement, financial statements, state addenda, and signed receipts).
+- A franchise attorney drafts and files it. Consultants like us prepare the underlying business framework so the attorney has something real to draft from.
+- **15 states require state-level registration** before you can sell in them. Most states accept the federal FDD as-is.
+- Realistic budget for the legal layer alone: **$5,000–$15,000** for first-time preparation; multi-state registration adds $150–$750 per state.
+- The most strategically important items are **Item 7** (initial investment), **Item 19** (financial performance representations), and the franchise agreement attached as Exhibit A. These three carry most of the conversion weight in your sales process.
+
+## What the FDD actually is (and what it isn't)
+
+The FDD is **not** your franchise agreement. The franchise agreement is the contract a franchisee signs to actually buy a franchise. The FDD is the *disclosure document* — the package of facts the federal government requires you to put in front of a prospect so they can evaluate the deal with eyes open.
+
+The agreement is in there too, as an exhibit. But the agreement is one thing. The FDD is everything around it: who you are, what you've done, what the franchise costs, what the franchisee gets, what happens if the relationship ends, and (optionally) how much existing franchisees actually make.
+
+The FTC Franchise Rule, codified at [16 CFR 436](https://www.ecfr.gov/current/title-16/chapter-I/subchapter-D/part-436), is the federal regulation that requires disclosure. Adopted in its modern form in 2007, it standardized what a franchise disclosure has to look like across the United States. Before that, you had a patchwork of state laws and an older federal rule. Today there's one base format with state-specific addenda layered on top.
+
+## The 23 items, in plain English
+
+Here's what every item is, why it exists, and what to focus on when you're preparing yours.
+
+### Item 1: The Franchisor and Any Parents, Predecessors, and Affiliates
+
+Background on you and any related companies. Who incorporated, when, what business you've been in, who your parent company is if any. Tedious but mandatory.
+
+**Where founders trip up:** under-disclosing prior business ventures (especially failed ones). The rule requires disclosure of "predecessors" — the businesses you operated before this one if they're related. Don't try to clean this up. Federal regulators and franchisee attorneys check.
+
+### Item 2: Business Experience
+
+Bios of every executive officer, director, and other person with management responsibility for the franchise relationship. Last five years of business experience.
+
+**Where founders trip up:** burying or omitting the executive who failed at a prior franchise system. Disclose it. Failure to is itself grounds for rescission.
+
+### Item 3: Litigation
+
+All material civil and criminal litigation involving the franchisor, its predecessors, affiliates, and disclosed officers — pending and recent. Bankruptcy litigation has its own item (Item 4).
+
+**Where founders trip up:** thinking small lawsuits don't matter. They do. The standard is "material" — lower than most people think.
+
+### Item 4: Bankruptcy
+
+Has anyone disclosed in Items 1 or 2 been involved in a bankruptcy in the last 10 years? If yes, disclose. If no, say so explicitly.
+
+### Item 5: Initial Fees
+
+The initial franchise fee and any other fees the franchisee pays before opening. Has to include the range, when payment is due, and whether any portion is refundable.
+
+**Where founders trip up:** under-pricing the fee because it feels uncomfortable to charge. The initial fee compensates you for the value of the franchise system, the territory, and your training and onboarding work. Set it too low and you signal a low-value system to good operators. See [Initial Franchise Fee vs. Royalty: What Each One Pays For](/blog/franchise-fee-vs-royalty).
+
+### Item 6: Other Fees
+
+Every recurring or contingent fee a franchisee will or might pay during the relationship — royalties, advertising fund contributions, technology fees, training fees, transfer fees, audit fees, late fees, and so on. Each gets its own line in a required-format table.
+
+**Where founders trip up:** missing fees they actually plan to charge but haven't formally documented. Once it's missing from Item 6, you can't charge it without amending the FDD.
+
+### Item 7: Estimated Initial Investment
+
+The total amount a franchisee should plan to spend to open and operate for the first three months. Required to be presented as a low and high range across multiple categories — initial fee, training, equipment, real estate, signage, working capital, and "additional funds" for the early operating period.
+
+**Why it matters:** Item 7 is the number every candidate scrolls to first. It determines who applies. We have a [full guide to building Item 7 the right way](/blog/fdd-item-7-initial-investment).
+
+### Item 8: Restrictions on Sources of Products and Services
+
+Are franchisees required to buy supplies, equipment, real estate, or services from designated sources (you, an affiliate, or approved vendors)? If yes, disclose. Including any "rebates" or "purchasing allowances" the franchisor or affiliate receives from those vendors.
+
+**Where founders trip up:** receiving vendor rebates without disclosing them. This is a serious violation; the rule is explicit.
+
+### Item 9: Franchisee's Obligations
+
+A required-format table cross-referencing every obligation in the franchise agreement against the section that creates it. Twenty-five rows covering site selection, training, opening, fees, operations, marketing, restrictions, transfers, renewal, default, and so on.
+
+This is the table where a franchisee or their attorney can scan the deal in two minutes. It also forces you, the franchisor, to think clearly about what you're actually requiring.
+
+### Item 10: Financing
+
+Do you, an affiliate, or a designated lender finance any portion of the initial fee, equipment, working capital, or other costs? If yes, disclose terms. Most emerging franchisors don't offer financing directly; you can disclose "We do not offer direct or indirect financing" and refer franchisees to SBA-preferred lenders.
+
+### Item 11: Franchisor's Assistance, Advertising, Computer Systems, and Training
+
+The big one for operations. What you provide pre-opening (site selection help, lease review, equipment specs, opening assistance) and ongoing (training, marketing, technology systems, ongoing supervision). Plus your training program — required to disclose subjects, hours, and instructor qualifications.
+
+**Where founders trip up:** over-promising in Item 11. Anything you commit to here, you have to deliver. If your training is two days, say two days. Don't say "comprehensive training program" if you actually provide a binder and a prayer.
+
+This is where your [operations manual](/blog/how-to-write-franchise-operations-manual) earns its keep — it documents what you actually do so Item 11 is accurate.
+
+### Item 12: Territory
+
+Whether the franchisee gets exclusive, protected, or open territory. Whether you, your affiliates, or your other franchisees can sell competing products in the franchisee's area. Whether the franchisee can sell to customers outside their territory or through the internet.
+
+Territory is one of the most negotiated items in franchise sales. Get the structure clear in your franchise agreement and you will sell more agreements.
+
+### Item 13: Trademarks
+
+The principal trademarks the franchisee will use. Whether they're federally registered (TM symbol vs. ®). Whether anyone has filed material litigation challenging them. Whether you indemnify the franchisee for trademark infringement claims.
+
+**Critical:** if your trademarks aren't federally registered, your franchisees inherit your weaker protection. Most franchise attorneys recommend filing for USPTO registration before or in parallel with FDD preparation. Federal trademark filings cost $250–$350 per class.
+
+### Item 14: Patents, Copyrights, and Proprietary Information
+
+Whether the franchisee gets rights to use any patents, copyrights, trade secrets, or other proprietary information. For most service and retail franchises this is straightforward (proprietary recipes, methods, software).
+
+### Item 15: Obligation to Participate in the Actual Operation of the Franchise Business
+
+Does the franchisee have to personally operate the franchise, or can they own absentee? Some systems require an owner-operator. Others permit "designated manager" structures.
+
+This decision affects who buys your franchise. Owner-operator-only systems attract operators. Absentee-permitted systems attract investors. Different sales motions.
+
+### Item 16: Restrictions on What the Franchisee May Sell
+
+Are there limits on the products and services the franchisee can offer? Yes for most franchise systems — that's part of the point of brand consistency.
+
+### Item 17: Renewal, Termination, Transfer, and Dispute Resolution
+
+Another required-format table. The terms of renewal (how long, what conditions), what causes termination (cure periods, notice), what happens on transfer (right of first refusal, transfer fees, training requirements), and how disputes are resolved (jurisdiction, arbitration vs. litigation).
+
+This is the lawyer-heavy section. It's also where the franchisee's attorney spends most of their review time. Don't try to write this section yourself — it's the legal heart of the relationship.
+
+### Item 18: Public Figures
+
+If you use a public figure (celebrity, athlete, etc.) to promote the franchise, disclose how much they're paid and what their actual involvement is. Most franchise systems leave this section as "Not applicable."
+
+### Item 19: Financial Performance Representations
+
+**The single most important optional item.** Item 19 is where you can disclose the actual financial performance of franchised or company-owned units — average revenue, average profit, average operating expense ratios. You can choose to make a representation or not.
+
+If you don't, you cannot ethically or legally tell prospects what they might earn. You have to refer them to existing franchisees and let them ask directly.
+
+We strongly recommend franchisors include Item 19. It's the single biggest conversion lever in franchise sales. Read [our deep dive on Item 19](/blog/fdd-item-19-financial-performance-representations) for the why and how.
+
+### Item 20: Outlets and Franchisee Information
+
+Tables showing the number of franchised and company-owned outlets, opened, transferred, terminated, ceased operations, by state, for the last three years. Plus contact information for current and recently-terminated franchisees.
+
+**This item is brutal for new franchisors with no track record.** The tables will show low numbers. There's nothing to do about it except accept that your first 5–10 sales are harder because Item 20 doesn't tell a story yet.
+
+### Item 21: Financial Statements
+
+Audited financial statements for the franchisor, prepared in accordance with generally accepted accounting principles (GAAP). Three years of statements (or fewer if the franchisor is younger).
+
+**Audit requirements vary:** some states require audited statements at registration. Others permit reviewed or unaudited statements for the franchisor's first year. Audited financials cost $2,500–$5,500 from a CPA familiar with franchise accounting.
+
+### Item 22: Contracts
+
+Copies of all contracts the franchisee signs — franchise agreement, lease agreement (if applicable), supply agreement, training agreement, area development agreement (if offered), confidentiality and non-compete addenda. Attached as exhibits.
+
+### Item 23: Receipts
+
+Two signed receipt copies confirming the franchisee received the FDD on a specific date. The clock for the 14-day waiting period starts on the receipt date. One receipt goes to the franchisor's records; the other stays with the franchisee.
+
+## State-level registration: which states require it
+
+Federal FTC rules apply nationwide. Fifteen "registration states" layer additional state requirements on top:
+
+| State | Requirement |
+|---|---|
+| California | Full registration with the Department of Financial Protection and Innovation |
+| Hawaii | Full registration with the Department of Commerce and Consumer Affairs |
+| Illinois | Full registration with the Attorney General |
+| Indiana | Full registration with the Securities Division |
+| Maryland | Full registration with the Securities Division |
+| Michigan | Notice filing only (lighter than full registration) |
+| Minnesota | Full registration with the Department of Commerce |
+| New York | Full registration with the Department of Law |
+| North Dakota | Full registration with the Securities Commissioner |
+| Rhode Island | Full registration with the Department of Business Regulation |
+| South Dakota | Full registration with the Division of Securities |
+| Virginia | Full registration with the State Corporation Commission |
+| Washington | Full registration with the Department of Financial Institutions |
+| Wisconsin | Full registration with the Division of Securities |
+
+Plus a handful of "franchise relationship" or "business opportunity" states that impose specific franchisor-franchisee relationship rules but don't require pre-sale registration (Arkansas, Connecticut, Delaware, Florida, Iowa, Kentucky, Louisiana, Maine, Mississippi, Nebraska, New Hampshire, New Jersey, North Carolina, Ohio, Oklahoma, South Carolina, Tennessee, Texas, Utah).
+
+Filing fees range from $150 (some lighter states) to $750 (California's initial filing). Annual renewals add up if you register everywhere — budget $3,000–$8,000/year for active multi-state registration if you want full national coverage.
+
+For most emerging franchisors, the right move is to start with your home state plus your top 5 expansion targets, and add registration states as your sales pipeline justifies them.
+
+## What you actually need to prepare for your first FDD
+
+Your franchise attorney drafts the FDD. But they need raw material from you to draft well. The longer your attorney spends reverse-engineering your business from a kickoff call, the more you pay and the longer the timeline.
+
+What attorneys want from you, in order of preparation difficulty:
+
+1. **Your franchise structure decisions:** initial fee, royalty rate, territory model, term length, transfer policy. (Hard. This is strategy work, not legal work. We help with this.)
+2. **Your operations manual draft.** Item 11 disclosures and the training program structure flow directly from this document. (Hard. Multi-month build.)
+3. **Your unit economics.** A clear pro forma showing revenue, cost structure, and projected profit. Required for Item 7 and the foundation of any Item 19 disclosure. (Medium.)
+4. **Your trademark filings.** Item 13 requires you to disclose the registration status. File before drafting if at all possible. (Low effort, takes time.)
+5. **Your financial statements.** Most first-year franchisors order audited financials in parallel with FDD drafting. (Outsourced to a CPA, takes 3–6 weeks.)
+
+If you arrive at your franchise attorney's door with all five of these in hand, your FDD is drafted in 60 days. If you arrive with a logo and a dream, plan for 120+ days and meaningfully more in legal fees.
+
+This is the gap [our Navigator program](/programs) closes. We prepare the business-side material so your attorney can draft efficiently.
+
+## Common FDD mistakes that cost franchisors deals
+
+After 30 years in this industry, the same mistakes show up over and over:
+
+- **Under-pricing the initial fee** because it "feels too high." Then candidates undervalue your system and you sell to the wrong people.
+- **Skipping Item 19** because the attorney said it was optional. Then candidates can't evaluate the opportunity and your conversion rate craters. (See [the Item 19 deep dive](/blog/fdd-item-19-financial-performance-representations).)
+- **Vague Item 11 commitments** like "comprehensive training and ongoing support." Now you're legally bound to provide whatever a franchisee can argue is "comprehensive."
+- **Missing a fee in Item 6.** You can't charge what isn't disclosed; amending mid-year is expensive and signals disorganization.
+- **Using a generic franchise agreement template** without state addenda. Each registration state has specific addendum language that overrides the base agreement. Skipping these gets your filing rejected.
+- **Trying to register in too many states at once.** Each registration is a separate review process. Better to launch in 3–5 strategic states and add as you scale.
+
+## Cost summary
+
+| Cost component | Range (2026 USD) |
+|---|---|
+| Franchise attorney (FDD preparation, first year) | $5,000 – $15,000 |
+| State registration filing fees (per state) | $150 – $750 |
+| Trademark federal registration (per class) | $250 – $350 |
+| Audited financial statements (CPA) | $2,500 – $5,500 |
+| Annual FDD renewal + state renewals (year two+) | $3,000 – $8,000 |
+| Franchise development consulting (separate from legal) | $2,997 – $80,000+ |
+
+Compare this against [the full breakdown of franchise development costs](/blog/the-real-cost-of-franchising-your-business) to see where the legal layer fits in the total picture.
+
+## Where to go from here
+
+If you're at the "do I even have an FDD-able business" stage, take the free [Franchise Readiness Assessment](/assessment). It scores your business against the same criteria a franchise attorney runs in their first call with you — but in 5 minutes instead of an hour at $400/hour.
+
+If you've decided franchising is your path and you're trying to figure out how to actually prepare, [book a 30-minute strategy call](/strategy-call). I'll tell you on the call what shape your business needs to be in before you spend a dollar with an attorney — and what it'll take to get there.
+
+The FDD isn't paperwork. It's the architecture of your franchise relationship. The founders who treat it that way build franchise systems that last decades. The ones who treat it like a one-time legal hurdle build systems that stall in year two.
+
+Either path is yours to choose.
+
+</div>
+
+<RelatedPosts currentSlug={post.slug} />

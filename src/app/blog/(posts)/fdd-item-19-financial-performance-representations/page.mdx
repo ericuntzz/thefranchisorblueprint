@@ -1,0 +1,184 @@
+import { BlogPostHeader } from "@/components/BlogPostHeader";
+import { RelatedPosts } from "@/components/RelatedPosts";
+import { JsonLd } from "@/components/JsonLd";
+import { blogPostingSchema, faqPageSchema, breadcrumbSchema } from "@/lib/schema";
+import { getPost } from "@/lib/blog";
+
+export const post = getPost("fdd-item-19-financial-performance-representations");
+
+export const metadata = {
+  title: `${post.title} | The Franchisor Blueprint`,
+  description: post.excerpt,
+  alternates: { canonical: `/blog/${post.slug}` },
+  openGraph: {
+    title: post.title,
+    description: post.excerpt,
+    type: "article",
+    publishedTime: post.date,
+    authors: ["Jason Stowe"],
+  },
+};
+
+<JsonLd data={blogPostingSchema({ slug: post.slug, title: post.title, description: post.excerpt, datePublished: post.date, wordCount: 1600 })} />
+<JsonLd data={breadcrumbSchema([
+  { name: "Home", url: "/" },
+  { name: "Blog", url: "/blog" },
+  { name: post.title, url: `/blog/${post.slug}` },
+])} />
+<JsonLd data={faqPageSchema([
+  {
+    q: "What is FDD Item 19?",
+    a: "FDD Item 19 is the Financial Performance Representations section of a Franchise Disclosure Document. It is the only place where a franchisor is permitted to make any representation about how much money a prospective franchisee might earn. Including Item 19 is optional under the FTC Franchise Rule, but if you do include it, the disclosure must have a reasonable basis and substantiated written records."
+  },
+  {
+    q: "Is Item 19 required?",
+    a: "No. Item 19 is the only optional disclosure item in the FDD. A franchisor can choose to include no financial performance representation. However, if Item 19 is omitted, the franchisor is legally prohibited from making any oral, written, or implied claim about franchisee earnings — including in marketing materials, sales calls, or Discovery Day."
+  },
+  {
+    q: "What can be included in Item 19?",
+    a: "Item 19 can disclose averages, medians, ranges, or specific data on revenue, gross profit, operating expenses, net profit, or any other financial metric — for franchised units, company-owned units, or both. Disclosures must specify the data source, time period, number of units included, and any material assumptions. Hand-picking high-performers without disclosure is a violation."
+  },
+  {
+    q: "Why do most new franchisors skip Item 19?",
+    a: "Most new franchisors skip Item 19 either because their franchise attorney advised against it (worried about liability), because they have too few units to disclose averages, or because their unit economics aren't strong enough to disclose. The first two reasons are usually wrong; the third is a real signal that your business may not be ready to franchise."
+  },
+  {
+    q: "What's the conversion impact of including Item 19?",
+    a: "Industry data and our experience with emerging franchisors consistently show that systems with a strong Item 19 close at meaningfully higher rates than systems without one. Candidates who can't see the numbers can't underwrite the opportunity, and serious operators won't proceed without that data. The real question isn't whether to include Item 19 — it's how to disclose responsibly."
+  },
+])} />
+
+<BlogPostHeader post={post} />
+
+<div className="max-w-[820px] mx-auto px-6 md:px-8 py-10 md:py-14">
+
+Item 19 is the only optional disclosure in the entire Franchise Disclosure Document. It's also the single biggest sales conversion lever you have.
+
+Most new franchisors skip it. Their franchise attorney was conservative. Their numbers felt too thin. They figured prospects would just call existing franchisees and ask. And then they wonder why their sales pipeline stalls at the proposal stage.
+
+Here's the truth that most franchise consultants won't say plainly: **a franchise without Item 19 is a franchise that's chosen to be harder to sell.** Sometimes that choice makes sense. Most of the time, it doesn't. This is the playbook for deciding which side you're on.
+
+## What Item 19 actually allows
+
+The FTC Franchise Rule, [16 CFR 436.5(s)](https://www.ecfr.gov/current/title-16/chapter-I/subchapter-D/part-436/section-436.5#p-436.5(s)), governs Item 19. The rule has two relevant components:
+
+1. **Item 19 is optional.** A franchisor may choose to make no Financial Performance Representation. If you make none, you can include a one-paragraph disclaimer stating so.
+2. **If you make any representation about earnings, anywhere — sales calls, brochures, websites, Discovery Day, recorded webinars — it must appear in Item 19.** Saying it once outside Item 19 is a federal violation.
+
+This second point is the trap that catches franchisors who think they're being safe by skipping Item 19. They skip it formally, then their salesperson tells a prospect *"our top units do over $1.2 million."* That sentence, said once, creates federal liability and gives the franchisee grounds to rescind the franchise agreement.
+
+If you want to talk about earnings *anywhere*, the safe place to do it is Item 19. If you don't put numbers in Item 19, your sales team has to operate under a gag order — and serious franchise candidates will not buy from a franchisor who can't or won't share unit economics.
+
+## Why most new franchisors skip Item 19 (and why most are wrong)
+
+I've heard every reason. Here are the three I encounter most:
+
+### "My attorney said it creates liability."
+
+Partially true. Item 19 disclosures can become the basis for franchisee lawsuits if the franchisor misrepresented or hand-picked data without disclosing the methodology. But this is fully manageable with a properly drafted Item 19 — clear data source, time period, methodology, and conservative figures.
+
+The bigger liability is *operating without Item 19* and then having a sales team or marketing site that quotes earnings claims anyway. That's the violation that ends franchise systems.
+
+A skilled franchise attorney can structure Item 19 to be both useful for sales and legally defensible. If your attorney is reflexively against Item 19, get a second opinion.
+
+### "I don't have enough units to disclose averages."
+
+This is a real concern but a fixable one. The FTC Franchise Rule doesn't require you to have a minimum number of units. It requires the disclosure to have a "reasonable basis."
+
+For a brand-new franchisor with one or two company-owned units, you can disclose:
+
+- **Specific historical data on those units** with full context ("Our company-owned location in Salt Lake City generated $X in 2024 revenue at Y% gross margin")
+- **Cohort data** if you have multiple years of operating history at company-owned locations
+- **Pro forma assumptions** with a clear footnote that they are not representations of actual or projected franchise performance
+
+Even one unit's real numbers, properly disclosed, beats no Item 19. It tells candidates: *here is what is actually happening in this business model.*
+
+### "My margins aren't great enough to disclose."
+
+This one is honest, and it's the only good reason to skip Item 19.
+
+If your unit economics genuinely don't support a franchise system — if your gross margins are too thin to absorb a 6-8% royalty plus a 1-2% marketing fund and still leave the franchisee with a livable return — skipping Item 19 doesn't fix that. It just delays the moment the candidate figures it out and walks away.
+
+If this is your situation, the answer isn't to hide the numbers. The answer is to fix the unit economics before you franchise. We see this often, and the [Franchise Readiness Assessment](/assessment) flags it explicitly.
+
+## What a strong Item 19 looks like
+
+Strong Item 19 disclosures share four characteristics:
+
+### 1. They show the data structure clearly
+
+A typical strong Item 19 includes a table showing:
+
+| Metric | Top quartile | Median | Bottom quartile |
+|---|---|---|---|
+| Annual revenue | $X | $Y | $Z |
+| Gross profit % | X% | Y% | Z% |
+| Operating expense % | X% | Y% | Z% |
+| Estimated EBITDA | $X | $Y | $Z |
+
+Quartile or decile breakdowns are dramatically more useful than averages alone. They tell candidates "here's what your unit might actually look like" rather than "here's a single number that hides everyone's reality."
+
+### 2. They specify the cohort
+
+A strong Item 19 footnote answers:
+
+- *Which units are included?* All franchised? Company-owned only? Mature units that have been open at least 24 months?
+- *What time period?* Trailing 12 months, calendar year, fiscal year?
+- *How many units?* (Required by the FTC Rule.)
+- *What's excluded and why?* Closed units, units in their first year, units operated by founders.
+
+### 3. They include real costs, not just revenue
+
+Revenue alone is the weakest possible Item 19. *"Top performers do $1.4M in revenue"* tells a candidate nothing about what they actually take home.
+
+Strong Item 19s show enough of the cost stack that candidates can model their own outcome. Gross margin is essential. Operating expense ratios are powerful. EBITDA per unit is the gold standard.
+
+### 4. They include the disclaimer language correctly
+
+Item 19 always closes with required disclaimer language about how new franchisees may not earn the disclosed amounts and how individual results vary. This isn't optional — your attorney will draft it.
+
+## How Item 19 changes your sales conversation
+
+Once you have a strong Item 19, every part of your franchise sales pipeline gets faster:
+
+- **Top of funnel:** your assessment, lead-magnet content, and marketing pages can reference average unit revenue without compliance fear (with the appropriate Item 19 reference).
+- **Discovery Day:** instead of saying *"we can't talk about earnings,"* your team walks the candidate through the Item 19 numbers in detail. The candidate sees the math. They build a real personal financial model. This is the conversation that closes franchise deals. (See [the Discovery Day Playbook](/blog/discovery-day-playbook) for how to structure that walk-through.)
+- **Bank financing:** SBA preferred lenders ask for Item 19 as part of franchise loan underwriting. Without it, the franchisee's loan application is materially harder.
+
+The candidates who progress through your pipeline will have better data, make a more informed decision, and (important) have less ground to claim later that they were misled. Strong Item 19 reduces post-sale disputes.
+
+## When skipping Item 19 actually makes sense
+
+A few legitimate cases:
+
+- **You're literally pre-revenue.** A franchisor offering franchises before any operating units exist (rare but possible) genuinely has nothing to disclose. The FDD must clearly state this.
+- **Your unit performance is so variable that any disclosure misleads.** This is rare and usually points to an underlying business model problem — high-variability units suggest weak operational consistency, which is itself a franchise readiness issue.
+- **Your attorney has specific, well-reasoned advice tied to your circumstances** (active litigation, regulatory inquiry, recent material change in unit economics). Listen to that attorney.
+
+In every other case, including Item 19 — even modestly — is the right call.
+
+## Where Item 19 fits in your overall FDD strategy
+
+Item 19 is one of three items that carry most of your franchise sales conversion:
+
+- **[Item 7](/blog/fdd-item-7-initial-investment):** what it costs to open.
+- **Item 19 (this one):** what existing units actually earn.
+- **The franchise agreement** (attached as Exhibit A): what the ongoing relationship looks like.
+
+A serious franchise candidate reads all three together. Strong on all three = high conversion. Weak on any one = stalled pipeline.
+
+For the full breakdown of every item in the FDD, see [The Franchise Disclosure Document Explained](/blog/franchise-disclosure-document-explained).
+
+For how Item 19 numbers feed into your candidate sales process, see [How to Recruit Your First 10 Franchisees](/blog/how-to-recruit-first-10-franchisees).
+
+## Next steps
+
+If you're trying to figure out whether your unit economics support a defensible Item 19, [book a 30-minute strategy call](/strategy-call). We'll look at your numbers and tell you honestly whether you're ready to disclose, what to disclose, and how to structure it.
+
+If you want a structured way to evaluate your business across all the readiness dimensions (Item 19 strength being one of them), take the free [Franchise Readiness Assessment](/assessment).
+
+The franchisors who include Item 19 sell more franchises, attract better operators, and build systems that survive their second year. The ones who don't are competing with one hand tied behind their back. Choose wisely.
+
+</div>
+
+<RelatedPosts currentSlug={post.slug} />

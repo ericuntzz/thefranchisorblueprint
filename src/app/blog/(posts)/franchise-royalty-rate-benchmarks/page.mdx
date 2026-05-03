@@ -1,0 +1,224 @@
+import { BlogPostHeader } from "@/components/BlogPostHeader";
+import { RelatedPosts } from "@/components/RelatedPosts";
+import { JsonLd } from "@/components/JsonLd";
+import { blogPostingSchema, faqPageSchema, breadcrumbSchema } from "@/lib/schema";
+import { getPost } from "@/lib/blog";
+
+export const post = getPost("franchise-royalty-rate-benchmarks");
+
+export const metadata = {
+  title: `${post.title} | The Franchisor Blueprint`,
+  description: post.excerpt,
+  alternates: { canonical: `/blog/${post.slug}` },
+  openGraph: {
+    title: post.title,
+    description: post.excerpt,
+    type: "article",
+    publishedTime: post.date,
+    authors: ["Jason Stowe"],
+  },
+};
+
+<JsonLd data={blogPostingSchema({ slug: post.slug, title: post.title, description: post.excerpt, datePublished: post.date, wordCount: 2200 })} />
+<JsonLd data={breadcrumbSchema([
+  { name: "Home", url: "/" },
+  { name: "Blog", url: "/blog" },
+  { name: post.title, url: `/blog/${post.slug}` },
+])} />
+<JsonLd data={faqPageSchema([
+  {
+    q: "What is a typical franchise royalty rate?",
+    a: "Most U.S. franchise systems charge royalties of 4% to 8% of gross franchisee revenue, with 5% to 6% being the most common range. Royalty rates vary significantly by sector — food service typically falls in the 4% to 7% range, business-to-business and home services often run 6% to 10%, and certain personal-services categories can exceed 10%. Royalty structures may also be flat-fee or tiered rather than purely percentage-based."
+  },
+  {
+    q: "How do you calculate a franchise royalty?",
+    a: "Most royalties are calculated as a percentage of gross franchisee revenue (sometimes called 'gross sales' or 'gross receipts'). The franchisee reports weekly or monthly revenue, and the royalty is automatically debited or invoiced. Some franchise systems use net revenue or a flat-fee structure instead. The calculation method must be specified in Item 6 of the FDD and the franchise agreement."
+  },
+  {
+    q: "Why don't all franchisors charge the same royalty?",
+    a: "Because the royalty must support the franchisor's ongoing service to the franchisee — training, technology, marketing, brand development, field support — while leaving the franchisee with enough margin to operate profitably. Different sectors have different cost structures, brand value, and operating margins. A 7% royalty in a 60%-margin software franchise is easy. A 7% royalty in a 15%-margin restaurant kills the franchisee."
+  },
+  {
+    q: "Can a franchisee negotiate the royalty rate?",
+    a: "In general, no — and you don't want them to. Item 5 (initial fee) and Item 6 (royalty and other fees) of the FDD must be disclosed uniformly to all franchisees. Negotiating different terms with different franchisees creates legal exposure under state franchise relationship laws and signals that the published rate isn't real. Master franchise and area development agreements have their own structures and can include negotiated terms."
+  },
+  {
+    q: "What is a 'minimum royalty'?",
+    a: "A minimum royalty is a floor amount the franchisee owes regardless of actual revenue. For example, '6% of gross revenue or $500 per month, whichever is greater.' Minimum royalties protect the franchisor from underperforming units and force franchisees to build to a baseline volume. They're common in service franchises and uncommon in food service. Disclose minimums clearly in Item 6."
+  },
+])} />
+
+<BlogPostHeader post={post} />
+
+<div className="max-w-[820px] mx-auto px-6 md:px-8 py-10 md:py-14">
+
+Royalty rate is the single most consequential number in your franchise system. Set it right and your franchisor business compounds for decades. Set it wrong — too high or too low — and you've quietly capped your system's lifespan before you sign your first agreement.
+
+Most new franchisors guess. They look at one or two competitors, pick a number that "feels right," and let their attorney drop it into the FDD. That's how you end up with a 5% royalty in a 12% margin business that bankrupts every franchisee in year three, or an 8% royalty in a 60% margin business where you're leaving millions on the table over the life of the system.
+
+This is the framework I use with my Navigator clients to set royalties defensibly — sector benchmarks first, then unit-economics math, then strategic adjustments.
+
+## What the royalty actually pays for
+
+Before benchmarks, the foundational question: *what is the royalty for?*
+
+The royalty is the franchisee's recurring payment for the ongoing services and rights you provide:
+
+- The continuing right to use your trademarks and brand system
+- Ongoing training, support, and field consulting
+- Technology platforms (POS, scheduling, CRM, customer-facing apps)
+- Brand-level marketing and PR (separate from a local marketing fund, which is its own line)
+- Continued R&D — new menu items, new service lines, new operating processes
+- Compliance, legal updates, FDD renewals
+- The infrastructure of running the franchisor business itself (you and your team)
+
+If the royalty doesn't cover those costs at scale, your franchisor business doesn't work. If the royalty is so high that the franchisee can't take home a competitive return on capital, your sales pipeline dies.
+
+A defensible royalty is one where both sides — franchisor and franchisee — make money at scale.
+
+## Industry benchmark ranges by sector
+
+Here are the typical royalty ranges by major franchise sector. These reflect long-term industry patterns from the International Franchise Association, FRANdata, and Entrepreneur's Franchise 500 — they represent what successful systems in each category have settled on, not arbitrary guidance.
+
+| Sector | Typical royalty range | Why it lands here |
+|---|---|---|
+| Quick-service restaurants (QSR) | 4% – 6% | Thin unit margins (15-22%) cap the royalty. Royalty plus marketing fund typically 6-9% combined. |
+| Casual dining | 4% – 6% | Same margin compression as QSR with higher labor cost. |
+| Coffee, ice cream, dessert | 5% – 7% | Higher product margins than QSR; slightly higher royalty room. |
+| Fitness | 5% – 9% | Variable depending on facility-based vs. small-format. Membership models support higher royalties. |
+| Beauty / personal care | 5% – 8% | Service-margin businesses with strong brand pull. |
+| Cleaning / janitorial | 4% – 7% | Often paired with fixed monthly fees instead of pure percentages. |
+| Home services (HVAC, plumbing, lawn) | 6% – 10% | Higher margin, lower technology overhead, room for higher royalties. |
+| Senior care / health services | 5% – 7% | Tightly regulated; royalty room limited by labor cost compression. |
+| Education / tutoring | 8% – 12% | High-margin service businesses; royalties run higher. |
+| Business services (B2B coaching, accounting) | 6% – 10% | High-margin recurring-revenue businesses. |
+| Real estate | 6% – 9% | Commission-based revenue allows higher royalties. |
+| Automotive services | 5% – 8% | Mid-margin services with significant equipment investment. |
+| Hotels | 4% – 6% | Historically lower royalties paired with much higher initial fees and reservation fees. |
+
+These are typical ranges, not absolute floors and ceilings. There are 5%-royalty home services franchises and 12%-royalty restaurants. The market tolerates a range, and your specific positioning matters.
+
+The cleanest way to validate where your system should land: pull the FDDs of your three closest direct competitors (FDDs are public records, available through state franchise registration databases for registration states) and read their Item 6. That's the most reliable benchmark you can get.
+
+## The unit economics math
+
+Benchmarks tell you what's typical. Your unit economics tell you what's *possible*.
+
+Here's the framework I run with every Navigator client:
+
+### Step 1: Build a clean unit P&L
+
+Start with a single-unit profit and loss statement at year-2 maturity (after the franchisee has ramped to typical operating revenue). Be honest about the cost stack:
+
+| Line | % of revenue (typical service franchise) |
+|---|---|
+| Revenue | 100% |
+| Cost of goods sold | 25-40% |
+| **Gross profit** | **60-75%** |
+| Labor (excluding owner) | 25-35% |
+| Rent and utilities | 6-12% |
+| Marketing (local, beyond franchisor brand fund) | 3-5% |
+| Technology and software | 2-4% |
+| Insurance, supplies, miscellaneous | 3-6% |
+| **Operating expenses** | **40-55%** |
+| **EBITDA before royalty + brand fund** | **15-25%** |
+
+### Step 2: Subtract the royalty + brand fund
+
+Your franchisee will pay the royalty plus your brand marketing fund. A typical combined ask is 7-10% of revenue (e.g., 6% royalty + 2% brand fund).
+
+In a 20%-EBITDA business, a combined 8% take takes the franchisee from 20% EBITDA to 12% EBITDA. That's still a healthy operating margin and supports a competitive return on the franchisee's invested capital.
+
+In a 15%-EBITDA business, the same 8% combined take leaves the franchisee at 7% EBITDA. That's marginal. Most candidates who do the math will pass.
+
+In a 25%-EBITDA business, an 8% combined take leaves them at 17%. That's strong, and you have room to raise the royalty if your service load is heavy.
+
+### Step 3: Cross-check against franchisee return on capital
+
+A serious franchise candidate compares franchise ROIC against alternatives — buying an existing business, real estate, public market index funds, etc. A franchise that yields a 15-25% return on franchisee invested capital after royalty is competitive. Below 12% is a hard sell. Above 30% is a screaming opportunity (and probably under-priced).
+
+Plug into the math:
+- Franchisee EBITDA after royalty: $X
+- Franchisee initial investment (your [Item 7](/blog/fdd-item-7-initial-investment)): $Y
+- Return on invested capital: X ÷ Y = should be in the 15-30% range
+
+If your royalty crushes franchisee ROIC below 12%, lower it. If franchisee ROIC is above 30%, you have room to charge more (and you're funding your franchisor business better).
+
+## Royalty structure variations
+
+Not every royalty has to be a flat percentage of gross revenue. Common variations:
+
+### Tiered royalties
+
+Higher rate at low revenue, lower rate as the franchisee scales. Example: 7% on the first $500K, 5% above. Encourages operator scale; gives top performers a reward.
+
+### Flat-fee royalties
+
+A fixed monthly amount regardless of revenue. Common in low-revenue, high-margin businesses (consulting franchises, mobile services). Easier for franchisees to budget; reduces revenue-reporting friction.
+
+### Combined flat + percentage
+
+A minimum monthly fee plus a percentage of revenue above a threshold. Protects the franchisor from underperforming units while keeping upside aligned with franchisee growth.
+
+### Net revenue royalties
+
+Royalty on net revenue rather than gross. Less common because it creates audit complexity (what's deductible?) but useful in industries with heavy pass-through costs (real estate commissions, insurance brokerage).
+
+## The most common royalty mistakes
+
+After 30 years building franchise systems, the same errors:
+
+### Mistake 1: Setting the royalty by competitor mimicry
+
+Looking at one or two competitors and matching their rate without doing the unit-economics math. Different brands have different cost structures; matching a 5% royalty in a system with 30% gross margin doesn't mean 5% works in your 20%-margin system.
+
+### Mistake 2: Not building in a separate brand marketing fund
+
+Combining the royalty and brand marketing into one number ("we'll just call it 8% royalty"). This is a strategic mistake. A separate brand marketing fund (typically 1-2% of revenue) is dedicated capital for system-level marketing — your website, your franchise lead generation, national PR. Mixing it into the royalty makes it harder to commit those dollars and harder to defend the spend to franchisees.
+
+### Mistake 3: No royalty floor
+
+For service franchises with variable revenue, a pure percentage royalty means a franchisee with a slow month pays you very little. A minimum royalty (e.g., $500/month) keeps your franchisor revenue stable and forces underperforming franchisees to invest in growth or exit.
+
+### Mistake 4: Royalties too high for the maturity of your support infrastructure
+
+If you're charging 8% but your "ongoing support" is one quarterly check-in call and a Slack channel, your franchisees will figure it out fast and the system will rot. The royalty has to match the support load you actually deliver.
+
+### Mistake 5: Locking the royalty in writing forever
+
+The franchise agreement should reserve the franchisor's right to adjust certain fees over time (technology fees, brand marketing fund) within disclosed limits. The royalty itself is typically locked for the term of the agreement, but other recurring fees should have appropriate flexibility. Your franchise attorney structures this.
+
+## How royalty fits with the initial franchise fee
+
+Royalty and initial franchise fee work together. Generally:
+
+- **Higher initial fee, lower royalty** — front-loads franchisor revenue, lighter ongoing burden on franchisee. Works for capital-intensive businesses where the franchisor invested heavily in pre-opening support.
+- **Lower initial fee, higher royalty** — easier for franchisees to enter, more aligned long-term. Works for service businesses with lower pre-opening costs.
+
+Read [Initial Franchise Fee vs. Royalty: What Each One Pays For](/blog/franchise-fee-vs-royalty) for the framework on how to balance the two.
+
+## Where royalty fits in the bigger picture
+
+Royalty is one of the foundational structural decisions in your franchise system. The others:
+
+- **[Initial franchise fee](/blog/franchise-fee-vs-royalty)** — what they pay to enter
+- **[Item 7 initial investment](/blog/fdd-item-7-initial-investment)** — what they need in total capital
+- **[Item 19 financial performance representations](/blog/fdd-item-19-financial-performance-representations)** — what existing units actually earn
+- **Marketing fund contribution** — typically separate from the royalty
+- **Technology fees, training fees, transfer fees** — itemized in Item 6
+
+A serious candidate will model all of these together. If your numbers stand up to that modeling, your sales close. If they don't, you'll know early.
+
+For the full picture of how franchise systems are priced end-to-end, see [The Real Cost of Franchising Your Business](/blog/the-real-cost-of-franchising-your-business).
+
+## Next steps
+
+If you're trying to set your royalty rate and want to compare against your specific sector's benchmark plus your unit economics, [book a 30-minute strategy call](/strategy-call). I'll walk through the math with your numbers and tell you what royalty supports a sustainable system.
+
+Or take the free [Franchise Readiness Assessment](/assessment) to evaluate where your unit economics stand before you start setting royalty structures.
+
+The royalty number you set today determines whether your franchisor business compounds for the next 25 years or stalls in year four. Worth getting right.
+
+</div>
+
+<RelatedPosts currentSlug={post.slug} />

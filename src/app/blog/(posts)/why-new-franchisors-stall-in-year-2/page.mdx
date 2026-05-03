@@ -1,0 +1,167 @@
+import { BlogPostHeader } from "@/components/BlogPostHeader";
+import { RelatedPosts } from "@/components/RelatedPosts";
+import { JsonLd } from "@/components/JsonLd";
+import { blogPostingSchema, faqPageSchema, breadcrumbSchema } from "@/lib/schema";
+import { getPost } from "@/lib/blog";
+
+export const post = getPost("why-new-franchisors-stall-in-year-2");
+
+export const metadata = {
+  title: `${post.title} | The Franchisor Blueprint`,
+  description: post.excerpt,
+  alternates: { canonical: `/blog/${post.slug}` },
+  openGraph: {
+    title: post.title,
+    description: post.excerpt,
+    type: "article",
+    publishedTime: post.date,
+    authors: ["Jason Stowe"],
+  },
+};
+
+<JsonLd data={blogPostingSchema({ slug: post.slug, title: post.title, description: post.excerpt, datePublished: post.date, wordCount: 1700 })} />
+<JsonLd data={breadcrumbSchema([
+  { name: "Home", url: "/" },
+  { name: "Blog", url: "/blog" },
+  { name: post.title, url: `/blog/${post.slug}` },
+])} />
+<JsonLd data={faqPageSchema([
+  {
+    q: "Why do most new franchisors stall after their first few sales?",
+    a: "Most new franchisors stall in months 14-24 because the first 3-5 sales come from network leads (friends, customers, family of contacts) and don't represent a repeatable sales process. Once the network is exhausted, the franchisor has to build real lead generation and a real sales funnel — and most haven't. The result is a flat sales pipeline for 6-12 months while the founder figures out what works."
+  },
+  {
+    q: "What percentage of new franchise systems fail?",
+    a: "Industry data is imprecise because failure can mean different things — units closing, the franchisor selling, or the franchisor formally winding down. Conservative estimates suggest that 25-40% of new franchise systems either stop selling or wind down within their first 5 years, often due to insufficient unit economics, poor sales execution, or under-capitalization at the franchisor level. The systems that survive year 5 typically continue operating for decades."
+  },
+  {
+    q: "How long does it take to build a sustainable franchise system?",
+    a: "Most successful franchise systems reach a sustainable cadence of 10+ new sales per year by year 3, with reliable unit-level performance data feeding stronger Item 19 disclosures and lower customer acquisition costs. The first 24 months are typically a build phase; profitability at the franchisor level usually arrives in years 3-4 as recurring royalty revenue compounds."
+  },
+  {
+    q: "What's the difference between franchisors that scale and those that stall?",
+    a: "Three factors consistently separate scaling from stalling: (1) unit economics strong enough to support both a competitive franchisee return and meaningful franchisor royalty income, (2) a documented and repeatable sales process beyond the founder's personal network, and (3) a fully-built operations and field-support infrastructure before the franchise system has 10+ units (rather than after). Franchisors that get all three right scale; franchisors missing any of them stall."
+  },
+])} />
+
+<BlogPostHeader post={post} />
+
+<div className="max-w-[820px] mx-auto px-6 md:px-8 py-10 md:py-14">
+
+I've spent 30 years in this industry watching new franchise systems launch, sell their first three units on hustle and friends-and-family, and then quietly stall. Same pattern, same timing, same root causes — over and over.
+
+Sales hum for the first 6-9 months as the founder works their network. Three or four franchisees sign. The team celebrates. Then the network runs out. Sales go flat. Twelve months later the founder is wondering whether franchising was the wrong move.
+
+Most of the time, the move was right. The execution had specific, identifiable gaps. Here are the seven patterns I see most often, and the systemic fixes for each.
+
+## Pattern 1: The first sales came from the network, not from a sales process
+
+**What it looks like:** The first 3-4 franchisees are friends, customers, family of customers, or referrals from existing business contacts. The founder describes the franchise opportunity in conversations and people raise their hands.
+
+This works to start. It also conceals the absence of a real sales process. When the network is exhausted around month 12-14, sales drop to zero — not because demand collapsed, but because the founder never built a system that converts strangers.
+
+**The fix:** Treat your first 5 sales as the validation phase, not the sales-process phase. Use that time to build the actual recruitment funnel — paid acquisition, content marketing, broker relationships, lead magnets — so when the network runs dry, the funnel is generating qualified leads.
+
+This is the work most first-time franchisors don't do until they're already stalled. By then they're playing catch-up under pressure. See [How to Recruit Your First 10 Franchisees](/blog/how-to-recruit-first-10-franchisees) for the full funnel build.
+
+## Pattern 2: Unit economics that "almost" support franchising
+
+**What it looks like:** The unit-level business is profitable, but tightly. Maybe 14-16% EBITDA at typical operating volume. The founder convinces themselves that's "close enough" to franchise.
+
+It isn't. Once you take 6-8% off the top for royalty + brand fund, the franchisee has 6-10% EBITDA. After they pay themselves a market salary as owner-operator, what's left as actual return on their invested capital is weak. Serious operators do this math and pass.
+
+The franchisor then either: (a) lowers the royalty to make the franchisee math work, which kills the franchisor business; or (b) sells anyway to under-qualified candidates who fail in year 2.
+
+**The fix:** Get unit-level EBITDA to 18%+ before you franchise. That's the threshold where the franchisor-franchisee revenue split works for both sides. If your unit economics are below that, fix them first or don't franchise.
+
+The [Franchise Readiness Assessment](/assessment) explicitly tests for this. Most candidates whose businesses fail readiness fail on this dimension.
+
+## Pattern 3: An empty Item 19
+
+**What it looks like:** The FDD has no Item 19 because the founder's franchise attorney recommended skipping it ("you don't have enough data, and Item 19 creates liability"). Sales conversations go: *"how much do units actually make?"* The founder responds: *"we can't legally tell you."*
+
+The serious candidate hangs up.
+
+**The fix:** Build a defensible [Item 19](/blog/fdd-item-19-financial-performance-representations) from your company-owned units, even if it's narrow. *"Our company-owned location in Salt Lake City generated $X in 2024 revenue at Y% gross margin"* with proper disclosure beats *"we cannot make any financial performance representations."*
+
+Get a second legal opinion if your attorney reflexively opposes Item 19. Most experienced franchise attorneys will help you build one defensibly.
+
+## Pattern 4: Field support infrastructure built after the fact
+
+**What it looks like:** The founder sold 5 franchises before building the field-consulting team, the technology platform for franchisee reporting, the routine call cadence, the standardized training delivery, the brand fund accounting. Now they have 5 franchisees demanding support, no infrastructure, and no time to build it because they're firefighting.
+
+Franchisees feel abandoned. Royalty payments slow. The system rots from the operational layer up.
+
+**The fix:** Build the support infrastructure before unit number 5. The [operations manual](/blog/how-to-write-franchise-operations-manual), the field consulting cadence, the reporting platform, the training delivery model — all should exist before the third franchise opens.
+
+This is a major capital-and-time commitment that most first-time franchisors underestimate. It's also the reason franchisors hire experienced operations leads early — running a 5-unit franchise system at scale-quality is structurally different from running 1 company-owned unit.
+
+## Pattern 5: Founder bottleneck
+
+**What it looks like:** The founder is doing every Discovery Day, leading every training, taking every escalation call, signing every check, and approving every marketing piece. The franchise system is operating at the speed of one person.
+
+When the founder gets sick, takes vacation, or just needs a week to think strategically — the entire system stalls.
+
+**The fix:** Hire a #2 — typically a Director of Franchise Development for sales, or a Director of Operations for field — before you reach 10 units. Push the founder up the abstraction layer (strategy, brand, partnerships) and out of the operational chair.
+
+Most founders resist this until the bottleneck has visibly damaged the system. Hire ahead of the need.
+
+## Pattern 6: Selling to anyone with money
+
+**What it looks like:** The franchise sales pipeline is light, so the founder lowers the qualification bar. Anyone with the franchise fee gets in. The franchisor convinces themselves they'll "support them harder" to make up for the gap.
+
+The under-qualified franchisee struggles, blames the franchisor, requires 4x the field support of a strong franchisee, and eventually closes. Now you have a closed unit in [Item 20](/blog/franchise-disclosure-document-explained), your average unit performance in Item 19 took a hit, and the next prospect's validation calls turn up the unhappy former franchisee.
+
+**The fix:** Maintain qualification standards regardless of pipeline pressure. Specifically: financial qualification (liquid net worth, total net worth), operational qualification (relevant experience), and motivational qualification (why this brand, not just any opportunity).
+
+A slow pipeline is a marketing problem to solve with marketing. It's not a qualification problem to solve by lowering the bar.
+
+## Pattern 7: No sales beyond Discovery Day
+
+**What it looks like:** The franchisor runs Discovery Days well. Candidates leave excited. Then nothing happens. Weeks pass. The candidate has time to talk themselves out of the decision, get cold feet, or find another opportunity. The deal dies.
+
+This is almost always a structural sales-process gap. Discovery Day ends with "great meeting, we'll be in touch" instead of an explicit close conversation.
+
+**The fix:** Run Discovery Day as a structured close, not a tour. End every Discovery Day with a defined three-option close: sign today, schedule a sign-or-decline date within 14 days, or formally decline.
+
+Open-ended endings lose 60-70% of would-be conversions. See [the Discovery Day Playbook](/blog/discovery-day-playbook) for the structure.
+
+## What scaling franchisors do differently
+
+The franchisors I've watched scale successfully have three things in common:
+
+### 1. They invested in unit-level proof before franchising
+
+They opened 2-4 company-owned units and ran them long enough to generate real Item 19 data and prove the model is replicable in someone else's hands. They didn't try to franchise off a single founder-operated location.
+
+### 2. They built the franchisor business as a real business
+
+Not a side project of the unit-operating business. They hired a sales lead. They hired a director of operations. They built reporting infrastructure. They treated the franchisor entity as the business they were building, with the company-owned units as a strategic asset within it.
+
+### 3. They told prospects the truth, including bad truth
+
+They disclosed real Item 19 numbers including the underperformers. They were honest about what the franchise required. They turned down candidates who weren't a fit. They built reputation rather than chasing volume.
+
+## How to know if you're heading toward year-2 stall
+
+Diagnostic questions:
+
+- **Are 80%+ of your sales coming from people you knew before launching the franchise?** You're heading toward stall.
+- **Is your weighted-average unit-level EBITDA below 18%?** You're heading toward stall.
+- **Does your FDD have no Item 19?** You're heading toward stall.
+- **Are you the only person who can run a Discovery Day?** You're heading toward stall.
+- **Have you sold 3+ franchises but haven't yet built field consulting infrastructure?** You're heading toward stall.
+
+Two or more "yes" answers and you should pause expansion until you've fixed the underlying gap. Selling more units when the foundation is weak just multiplies the problem.
+
+## Where to go from here
+
+If you're already a franchisor and you're concerned about year-2 stall, [book a 30-minute strategy call](/strategy-call). We'll diagnose where you are against these seven patterns and prioritize the fixes.
+
+If you're earlier — pre-launch or just considering franchising — take the [Franchise Readiness Assessment](/assessment) before you spend money on documents. The assessment flags the readiness issues that lead to year-2 stall before you've committed to franchising.
+
+The patterns are predictable. The fixes are knowable. The franchisors who address them early build systems that compound for 25 years. The ones who don't sell three franchises and stall, and then sell their assets at a loss in year four. Worth getting ahead of.
+
+</div>
+
+<RelatedPosts currentSlug={post.slug} />

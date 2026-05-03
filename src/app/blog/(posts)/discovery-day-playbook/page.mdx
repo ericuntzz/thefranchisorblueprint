@@ -1,0 +1,206 @@
+import { BlogPostHeader } from "@/components/BlogPostHeader";
+import { RelatedPosts } from "@/components/RelatedPosts";
+import { JsonLd } from "@/components/JsonLd";
+import { blogPostingSchema, faqPageSchema, breadcrumbSchema } from "@/lib/schema";
+import { getPost } from "@/lib/blog";
+
+export const post = getPost("discovery-day-playbook");
+
+export const metadata = {
+  title: `${post.title} | The Franchisor Blueprint`,
+  description: post.excerpt,
+  alternates: { canonical: `/blog/${post.slug}` },
+  openGraph: {
+    title: post.title,
+    description: post.excerpt,
+    type: "article",
+    publishedTime: post.date,
+    authors: ["Jason Stowe"],
+  },
+};
+
+<JsonLd data={blogPostingSchema({ slug: post.slug, title: post.title, description: post.excerpt, datePublished: post.date, wordCount: 1500 })} />
+<JsonLd data={breadcrumbSchema([
+  { name: "Home", url: "/" },
+  { name: "Blog", url: "/blog" },
+  { name: post.title, url: `/blog/${post.slug}` },
+])} />
+<JsonLd data={faqPageSchema([
+  {
+    q: "What is a franchise Discovery Day?",
+    a: "A Discovery Day is the structured in-person (or virtual) event where a franchisor walks a qualified candidate through the full franchise system, the unit economics, and the operating expectations — and the candidate decides whether to sign the franchise agreement. It is the primary closing event in franchise sales and typically lasts a full business day."
+  },
+  {
+    q: "How long should a Discovery Day be?",
+    a: "Most well-run Discovery Days are 6 to 8 hours, scheduled as a full business day. Shorter formats (3-4 hours) work for less complex franchises but give the candidate less time to develop confidence in the decision. Longer formats (multi-day) can be appropriate for high-investment franchises ($150k+) where the buyer needs to meet the entire franchisor team."
+  },
+  {
+    q: "Who attends Discovery Day?",
+    a: "From the franchisor side: the founder or CEO, the head of operations, the head of training, and any executive the candidate would interact with regularly. From the candidate side: the candidate, their spouse or business partner, and sometimes their attorney or accountant. Bringing the spouse is critical — many franchise sales fail when the candidate's partner has not been included in the process."
+  },
+  {
+    q: "Should you ask for the close at Discovery Day?",
+    a: "Yes. The most effective Discovery Days end with a clear ask: 'Based on what you've seen today, are you ready to move forward?' Candidates who leave Discovery Day without a defined next step typically don't sign. The close conversation should be planned, not improvised, and should give the candidate three concrete options: sign now, schedule a sign-or-decline date within 14 days, or formally decline."
+  },
+])} />
+
+<BlogPostHeader post={post} />
+
+<div className="max-w-[820px] mx-auto px-6 md:px-8 py-10 md:py-14">
+
+Discovery Day is the closing instrument of franchise sales.
+
+A candidate who's qualified, has reviewed your FDD, and has done their validation calls is sitting at maybe 60-70% commitment to your brand. Discovery Day is what gets them from 70% to "yes." Run it well and you sign the candidate that day. Run it as a tour and you lose them to the next franchisor with a sharper close.
+
+Most first-time franchisors run Discovery Day as a tour. They show the candidate the office, introduce them to the team, walk through some slides, take them to lunch, and hope. Conversion rates from "Discovery Day attended" to "signed agreement" sit around 20-30% in those systems.
+
+Well-structured Discovery Days convert at 50-70%. The difference is structure. This is the playbook.
+
+## What Discovery Day actually is
+
+Discovery Day is a **structured closing event**, not a sales presentation. By the time the candidate arrives:
+
+- They've already received and reviewed the FDD (the 14-day clock has started)
+- They've spoken with 2-3 existing franchisees (or the company-owned manager if pre-franchise)
+- Their attorney has reviewed the franchise agreement
+- They've done preliminary territory selection
+- They've modeled their personal financial picture against [Item 7 and Item 19](/blog/fdd-item-7-initial-investment)
+
+What's left at Discovery Day is the human conversation that converts a "yes on paper" into a "yes I'm signing." That conversation needs structure.
+
+## The 7-block agenda
+
+Here's the agenda that consistently converts. Adapt timing to your sector — restaurant franchisors usually need more time on operations; service franchises usually need more time on territory and sales support.
+
+### Block 1: Welcome and Brand Story (45 minutes, 9:00-9:45 AM)
+
+The founder (you) tells the brand story. Why the company exists, the founding moment, the early years, the inflection point that brought you to franchising.
+
+This is the only "soft" block in the day. It's the only one that's about emotion, not numbers. Skip it at your peril — franchise candidates buy a franchise *and* the founder. They need to feel the brand from the source.
+
+End the block by asking the candidate one question: *"Tell me what brought you here today."* Their answer is the most important sales information you'll get all day.
+
+### Block 2: Unit Economics Walk-Through (90 minutes, 9:45-11:15 AM)
+
+The hard numbers. Walk the candidate through:
+
+- A typical unit P&L at year 1, year 2, year 3
+- Item 7 line by line, with examples from real markets you've evaluated
+- Item 19 cohort data (averages, medians, top quartile)
+- Their own market analysis (population, competitive density, local pricing benchmarks)
+- The royalty math and what their personal income looks like at typical revenue
+
+Bring real spreadsheets. Build the candidate's financial model in front of them. *"Let's plug your projected revenue in. Here's what your operating expense looks like. Here's your EBITDA. Here's your take-home after debt service."*
+
+This is the block that closes intelligent candidates. They want to do the math, and they want to see you do it openly.
+
+### Block 3: Operations Walk-Through (90 minutes, 11:15-12:45)
+
+How a unit actually runs. This is best done at a real operating location if you have one — your company-owned unit, a flagship franchisee's site, or even a competitor's site if you have permission to observe.
+
+Walk through:
+
+- A day in the life of the unit
+- The operations manual (your [17-chapter framework](/blog/how-to-write-franchise-operations-manual)) — show real chapters
+- The technology stack
+- The training program
+- The field consulting cadence
+
+Let the candidate see the substance. The operations manual photographs better than any deck slide.
+
+### Block 4: Lunch with the Team (75 minutes, 12:45-2:00 PM)
+
+Off-script lunch. The candidate eats with your operations head, your training director, and (if possible) one of your existing franchisees over video call.
+
+This block is intentionally unstructured. The candidate asks the questions they've been holding back. The team answers honestly. Franchise sales close at lunch more often than first-time franchisors realize.
+
+If the candidate brought their spouse, lunch is when the spouse gets to ask the questions they've been holding. Make space for that.
+
+### Block 5: Territory and Site Selection (60 minutes, 2:00-3:00 PM)
+
+Get specific about *their* market. Pull up the maps. Show them how your territory model works. Walk through the demographic and competitive analysis for their target market.
+
+If you have site selection software (or Excel models), use them live. Show the candidate three potential sites in their target area and walk through scoring each.
+
+This block transitions the conversation from abstract ("franchising is interesting") to concrete ("my unit at the corner of X and Y"). That transition is critical for closing.
+
+### Block 6: Q&A and Concerns (45 minutes, 3:00-3:45 PM)
+
+Reserved time for the candidate to surface anything they haven't asked. This block exists because candidates always have unspoken concerns and need explicit permission to raise them.
+
+Ask directly: *"What concerns do you still have? What's keeping you from saying yes today?"* Listen all the way. Address each concern specifically.
+
+If the candidate has no concerns, that's actually a warning sign — it usually means they've already decided no and aren't engaging. Probe gently.
+
+### Block 7: The Close (45 minutes, 3:45-4:30 PM)
+
+The structured close. This is the block most franchisors skip or run poorly.
+
+The framing: *"Based on everything you've seen today, I want to give you three options for what happens next."*
+
+**Option 1: Sign today.** If the candidate is ready, sign the franchise agreement now. Take the deposit. Hand them the welcome packet. Schedule their training start date.
+
+**Option 2: Sign-or-decline date within 14 days.** If they need to consult their spouse one more time, finalize financing, or sleep on it, set a specific date by which they will commit either way. Put it on both calendars.
+
+**Option 3: Formal decline today.** If Discovery Day surfaced fundamental misalignment, end it cleanly. *"It sounds like this isn't the right fit. I appreciate you coming today. Let me know if anything changes."*
+
+What you don't allow: option 4, the open-ended "I'll let you know" that becomes silence. That's where most franchise sales die.
+
+## What materials you need
+
+A well-run Discovery Day uses:
+
+- **Discovery Day Deck** — a 25-30 slide presentation that anchors blocks 1-3. We have a Discovery Day Deck template included in [The Blueprint](/programs/blueprint).
+- **Real unit P&L spreadsheet** — bring it on a laptop, model live in front of the candidate
+- **Operations manual excerpts** — show real chapters, not a "here's our manual" sentence
+- **Territory map and competitive analysis** for the candidate's specific market
+- **Welcome packet** — what they receive when they sign (the next-steps checklist, training schedule, key contacts)
+- **Franchise agreement** — printed, ready to sign
+
+Don't run Discovery Day with a single deck and a tour. Bring substance to every block.
+
+## Common Discovery Day mistakes
+
+### Mistake 1: Treating it like a sales pitch
+
+Discovery Day is not a pitch. The candidate has already decided your brand is interesting; that's why they're there. Pitching at Discovery Day comes across as desperate and undermines the close.
+
+The right posture is *"we're showing you what this is so you can decide."* Confident, direct, transparent.
+
+### Mistake 2: Skipping the unit economics walk-through
+
+Founders sometimes skip the numbers block because they're uncomfortable showing the math. This is the single biggest closing mistake. Serious candidates need the math. Skipping it tells them you don't want them to do diligence.
+
+### Mistake 3: No structured close
+
+Letting Discovery Day end with "any questions? Great, we'll be in touch." The candidate goes home, life intervenes, and the close stalls. Always end with a defined next-step option set.
+
+### Mistake 4: Not including the spouse
+
+If the candidate's spouse has a vote in the decision (most do, even when not formally a partner), include them. Send them an invitation. Make space for them at lunch. Address them directly during the operations walk-through. Spouses kill more franchise deals than any other single factor when they're excluded.
+
+### Mistake 5: Running it at the wrong venue
+
+A coffee shop is not a Discovery Day venue. Your office or an operating unit is. The candidate needs to see the substance of the franchise system live, not in a retail lobby.
+
+If you don't have an office or a unit to host at, consider a co-working day pass with a private conference room. A real venue signals seriousness.
+
+## Where Discovery Day fits in the broader funnel
+
+Discovery Day is Stage 4 of the franchise sales funnel. The other stages — awareness, qualification, FDD review — set up Discovery Day. Discovery Day either closes the candidate or graceful disqualifies them.
+
+For the full sales funnel including how to recruit candidates to Discovery Day in the first place, see [How to Recruit Your First 10 Franchisees](/blog/how-to-recruit-first-10-franchisees).
+
+## Next steps
+
+If you're preparing to run your first Discovery Day and want help structuring the day or building your Discovery Day Deck, [The Blueprint](/programs/blueprint) includes a Discovery Day presentation template plus the operating procedures.
+
+If you want guided support running Discovery Days as you start closing franchises, [Navigator](/programs) includes coaching specifically on the franchise sales process.
+
+Or take the [Franchise Readiness Assessment](/assessment) to see whether your business is at the stage where running Discovery Days makes sense yet.
+
+A well-run Discovery Day closes 50-70% of qualified candidates. That's the difference between a franchise system that compounds and one that stalls. Worth structuring carefully.
+
+</div>
+
+<RelatedPosts currentSlug={post.slug} />

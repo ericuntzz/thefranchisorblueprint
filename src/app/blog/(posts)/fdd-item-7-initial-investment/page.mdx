@@ -1,0 +1,174 @@
+import { BlogPostHeader } from "@/components/BlogPostHeader";
+import { RelatedPosts } from "@/components/RelatedPosts";
+import { JsonLd } from "@/components/JsonLd";
+import { blogPostingSchema, faqPageSchema, breadcrumbSchema } from "@/lib/schema";
+import { getPost } from "@/lib/blog";
+
+export const post = getPost("fdd-item-7-initial-investment");
+
+export const metadata = {
+  title: `${post.title} | The Franchisor Blueprint`,
+  description: post.excerpt,
+  alternates: { canonical: `/blog/${post.slug}` },
+  openGraph: {
+    title: post.title,
+    description: post.excerpt,
+    type: "article",
+    publishedTime: post.date,
+    authors: ["Jason Stowe"],
+  },
+};
+
+<JsonLd data={blogPostingSchema({ slug: post.slug, title: post.title, description: post.excerpt, datePublished: post.date, wordCount: 1500 })} />
+<JsonLd data={breadcrumbSchema([
+  { name: "Home", url: "/" },
+  { name: "Blog", url: "/blog" },
+  { name: post.title, url: `/blog/${post.slug}` },
+])} />
+<JsonLd data={faqPageSchema([
+  {
+    q: "What is FDD Item 7?",
+    a: "FDD Item 7 is the federally required disclosure of the franchisee's estimated initial investment to open a franchise and operate it for an initial period (typically three months). The FTC Franchise Rule (16 CFR 436.5(g)) requires the disclosure to be presented as a low-to-high range across multiple cost categories, with each category footnoted to explain assumptions."
+  },
+  {
+    q: "What categories must Item 7 include?",
+    a: "Item 7 must include the initial franchise fee, training expenses, real estate or rent (if applicable), leasehold improvements, equipment, fixtures, signs, opening inventory, security deposits, business licenses, insurance, professional fees, and 'additional funds' to cover operating expenses for an initial period (typically three months). Each category is shown as a low and high estimate."
+  },
+  {
+    q: "How wide can the Item 7 range be?",
+    a: "There's no hard cap, but ranges should be defensible. A 3x spread between low and high (e.g., $150,000 low, $450,000 high) is normal for service-based franchises with variable real estate costs. A 10x spread looks evasive and signals that you don't actually understand your unit economics. Most state regulators flag suspicious ranges during review."
+  },
+  {
+    q: "How much working capital should Item 7 include?",
+    a: "The 'additional funds' category should cover at least three months of operating expenses, and most franchise attorneys recommend disclosing six. The amount depends entirely on your business model — a software-light service franchise might need $15,000; a brick-and-mortar restaurant might need $80,000. The FTC requires you to explain your assumptions in a footnote."
+  },
+])} />
+
+<BlogPostHeader post={post} />
+
+<div className="max-w-[820px] mx-auto px-6 md:px-8 py-10 md:py-14">
+
+Item 7 is the number every franchise candidate scrolls to first.
+
+They've read your eyebrow, glanced at your pitch deck, and now they want one number: *how much money do I have to come up with to actually do this thing?* Item 7 of your FDD is where you tell them.
+
+Get it right and the right candidates self-select in. Get it wrong — too low, too high, or too vague — and you either scare off serious operators or attract people who can't afford to succeed. Either way, your franchise system pays the price.
+
+This is the practical guide to building Item 7 the way an experienced franchise attorney would, and the way an experienced candidate evaluates it.
+
+## What Item 7 actually requires
+
+The FTC's Franchise Rule, [16 CFR 436.5(g)](https://www.ecfr.gov/current/title-16/chapter-I/subchapter-D/part-436/section-436.5#p-436.5(g)), requires every franchisor to disclose:
+
+> "The franchisee's estimated initial investment, in the form of the table set out below."
+
+That table breaks the total initial investment into specific categories — each shown as a **low estimate** and a **high estimate**, with footnotes explaining assumptions. Three months of operating expenses must be included as a separate "additional funds" line so candidates don't undercapitalize and run out of cash in month two.
+
+This format is rigid. The FTC doesn't let you simplify it down to a single number, and they don't let you exclude categories that genuinely apply to your business.
+
+## The required Item 7 categories
+
+Here are the cost lines every Item 7 must address, with what each one is for:
+
+| Category | What's in it |
+|---|---|
+| Initial franchise fee | Your franchise fee from Item 5 |
+| Training | Travel, lodging, meals during your training program (paid by franchisee) |
+| Real estate / lease deposits | Security deposits, first/last month rent, property acquisition if applicable |
+| Leasehold improvements | Build-out, contractor work, permits, architectural fees |
+| Equipment, fixtures, signage | Everything they have to buy to operate |
+| Opening inventory | Initial stock to open the doors |
+| Computer hardware/software | POS systems, branded software licenses, hardware |
+| Licenses and permits | Business license, food handler, alcohol, professional licensing |
+| Insurance | First-year general liability, workers comp, property |
+| Professional fees | Their attorney to review the franchise agreement, their accountant |
+| Marketing / grand opening | Local launch advertising, signage, pre-opening marketing |
+| **Additional funds (3 months)** | **Operating expenses while revenue ramps** |
+
+Not every category applies to every franchise. A home-services franchise with no physical location skips real estate and leasehold improvements. A digital-product franchise might skip inventory and equipment. Disclose what applies, footnote what doesn't.
+
+## How to set the ranges defensibly
+
+The two most common Item 7 mistakes are opposite errors:
+
+**Error 1: Too narrow a range.** "$50,000 to $55,000 to open a coffee shop." This is mathematically impossible. Real estate alone varies by 5-10x across markets. A narrow range tells regulators you're either lying or guessing.
+
+**Error 2: Too wide a range.** "$50,000 to $1,500,000 to open a coffee shop." This tells candidates you have no idea what your business costs to operate. They can't budget against it. Their bank can't underwrite a loan against it. They walk.
+
+The defensible middle: a range that reflects real variation across **markets you'd actually approve** for your franchise.
+
+Here's the test I use with my Navigator clients: pull three real prospective sites — one in a Tier 1 metro (NYC, LA, Chicago), one in a Tier 2 metro (Nashville, Phoenix, Salt Lake City), and one in a Tier 3 market (a city of 75,000-150,000 people). For each, build a real budget. The lowest defensible budget becomes your low; the highest becomes your high. Footnote the assumption ("Range reflects build-out costs in markets ranging from secondary to primary metros, with leasehold improvements ranging from $25/sf to $120/sf and franchise occupancy from 1,200 to 2,400 sf").
+
+This anchors the range in reality. Regulators accept it. Candidates respect it.
+
+## The "additional funds" trap
+
+The "additional funds" line — the operating capital reserve — is where I see new franchisors hurt themselves the most.
+
+The FTC requires at least three months of operating expenses. Three months is the floor, not the goal. Most experienced franchise attorneys recommend disclosing six months, particularly for businesses with a longer ramp-up to profitability.
+
+Here's why this matters: franchisees who undercapitalize fail. Their failure costs you a unit and damages [Item 20's outlet table](/blog/franchise-disclosure-document-explained) for years to come. A higher additional-funds line might make your Item 7 look more expensive on paper, but it filters in candidates who can actually weather the first 18 months.
+
+Calculate it like this:
+
+1. Take your projected monthly operating expense at a typical unit (rent, payroll, supplies, utilities, marketing, insurance — everything except cost of goods sold scaled to revenue).
+2. Multiply by the number of months you're disclosing (minimum 3, recommended 6).
+3. Footnote the assumption with the underlying monthly figure so candidates understand the math.
+
+A typical service franchise might disclose $15,000-$45,000 in additional funds. A typical restaurant franchise might disclose $50,000-$150,000. The number isn't arbitrary; it reflects how long your business actually takes to become cash-flow positive.
+
+## Footnoting like a pro
+
+The Item 7 table is required. The footnotes underneath it are where you communicate.
+
+Strong footnotes do three things:
+
+1. **Explain the variability driver.** *"Range reflects build-out costs in primary metro markets ($120/sf high) versus secondary markets ($25/sf low)."*
+2. **Cite your source.** *"Equipment estimate based on quoted package from approved vendor as of January 2026."*
+3. **Disclose what's not included.** *"Range assumes franchisee owns or finances real estate separately. Cost of real estate acquisition not included."*
+
+Weak footnotes hide assumptions. *"Estimates are approximate and subject to change"* tells the candidate (and the regulator) nothing. Strong footnotes survive due diligence.
+
+## How Item 7 connects to your sales process
+
+Once your Item 7 is published, it becomes the spine of your franchise sales conversation:
+
+- **Pre-qualification:** filter candidates against the high-end of Item 7 plus a ~25% safety margin. A candidate with $200K liquid for a $250K-$400K Item 7 system is probably under-capitalized for your top-end markets.
+- **Discovery Day:** walk the candidate through the Item 7 line by line, with real-world examples from existing franchisees if you have them. (See [the Discovery Day Playbook](/blog/discovery-day-playbook).)
+- **Closing:** the franchisee's bank or SBA lender will scrutinize Item 7 against the loan request. A defensible Item 7 makes franchise SBA loans dramatically easier to underwrite.
+
+This is why a sloppy Item 7 isn't just a legal compliance issue — it's a sales conversion problem.
+
+## Common Item 7 errors I see in real FDDs
+
+After 30 years reviewing franchise disclosure documents, here are the patterns I look for:
+
+- **Missing real estate variability.** Franchisor discloses one-size-fits-all build-out cost based on their company-owned location and never adjusts for franchisee market.
+- **Three-month additional-funds disclosure for a six-month-ramp business.** Franchisees burn through reserves and start cutting corners on quality at month four. Brand suffers.
+- **Initial fee buried.** Item 7 should clearly itemize the franchise fee (which already appears in Item 5). Don't roll it into a vague "startup costs" line.
+- **No leasehold improvement footnote.** Build-out is the single most variable line. Without footnotes explaining the assumption, the range looks arbitrary.
+- **Excluding insurance and licenses.** These are required, every franchise pays them, and they sum to $3,000–$15,000. Excluding them understates the real investment.
+
+## Where Item 7 fits in the broader FDD
+
+Item 7 is one of three items that carry most of your franchise sales conversion weight:
+
+- **Item 7 (this one):** how much it costs to start.
+- **[Item 19](/blog/fdd-item-19-financial-performance-representations):** how much existing units actually make.
+- **[The franchise agreement and royalty structure](/blog/franchise-royalty-rate-benchmarks):** what the ongoing economics look like.
+
+A franchise candidate evaluates the deal by reading these three together: *what does it cost, what does it earn, what do I owe ongoing.* Get all three credible and your sales process flows. Get any one weak and prospects stall.
+
+For the full anatomy of the disclosure document, see [The Franchise Disclosure Document Explained: All 23 Items in Plain English](/blog/franchise-disclosure-document-explained).
+
+## Next steps
+
+Item 7 should be drafted by your franchise attorney, but the *numbers in it* come from your business — your unit economics, your real estate strategy, your operating cost structure. If those aren't documented, your attorney is guessing.
+
+If you want help building a defensible Item 7 (and the underlying unit economics that drive it), [book a 30-minute strategy call](/strategy-call) and we'll walk through where your numbers stand. Or take the [Franchise Readiness Assessment](/assessment) to see whether your business is at a stage where Item 7 even makes sense yet.
+
+The franchisors who get Item 7 right attract the candidates who can actually succeed in their system. The ones who don't attract everyone — and that's the worst sales outcome of all.
+
+</div>
+
+<RelatedPosts currentSlug={post.slug} />

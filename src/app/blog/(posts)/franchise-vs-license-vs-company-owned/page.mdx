@@ -1,0 +1,225 @@
+import { BlogPostHeader } from "@/components/BlogPostHeader";
+import { RelatedPosts } from "@/components/RelatedPosts";
+import { JsonLd } from "@/components/JsonLd";
+import { blogPostingSchema, faqPageSchema, breadcrumbSchema } from "@/lib/schema";
+import { getPost } from "@/lib/blog";
+
+export const post = getPost("franchise-vs-license-vs-company-owned");
+
+export const metadata = {
+  title: `${post.title} | The Franchisor Blueprint`,
+  description: post.excerpt,
+  alternates: { canonical: `/blog/${post.slug}` },
+  openGraph: {
+    title: post.title,
+    description: post.excerpt,
+    type: "article",
+    publishedTime: post.date,
+    authors: ["Jason Stowe"],
+  },
+};
+
+<JsonLd data={blogPostingSchema({ slug: post.slug, title: post.title, description: post.excerpt, datePublished: post.date, wordCount: 2200 })} />
+<JsonLd data={breadcrumbSchema([
+  { name: "Home", url: "/" },
+  { name: "Blog", url: "/blog" },
+  { name: post.title, url: `/blog/${post.slug}` },
+])} />
+<JsonLd data={faqPageSchema([
+  {
+    q: "What's the difference between franchising and licensing?",
+    a: "A franchise involves three legal elements: the franchisee uses the franchisor's trademark, the franchisor exerts significant control over the franchisee's operating system, and the franchisee pays a fee for the right to operate. A license typically involves only one or two of these elements — most commonly, the right to use a trademark or technology without the franchisor controlling the operating system. The FTC Franchise Rule (16 CFR 436) defines what legally constitutes a franchise; many arrangements that are called 'licenses' actually meet the franchise definition and are illegal if not properly disclosed."
+  },
+  {
+    q: "Is franchising or company-owned expansion more profitable?",
+    a: "Company-owned units typically generate 3-10x more profit per unit than franchised units (because the franchisor keeps all the unit-level EBITDA instead of just royalties). However, franchised growth is dramatically more capital-efficient — franchisees fund their own units, freeing the franchisor to scale to 50-500+ units without that capital outlay. The right answer depends on your access to capital, your appetite for operational complexity, and your scale ambitions."
+  },
+  {
+    q: "Can a business be both franchised and company-owned?",
+    a: "Yes — and the strongest franchise systems usually are. Most successful franchisors maintain some company-owned units (often 5-15% of total locations) to test new concepts, train new franchisees, generate Item 19 data, and demonstrate operating commitment to the system. The mix changes over time as the system matures."
+  },
+  {
+    q: "When should you franchise vs. open more company-owned locations?",
+    a: "Franchise when: capital is the bottleneck to growth; you want to enter many markets quickly; the unit economics are strong but operating complexity is too high to manage centrally; or you've validated 2-3 company-owned units and proven the model is replicable. Stay company-owned when: capital is not the bottleneck; you want full operational control; the model isn't yet replicable in the hands of an owner-operator; or unit economics are too thin to support the franchisor-franchisee revenue split."
+  },
+])} />
+
+<BlogPostHeader post={post} />
+
+<div className="max-w-[820px] mx-auto px-6 md:px-8 py-10 md:py-14">
+
+If you've built a successful business and you're thinking about how to grow it across markets, franchising is one option. It is not the only option. Sometimes it's not the right one.
+
+Most franchise consulting content assumes franchising is your answer because that's what consultants sell. This is the post that breaks the bias. Here are the four real expansion paths, what each one is for, and the framework I use to help founders pick the right one.
+
+## The four real expansion paths
+
+When a successful single-location business wants to grow to many markets, the structural options are:
+
+1. **Company-owned expansion** — you raise capital and open more units yourself
+2. **Franchising** — independent operators buy the right to operate units under your system
+3. **Licensing** — independent operators pay you for narrower rights (typically just the trademark or specific IP) without the system control
+4. **Joint ventures or partnerships** — you co-own units with local operators
+
+Each has dramatically different economics, control profiles, and operational implications. Most founders default to franchising because it's the most visible option. That's not always the best decision.
+
+## Path 1: Company-owned expansion
+
+You raise capital — debt, equity, or retained earnings — and open the next units yourself. You hire managers, you sign the leases, you eat the upfront cost, and you keep all the unit-level EBITDA.
+
+### When it works
+
+- **You have strong access to capital.** Whether self-funded, SBA-backed, or institutional equity, you can absorb the multi-hundred-thousand-dollar cost per unit without crippling the business.
+- **You want full operational control.** Brand standards, employee culture, customer experience — all centrally managed. No franchisee diversity to herd.
+- **The model isn't replicable in someone else's hands yet.** If your unit's success depends on you (the founder) being there, you're not ready to franchise. Open more company-owned units while you systematize.
+- **You want maximum unit-level profit.** Company-owned units keep all the EBITDA. Franchised units net you just the royalty (typically 4-8% of revenue). Over a 25-unit chain, that's millions of dollars per year in difference.
+- **You're building toward an exit.** Strategic acquirers and private equity often pay higher multiples for company-owned chains than franchise systems because they get all the cash flow, not just the royalty stream.
+
+### When it doesn't
+
+- **Capital is the bottleneck.** If raising the capital to open the next 10 units would dilute you significantly or require unsustainable debt, franchising lets you scale without that constraint.
+- **You want to enter many markets fast.** Company-owned expansion typically opens 2-5 units per year per leadership team. Well-run franchise systems open 10-50+ units per year.
+- **You don't want to manage hundreds of employees.** Company-owned chains are operating businesses at scale — HR, payroll, multi-state employment law, manager turnover. Many founders learn after their fifth or tenth unit that they don't want this life.
+
+### What it looks like
+
+The classic company-owned chain plays the long game on profit per unit. Chipotle stayed largely company-owned through their growth. Five Guys was company-owned for years before franchising. In-N-Out remains company-owned today and could franchise tomorrow if they chose to — they don't, by design.
+
+## Path 2: Franchising
+
+Independent franchisees buy the right to operate units under your brand and system. They put up the capital, they sign the lease, they hire the team. You collect the [initial franchise fee](/blog/franchise-fee-vs-royalty) and ongoing [royalties](/blog/franchise-royalty-rate-benchmarks).
+
+### When it works
+
+- **Capital is your growth bottleneck.** Franchisees fund their own units, freeing you to scale beyond what you could fund alone.
+- **You want speed and geographic diversity.** Franchising can put you in 15 markets in 24 months. Company-owned expansion at that pace is rare.
+- **Your model is replicable in the hands of trained owner-operators.** This is the threshold question. If your business depends on the founder's personal genius, your franchise will fail.
+- **Your unit economics support the franchise revenue split.** If a franchisee can't make a competitive return on their capital after paying you a 6-7% royalty, the system won't recruit good operators. (See [Royalty Benchmarks](/blog/franchise-royalty-rate-benchmarks).)
+- **You want a recurring-revenue franchisor business.** A 100-unit franchise system at 6% royalty on $800K/year average unit revenue produces $4.8M/year in royalty revenue — a high-margin recurring business with operating leverage.
+
+### When it doesn't
+
+- **Your unit margins are too thin.** If your unit EBITDA is 12-15%, taking 7-8% off the top for royalty + brand fund leaves the franchisee with 4-7% — not enough to recruit serious operators.
+- **Your operating model isn't documented enough to teach.** If you can't write the [operations manual](/blog/how-to-write-franchise-operations-manual), you can't franchise.
+- **You don't want to give up control.** Franchisees are independent business owners. They make decisions you don't always agree with. They open at hours you wouldn't. They hire people you wouldn't. Franchising is a lateral relationship, not a hierarchical one.
+- **The legal and regulatory burden is too high for your team size.** FDD preparation, state registration, ongoing compliance — these are real costs and ongoing operational obligations.
+
+### What it looks like
+
+McDonald's. Subway. Anytime Fitness. Restoration 1. The Maids. Jiffy Lube. Nearly every nationally recognized service brand operates as a franchise system at scale because franchising is the most efficient capital-efficient growth path for replicable unit-economics models.
+
+## Path 3: Licensing
+
+Licensing is narrower than franchising. The licensee pays you for specific rights — typically the right to use your trademark, sometimes the right to use specific recipes or methods — but you don't control their operating system the way a franchisor does.
+
+The legal distinction matters enormously. The FTC Franchise Rule defines a "franchise" as an arrangement that includes (1) trademark license, (2) significant operational control by the franchisor, and (3) a required fee. **If your "license" includes all three elements, it's actually a franchise — and selling it without an FDD is a federal violation.**
+
+This catches many businesses that thought they were doing "licensing" when they were unintentionally operating an undisclosed franchise.
+
+### When licensing actually fits
+
+- **You have valuable IP that doesn't require operational control.** Software, music, patents, branded merchandise, recipe rights for use in someone else's existing business. The licensee uses your IP within their own business model; you don't dictate how they run.
+- **You want minimal regulatory burden.** Pure licensing avoids FDD requirements (when properly structured).
+- **You want a smaller revenue capture per relationship.** Licensing fees are typically a fraction of franchise economics — you're getting paid for the IP, not the system.
+
+### When it doesn't fit
+
+- **You want to control how the brand is operated in market.** That's franchising, not licensing. Trying to do that under a "license agreement" is illegal.
+- **You want significant ongoing revenue per location.** Licensing economics rarely match franchise economics for service or retail businesses.
+- **Your business depends on consistent customer experience across locations.** Licensing gives you no enforceable mechanism to require it.
+
+### What it looks like
+
+Coca-Cola licensing its branded merchandise. Disney licensing characters for branded toys. Pure brand or IP licensing arrangements where the licensee operates an entirely separate business that incorporates your IP.
+
+If you're tempted to "license" your restaurant concept to someone who'll open one and operate it like yours — that's a franchise. Stop. Talk to a franchise attorney before you do anything.
+
+## Path 4: Joint ventures and partnerships
+
+You co-own units with local operators. You contribute the brand, the system, and (often) some capital. They contribute the local operating expertise, sometimes capital, and (always) the day-to-day management.
+
+### When it works
+
+- **You want operating control plus local expertise.** Joint ventures let you keep significant operational authority while leveraging a local operator's market knowledge.
+- **You're entering culturally distinct markets** where local partnership is structurally necessary (international expansion, often).
+- **You want unit-level economics with shared capital risk.** Splitting the equity and the profit between you and the operator can produce a structure that works when neither pure company-owned nor pure franchising would.
+
+### When it doesn't
+
+- **You want to scale to many units fast.** Each joint venture is a custom legal structure — slower than franchising, slower than company-owned with corporate operator cohort training.
+- **You want simple economics.** JV accounting is more complex than royalty accounting.
+- **You don't want partners.** Joint ventures create real co-ownership relationships. Disagreements escalate to equity-level conflicts. Some founders aren't built for that.
+
+### What it looks like
+
+International franchise expansion is often structured as joint ventures or master-franchise arrangements (a hybrid of franchise + JV). McDonald's used JVs heavily in its international expansion through the 1980s and 1990s.
+
+## How to choose: the decision framework
+
+Here's the framework I walk Navigator clients through:
+
+### Question 1: Is your unit model genuinely replicable?
+
+If a trained owner-operator (not you, not a hand-picked manager) can run your unit at 80%+ of your performance with the right system in place — yes. Move on.
+
+If success at your single location depends on your personal involvement, your unique relationships, or undocumentable judgment — no. Open more company-owned units while you systematize.
+
+The [Franchise Readiness Assessment](/assessment) explicitly tests for this.
+
+### Question 2: What's your access to growth capital?
+
+If you can fund 5-10 units yourself in the next 24 months without crippling the business — company-owned is on the table.
+
+If capital is the bottleneck — franchising or JV becomes structurally necessary.
+
+### Question 3: What's your appetite for operational complexity at scale?
+
+If you want to keep the business simple and just collect royalties — franchising fits.
+
+If you want full control, full margin, and don't mind running an HR and operations function at scale — company-owned fits.
+
+### Question 4: What are the unit economics?
+
+If your unit EBITDA is consistently 18%+ at typical operating volume — franchising is feasible. The franchisor-franchisee revenue split leaves both sides making real money.
+
+If your unit EBITDA is 12-15% — franchising is hard. Either you take so little that your franchisor business doesn't work, or you take so much that the franchisee doesn't make enough to be worth the work. Look at company-owned or strengthen your unit margins first.
+
+### Question 5: What's your scale ambition and timeline?
+
+If you want 5-10 units in your home region over 10 years — company-owned fits.
+
+If you want 25-100+ units across the country in 5-10 years — franchising is structurally necessary.
+
+If you want 500+ units globally — you're in franchise + JV + master-franchise hybrid territory.
+
+## The honest answer most consultants won't give
+
+Franchising isn't always the right answer. Sometimes the right answer is *don't franchise yet, open three more company-owned units, document the system, then come back in 18 months.*
+
+Sometimes the right answer is *your unit economics aren't strong enough to franchise, fix the unit-level business first.*
+
+Sometimes the right answer is *your business is genuinely a licensing opportunity, not a franchise — talk to an IP attorney, not a franchise consultant.*
+
+A real franchise consultant will tell you when franchising isn't your path. We do this every week with prospects in our [strategy calls](/strategy-call). The first 30 minutes are usually spent figuring out whether franchising is even the right structural answer for the business in front of us.
+
+## If franchising IS your answer
+
+Once you've decided franchising fits, the next questions are operational:
+
+1. **How ready is your business to franchise?** [10-Point Readiness Checklist](/blog/is-my-business-ready-to-franchise)
+2. **What does it actually cost?** [The Real Cost of Franchising](/blog/the-real-cost-of-franchising-your-business)
+3. **What does the legal layer look like?** [The Franchise Disclosure Document Explained](/blog/franchise-disclosure-document-explained)
+4. **How do you structure the economics?** [Royalty Benchmarks](/blog/franchise-royalty-rate-benchmarks) + [Fee vs Royalty](/blog/franchise-fee-vs-royalty)
+5. **How do you actually sell franchises?** [Recruiting Your First 10 Franchisees](/blog/how-to-recruit-first-10-franchisees)
+
+## Next steps
+
+If you're trying to decide which expansion path fits your business and you want an outside read, [book a 30-minute strategy call](/strategy-call). We'll spend the first 10 minutes figuring out whether franchising is even your answer — honestly. If it isn't, we'll tell you that.
+
+Or take the [Franchise Readiness Assessment](/assessment) — the scoring rubric explicitly flags businesses that aren't yet franchise-ready and recommends what to fix before you franchise (or whether company-owned expansion is the better near-term path).
+
+The right structural answer depends on your business, your capital, your ambition, and your appetite for the operational complexity that comes with each path. There's no universally right answer — but there's almost always a clearly better one for *your* situation.
+
+</div>
+
+<RelatedPosts currentSlug={post.slug} />
