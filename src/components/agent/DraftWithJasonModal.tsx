@@ -43,6 +43,8 @@ import {
   X,
 } from "lucide-react";
 import type { ChapterAttachment } from "@/lib/supabase/types";
+import type { FieldDef } from "@/lib/memory/schemas";
+import { SchemaFieldInput } from "./SchemaFieldInput";
 import { MEMORY_FILE_TITLES } from "@/lib/memory/files";
 import type { MemoryFileSlug } from "@/lib/memory/files";
 
@@ -100,6 +102,136 @@ export function DraftWithJasonModal({
   // the border + background so the customer gets immediate visual feedback
   // that the area is "armed."
   const [dragActive, setDragActive] = useState(false);
+
+  // ---- Proactive Jason: pre-draft readiness check ----
+  // Fetched once when the modal opens. While loading, we render a
+  // small placeholder. If the chapter is below MIN_DRAFTABLE_SCORE
+  // (60), we swap the body to a "Jason can draft, but it'll be weak
+  // unless we answer these:" panel with inline inputs for the top
+  // blockers. Customer can save those, then proceed to drafting.
+  // "Draft anyway" is always available so we don't trap power users.
+  type Blocker = { fieldName: string; fieldDef: FieldDef };
+  type Readiness = {
+    score: number;
+    filledRequired: number;
+    totalRequired: number;
+    blockers: Blocker[];
+  };
+  const [readiness, setReadiness] = useState<Readiness | null>(null);
+  const [readinessLoading, setReadinessLoading] = useState(true);
+  const [blockerValues, setBlockerValues] = useState<
+    Record<string, string | number | boolean | string[] | null>
+  >({});
+  const [savingBlockers, setSavingBlockers] = useState(false);
+  const [overrideReadinessGate, setOverrideReadinessGate] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    setReadinessLoading(true);
+    fetch(`/api/agent/draft-readiness?slug=${slug}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then((data) => {
+        if (!alive) return;
+        setReadiness({
+          score: data.score,
+          filledRequired: data.filledRequired,
+          totalRequired: data.totalRequired,
+          blockers: data.blockers ?? [],
+        });
+      })
+      .catch((err) => {
+        // Non-fatal: if readiness fetch fails, we just fall through
+        // to the normal modal body. Score=100 unblocks the gate.
+        console.warn("[DraftWithJasonModal] readiness fetch failed:", err);
+        if (alive)
+          setReadiness({
+            score: 100,
+            filledRequired: 0,
+            totalRequired: 0,
+            blockers: [],
+          });
+      })
+      .finally(() => {
+        if (alive) setReadinessLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [slug]);
+
+  /** True iff the chapter is below the draftability threshold AND
+   *  the customer hasn't explicitly said "draft anyway". */
+  const showBlockerGate =
+    !!readiness &&
+    readiness.score < 60 &&
+    readiness.blockers.length > 0 &&
+    !overrideReadinessGate;
+
+  function setBlocker(fieldName: string, v: typeof blockerValues[string]) {
+    setBlockerValues((prev) => ({ ...prev, [fieldName]: v }));
+  }
+
+  /** Save every blocker that has a non-empty value, then either
+   *  (a) re-fetch readiness so the customer sees an updated score,
+   *  or (b) if everything was answered, drop into the normal modal
+   *  view. We don't auto-trigger the draft — the customer chooses
+   *  when to start. */
+  async function saveBlockers(): Promise<void> {
+    if (!readiness) return;
+    setSavingBlockers(true);
+    try {
+      // POST to the queue's saveQueueAnswer is server-action only.
+      // For modal use, we hit a thin endpoint via the same route.
+      // Easiest path: reuse /api/agent/chapter-attachment-style
+      // contract isn't quite right; we need a generic field write.
+      // The chat tool's update_memory_field server-side function is
+      // best, but it's only invokable through the chat. Simplest:
+      // call writeMemoryFields via a new tiny server action wrapper
+      // — but to avoid that round-trip we POST to a small dedicated
+      // endpoint /api/agent/save-fields.
+      const toSave: Record<string, unknown> = {};
+      for (const b of readiness.blockers) {
+        const v = blockerValues[b.fieldName];
+        if (v == null) continue;
+        if (typeof v === "string" && v.trim() === "") continue;
+        if (Array.isArray(v) && v.length === 0) continue;
+        toSave[b.fieldName] = v;
+      }
+      if (Object.keys(toSave).length === 0) {
+        setOverrideReadinessGate(true); // nothing to save → user just wants to proceed
+        return;
+      }
+      const res = await fetch("/api/agent/save-fields", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug, changes: toSave }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error((j as { error?: string }).error ?? `HTTP ${res.status}`);
+      }
+      // Re-fetch readiness so the score + remaining blockers update.
+      const refreshed = await fetch(
+        `/api/agent/draft-readiness?slug=${slug}`,
+      ).then((r) => r.json());
+      setReadiness({
+        score: refreshed.score,
+        filledRequired: refreshed.filledRequired,
+        totalRequired: refreshed.totalRequired,
+        blockers: refreshed.blockers ?? [],
+      });
+      setBlockerValues({});
+      // If we cleared every blocker, also drop the gate so the modal
+      // moves on to the normal view automatically.
+      if (refreshed.score >= 60 || (refreshed.blockers ?? []).length === 0) {
+        setOverrideReadinessGate(true);
+      }
+    } catch (e) {
+      setUploadErr(e instanceof Error ? e.message : "Save failed");
+    } finally {
+      setSavingBlockers(false);
+    }
+  }
 
   // ESC closes; trap is intentionally light — page underneath is
   // still scrollable but the modal is centered and high-z so any
@@ -294,6 +426,22 @@ export function DraftWithJasonModal({
         <div
           className={`px-5 sm:px-6 py-5 space-y-5 overflow-y-auto ${submitting ? "hidden" : ""}`}
         >
+          {readinessLoading ? (
+            <div className="flex items-center gap-2 text-grey-3 text-xs italic">
+              <Loader2 size={12} className="animate-spin" />
+              Checking what Jason needs to write a credible draft…
+            </div>
+          ) : showBlockerGate ? (
+            <BlockerGate
+              readiness={readiness}
+              values={blockerValues}
+              onChange={setBlocker}
+              saving={savingBlockers}
+              onSave={saveBlockers}
+              onSkip={() => setOverrideReadinessGate(true)}
+            />
+          ) : (
+            <>
           {/* Free-form instruction */}
           <div>
             <label className="block text-[11px] uppercase tracking-[0.16em] text-gold-warm font-bold mb-2">
@@ -440,13 +588,15 @@ export function DraftWithJasonModal({
               <span>{submitErr}</span>
             </div>
           )}
+            </>
+          )}
         </div>
 
         {/* Footer — hidden during draft submission so the
             DraftingProgressView is the visual focal point. The
             controls below are inert anyway while submitting=true,
             and removing them removes a competing visual element. */}
-        {!submitting && (
+        {!submitting && !showBlockerGate && (
           <div className="px-5 sm:px-6 py-4 border-t border-navy/5 bg-cream/20 flex items-center justify-end gap-2 rounded-b-2xl">
             <button
               type="button"
@@ -656,5 +806,123 @@ function AttachmentCheckRow({
         </div>
       </button>
     </li>
+  );
+}
+
+/**
+ * Blocker gate — the proactive-Jason face of the modal.
+ *
+ * Rendered when the chapter readiness score is below 60. Each
+ * blocker row uses the same SchemaFieldInput primitive the Question
+ * Queue uses — same look + same input behavior across surfaces.
+ *
+ * Two exits:
+ *   1. "Save & continue" — write the inline answers, re-fetch
+ *      readiness; the parent drops the gate when score crosses 60
+ *      OR every blocker has been answered.
+ *   2. "Skip for now, draft anyway" — explicit override. Customer
+ *      sees the warning and knows the draft will be skeleton-y; we
+ *      let them through because trapping them is worse UX than a
+ *      weak draft.
+ */
+function BlockerGate({
+  readiness,
+  values,
+  onChange,
+  saving,
+  onSave,
+  onSkip,
+}: {
+  readiness: {
+    score: number;
+    filledRequired: number;
+    totalRequired: number;
+    blockers: Array<{ fieldName: string; fieldDef: FieldDef }>;
+  };
+  values: Record<string, string | number | boolean | string[] | null>;
+  onChange: (
+    fieldName: string,
+    v: string | number | boolean | string[] | null,
+  ) => void;
+  saving: boolean;
+  onSave: () => Promise<void>;
+  onSkip: () => void;
+}) {
+  const filledHere = Object.values(values).filter((v) => {
+    if (v == null) return false;
+    if (typeof v === "string") return v.trim().length > 0;
+    if (Array.isArray(v)) return v.length > 0;
+    return true;
+  }).length;
+  return (
+    <div className="space-y-4">
+      <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 flex items-start gap-2">
+        <AlertCircle
+          size={16}
+          className="text-amber-700 mt-0.5 flex-shrink-0"
+        />
+        <div>
+          <div className="text-amber-900 font-bold text-sm mb-0.5">
+            Jason can draft this — but it&apos;ll be weak.
+          </div>
+          <p className="text-amber-900/85 text-xs leading-relaxed">
+            You&apos;re at <strong>{readiness.score}%</strong> of the
+            required inputs ({readiness.filledRequired} of{" "}
+            {readiness.totalRequired}). Answer the {readiness.blockers.length}{" "}
+            below and Jason can write something the customer should actually
+            verify.
+          </p>
+        </div>
+      </div>
+
+      <ul className="space-y-4">
+        {readiness.blockers.map((b) => (
+          <li key={b.fieldName} className="space-y-1.5">
+            <label className="block text-sm font-semibold text-navy">
+              {b.fieldDef.label}
+              <span className="text-gold-warm ml-1">*</span>
+            </label>
+            {b.fieldDef.helpText && (
+              <p className="text-xs text-grey-3 leading-relaxed">
+                {b.fieldDef.helpText}
+              </p>
+            )}
+            <SchemaFieldInput
+              fieldDef={b.fieldDef}
+              value={values[b.fieldName] ?? null}
+              onChange={(v) => onChange(b.fieldName, v)}
+              compact
+            />
+          </li>
+        ))}
+      </ul>
+
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-navy/5">
+        <button
+          type="button"
+          onClick={onSkip}
+          disabled={saving}
+          className="text-grey-3 hover:text-navy text-xs font-semibold py-2 transition-colors disabled:opacity-50"
+        >
+          Skip and draft anyway
+        </button>
+        <button
+          type="button"
+          onClick={() => void onSave()}
+          disabled={saving || filledHere === 0}
+          className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-xs uppercase tracking-[0.1em] px-5 py-3 rounded-full hover:bg-gold-dark disabled:opacity-50 transition-colors"
+        >
+          {saving ? (
+            <>
+              <Loader2 size={13} className="animate-spin" /> Saving…
+            </>
+          ) : (
+            <>
+              Save {filledHere > 0 ? `${filledHere} ` : ""}&amp; continue
+            </>
+          )}
+        </button>
+      </div>
+    </div>
   );
 }
