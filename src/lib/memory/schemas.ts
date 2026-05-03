@@ -75,31 +75,103 @@
  *   ✗ "The first chapter your attorney reads."
  *   ✗ "Defines the franchisor's revenue per franchisee."
  *
- * ─── THE LOOKUP-BURDEN PATTERN ─────────────────────────────────────────
+ * ─── COMPUTATION, SUGGESTION, AND PRE-FILL ─────────────────────────────
  *
- * If a field requires the customer to GO LOOK SOMETHING UP that we
- * could resolve for them, the agent fills it by default. The customer
- * sees the resolved value with a "Verify" affordance and can override
- * if we got it wrong.
+ * Don't ask the customer to do work the system can do. Three field
+ * archetypes:
  *
- * Examples:
- *   - `naics_code` ← inferred from `industry_category` via lookup table
- *     + Sonnet 4.6 fallback. Customer never has to visit naics.com.
- *   - State franchise registration list (future) ← inferred from the
- *     states where the customer wants to operate.
- *   - Industry-typical royalty range (future) ← inferred from
- *     `industry_category` against published franchise-industry data.
+ *   COMPUTED — fully derived from other fields. The customer sees a
+ *   read-only value with a "calculated from X" tooltip. The value
+ *   updates live as dependencies change.
+ *     Example: `ebitda_margin_pct` = 100 - cogs - labor - occupancy -
+ *     marketing - other_opex. The customer doesn't compute this;
+ *     editing the inputs updates the output.
  *
- * Implementation note: there's no `agentFillsAutomatically: true` flag
- * on FieldDef yet — the agent's draft pipeline knows which fields to
- * resolve via the prompt. We may add a declarative flag later if the
- * pattern proliferates, but for now it's fine to encode the behavior
- * in the agent's prompt template + a comment on the field itself.
+ *   SUGGESTED — pre-filled by the system but EDITABLE. The customer
+ *   sees the suggested value with a "Why this number?" affordance
+ *   and can override when their reality differs. Four kinds:
  *
- * The customer-facing voice for these fields makes the agent's role
- * explicit: "We look this up from your industry category — you don't
- * have to find it yourself." Never make the customer feel like they
- * have homework we could have done.
+ *     1. industry_lookup — looked up from `industry_category` against
+ *        a curated table or LLM fallback. Used for industry-typical
+ *        defaults: NAICS code, royalty rate range, term length,
+ *        credit score threshold.
+ *
+ *     2. derived — calculated from other fields with a sensible
+ *        default formula but the customer can override. Used when
+ *        there's a defensible math relationship but their actual
+ *        number may differ (e.g. `minimum_liquid_capital` defaults to
+ *        30% of `initial_investment_high` but a franchisor might want
+ *        a tighter threshold).
+ *
+ *     3. from_assessment — pulled from the customer's pre-purchase
+ *        assessment row. Saves them re-typing things they already
+ *        gave us (business name, first name, website).
+ *
+ *     4. from_scrape — pulled from the website scrape pipeline. Same
+ *        idea: don't ask them what we already learned.
+ *
+ *   PRIMITIVE — neither computed nor suggested; the customer types it.
+ *   Default for any field not marked otherwise.
+ *
+ * Two principles drive this:
+ *   1. NEVER MAKE THE CUSTOMER DOUBLE-ANSWER. If we have it from the
+ *      assessment or scrape, pre-fill it with a `from_*` suggestion.
+ *   2. NEVER MAKE THE CUSTOMER COMPUTE. EBITDA margin shouldn't be
+ *      something they calculate — they enter the inputs (cogs %,
+ *      labor %, etc.) and the output appears.
+ *
+ * Implementation note: the `computed` and `suggestedFrom` metadata
+ * here is *intent only* — the actual computation logic lives in
+ * `src/lib/calc/` (the math library, Phase 1.5a step 5) and the
+ * agent's draft pipeline (which reads the schema and resolves
+ * `industry_lookup` / `from_assessment` / `from_scrape` suggestions
+ * against the customer's available data). The customer-facing voice
+ * for any suggested field makes the system's role explicit: "We
+ * suggested this from X — adjust if your reality differs."
+ *
+ * ─── DEFER TO TFB'S EXISTING DOCUMENTS ────────────────────────────────
+ *
+ * The schemas in this file should reflect what TFB *already says* a
+ * franchisor needs to define — not what I (Claude) think they need.
+ * Jason's 30 years of franchise experience is captured in the existing
+ * deliverables: the original 9 capability documents, the High Point
+ * Coffee bundle, any other reference documents Jason and his team
+ * have used on past engagements.
+ *
+ * Two rules:
+ *
+ *   1. AUDIT BEFORE DESIGNING. When designing a chapter's schema, the
+ *      first input is whatever existing TFB document maps to that
+ *      chapter (e.g. for `unit_economics` → the financial model
+ *      template; for `franchisee_profile` → the franchisee scoring
+ *      matrix; for `business_overview` → the concept-and-positioning
+ *      worksheet). Every prompt or section header in the source
+ *      document should turn into a field. The schema is a *typed
+ *      version* of the existing document, not a redesign.
+ *
+ *   2. DEFAULT TO INCLUDING, NOT CUTTING. If I see a field that
+ *      doesn't obviously map to an FDD item or a customer-facing
+ *      deliverable, that's not grounds to cut it — that's grounds to
+ *      ASK whether the existing TFB framework already covers it. Many
+ *      questions Jason asks have non-obvious downstream value (e.g.
+ *      recruitment channel preferences feed into the marketing fund
+ *      manual; decision-timeline data feeds into capacity planning
+ *      that Jason coaches franchisors on). I don't have full
+ *      visibility — I should bias toward inclusion and surface
+ *      questions for review, not unilaterally cut.
+ *
+ * The earlier draft of this file had a stricter "purpose-test" that
+ * said cut anything that doesn't move toward franchise ownership. That
+ * was the wrong frame — I was making product calls Jason should make.
+ * The current frame: every field is here because TFB's existing
+ * framework asks the customer to define it (or Jason confirms it
+ * should be here).
+ *
+ * NEXT AUDIT NEEDED: cross-check the four foundational schemas against
+ * the High Point Coffee bundle and the original capability documents.
+ * Anything in those that's NOT in the schemas should be added.
+ * Anything in the schemas NOT in those documents should be flagged for
+ * Jason's review before staying.
  *
  * ─── STATUS ────────────────────────────────────────────────────────────
  *
@@ -216,6 +288,52 @@ export type FieldDef = {
    * matter when they do. Don't overuse — buried fields don't get filled.
    */
   advanced?: boolean;
+  /**
+   * If set, the field is fully derived from other fields and is
+   * READ-ONLY in the UI. The customer sees the computed value with a
+   * "calculated from X" tooltip. The actual computation function lives
+   * in `src/lib/calc/` keyed by the field name.
+   *
+   * `deps` may reference fields in the same chapter by bare name
+   * (e.g. `"cogs_pct"`) or in another chapter via `chapter.field`
+   * syntax (e.g. `"unit_economics.initial_investment_high_dollars"`).
+   *
+   * `formula` is a human-readable description for the tooltip — it's
+   * NOT executed; just shown.
+   */
+  computed?: {
+    deps: string[];
+    formula: string;
+  };
+  /**
+   * If set, the system pre-fills this field but the customer can
+   * override. They see the suggested value with a "Why this number?"
+   * affordance. See the COMPUTATION, SUGGESTION, AND PRE-FILL section
+   * at the top of this file for the four kinds.
+   */
+  suggestedFrom?:
+    | {
+        kind: "industry_lookup";
+        /** What the lookup table is keyed on. Default: `industry_category`. */
+        keyedOn?: string;
+        /** Free-form description of where the data comes from, for the tooltip. */
+        source: string;
+      }
+    | {
+        kind: "derived";
+        deps: string[];
+        formula: string;
+      }
+    | {
+        kind: "from_assessment";
+        /** Field name on the assessment_sessions row. */
+        field: string;
+      }
+    | {
+        kind: "from_scrape";
+        /** Field name in the structured scrape output. */
+        field: string;
+      };
 };
 
 /**
@@ -293,22 +411,25 @@ const BUSINESS_OVERVIEW: ChapterSchema = {
       placeholder: "Specialty coffee café (QSR coffee subcategory)",
       helpText: "Plain-English category, not a NAICS code.",
       category: "The concept",
+      suggestedFrom: {
+        kind: "from_scrape",
+        field: "industry_category",
+      },
     },
     {
-      // Agent-resolved by default — see "Lookup-burden pattern" in the
-      // file's top comment block. Customer fills `industry_category` in
-      // plain English; the agent infers the NAICS code from a lookup
-      // table + Sonnet 4.6 fallback. Customer sees the resolved value
-      // here with a "Verify" link to the official NAICS page; can
-      // override if we got it wrong.
       name: "naics_code",
       label: "NAICS code",
       type: "text",
       placeholder: "722515",
       helpText:
-        "We look this up from your industry category — you don't have to find it yourself. Verify it on the U.S. Census NAICS site if you want to double-check, and override here if we got it wrong.",
+        "We look this up from your industry category — you don't have to find it yourself. Verify on the U.S. Census NAICS site if you want to double-check, and override here if we got it wrong.",
       category: "The concept",
       advanced: true,
+      suggestedFrom: {
+        kind: "industry_lookup",
+        keyedOn: "industry_category",
+        source: "U.S. Census NAICS table + Sonnet 4.6 fallback",
+      },
     },
 
     // ── Founder ─────────────────────────────────────────────────────────────
@@ -321,6 +442,10 @@ const BUSINESS_OVERVIEW: ChapterSchema = {
       helpText:
         "The person whose story anchors the brand. If multiple co-founders, the one who's the public face.",
       category: "Founder",
+      suggestedFrom: {
+        kind: "from_assessment",
+        field: "first_name",
+      },
     },
     {
       name: "founder_background",
@@ -351,6 +476,10 @@ const BUSINESS_OVERVIEW: ChapterSchema = {
       placeholder: "2018-09-01",
       helpText: "Date the first revenue-generating location opened.",
       category: "Track record",
+      suggestedFrom: {
+        kind: "from_scrape",
+        field: "founding_date",
+      },
     },
     {
       name: "first_location_address",
@@ -465,8 +594,13 @@ const UNIT_ECONOMICS: ChapterSchema = {
       type: "currency",
       placeholder: "780000",
       helpText:
-        "What a typical new location generates in its first 12 months.",
+        "What a typical new location generates in its first 12 months. We suggest a starting number from your mature AUV × your year-1 ramp percentage; override if your real data says different.",
       category: "Headline performance",
+      suggestedFrom: {
+        kind: "derived",
+        deps: ["average_unit_volume_dollars", "ramp_curve_year_1_pct"],
+        formula: "average_unit_volume_dollars × (ramp_curve_year_1_pct / 100)",
+      },
     },
     {
       name: "auv_year_2_dollars",
@@ -474,6 +608,11 @@ const UNIT_ECONOMICS: ChapterSchema = {
       type: "currency",
       placeholder: "1000000",
       category: "Headline performance",
+      suggestedFrom: {
+        kind: "derived",
+        deps: ["average_unit_volume_dollars", "ramp_curve_year_2_pct"],
+        formula: "average_unit_volume_dollars × (ramp_curve_year_2_pct / 100)",
+      },
     },
     {
       name: "ebitda_margin_pct",
@@ -482,10 +621,21 @@ const UNIT_ECONOMICS: ChapterSchema = {
       required: true,
       placeholder: "18",
       helpText:
-        "EBITDA as a % of revenue (operating profit before interest, taxes, depreciation, amortization). The number a banker or franchisee will look at first.",
+        "EBITDA as a % of revenue (operating profit before interest, taxes, depreciation, amortization). Calculated for you from the cost-structure inputs below — you don't need to compute this. The number a banker or franchisee will look at first.",
       category: "Headline performance",
       min: 0,
       max: 100,
+      computed: {
+        deps: [
+          "cogs_pct",
+          "labor_pct",
+          "occupancy_pct",
+          "marketing_pct",
+          "other_opex_pct",
+        ],
+        formula:
+          "100 − COGS% − Labor% − Occupancy% − Marketing% − Other opex%",
+      },
     },
     {
       name: "payback_period_months",
@@ -493,8 +643,18 @@ const UNIT_ECONOMICS: ChapterSchema = {
       type: "integer",
       placeholder: "30",
       helpText:
-        "How long until a franchisee recovers their initial investment from operating cash flow.",
+        "How long until a franchisee recovers their initial investment from operating cash flow. Calculated from the average initial investment and mature-unit profit dollars — you don't need to compute this.",
       category: "Headline performance",
+      computed: {
+        deps: [
+          "initial_investment_low_dollars",
+          "initial_investment_high_dollars",
+          "average_unit_volume_dollars",
+          "ebitda_margin_pct",
+        ],
+        formula:
+          "((investment_low + investment_high) / 2) ÷ (AUV × EBITDA% ÷ 100) × 12",
+      },
     },
 
     // ── Cost structure (% of revenue) ───────────────────────────────────────
@@ -563,10 +723,15 @@ const UNIT_ECONOMICS: ChapterSchema = {
       type: "percentage",
       placeholder: "65",
       helpText:
-        "What % of mature AUV a new location hits in year 1. Used to forecast year-1 revenue in the FDD and the financial model.",
+        "What % of mature AUV a new location hits in year 1. We suggest an industry-typical default for your concept; override if your existing locations have shown a different curve.",
       category: "Ramp curve",
       min: 0,
       max: 100,
+      suggestedFrom: {
+        kind: "industry_lookup",
+        keyedOn: "industry_category",
+        source: "FRANdata + IFA published ramp curves by concept type",
+      },
     },
     {
       name: "ramp_curve_year_2_pct",
@@ -576,6 +741,11 @@ const UNIT_ECONOMICS: ChapterSchema = {
       category: "Ramp curve",
       min: 0,
       max: 100,
+      suggestedFrom: {
+        kind: "industry_lookup",
+        keyedOn: "industry_category",
+        source: "FRANdata + IFA published ramp curves by concept type",
+      },
     },
     {
       name: "ramp_curve_year_3_pct",
@@ -711,8 +881,13 @@ const FRANCHISE_ECONOMICS: ChapterSchema = {
       required: true,
       placeholder: "45000",
       helpText:
-        "One-time fee paid at signing. Industry typical for emerging franchisors: $25K–$50K.",
+        "One-time fee paid at signing. We'll suggest a number from your industry — adjust to match your strategy. Most emerging franchisors land between $25K and $50K.",
       category: "Initial fee",
+      suggestedFrom: {
+        kind: "industry_lookup",
+        keyedOn: "industry_category",
+        source: "FRANdata published franchise-fee benchmarks by concept type",
+      },
     },
     {
       name: "franchise_fee_volume_discount",
@@ -733,10 +908,15 @@ const FRANCHISE_ECONOMICS: ChapterSchema = {
       required: true,
       placeholder: "6",
       helpText:
-        "% of gross sales the franchisee pays the franchisor. Industry typical: 4–8%.",
+        "% of gross sales the franchisee pays the franchisor. We'll suggest a number from your industry; adjust to match what your unit economics support. Industry typical: 4–8%.",
       category: "Royalty",
       min: 0,
       max: 25,
+      suggestedFrom: {
+        kind: "industry_lookup",
+        keyedOn: "industry_category",
+        source: "FRANdata + IFA published royalty benchmarks by concept type",
+      },
     },
     {
       name: "royalty_rate_basis",
@@ -781,10 +961,15 @@ const FRANCHISE_ECONOMICS: ChapterSchema = {
       required: true,
       placeholder: "2",
       helpText:
-        "% of gross sales franchisees contribute to the brand-wide ad fund. Industry typical: 1–3%.",
+        "% of gross sales franchisees contribute to the brand-wide ad fund. We'll suggest a number from your industry. Industry typical: 1–3%.",
       category: "Ad fund",
       min: 0,
       max: 10,
+      suggestedFrom: {
+        kind: "industry_lookup",
+        keyedOn: "industry_category",
+        source: "FRANdata + IFA published ad-fund benchmarks by concept type",
+      },
     },
     {
       name: "local_marketing_minimum_pct",
@@ -845,10 +1030,15 @@ const FRANCHISE_ECONOMICS: ChapterSchema = {
       type: "integer",
       required: true,
       placeholder: "10",
-      helpText: "Length of the initial franchise agreement. Industry typical: 10 years.",
+      helpText: "Length of the initial franchise agreement. We default to 10 years — the franchise-industry standard. Adjust if your industry runs shorter (some service trades are 5-7).",
       category: "Term",
       min: 1,
       max: 30,
+      suggestedFrom: {
+        kind: "industry_lookup",
+        keyedOn: "industry_category",
+        source: "Standard term lengths by concept type (FRANdata)",
+      },
     },
     {
       name: "renewal_term_years",
@@ -976,8 +1166,13 @@ const FRANCHISEE_PROFILE: ChapterSchema = {
       required: true,
       placeholder: "100000",
       helpText:
-        "How much cash a candidate must have on hand. Industry rule of thumb: 25-40% of the high end of your initial investment range.",
+        "How much cash a candidate must have on hand. We suggest 30% of the high end of your initial investment range — adjust if you want a tighter or looser threshold.",
       category: "Financial profile",
+      suggestedFrom: {
+        kind: "derived",
+        deps: ["unit_economics.initial_investment_high_dollars"],
+        formula: "0.30 × unit_economics.initial_investment_high_dollars",
+      },
     },
     {
       name: "minimum_net_worth_dollars",
@@ -986,8 +1181,13 @@ const FRANCHISEE_PROFILE: ChapterSchema = {
       required: true,
       placeholder: "500000",
       helpText:
-        "Total net worth (cash, investments, equity in real estate, etc.) required to qualify. Typically 3–4x liquid capital requirement.",
+        "Total net worth (cash, investments, equity in real estate, etc.) required to qualify. We suggest 3.5× the liquid capital requirement — the franchise-industry default.",
       category: "Financial profile",
+      suggestedFrom: {
+        kind: "derived",
+        deps: ["minimum_liquid_capital_dollars"],
+        formula: "3.5 × minimum_liquid_capital_dollars",
+      },
     },
     {
       name: "minimum_credit_score",
@@ -995,11 +1195,16 @@ const FRANCHISEE_PROFILE: ChapterSchema = {
       type: "integer",
       placeholder: "680",
       helpText:
-        "Most franchisors land at 680+. Lower scores can usually still get SBA financing but qualify for fewer banks.",
+        "We default to 680 — the franchise-industry standard for SBA-financed deals. Lower scores can usually still qualify with the right bank but narrow the candidate pool.",
       category: "Financial profile",
       min: 300,
       max: 850,
       advanced: true,
+      suggestedFrom: {
+        kind: "industry_lookup",
+        keyedOn: "industry_category",
+        source: "Standard credit-score thresholds for SBA-financed franchise deals",
+      },
     },
     {
       name: "accepts_sba_financed",
