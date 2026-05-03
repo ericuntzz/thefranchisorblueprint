@@ -34,6 +34,8 @@ import type {
   CustomerMemoryProvenance,
 } from "@/lib/supabase/types";
 import { ChapterAttachments } from "./ChapterAttachments";
+import { DraftWithJasonModal } from "./DraftWithJasonModal";
+import type { MemoryFileSlug } from "@/lib/memory/files";
 import { type ChapterSchema, type FieldDef } from "@/lib/memory/schemas";
 import { isValidMemoryFileSlug } from "@/lib/memory/files";
 import {
@@ -56,6 +58,16 @@ type Props = {
   provenance: CustomerMemoryProvenance[];
   /** Per-chapter attachments (files + links). */
   attachments: ChapterAttachment[];
+  /**
+   * Every attachment across the customer's chapters — used by the
+   * pre-draft modal to show a cross-chapter checkbox list. The page
+   * already has this data from its single Memory read; passing it
+   * down avoids a second round-trip when the modal opens.
+   */
+  allAttachmentsByChapter: Array<{
+    slug: MemoryFileSlug;
+    attachments: ChapterAttachment[];
+  }>;
   /** Structured fields for THIS chapter. Empty object if none yet. */
   fields: Record<string, FieldValue>;
   /** Cross-chapter field state — for computed-field formulas. */
@@ -97,6 +109,7 @@ export function ChapterCard({
   updatedAt,
   provenance,
   attachments,
+  allAttachmentsByChapter,
   fields,
   otherChaptersFields,
   schema,
@@ -108,8 +121,26 @@ export function ChapterCard({
   const [insufficientCtx, setInsufficientCtx] = useState<string | null>(null);
   const [showProvenance, setShowProvenance] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [draftModalOpen, setDraftModalOpen] = useState(false);
 
-  async function draftThis() {
+  // Click handler for the Draft / Redraft buttons. Just opens the
+  // pre-draft modal — the actual API call happens when the customer
+  // confirms inside the modal (with their extra context + selected
+  // attachments). Keeps the click-to-draft flow consistent for empty
+  // chapters and redrafts.
+  function openDraftModal() {
+    setDraftError(null);
+    setInsufficientCtx(null);
+    setDraftModalOpen(true);
+  }
+
+  // Called by the modal's onConfirm. Posts to /api/agent/draft with
+  // the modal's gathered inputs, handles the 422 insufficient-context
+  // signal, and reloads on success.
+  async function performDraft(args: {
+    extraContext: string;
+    referencedAttachmentIds: string[];
+  }) {
     setDrafting(true);
     setDraftError(null);
     setInsufficientCtx(null);
@@ -117,12 +148,12 @@ export function ChapterCard({
       const res = await fetch("/api/agent/draft", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug }),
+        body: JSON.stringify({
+          slug,
+          extraContext: args.extraContext,
+          referencedAttachmentIds: args.referencedAttachmentIds,
+        }),
       });
-      // 422 = the API refused to draft because Memory is too thin to
-      // produce anything but a skeleton. Swap to the routing UI rather
-      // than render this as a generic red error — the customer needs
-      // direction, not an error code.
       if (res.status === 422) {
         const j = (await res.json().catch(() => ({}))) as {
           reason?: string;
@@ -133,6 +164,7 @@ export function ChapterCard({
             j.message ??
               "Jason needs more context about your business before he can draft this.",
           );
+          setDraftModalOpen(false);
           setDrafting(false);
           return;
         }
@@ -141,13 +173,13 @@ export function ChapterCard({
         const j = await res.json().catch(() => ({}));
         throw new Error((j as { error?: string }).error ?? `draft ${res.status}`);
       }
-      // Soft refresh — re-fetch the canvas so the new draft renders.
-      // Using full reload here keeps the v1 simple; we can switch to
-      // router.refresh() + state-based update later.
+      // Success: full reload so the new draft + extracted fields land
+      // on the canvas. Modal will be torn down by the unmount.
       window.location.reload();
     } catch (err) {
       setDraftError(err instanceof Error ? err.message : "draft failed");
       setDrafting(false);
+      throw err; // re-throw so the modal surfaces it inline too
     }
   }
 
@@ -221,7 +253,7 @@ export function ChapterCard({
             <div className="flex flex-wrap items-center justify-center gap-2">
               <button
                 type="button"
-                onClick={draftThis}
+                onClick={openDraftModal}
                 disabled={drafting}
                 className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-xs uppercase tracking-[0.1em] px-5 py-3 rounded-full hover:bg-gold-dark disabled:opacity-50 transition-colors"
               >
@@ -386,7 +418,7 @@ export function ChapterCard({
               )}
               <button
                 type="button"
-                onClick={draftThis}
+                onClick={openDraftModal}
                 disabled={drafting}
                 className="text-gold-warm hover:text-gold-dark font-semibold disabled:opacity-50"
               >
@@ -440,6 +472,19 @@ export function ChapterCard({
           surface and hides this. */}
       {!editing && (
         <ChapterAttachments slug={slug} attachments={attachments} />
+      )}
+      {draftModalOpen && isValidMemoryFileSlug(slug) && (
+        <DraftWithJasonModal
+          slug={slug}
+          chapterTitle={title}
+          thisChapterAttachments={attachments}
+          allAttachmentsByChapter={allAttachmentsByChapter}
+          isRedraft={!isEmpty}
+          onClose={() => {
+            if (!drafting) setDraftModalOpen(false);
+          }}
+          onConfirm={performDraft}
+        />
       )}
     </article>
   );

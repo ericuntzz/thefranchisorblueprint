@@ -384,6 +384,40 @@ export async function readAttachments(
 }
 
 /**
+ * Read every attachment across all of a customer's chapters. Used by
+ * the pre-draft modal so the customer can pull a reference uploaded
+ * to one chapter into another chapter's draft, and by the draft route
+ * to resolve `referencedAttachmentIds` into actual attachment records.
+ *
+ * Returns an array per chapter (only chapters with at least one
+ * attachment) to keep the payload tight.
+ */
+export async function readAllAttachments(
+  userId: string,
+): Promise<Array<{ slug: MemoryFileSlug; attachments: ChapterAttachment[] }>> {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("customer_memory")
+    .select("file_slug, attachments")
+    .eq("user_id", userId);
+  if (error) {
+    console.error(`[memory] readAllAttachments failed:`, error.message);
+    throw new Error(`Attachments read failed: ${error.message}`);
+  }
+  const out: Array<{ slug: MemoryFileSlug; attachments: ChapterAttachment[] }> = [];
+  for (const row of (data ?? []) as Array<{
+    file_slug: string;
+    attachments: ChapterAttachment[] | null;
+  }>) {
+    const slug = row.file_slug as MemoryFileSlug;
+    if (!isValidMemoryFileSlug(slug)) continue;
+    const attachments = row.attachments ?? [];
+    if (attachments.length > 0) out.push({ slug, attachments });
+  }
+  return out;
+}
+
+/**
  * Append one attachment to a chapter. Creates the chapter row if it
  * doesn't exist yet (so attaching is allowed before any prose has
  * been drafted). Atomic at the row level — concurrent appends to the

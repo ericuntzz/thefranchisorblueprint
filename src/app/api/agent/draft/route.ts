@@ -4,10 +4,12 @@ import { draftChapter } from "@/lib/agent";
 import {
   hasSufficientMemoryForDraft,
   isValidMemoryFileSlug,
+  readAllAttachments,
   upsertMemoryWithProvenance,
   writeMemoryFields,
 } from "@/lib/memory";
-import type { Purchase } from "@/lib/supabase/types";
+import type { ChapterAttachment, Purchase } from "@/lib/supabase/types";
+import type { MemoryFileSlug } from "@/lib/memory/files";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -47,7 +49,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No active purchase" }, { status: 403 });
   }
 
-  let body: { slug?: string; instruction?: string; persist?: boolean };
+  let body: {
+    slug?: string;
+    instruction?: string;
+    persist?: boolean;
+    /** Extra context the customer typed in the pre-draft modal. Not a
+     *  replacement for `instruction` — appended to the default. */
+    extraContext?: string;
+    /** IDs of attachments (across any chapter) the customer explicitly
+     *  selected in the modal. The route resolves these against the
+     *  user's full attachment set and threads them into Opus's prompt
+     *  alongside the chapter's own attachments. */
+    referencedAttachmentIds?: string[];
+  };
   try {
     body = (await req.json()) as typeof body;
   } catch {
@@ -64,9 +78,13 @@ export async function POST(req: NextRequest) {
     );
   }
   const persist = body.persist !== false; // default true
-  const instruction =
+  const baseInstruction =
     (body.instruction ?? "").trim() ||
     "Draft this chapter from everything we know about the customer so far. Be aggressive — fill in what you can, mark gaps clearly with [NEEDS INPUT: ...].";
+  const extraContext = (body.extraContext ?? "").trim();
+  const instruction = extraContext
+    ? `${baseInstruction}\n\nAdditional context the customer wants you to weave in or pay attention to:\n${extraContext}`
+    : baseInstruction;
 
   // Pre-flight: refuse to draft when Memory is too thin to produce
   // anything but a skeleton. Returning a structured "insufficient_context"
@@ -98,11 +116,45 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 
+  // Resolve referenced attachment IDs to actual attachment records.
+  // The customer might have selected attachments from chapters other
+  // than this one — pull them in via readAllAttachments and tag each
+  // with its origin slug so the prompt knows where it came from.
+  let additionalAttachments: Array<{
+    fromSlug: MemoryFileSlug;
+    attachment: ChapterAttachment;
+  }> = [];
+  const requestedIds = new Set(body.referencedAttachmentIds ?? []);
+  if (requestedIds.size > 0) {
+    try {
+      const all = await readAllAttachments(user.id);
+      for (const { slug, attachments } of all) {
+        // Skip THIS chapter's attachments — draftChapter already loads
+        // them as "native" attachments. Only foreign-chapter pulls
+        // belong in additionalAttachments.
+        if (slug === body.slug) continue;
+        for (const att of attachments) {
+          if (requestedIds.has(att.id)) {
+            additionalAttachments.push({ fromSlug: slug, attachment: att });
+          }
+        }
+      }
+    } catch (err) {
+      // Non-fatal: log and proceed with chapter-native attachments only.
+      console.error(
+        "[agent/draft] readAllAttachments failed (non-fatal):",
+        err instanceof Error ? err.message : err,
+      );
+      additionalAttachments = [];
+    }
+  }
+
   try {
     const result = await draftChapter({
       userId: user.id,
       slug: body.slug,
       instruction,
+      additionalAttachments,
     });
     if (persist) {
       await upsertMemoryWithProvenance({

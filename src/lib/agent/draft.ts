@@ -83,6 +83,17 @@ export async function draftChapter(args: {
   instruction: string;
   /** Override the default effort level (e.g. "max" for a critical chapter). */
   effort?: EffortLevel;
+  /**
+   * Cross-chapter attachments the customer explicitly opted-in to via
+   * the pre-draft modal. Merged with the chapter's own attachments
+   * (de-duped by id) for Opus's prompt. Each entry includes
+   * `fromSlug` so the prompt can label "from another chapter" so Opus
+   * knows it's external context, not chapter-native source material.
+   */
+  additionalAttachments?: Array<{
+    fromSlug: MemoryFileSlug;
+    attachment: ChapterAttachment;
+  }>;
 }): Promise<DraftResult> {
   const { userId, slug, instruction } = args;
   const effort = args.effort ?? EFFORT_FOR_DRAFT;
@@ -152,7 +163,25 @@ export async function draftChapter(args: {
       },
       {
         type: "text",
-        text: `Now draft the **${chapterTitle}** (\`${slug}\`) chapter.\n\nDrafting instruction:\n${instruction}${lockPreservationInstruction ? `\n\n${lockPreservationInstruction}` : ""}${attachments.length > 0 ? `\n\n${formatAttachmentsForPrompt(attachments)}` : ""}\n\nFormat requirements:\n- Output the chapter as polished markdown.\n- Embed claim anchors as HTML comments: \`<!-- claim:short-id -->\` immediately before each meaningfully sourced paragraph or numeric assertion. Keep the IDs short and unique within the chapter.\n- After the chapter body, output a fenced \`\`\`json block named \`provenance\` containing an array of objects of the form: \`{ "claim_id": "...", "source_type": "voice_session|upload|form|agent_inference|jason_playbook|research|assessment|scraper", "source_ref": "...", "source_excerpt": "..." }\`. One entry per claim_id used in the chapter. Use \`agent_inference\` for any claim derived from other Memory content vs. directly stated by the customer.\n- Where you don't have enough information, leave a clearly marked \`[NEEDS INPUT: short description]\` block — don't fabricate.\n\nDraft the chapter now.`,
+        text: `Now draft the **${chapterTitle}** (\`${slug}\`) chapter.\n\nDrafting instruction:\n${instruction}${lockPreservationInstruction ? `\n\n${lockPreservationInstruction}` : ""}${(() => {
+          // Merge chapter-native attachments (always-on) with any
+          // cross-chapter attachments the customer explicitly opted
+          // into via the pre-draft modal. De-dupe by id in case an
+          // attachment is somehow listed in both buckets.
+          const merged: Array<{
+            attachment: ChapterAttachment;
+            fromSlug: MemoryFileSlug | null;
+          }> = attachments.map((a) => ({ attachment: a, fromSlug: null }));
+          const seen = new Set(attachments.map((a) => a.id));
+          for (const extra of args.additionalAttachments ?? []) {
+            if (seen.has(extra.attachment.id)) continue;
+            seen.add(extra.attachment.id);
+            merged.push({ attachment: extra.attachment, fromSlug: extra.fromSlug });
+          }
+          return merged.length > 0
+            ? `\n\n${formatAttachmentsForPrompt(merged)}`
+            : "";
+        })()}\n\nFormat requirements:\n- Output the chapter as polished markdown.\n- Embed claim anchors as HTML comments: \`<!-- claim:short-id -->\` immediately before each meaningfully sourced paragraph or numeric assertion. Keep the IDs short and unique within the chapter.\n- After the chapter body, output a fenced \`\`\`json block named \`provenance\` containing an array of objects of the form: \`{ "claim_id": "...", "source_type": "voice_session|upload|form|agent_inference|jason_playbook|research|assessment|scraper", "source_ref": "...", "source_excerpt": "..." }\`. One entry per claim_id used in the chapter. Use \`agent_inference\` for any claim derived from other Memory content vs. directly stated by the customer.\n- Where you don't have enough information, leave a clearly marked \`[NEEDS INPUT: short description]\` block — don't fabricate.\n\nDraft the chapter now.`,
       },
     ],
   });
@@ -330,16 +359,24 @@ function parseDraftWithProvenance(text: string): {
  * structured input distinct from Memory. This is what powers the "I
  * uploaded our training manual — use it when drafting" workflow.
  */
-function formatAttachmentsForPrompt(attachments: ChapterAttachment[]): string {
-  const blocks = attachments.map((a, i) => {
-    const head = `${i + 1}. [${a.kind === "file" ? "FILE" : "LINK"}] ${a.label}${a.kind === "link" ? `  (${a.ref})` : ""}`;
+function formatAttachmentsForPrompt(
+  attachments: Array<{
+    attachment: ChapterAttachment;
+    fromSlug: MemoryFileSlug | null;
+  }>,
+): string {
+  const blocks = attachments.map(({ attachment: a, fromSlug }, i) => {
+    const origin = fromSlug
+      ? `  [from ${fromSlug} chapter]`
+      : "";
+    const head = `${i + 1}. [${a.kind === "file" ? "FILE" : "LINK"}] ${a.label}${a.kind === "link" ? `  (${a.ref})` : ""}${origin}`;
     const excerpt = a.excerpt
       ? `\n   Excerpt:\n   ${a.excerpt.replace(/\n/g, "\n   ")}`
       : "";
     return `${head}${excerpt}`;
   });
   return `<chapter_attachments>
-The customer has attached ${attachments.length} reference${attachments.length === 1 ? "" : "s"} to this chapter to help you draft. Use them as primary source material when relevant.
+The customer has attached ${attachments.length} reference${attachments.length === 1 ? "" : "s"} for this draft. Items marked "from <slug> chapter" were pulled in by the customer as additional context. Use them as primary source material when relevant.
 
 ${blocks.join("\n\n")}
 </chapter_attachments>`;

@@ -102,6 +102,15 @@ export default async function BlueprintLabPage() {
     >;
   }
 
+  // Cross-chapter attachments index, fed to every ChapterCard so the
+  // pre-draft modal can offer a "pull a reference from another
+  // chapter" checkbox list. Only includes chapters that have at least
+  // one attachment — keeps the list tight when most chapters are bare.
+  const allAttachmentsByChapter = MEMORY_FILES.flatMap((s) => {
+    const att = (memoryBySlug.get(s)?.attachments ?? []) as ChapterAttachment[];
+    return att.length > 0 ? [{ slug: s, attachments: att }] : [];
+  });
+
   return (
     <>
       <main className="min-h-[calc(100vh-200px)] bg-cream">
@@ -229,6 +238,7 @@ export default async function BlueprintLabPage() {
                     updatedAt={row?.updated_at ?? null}
                     provenance={provenance}
                     attachments={(row?.attachments ?? []) as ChapterAttachment[]}
+                    allAttachmentsByChapter={allAttachmentsByChapter}
                     fields={fields}
                     otherChaptersFields={otherChaptersFields}
                     schema={schema}
