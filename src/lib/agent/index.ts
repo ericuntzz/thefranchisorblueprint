@@ -31,4 +31,10 @@ export {
 
 export { draftChapter, type DraftResult } from "./draft";
 
-export { streamChat, type ChatTurn } from "./chat";
+export { streamChatEvents, type ChatTurn, type ChatEvent } from "./chat";
+
+export {
+  UPDATE_MEMORY_FIELD_TOOL,
+  executeUpdateMemoryField,
+  type ToolResult,
+} from "./tools";
