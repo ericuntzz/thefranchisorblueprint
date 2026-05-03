@@ -13,7 +13,18 @@
  */
 
 import { useState } from "react";
-import { ArrowRight, Clock, Loader2, Pencil, ShieldCheck, Sparkles } from "lucide-react";
+import Link from "next/link";
+import {
+  AlertCircle,
+  ArrowRight,
+  Clock,
+  Globe,
+  Loader2,
+  MessageCircle,
+  Pencil,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { CustomerMemoryProvenance } from "@/lib/supabase/types";
@@ -71,18 +82,38 @@ export function ChapterCard({
 }: Props) {
   const [drafting, setDrafting] = useState(false);
   const [draftError, setDraftError] = useState<string | null>(null);
+  const [insufficientCtx, setInsufficientCtx] = useState<string | null>(null);
   const [showProvenance, setShowProvenance] = useState(false);
   const [editing, setEditing] = useState(false);
 
   async function draftThis() {
     setDrafting(true);
     setDraftError(null);
+    setInsufficientCtx(null);
     try {
       const res = await fetch("/api/agent/draft", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ slug }),
       });
+      // 422 = the API refused to draft because Memory is too thin to
+      // produce anything but a skeleton. Swap to the routing UI rather
+      // than render this as a generic red error — the customer needs
+      // direction, not an error code.
+      if (res.status === 422) {
+        const j = (await res.json().catch(() => ({}))) as {
+          reason?: string;
+          message?: string;
+        };
+        if (j.reason === "insufficient_context") {
+          setInsufficientCtx(
+            j.message ??
+              "Jason needs more context about your business before he can draft this.",
+          );
+          setDrafting(false);
+          return;
+        }
+      }
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
         throw new Error((j as { error?: string }).error ?? `draft ${res.status}`);
@@ -148,62 +179,68 @@ export function ChapterCard({
           onCancel={() => setEditing(false)}
         />
       ) : isEmpty ? (
-        <div className="rounded-xl border border-dashed border-navy/15 bg-grey-1 px-5 py-8 text-center">
-          <p className="text-grey-3 text-sm mb-4">
-            This chapter is empty. Jason can take a first pass from everything
-            you&apos;ve given the system so far — or you can fill in the
-            details yourself.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <button
-              type="button"
-              onClick={draftThis}
-              disabled={drafting}
-              className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-xs uppercase tracking-[0.1em] px-5 py-3 rounded-full hover:bg-gold-dark disabled:opacity-50 transition-colors"
-            >
-              {drafting ? (
-                <>
-                  <Loader2 size={13} className="animate-spin" /> Drafting…
-                </>
-              ) : (
-                <>
-                  <Sparkles size={13} /> Draft with Jason <ArrowRight size={12} />
-                </>
-              )}
-            </button>
-            {schema && (
+        insufficientCtx ? (
+          <InsufficientContextPanel
+            message={insufficientCtx}
+            schema={schema}
+            onFillFields={() => {
+              setInsufficientCtx(null);
+              setEditing(true);
+            }}
+          />
+        ) : (
+          <div className="rounded-xl border border-dashed border-navy/15 bg-grey-1 px-5 py-8 text-center">
+            <p className="text-grey-3 text-sm mb-4">
+              This chapter is empty. Jason can take a first pass from
+              everything you&apos;ve given the system so far — or you can fill
+              in the details yourself.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-2">
               <button
                 type="button"
-                onClick={() => setEditing(true)}
+                onClick={draftThis}
                 disabled={drafting}
-                className="inline-flex items-center gap-2 bg-transparent text-navy border-2 border-navy font-bold text-xs uppercase tracking-[0.1em] px-5 py-3 rounded-full hover:bg-navy hover:text-cream disabled:opacity-50 transition-colors"
+                className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-xs uppercase tracking-[0.1em] px-5 py-3 rounded-full hover:bg-gold-dark disabled:opacity-50 transition-colors"
               >
-                <Pencil size={13} /> Fill in directly
+                {drafting ? (
+                  <>
+                    <Loader2 size={13} className="animate-spin" /> Drafting…
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={13} /> Draft with Jason{" "}
+                    <ArrowRight size={12} />
+                  </>
+                )}
               </button>
+              {schema && (
+                <button
+                  type="button"
+                  onClick={() => setEditing(true)}
+                  disabled={drafting}
+                  className="inline-flex items-center gap-2 bg-transparent text-navy border-2 border-navy font-bold text-xs uppercase tracking-[0.1em] px-5 py-3 rounded-full hover:bg-navy hover:text-cream disabled:opacity-50 transition-colors"
+                >
+                  <Pencil size={13} /> Fill in directly
+                </button>
+              )}
+            </div>
+            {drafting && (
+              <p className="mt-3 text-xs text-grey-4 italic">
+                Jason is reading your full Memory and writing a chapter from
+                scratch. This usually takes 60–90 seconds — the page will
+                refresh when he&apos;s done.
+              </p>
+            )}
+            {draftError && (
+              <p className="mt-3 text-xs text-red-700">{draftError}</p>
             )}
           </div>
-          {drafting && (
-            <p className="mt-3 text-xs text-grey-4 italic">
-              Jason is reading your full Memory and writing a chapter from
-              scratch. This usually takes 60–90 seconds — the page will
-              refresh when he&apos;s done.
-            </p>
-          )}
-          {draftError && (
-            <p className="mt-3 text-xs text-red-700">{draftError}</p>
-          )}
-        </div>
+        )
       ) : (
         <>
           <div className="chapter-prose text-navy/90 leading-relaxed">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              // Strip the embedded `<!-- claim:X -->` anchors from the
-              // visible render — they're meaningful to the provenance
-              // layer, not to the human reader.
-              skipHtml={true}
-            >
-              {contentMd
+            <NeedsInputProse
+              md={contentMd
                 // Drop claim anchors (they're stored in customer_memory_provenance).
                 .replace(/<!--\s*claim:[^>]*-->/g, "")
                 // Drop the trailing ```json provenance``` fenced block
@@ -213,7 +250,10 @@ export function ChapterCard({
                 // page width via the un-wrappable `<code>` block.
                 .replace(/```json(?:\s*provenance)?\s*\n[\s\S]*?\n```\s*$/i, "")
                 .trim()}
-            </ReactMarkdown>
+              onFillFields={
+                schema ? () => setEditing(true) : undefined
+              }
+            />
           </div>
           <style jsx>{`
             .chapter-prose {
@@ -359,12 +399,237 @@ export function ChapterCard({
               ))}
             </div>
           )}
+          {insufficientCtx && (
+            <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-xs text-amber-900 flex items-start gap-2">
+              <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
+              <span>{insufficientCtx}</span>
+            </div>
+          )}
           {draftError && (
             <p className="mt-3 text-xs text-red-700">{draftError}</p>
           )}
         </>
       )}
     </article>
+  );
+}
+
+/**
+ * Shown when the draft API refuses (422 insufficient_context). Routes
+ * the customer toward the three things that will give Jason something
+ * real to work from: scrape their site, fill in the structured fields,
+ * or open the chat dock to talk it through.
+ *
+ * Why this exists: clicking "Draft with Jason" on a brand-new account
+ * with no Memory used to return a skeleton riddled with `[NEEDS INPUT:
+ * ...]` placeholders. Eric's note: confusing, indistinguishable from
+ * intentional content. Better to refuse cleanly and show the customer
+ * the ramp.
+ */
+function InsufficientContextPanel({
+  message,
+  schema,
+  onFillFields,
+}: {
+  message: string;
+  schema: ChapterSchema | null;
+  onFillFields: () => void;
+}) {
+  return (
+    <div className="rounded-xl border border-amber-300 bg-amber-50 px-5 py-6">
+      <div className="flex items-start gap-3 mb-4">
+        <AlertCircle
+          size={18}
+          className="text-amber-700 mt-0.5 flex-shrink-0"
+        />
+        <div>
+          <div className="text-amber-900 font-bold text-sm mb-1">
+            Jason needs more to work with
+          </div>
+          <p className="text-amber-900/85 text-sm leading-relaxed">
+            {message} Pick one of these to seed the system — Jason can draft
+            the rest from there.
+          </p>
+        </div>
+      </div>
+      <div className="grid sm:grid-cols-2 gap-2">
+        <Link
+          href="/portal/lab/intake"
+          className="flex items-start gap-2 rounded-lg bg-white border border-amber-300 hover:border-navy/40 hover:bg-cream px-3 py-3 text-xs transition-colors"
+        >
+          <Globe
+            size={14}
+            className="text-gold-warm mt-0.5 flex-shrink-0"
+          />
+          <span>
+            <span className="block text-navy font-bold mb-0.5">
+              Pre-fill from your website
+            </span>
+            <span className="block text-grey-3">
+              ~90 seconds. Jason scrapes your site and seeds the foundational
+              chapters.
+            </span>
+          </span>
+        </Link>
+        {schema ? (
+          <button
+            type="button"
+            onClick={onFillFields}
+            className="flex items-start gap-2 rounded-lg bg-white border border-amber-300 hover:border-navy/40 hover:bg-cream px-3 py-3 text-xs transition-colors text-left"
+          >
+            <Pencil
+              size={14}
+              className="text-gold-warm mt-0.5 flex-shrink-0"
+            />
+            <span>
+              <span className="block text-navy font-bold mb-0.5">
+                Fill in the fields here
+              </span>
+              <span className="block text-grey-3">
+                Type the basics for this chapter directly. Jason picks it up
+                from there.
+              </span>
+            </span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("jason:open-dock"));
+              }
+            }}
+            className="flex items-start gap-2 rounded-lg bg-white border border-amber-300 hover:border-navy/40 hover:bg-cream px-3 py-3 text-xs transition-colors text-left"
+          >
+            <MessageCircle
+              size={14}
+              className="text-gold-warm mt-0.5 flex-shrink-0"
+            />
+            <span>
+              <span className="block text-navy font-bold mb-0.5">
+                Talk it through with Jason
+              </span>
+              <span className="block text-grey-3">
+                Open the chat dock and answer a few questions. Jason captures
+                what he hears.
+              </span>
+            </span>
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Renders chapter markdown with `[NEEDS INPUT: ...]` patterns extracted
+ * into visually distinct callout boxes.
+ *
+ * Why a custom renderer: passing the raw markdown to ReactMarkdown
+ * leaves `[NEEDS INPUT: ...]` as plain text inside paragraphs, which
+ * blends visually with the surrounding instructional prose. Eric's
+ * feedback: "input sections blend with instructions, and vice versa".
+ *
+ * Approach: split the markdown at every `[NEEDS INPUT: ...]` occurrence,
+ * render each text segment with ReactMarkdown, and interleave the
+ * extracted prompts as styled callouts. This keeps real prose styled by
+ * react-markdown and gives the gaps a distinct, scannable treatment.
+ *
+ * Tradeoff: splitting mid-stream can technically break a markdown
+ * construct that straddles the boundary (e.g. a list with `[NEEDS
+ * INPUT]` between bullets). In practice the agent emits these as their
+ * own line / block, so the split is clean. If we hit cases where it
+ * isn't, the next iteration is a remark plugin that walks the AST.
+ */
+function NeedsInputProse({
+  md,
+  onFillFields,
+}: {
+  md: string;
+  onFillFields?: () => void;
+}) {
+  // Tolerant pattern: `[NEEDS INPUT:` ... `]`. Doesn't match nested
+  // brackets, but the agent's outputs don't use those inside the prompt
+  // text — confirmed by inspecting a dozen sample drafts.
+  const re = /\[NEEDS INPUT:\s*([^\]]+)\]/g;
+  const parts: Array<
+    { kind: "md"; text: string } | { kind: "needs"; prompt: string }
+  > = [];
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(md)) !== null) {
+    if (m.index > last) parts.push({ kind: "md", text: md.slice(last, m.index) });
+    parts.push({ kind: "needs", prompt: m[1].trim() });
+    last = m.index + m[0].length;
+  }
+  if (last < md.length) parts.push({ kind: "md", text: md.slice(last) });
+
+  // No prompts → just render the whole thing as a single ReactMarkdown
+  // pass (cheaper, no risk of split artefacts).
+  if (!parts.some((p) => p.kind === "needs")) {
+    return (
+      <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml={true}>
+        {md}
+      </ReactMarkdown>
+    );
+  }
+
+  return (
+    <>
+      {parts.map((p, i) =>
+        p.kind === "md" ? (
+          p.text.trim() ? (
+            <ReactMarkdown
+              key={i}
+              remarkPlugins={[remarkGfm]}
+              skipHtml={true}
+            >
+              {p.text}
+            </ReactMarkdown>
+          ) : null
+        ) : (
+          <NeedsInputCallout
+            key={i}
+            prompt={p.prompt}
+            onFillFields={onFillFields}
+          />
+        ),
+      )}
+    </>
+  );
+}
+
+/**
+ * One styled `[NEEDS INPUT: ...]` callout. Visually distinct from
+ * surrounding prose — amber rule, AlertCircle icon, "Needs input"
+ * label, and (when the chapter has a schema) a "Fill in fields" CTA
+ * that flips the card into edit mode. The customer always knows what
+ * Jason wrote vs what Jason is asking for.
+ */
+function NeedsInputCallout({
+  prompt,
+  onFillFields,
+}: {
+  prompt: string;
+  onFillFields?: () => void;
+}) {
+  return (
+    <div className="my-4 rounded-lg border-l-4 border-amber-400 bg-amber-50/70 pl-4 pr-3 py-3">
+      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.14em] font-bold text-amber-800 mb-1">
+        <AlertCircle size={11} />
+        Needs input
+      </div>
+      <div className="text-sm text-amber-950/90 leading-snug">{prompt}</div>
+      {onFillFields && (
+        <button
+          type="button"
+          onClick={onFillFields}
+          className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-amber-900 hover:text-navy transition-colors"
+        >
+          <Pencil size={11} /> Fill in fields
+        </button>
+      )}
+    </div>
   );
 }
 

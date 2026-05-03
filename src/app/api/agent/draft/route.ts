@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { draftChapter } from "@/lib/agent";
 import {
+  hasSufficientMemoryForDraft,
   isValidMemoryFileSlug,
   upsertMemoryWithProvenance,
 } from "@/lib/memory";
@@ -65,6 +66,36 @@ export async function POST(req: NextRequest) {
   const instruction =
     (body.instruction ?? "").trim() ||
     "Draft this chapter from everything we know about the customer so far. Be aggressive — fill in what you can, mark gaps clearly with [NEEDS INPUT: ...].";
+
+  // Pre-flight: refuse to draft when Memory is too thin to produce
+  // anything but a skeleton. Returning a structured "insufficient_context"
+  // signal lets the UI route the customer to fill fields / scrape their
+  // site / record voice intake first, instead of showing them a wall of
+  // [NEEDS INPUT] placeholders.
+  //
+  // This check is global (across the whole customer's Memory), not
+  // chapter-local — even an empty chapter is draftable if other chapters
+  // have content the agent can reason from. We only refuse when the
+  // entire Memory is effectively empty.
+  try {
+    const sufficiency = await hasSufficientMemoryForDraft(user.id);
+    if (!sufficiency.sufficient) {
+      return NextResponse.json(
+        {
+          ok: false,
+          reason: "insufficient_context",
+          message:
+            "Jason needs at least a little context about your business before drafting a chapter. The chapter would be mostly placeholders right now — let's seed it first.",
+          signals: sufficiency.signals,
+        },
+        { status: 422 },
+      );
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "sufficiency check failed";
+    console.error("[agent/draft] sufficiency check failed:", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 
   try {
     const result = await draftChapter({

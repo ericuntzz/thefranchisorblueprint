@@ -261,6 +261,76 @@ export async function writeMemoryFields(args: {
 }
 
 /**
+ * Sufficiency check for the chapter-draft pipeline.
+ *
+ * The agent should NOT attempt a fresh chapter draft if Memory is
+ * effectively empty across the entire customer — Opus will dutifully
+ * produce a skeleton riddled with `[NEEDS INPUT: ...]` placeholders
+ * (Eric's feedback: "this is confusing"). Cheaper and clearer to refuse
+ * up-front and route the customer to fill fields, scrape their site, or
+ * record a voice intake first.
+ *
+ * "Sufficient" today means ANY of:
+ *   - At least one chapter has ≥100 chars of `content_md` (scrape, prior
+ *     draft, or customer prose). 100 chars eliminates near-empty rows
+ *     that exist only because some metadata column was set.
+ *   - At least 3 structured fields populated across all chapters
+ *     (signals the customer has typed at least the basics).
+ *
+ * Returns the signals so the caller can pass them to the UI for a
+ * targeted "what to do next" message.
+ */
+export async function hasSufficientMemoryForDraft(userId: string): Promise<{
+  sufficient: boolean;
+  signals: {
+    chaptersWithContent: number;
+    chaptersWithFields: number;
+    totalFieldsPopulated: number;
+  };
+}> {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("customer_memory")
+    .select("content_md, fields")
+    .eq("user_id", userId);
+  if (error) {
+    console.error(`[memory] hasSufficientMemoryForDraft failed:`, error.message);
+    throw new Error(`Memory read failed: ${error.message}`);
+  }
+
+  let chaptersWithContent = 0;
+  let chaptersWithFields = 0;
+  let totalFieldsPopulated = 0;
+
+  for (const row of (data ?? []) as Array<{
+    content_md: string | null;
+    fields: Record<string, unknown> | null;
+  }>) {
+    if ((row.content_md ?? "").trim().length >= 100) chaptersWithContent += 1;
+    const fields = row.fields ?? {};
+    let countThisRow = 0;
+    for (const v of Object.values(fields)) {
+      if (v == null) continue;
+      if (typeof v === "string" && v.trim() === "") continue;
+      if (Array.isArray(v) && v.length === 0) continue;
+      countThisRow += 1;
+    }
+    if (countThisRow > 0) chaptersWithFields += 1;
+    totalFieldsPopulated += countThisRow;
+  }
+
+  const sufficient = chaptersWithContent >= 1 || totalFieldsPopulated >= 3;
+  return {
+    sufficient,
+    signals: {
+      chaptersWithContent,
+      chaptersWithFields,
+      totalFieldsPopulated,
+    },
+  };
+}
+
+/**
  * Read just the structured-fields layer for one chapter. Returns null
  * if the chapter has no row yet (every field is empty).
  */
