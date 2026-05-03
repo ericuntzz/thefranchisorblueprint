@@ -57,6 +57,10 @@
  *   - "system", "identity", "platform", "ecosystem" (unless very specific)
  *   - "brand voice/tone/persona" without context
  *   - "drives" / "leverages" / "powers" (consultant verbs)
+ *   - "chapter" — that's our internal language for the 16 Memory files,
+ *     not what the customer calls them. They see them as labeled
+ *     sections of their Blueprint. Use "section" or rephrase to avoid
+ *     the meta-reference entirely.
  *   - Anything that sounds like a marketing-agency intake form
  *
  * Test phrase: "would Jason say this on a strategy call?" If not,
@@ -68,7 +72,34 @@
  * Examples that fail:
  *   ✗ "How your brand identity shows up in the system."
  *   ✗ "The cover story for the whole bundle."
+ *   ✗ "The first chapter your attorney reads."
  *   ✗ "Defines the franchisor's revenue per franchisee."
+ *
+ * ─── THE LOOKUP-BURDEN PATTERN ─────────────────────────────────────────
+ *
+ * If a field requires the customer to GO LOOK SOMETHING UP that we
+ * could resolve for them, the agent fills it by default. The customer
+ * sees the resolved value with a "Verify" affordance and can override
+ * if we got it wrong.
+ *
+ * Examples:
+ *   - `naics_code` ← inferred from `industry_category` via lookup table
+ *     + Sonnet 4.6 fallback. Customer never has to visit naics.com.
+ *   - State franchise registration list (future) ← inferred from the
+ *     states where the customer wants to operate.
+ *   - Industry-typical royalty range (future) ← inferred from
+ *     `industry_category` against published franchise-industry data.
+ *
+ * Implementation note: there's no `agentFillsAutomatically: true` flag
+ * on FieldDef yet — the agent's draft pipeline knows which fields to
+ * resolve via the prompt. We may add a declarative flag later if the
+ * pattern proliferates, but for now it's fine to encode the behavior
+ * in the agent's prompt template + a comment on the field itself.
+ *
+ * The customer-facing voice for these fields makes the agent's role
+ * explicit: "We look this up from your industry category — you don't
+ * have to find it yourself." Never make the customer feel like they
+ * have homework we could have done.
  *
  * ─── STATUS ────────────────────────────────────────────────────────────
  *
@@ -229,7 +260,7 @@ const BUSINESS_OVERVIEW: ChapterSchema = {
   slug: "business_overview",
   title: "Concept & Story",
   description:
-    "What you do, who you do it for, and how you got here. The first chapter your attorney reads — and what franchisees fall in love with.",
+    "What you do, who you do it for, and how you got here. The opening of your FDD — and what franchisees fall in love with.",
   compilesInto:
     "FDD Item 1, Operations Manual §1, Discovery Day deck opener.",
   fields: [
@@ -240,7 +271,7 @@ const BUSINESS_OVERVIEW: ChapterSchema = {
       type: "textarea",
       required: true,
       placeholder:
-        "High Point is a small-town third-wave coffee shop that roasts on-site, serves a locally-tuned menu, and treats every café as a community room rather than a transaction counter.",
+        "Cypress Lane is a small-town third-wave coffee shop that roasts on-site, serves a locally-tuned menu, and treats every café as a community room rather than a transaction counter.",
       helpText:
         "2–3 sentences. The first paragraph an attorney reads. Should be unmistakably about your business — not generic.",
       category: "The concept",
@@ -264,12 +295,18 @@ const BUSINESS_OVERVIEW: ChapterSchema = {
       category: "The concept",
     },
     {
+      // Agent-resolved by default — see "Lookup-burden pattern" in the
+      // file's top comment block. Customer fills `industry_category` in
+      // plain English; the agent infers the NAICS code from a lookup
+      // table + Sonnet 4.6 fallback. Customer sees the resolved value
+      // here with a "Verify" link to the official NAICS page; can
+      // override if we got it wrong.
       name: "naics_code",
       label: "NAICS code",
       type: "text",
       placeholder: "722515",
       helpText:
-        "U.S. industry classification code. Required on most state franchise registration applications — your attorney will need it. Look up at naics.com.",
+        "We look this up from your industry category — you don't have to find it yourself. Verify it on the U.S. Census NAICS site if you want to double-check, and override here if we got it wrong.",
       category: "The concept",
       advanced: true,
     },
@@ -290,7 +327,7 @@ const BUSINESS_OVERVIEW: ChapterSchema = {
       label: "Founder background",
       type: "textarea",
       placeholder:
-        "Sarah spent eight years as a barista and trainer at three Bay Area roasters before moving back home to Hattiesburg in 2017.",
+        "Sarah spent eight years as a barista and trainer at three Bay Area roasters before moving back home to Oxford in 2018.",
       helpText:
         "1–2 sentences on relevant experience. The credibility paragraph — what gives the founder the right to be running this.",
       category: "Founder",
@@ -311,7 +348,7 @@ const BUSINESS_OVERVIEW: ChapterSchema = {
       name: "founding_date",
       label: "First location opened",
       type: "date",
-      placeholder: "2017-09-01",
+      placeholder: "2018-09-01",
       helpText: "Date the first revenue-generating location opened.",
       category: "Track record",
     },
@@ -319,7 +356,7 @@ const BUSINESS_OVERVIEW: ChapterSchema = {
       name: "first_location_address",
       label: "First location address",
       type: "text",
-      placeholder: "412 Main Street, Hattiesburg, MS 39401",
+      placeholder: "412 Main Street, Oxford, MS 38655",
       category: "Track record",
       advanced: true,
     },
@@ -353,7 +390,7 @@ const BUSINESS_OVERVIEW: ChapterSchema = {
       label: "Key milestones",
       type: "list_long",
       placeholder:
-        "2017: opened first location\n2019: hit $850K AUV\n2021: opened second location, brought roasting in-house\n2023: third location, started developing the franchise model",
+        "2018: opened first location\n2020: hit $850K AUV\n2022: opened second location, brought roasting in-house\n2024: third location, started developing the franchise model",
       helpText:
         "One short line per milestone. The arc the FDD and Discovery Day deck both walk through.",
       category: "Track record",
@@ -631,7 +668,7 @@ const UNIT_ECONOMICS: ChapterSchema = {
       label: "Key assumptions behind these numbers",
       type: "textarea",
       placeholder:
-        "Numbers based on the three corporate locations (years 2017–2024). Assumes a 1,400–1,800 sqft footprint, urban or close-suburb location, and a household income median ≥ $55K within 5 miles. Does not assume drive-through revenue.",
+        "Numbers based on the three corporate locations (years 2018–2025). Assumes a 1,400–1,800 sqft footprint, urban or close-suburb location, and a household income median ≥ $55K within 5 miles. Does not assume drive-through revenue.",
       helpText:
         "Anything an attorney or franchisee should know to read these numbers correctly. Becomes the FDD Item 19 disclaimer paragraph.",
       category: "Assumptions",
