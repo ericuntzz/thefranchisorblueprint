@@ -16,6 +16,7 @@ import {
   Briefcase,
 } from "lucide-react";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
   CAPABILITIES,
   PHASES,
@@ -24,6 +25,20 @@ import {
   type Capability,
   type CapabilityPhase,
 } from "@/lib/capabilities";
+import {
+  computeChapterReadiness,
+  indexMemoryRows,
+  memoryFieldsFromRows,
+  overallReadinessPct,
+} from "@/lib/memory/readiness";
+import {
+  computeQuestionQueue,
+  estimateMinutes,
+  summarizeQueue,
+} from "@/lib/memory/queue";
+import { CommandCenter } from "@/components/portal/CommandCenter";
+import { DeliverableChecklist } from "@/components/portal/DeliverableChecklist";
+import type { CustomerMemory as CM } from "@/lib/supabase/types";
 import {
   getActiveOffersForUser,
   isPromoActive,
@@ -144,6 +159,29 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
     ? Math.max(1, Math.floor((Date.now() - joinedAt.getTime()) / (24 * 3600 * 1000)) + 1)
     : null;
 
+  // ---- Franchise Readiness Command Center inputs ----
+  // Read every customer_memory row so we can compute per-chapter
+  // readiness + the question queue. Service-role client because the
+  // dashboard is auth-gated and we want this in one round-trip.
+  const admin = getSupabaseAdmin();
+  const { data: memoryRowsRaw } = await admin
+    .from("customer_memory")
+    .select("file_slug, content_md, fields, confidence, attachments")
+    .eq("user_id", user.id);
+  const memoryIndexed = indexMemoryRows(
+    (memoryRowsRaw ?? []) as Array<
+      Pick<
+        CM,
+        "file_slug" | "content_md" | "fields" | "confidence" | "attachments"
+      >
+    >,
+  );
+  const chapterReadiness = computeChapterReadiness(memoryIndexed);
+  const readinessPct = overallReadinessPct(chapterReadiness);
+  const queueItems = computeQuestionQueue(memoryFieldsFromRows(memoryIndexed));
+  const queueSummary = summarizeQueue(queueItems);
+  const queueEstimateMin = estimateMinutes(queueItems);
+
   // Active 48hr promo offer — surfaced via the inline UpgradeBanner component
   const offers = tier < 3 ? await getActiveOffersForUser(user.id) : [];
   const activePromo = offers
@@ -195,6 +233,25 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
 
           {/* Progress bar — single source of truth on "where am I" */}
           <ProgressMeter percent={percentComplete} completed={completedCount} total={totalCount} />
+        </div>
+      </section>
+
+      {/* ===== Franchise Readiness Command Center ===== */}
+      {/* Phase 2A surface — guided next-best-step + deliverable
+          checklist. Sits between the welcome hero and the legacy
+          capability journey so customers landing on /portal see the
+          guided path first. The /portal/lab/blueprint canvas remains
+          available as the "expert mode" via the Command Center's
+          secondary "View full Blueprint" link. */}
+      <section className="bg-cream py-8 md:py-12 border-b border-navy/5">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 space-y-6">
+          <CommandCenter
+            firstName={firstName}
+            readinessPct={readinessPct}
+            queue={queueSummary}
+            estimateMin={queueEstimateMin}
+          />
+          <DeliverableChecklist readiness={chapterReadiness} />
         </div>
       </section>
 
