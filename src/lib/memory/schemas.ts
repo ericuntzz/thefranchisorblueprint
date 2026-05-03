@@ -1,38 +1,91 @@
 /**
  * Per-chapter field schemas — Phase 1.5a.
  *
- * Each chapter of the customer's Franchisor Blueprint has a STRUCTURED
- * data layer (typed fields) alongside the existing narrative `content_md`
- * prose. The structured layer is what:
+ * Each chapter has a STRUCTURED data layer (typed fields) alongside the
+ * existing narrative `content_md` prose. The structured layer is what:
  *
- *   - The export pipeline (Phase 5) substitutes into DOCX/PPTX templates
+ *   - The export pipeline substitutes into DOCX/PPTX templates
  *     (`{{royalty_rate_pct}}` is clean; parsing "5–7% depending on tier"
  *     out of a paragraph is brittle).
- *   - The math library (`src/lib/calc/`) reads for FDD Item 7 totals,
- *     ramp curves, financial-model formulas (those need typed numbers).
- *   - The attorney-readiness scoring reads to compute "12 of 15 fields
- *     verified" — a sharper metric than "78% attorney-ready."
- *   - The customer-edits-inline UI is built around (Profound-style:
- *     click a labeled field, type a value, save).
- *   - The chat agent's `update_memory_field` tool targets, by name,
- *     when it learns something via voice intake or chat correction.
+ *   - The math library reads for FDD Item 7 totals, ramp curves,
+ *     financial-model formulas (those need typed numbers).
+ *   - The attorney-readiness scoring reads to compute "12 of 15 required
+ *     fields filled" — a sharper metric than "78% attorney-ready."
+ *   - The customer-edits-inline UI is built around (click a labeled
+ *     field, type a value, save).
+ *   - The chat agent's `update_memory_field` tool targets, by name, when
+ *     it learns something via voice intake or chat correction.
  *
  * The narrative `content_md` still exists alongside this — it's the
  * polished prose that gets compiled into the export. The agent's
  * drafting pipeline writes BOTH: it extracts structured field values
  * AND writes prose that references those fields. When a field changes,
- * the prose can stay or be regenerated explicitly (we do NOT auto-
- * regenerate prose on every field edit — would be jarring).
+ * the prose can stay or be regenerated explicitly — we do NOT auto-
+ * regenerate prose on every field edit (would be jarring).
  *
- * THIS FILE IS THE ONLY SOURCE OF TRUTH for what fields a chapter has.
- * Eric and Jason should treat it as the product spec and edit here when
- * they want to add/remove/rename a field. Renames are destructive — see
- * the migration note at the bottom.
+ * ─── THE THREE-BUCKET FRAMEWORK ────────────────────────────────────────
  *
- * Phase 1.5a status:
- *   ✅ Foundational chapters defined (brand_voice, business_overview,
- *      unit_economics, franchise_economics)
- *   ⏳ Remaining 12 chapters pending Eric+Jason review of these four
+ * Not every chapter wants to be heavily field-driven. Forcing structure
+ * on inherently prose chapters makes them brittle and removes the
+ * agent's ability to write fluid copy. Each chapter belongs to one of
+ * three buckets:
+ *
+ *   1. HEAVY STRUCTURED (15–25 fields)
+ *      Numbers + legal templating drive these. Field accuracy matters
+ *      more than prose quality. Examples: unit_economics,
+ *      franchise_economics, employee_handbook, compliance_legal.
+ *
+ *   2. LIGHT HYBRID (4–8 anchor fields + content_md)
+ *      A handful of named anchors (founder name, founding year,
+ *      concept summary) plus rich prose. The anchors are what the
+ *      export references; the prose is what the customer reads.
+ *      Examples: business_overview, brand_voice, operating_model,
+ *      training_program.
+ *
+ *   3. AGENT-RESEARCH DRAFTED (2–3 anchors + research-driven prose)
+ *      Mostly written by the agent from external research, with a
+ *      handful of customer-confirmed anchors. Examples (Phase 3):
+ *      market_strategy, competitor_landscape, territory_real_estate.
+ *
+ * If a chapter is creeping past 25 fields, the bucket is probably wrong.
+ *
+ * ─── THE OPERATOR-VOICE RULE ───────────────────────────────────────────
+ *
+ * Field labels, descriptions, and helpText all read to a $1M-$10M
+ * business owner who is NOT a marketer. Avoid:
+ *
+ *   - "system", "identity", "platform", "ecosystem" (unless very specific)
+ *   - "brand voice/tone/persona" without context
+ *   - "drives" / "leverages" / "powers" (consultant verbs)
+ *   - Anything that sounds like a marketing-agency intake form
+ *
+ * Test phrase: "would Jason say this on a strategy call?" If not,
+ * rewrite. Examples that pass:
+ *   ✓ "What changes hands at the register."
+ *   ✓ "The single most important number in the whole Blueprint."
+ *   ✓ "Skip if you don't have one — better to leave blank than invent
+ *     one for the FDD."
+ * Examples that fail:
+ *   ✗ "How your brand identity shows up in the system."
+ *   ✗ "The cover story for the whole bundle."
+ *   ✗ "Defines the franchisor's revenue per franchisee."
+ *
+ * ─── STATUS ────────────────────────────────────────────────────────────
+ *
+ * ✅ Foundational chapters (4):
+ *      business_overview      (light hybrid, 15 fields)
+ *      unit_economics         (heavy structured, 22 fields)
+ *      franchise_economics    (heavy structured, 21 fields)
+ *      franchisee_profile     (heavy structured, ~20 fields)
+ *
+ * ⏳ Pending Eric+Jason review on the four above before designing the
+ *    remaining 12.
+ *
+ * 🅿️ Deferred to Phase 1.5b (lighter footprint when designed):
+ *      brand_voice — light hybrid, ~6-8 fields. The v1 was scoped too
+ *      heavily (20 fields) anchored on a marketing-agency mental
+ *      model. Operators don't need 20 brand fields; they need logo,
+ *      2-3 colors, 1 sentence on voice — done. Coming back to this.
  *
  * See `docs/agentic-portal-buildout.md` §4 for the broader Memory
  * architecture and `src/lib/memory/files.ts` for the canonical chapter
@@ -158,208 +211,16 @@ export type ChapterSchema = {
 // ---------------------------------------------------------------------------
 
 /**
- * brand_voice — Brand Standards.
- *
- * This is the first chapter the website-scrape pipeline populates, so
- * almost every field here should be reachable from a typical
- * marketing-site scrape (with help from Sonnet 4.6 inference).
- *
- * Compiles into: Operations Manual §2 (Brand Standards), Marketing Fund
- * Manual cover sections, FDD Item 1 cover/branding.
- */
-const BRAND_VOICE: ChapterSchema = {
-  slug: "brand_voice",
-  title: "Brand Standards",
-  description:
-    "How your brand identity shows up in the system — the version every franchisee will use.",
-  compilesInto:
-    "Operations Manual §2, Marketing Fund Manual cover, FDD Item 1 branding.",
-  fields: [
-    // ── Identity ────────────────────────────────────────────────────────────
-    {
-      name: "brand_name",
-      label: "Brand name",
-      type: "text",
-      required: true,
-      placeholder: "High Point Coffee",
-      helpText:
-        "The customer-facing name on signage, packaging, and marketing. Not the LLC.",
-      category: "Identity",
-    },
-    {
-      name: "legal_entity_name",
-      label: "Legal franchisor entity",
-      type: "text",
-      placeholder: "High Point Coffee Franchising, LLC",
-      helpText:
-        "The legal entity that signs the franchise agreement. Often different from the brand name.",
-      category: "Identity",
-    },
-    {
-      name: "founding_year",
-      label: "Founded in",
-      type: "year",
-      placeholder: "2017",
-      category: "Identity",
-    },
-    {
-      name: "tagline",
-      label: "Tagline / slogan",
-      type: "text",
-      placeholder: "The smartest path to better coffee.",
-      helpText:
-        "Optional. Skip if you don't have one — better to leave blank than invent one for the FDD.",
-      category: "Identity",
-    },
-
-    // ── Voice ───────────────────────────────────────────────────────────────
-    {
-      name: "mission_statement",
-      label: "Mission",
-      type: "textarea",
-      placeholder:
-        "We exist to make better coffee accessible to small towns the third-wave skipped over.",
-      helpText:
-        "1–2 sentences on why the business exists. Should be defensible to a franchisee asking 'what am I really selling?'",
-      category: "Voice",
-    },
-    {
-      name: "positioning_statement",
-      label: "Positioning",
-      type: "textarea",
-      placeholder:
-        "For locals who want a daily café experience without driving 40 miles to the city, High Point delivers third-wave coffee in a small-town-comfortable space.",
-      helpText:
-        "2–3 sentences. The 'for X who Y, we provide Z' shape. Forces clarity an attorney will appreciate.",
-      category: "Voice",
-    },
-    {
-      name: "voice_adjectives",
-      label: "Voice — three to five words",
-      type: "list_short",
-      placeholder: "Warm, direct, operator-to-operator",
-      helpText: "Three to five adjectives that describe how the brand speaks.",
-      category: "Voice",
-    },
-    {
-      name: "voice_description",
-      label: "Voice — one-sentence description",
-      type: "textarea",
-      placeholder:
-        "We talk to customers like neighbors who happen to know coffee. No barista jargon, no condescension.",
-      helpText:
-        "How those adjectives play out. Used in the operations manual to coach franchisees on copy and customer service language.",
-      category: "Voice",
-    },
-    {
-      name: "target_customer",
-      label: "Target customer",
-      type: "textarea",
-      placeholder:
-        "Locals 25–55 who used to drive to the city for good coffee and would rather stay closer to home if the quality holds up.",
-      helpText: "Who this is built for. One paragraph.",
-      category: "Voice",
-    },
-    {
-      name: "distinctive_value_props",
-      label: "What makes you distinctive",
-      type: "list_short",
-      placeholder: "Single-origin every week\nIn-house roasting\nNo Wi-Fi",
-      helpText:
-        "Three to five differentiators. Should each be a defensible claim, not marketing fluff.",
-      category: "Voice",
-    },
-
-    // ── Visual ──────────────────────────────────────────────────────────────
-    {
-      name: "primary_color_hex",
-      label: "Primary color",
-      type: "color",
-      placeholder: "#1E3A5F",
-      helpText: "The single dominant brand color.",
-      category: "Visual",
-    },
-    {
-      name: "secondary_color_hex",
-      label: "Secondary color",
-      type: "color",
-      placeholder: "#D4AF37",
-      category: "Visual",
-    },
-    {
-      name: "accent_color_hex",
-      label: "Accent color",
-      type: "color",
-      placeholder: "#ECE9DF",
-      category: "Visual",
-      advanced: true,
-    },
-    {
-      name: "typography_primary",
-      label: "Primary typeface",
-      type: "text",
-      placeholder: "Inter",
-      helpText: "The display / heading typeface.",
-      category: "Visual",
-    },
-    {
-      name: "typography_secondary",
-      label: "Secondary typeface",
-      type: "text",
-      placeholder: "Source Serif Pro",
-      helpText: "Optional. Body text or supporting use.",
-      category: "Visual",
-      advanced: true,
-    },
-    {
-      name: "logo_url",
-      label: "Logo URL",
-      type: "url",
-      placeholder: "https://yoursite.com/logo.svg",
-      helpText: "Direct URL to your highest-resolution logo file.",
-      category: "Visual",
-    },
-
-    // ── Web presence ────────────────────────────────────────────────────────
-    {
-      name: "website_url",
-      label: "Website",
-      type: "url",
-      placeholder: "https://highpointcoffee.com",
-      category: "Web presence",
-    },
-    {
-      name: "instagram_handle",
-      label: "Instagram",
-      type: "text",
-      placeholder: "@highpointcoffee",
-      category: "Web presence",
-      advanced: true,
-    },
-    {
-      name: "linkedin_url",
-      label: "LinkedIn",
-      type: "url",
-      category: "Web presence",
-      advanced: true,
-    },
-    {
-      name: "facebook_url",
-      label: "Facebook",
-      type: "url",
-      category: "Web presence",
-      advanced: true,
-    },
-  ],
-};
-
-/**
  * business_overview — Concept & Story.
  *
  * The narrative anchor for FDD Item 1 (the franchisor's identity and
  * concept) and the Operations Manual's opening chapter. The fields here
  * are the ones a franchise attorney will want documented — and the ones
- * Jason will want stress-tested in the readiness audit.
+ * Jason will stress-test in the readiness audit.
+ *
+ * Bucket: light hybrid (15 anchor fields + content_md prose). The
+ * founder origin story and concept summary are mostly carried by the
+ * prose; the anchors are what the export pipeline references.
  *
  * Compiles into: FDD Item 1, Operations Manual §1, Discovery Day deck
  * opener, Concept Memo (the Day-1 wow artifact).
@@ -368,7 +229,7 @@ const BUSINESS_OVERVIEW: ChapterSchema = {
   slug: "business_overview",
   title: "Concept & Story",
   description:
-    "What the business is, why it exists, and what makes it franchisable. The cover story for the whole bundle.",
+    "What you do, who you do it for, and how you got here. The first chapter your attorney reads — and what franchisees fall in love with.",
   compilesInto:
     "FDD Item 1, Operations Manual §1, Discovery Day deck opener.",
   fields: [
@@ -381,7 +242,7 @@ const BUSINESS_OVERVIEW: ChapterSchema = {
       placeholder:
         "High Point is a small-town third-wave coffee shop that roasts on-site, serves a locally-tuned menu, and treats every café as a community room rather than a transaction counter.",
       helpText:
-        "2–3 sentences. The single paragraph an attorney reads first. Should be unmistakably about THIS business — not boilerplate.",
+        "2–3 sentences. The first paragraph an attorney reads. Should be unmistakably about your business — not generic.",
       category: "The concept",
     },
     {
@@ -391,7 +252,7 @@ const BUSINESS_OVERVIEW: ChapterSchema = {
       placeholder:
         "Specialty coffee (single-origin pour-over, espresso drinks), in-house pastries, light savory menu, retail beans by the bag.",
       helpText:
-        "What changes hands at the register. Specific enough that an FDD reviewer can classify the business.",
+        "What changes hands at the register. Specific enough an attorney can classify the business.",
       category: "The concept",
     },
     {
@@ -408,7 +269,7 @@ const BUSINESS_OVERVIEW: ChapterSchema = {
       type: "text",
       placeholder: "722515",
       helpText:
-        "U.S. industry classification code. Required on most state franchise registration applications. Look up at naics.com if unsure.",
+        "U.S. industry classification code. Required on most state franchise registration applications — your attorney will need it. Look up at naics.com.",
       category: "The concept",
       advanced: true,
     },
@@ -431,17 +292,17 @@ const BUSINESS_OVERVIEW: ChapterSchema = {
       placeholder:
         "Sarah spent eight years as a barista and trainer at three Bay Area roasters before moving back home to Hattiesburg in 2017.",
       helpText:
-        "1–2 sentences on relevant experience. Used to establish operator credibility for the FDD.",
+        "1–2 sentences on relevant experience. The credibility paragraph — what gives the founder the right to be running this.",
       category: "Founder",
     },
     {
       name: "founder_origin_story",
       label: "Why this business exists",
-      type: "markdown",
+      type: "textarea",
       placeholder:
         "I grew up here and I drove 40 miles each way for good coffee for years. When I moved back, I didn't want to keep doing that — and I figured my neighbors didn't either.",
       helpText:
-        "1–2 paragraphs in the founder's voice. The most important narrative passage in the whole Blueprint — this is what an investor or franchisee remembers.",
+        "1–2 paragraphs in the founder's own voice. The single most important narrative passage in the whole Blueprint — this is what franchisees remember.",
       category: "Founder",
     },
 
@@ -464,15 +325,15 @@ const BUSINESS_OVERVIEW: ChapterSchema = {
     },
     {
       name: "current_location_count",
-      label: "Current locations operating",
+      label: "Locations operating today",
       type: "integer",
       placeholder: "3",
-      helpText: "Open and revenue-generating, including franchised + corporate.",
+      helpText: "Open and earning revenue, both your own and any already franchised.",
       category: "Track record",
     },
     {
       name: "corporate_location_count",
-      label: "Of which: corporate-owned",
+      label: "Of which: you own",
       type: "integer",
       placeholder: "3",
       category: "Track record",
@@ -483,7 +344,7 @@ const BUSINESS_OVERVIEW: ChapterSchema = {
       label: "Of which: already franchised",
       type: "integer",
       placeholder: "0",
-      helpText: "Existing franchised units. Will be 0 for emerging franchisors pre-launch.",
+      helpText: "Most emerging franchisors are at 0 here when they start the FDD process.",
       category: "Track record",
       advanced: true,
     },
@@ -494,29 +355,29 @@ const BUSINESS_OVERVIEW: ChapterSchema = {
       placeholder:
         "2017: opened first location\n2019: hit $850K AUV\n2021: opened second location, brought roasting in-house\n2023: third location, started developing the franchise model",
       helpText:
-        "One short line per milestone. Used to establish a track record arc for the FDD and Discovery Day deck.",
+        "One short line per milestone. The arc the FDD and Discovery Day deck both walk through.",
       category: "Track record",
     },
 
     // ── Audience ────────────────────────────────────────────────────────────
     {
       name: "target_customer_persona",
-      label: "Target customer persona",
+      label: "Who walks through the door",
       type: "textarea",
       placeholder:
         "Locals 25–55 with disposable income and either a remote-work setup or a kid in school. They have a coffee habit and they care about quality more than they admit.",
       helpText:
-        "2–3 sentences on who walks through the door. Specific enough to inform site selection and marketing.",
+        "2–3 sentences on your typical customer. Specific enough to drive site selection and franchisee training.",
       category: "Audience",
     },
     {
       name: "distinctive_attributes",
-      label: "What makes you franchisable",
+      label: "Why this works as a franchise",
       type: "list_short",
       placeholder:
         "Codified menu (no chef-driven dependency)\nIn-house roasting + barista training program\nProven unit economics across 3 locations",
       helpText:
-        "Three to five attributes that justify the franchise model. These should be defensible — what would Jason say if a franchisee asked 'why should I trust this is replicable?'",
+        "Three to five reasons this works as a franchise — not just as your business. Each should be a defensible claim, not marketing fluff.",
       category: "Audience",
     },
   ],
@@ -531,24 +392,24 @@ const BUSINESS_OVERVIEW: ChapterSchema = {
  * model deliverable. Wrong numbers here are the difference between an
  * approved FDD and a rejected one.
  *
- * Note on field design: many of these fields are "advanced" by default
- * because the customer typically only needs the headline numbers
- * (AUV, COGS%, labor%, royalty rate, initial investment) to get a
- * draft. The deeper line-items (FF&E, working capital breakdown,
- * specific PoS systems) get filled in as the customer prepares for the
- * attorney handoff. Don't try to make a customer fill 28 fields in one
- * sitting.
+ * Bucket: heavy structured (~22 fields). Many flagged `advanced` so a
+ * customer can get a usable draft from ~5-6 headline numbers (AUV,
+ * COGS%, labor%, EBITDA margin, initial investment range), then fill
+ * in the deeper line-items as they prepare for the attorney handoff.
  *
- * Compiles into: FDD Item 7, FDD Item 19, Financial Model deliverable,
- * Franchisee Scoring Matrix (liquidity + net worth requirements).
+ * NOTE: franchisee qualification fields (required liquid capital,
+ * required net worth) live on `franchisee_profile`, not here. They're
+ * about WHO can buy in, not WHAT a unit costs to run.
+ *
+ * Compiles into: FDD Item 7, FDD Item 19, Financial Model deliverable.
  */
 const UNIT_ECONOMICS: ChapterSchema = {
   slug: "unit_economics",
   title: "Unit Economics & Financial Model",
   description:
-    "The numbers that drive every dollar in the FDD and every projection in the model.",
+    "The money side. What a location earns, what it costs, and what it takes to open one. Every number here ends up in the FDD or the financial model your franchisees will look at.",
   compilesInto:
-    "FDD Item 7, FDD Item 19, Financial Model, Franchisee Scoring Matrix.",
+    "FDD Item 7, FDD Item 19, Financial Model.",
   fields: [
     // ── Headline performance ────────────────────────────────────────────────
     {
@@ -579,12 +440,12 @@ const UNIT_ECONOMICS: ChapterSchema = {
     },
     {
       name: "ebitda_margin_pct",
-      label: "EBITDA margin (mature)",
+      label: "Operating profit margin (mature)",
       type: "percentage",
       required: true,
       placeholder: "18",
       helpText:
-        "Operating profit before interest, taxes, depreciation, amortization — as a % of revenue. The number an investor cares about most.",
+        "EBITDA as a % of revenue (operating profit before interest, taxes, depreciation, amortization). The number a banker or franchisee will look at first.",
       category: "Headline performance",
       min: 0,
       max: 100,
@@ -665,7 +526,7 @@ const UNIT_ECONOMICS: ChapterSchema = {
       type: "percentage",
       placeholder: "65",
       helpText:
-        "What % of mature AUV a new location hits in year 1. Drives Item 19 ranges and the financial model's revenue forecast.",
+        "What % of mature AUV a new location hits in year 1. Used to forecast year-1 revenue in the FDD and the financial model.",
       category: "Ramp curve",
       min: 0,
       max: 100,
@@ -746,27 +607,6 @@ const UNIT_ECONOMICS: ChapterSchema = {
       advanced: true,
     },
 
-    // ── Franchisee qualifications ───────────────────────────────────────────
-    {
-      name: "liquidity_requirement_dollars",
-      label: "Required liquid capital",
-      type: "currency",
-      required: true,
-      placeholder: "100000",
-      helpText:
-        "How much liquid cash a franchisee must have. Drives the qualification screen.",
-      category: "Franchisee qualifications",
-    },
-    {
-      name: "net_worth_requirement_dollars",
-      label: "Required net worth",
-      type: "currency",
-      required: true,
-      placeholder: "500000",
-      helpText: "Total net worth (liquid + illiquid) required to qualify.",
-      category: "Franchisee qualifications",
-    },
-
     // ── Systems ─────────────────────────────────────────────────────────────
     {
       name: "pos_system",
@@ -788,12 +628,12 @@ const UNIT_ECONOMICS: ChapterSchema = {
     // ── Assumptions narrative ───────────────────────────────────────────────
     {
       name: "key_assumptions",
-      label: "Key assumptions in this model",
-      type: "markdown",
+      label: "Key assumptions behind these numbers",
+      type: "textarea",
       placeholder:
         "Numbers based on the three corporate locations (years 2017–2024). Assumes a 1,400–1,800 sqft footprint, urban or close-suburb location, and a household income median ≥ $55K within 5 miles. Does not assume drive-through revenue.",
       helpText:
-        "Anything an attorney or franchisee should know to interpret these numbers. Used in the FDD Item 19 disclaimer paragraph.",
+        "Anything an attorney or franchisee should know to read these numbers correctly. Becomes the FDD Item 19 disclaimer paragraph.",
       category: "Assumptions",
     },
   ],
@@ -802,13 +642,18 @@ const UNIT_ECONOMICS: ChapterSchema = {
 /**
  * franchise_economics — Royalty, Ad Fund & Fees.
  *
- * The franchisor business-model layer. These numbers define the
+ * The deal you're offering franchisees. These numbers define the
  * franchisor's revenue per franchisee, and they appear in FDD Items 5
  * (initial fees) and 6 (other fees), the franchise agreement itself,
  * and the marketing fund manual. Most are simple typed numbers; the
  * complexity is in the territory section where there's a real shape
  * decision (exclusive / non-exclusive / point-of-interest) that
  * triggers different downstream language.
+ *
+ * Bucket: heavy structured (~21 fields). Like unit_economics, many
+ * fields are flagged `advanced` so the customer can get a usable draft
+ * from the headline numbers (initial fee, royalty rate, ad fund pct,
+ * term length, territory type) before working through the long tail.
  *
  * Compiles into: FDD Items 5+6, FDD Item 12 (territory), Marketing
  * Fund Manual, Franchise Agreement scaffolding.
@@ -817,7 +662,7 @@ const FRANCHISE_ECONOMICS: ChapterSchema = {
   slug: "franchise_economics",
   title: "Royalty, Ad Fund & Fees",
   description:
-    "The fee structure that defines the franchisor's revenue per franchisee.",
+    "The deal you're offering franchisees. Royalty, fees, territory, contract length. The math your franchise agreement is built on.",
   compilesInto:
     "FDD Items 5+6, FDD Item 12 (territory), Marketing Fund Manual, Franchise Agreement scaffolding.",
   fields: [
@@ -1060,22 +905,291 @@ const FRANCHISE_ECONOMICS: ChapterSchema = {
   ],
 };
 
+/**
+ * franchisee_profile — Who You Want as a Franchisee.
+ *
+ * The most important filter the franchisor controls. The right
+ * franchisee profile compounds — wrong franchisees burn through cash,
+ * generate complaints, and drag the brand down. This chapter is where
+ * Jason's "we'd rather tell you not to franchise than sell you something
+ * that won't work" trust line gets enforced: at who you let buy in.
+ *
+ * Bucket: heavy structured (~20 fields). The financial-qualification
+ * fields drive the pre-screen funnel; the experience and lifestyle
+ * fields drive Discovery Day questions; the disqualifiers list is what
+ * Jason holds up when a candidate looks great on paper but smells off.
+ *
+ * Compiles into: FDD Item 20, the Franchisee Scoring Matrix
+ * (a Jason-trademarked tool that weights candidates), Discovery Day
+ * pre-qualification questions, marketing-funnel pre-screen.
+ */
+const FRANCHISEE_PROFILE: ChapterSchema = {
+  slug: "franchisee_profile",
+  title: "Who You Want as a Franchisee",
+  description:
+    "The kind of person who should own one of your locations. Their financial profile, what they've done before, how they'll run it, and — just as important — who they aren't.",
+  compilesInto:
+    "FDD Item 20, Franchisee Scoring Matrix, Discovery Day pre-qualification.",
+  fields: [
+    // ── Financial profile ──────────────────────────────────────────────────
+    {
+      name: "minimum_liquid_capital_dollars",
+      label: "Required liquid capital",
+      type: "currency",
+      required: true,
+      placeholder: "100000",
+      helpText:
+        "How much cash a candidate must have on hand. Industry rule of thumb: 25-40% of the high end of your initial investment range.",
+      category: "Financial profile",
+    },
+    {
+      name: "minimum_net_worth_dollars",
+      label: "Required net worth",
+      type: "currency",
+      required: true,
+      placeholder: "500000",
+      helpText:
+        "Total net worth (cash, investments, equity in real estate, etc.) required to qualify. Typically 3–4x liquid capital requirement.",
+      category: "Financial profile",
+    },
+    {
+      name: "minimum_credit_score",
+      label: "Minimum credit score",
+      type: "integer",
+      placeholder: "680",
+      helpText:
+        "Most franchisors land at 680+. Lower scores can usually still get SBA financing but qualify for fewer banks.",
+      category: "Financial profile",
+      min: 300,
+      max: 850,
+      advanced: true,
+    },
+    {
+      name: "accepts_sba_financed",
+      label: "Open to SBA-financed candidates?",
+      type: "boolean",
+      helpText:
+        "Most emerging franchisors say yes. Saying no narrows the candidate pool dramatically.",
+      category: "Financial profile",
+      advanced: true,
+    },
+
+    // ── Experience required ────────────────────────────────────────────────
+    {
+      name: "prior_business_ownership_required",
+      label: "Must have owned a business before?",
+      type: "boolean",
+      helpText:
+        "Selling only to experienced operators reduces failure rate but cuts the candidate pool by ~70%.",
+      category: "Experience",
+    },
+    {
+      name: "prior_industry_experience_required",
+      label: "Must have industry experience?",
+      type: "boolean",
+      helpText:
+        "Whether they need to have worked in your specific industry before. Most franchisors do NOT require this — operations training is what bridges the gap.",
+      category: "Experience",
+    },
+    {
+      name: "minimum_years_business_experience",
+      label: "Minimum years running a business",
+      type: "integer",
+      placeholder: "3",
+      helpText:
+        "Optional. Skip if you don't require prior business ownership. Typical range: 3–7 years.",
+      category: "Experience",
+      advanced: true,
+    },
+    {
+      name: "specific_experience_notes",
+      label: "Specific experience that helps (optional)",
+      type: "textarea",
+      placeholder:
+        "QSR, hospitality, or specialty retail backgrounds adapt fastest. Pure corporate finance backgrounds tend to struggle with the daily-ops side.",
+      helpText:
+        "Free-form notes for Discovery Day screeners. What kind of background actually transfers to running this concept well.",
+      category: "Experience",
+      advanced: true,
+    },
+
+    // ── How they'll run it ─────────────────────────────────────────────────
+    {
+      name: "engagement_model",
+      label: "How they'll run their location",
+      type: "select",
+      required: true,
+      helpText:
+        "Drives nearly every other downstream qualification. Owner-operators show up daily; semi-absentees hire a manager; absentees hire a whole leadership team and visit monthly.",
+      options: [
+        { value: "owner_operator", label: "Owner-operator (full-time, on-site)" },
+        { value: "semi_absentee", label: "Semi-absentee (10-25 hrs/week + GM)" },
+        { value: "absentee", label: "Absentee (investor with operations team)" },
+        { value: "flexible", label: "Flexible — any of the above" },
+      ],
+      category: "How they'll run it",
+    },
+    {
+      name: "minimum_hours_per_week",
+      label: "Minimum hours/week (owner-operator only)",
+      type: "integer",
+      placeholder: "40",
+      helpText:
+        "If you require owner-operators, how many hours per week minimum. Skip if you accept semi-absentee or absentee.",
+      category: "How they'll run it",
+      advanced: true,
+    },
+    {
+      name: "relocation_required",
+      label: "Must they live near the location?",
+      type: "boolean",
+      helpText:
+        "True for most owner-operator concepts. False for semi-absentee or absentee.",
+      category: "How they'll run it",
+      advanced: true,
+    },
+
+    // ── Character & fit ────────────────────────────────────────────────────
+    {
+      name: "ideal_traits",
+      label: "Traits that make a great franchisee",
+      type: "list_short",
+      placeholder:
+        "Comfortable with structure and brand standards\nGenuinely likes serving customers daily\nHas savings to weather a slow ramp\nWants to own the business, not be owned by it",
+      helpText:
+        "Three to six traits. The ones a Jason-style strategy call would surface. Specific enough that a Discovery Day screener can ask about them.",
+      category: "Character & fit",
+    },
+    {
+      name: "common_disqualifiers",
+      label: "What rules someone OUT",
+      type: "list_short",
+      placeholder:
+        "Looking for a 'set it and forget it' investment\nExpects to renegotiate the franchise agreement\nHas been an absentee owner of a struggling business\nWants to modify the menu or branding",
+      helpText:
+        "The deal-killers. What separates a great-on-paper candidate from a fit. Critical for Discovery Day — these are the questions the franchisee answers in their own words.",
+      category: "Character & fit",
+    },
+    {
+      name: "candidate_persona_narrative",
+      label: "The ideal franchisee, in your own words",
+      type: "textarea",
+      placeholder:
+        "Mid-career operator, 35-55, who's been a GM or owner of a service business and wants something they can hand to their kids in 15 years. Not chasing a quick exit — building a portfolio.",
+      helpText:
+        "1-2 paragraphs describing your ideal candidate as a person, not a checklist. Used in marketing copy and the Discovery Day pre-qual.",
+      category: "Character & fit",
+    },
+
+    // ── Recruitment ────────────────────────────────────────────────────────
+    {
+      name: "target_recruitment_channels",
+      label: "Where you'll find them",
+      type: "list_short",
+      placeholder:
+        "Franchise broker network\nIndustry trade shows\nReferrals from existing locations\nLinkedIn (mid-career operators)",
+      helpText:
+        "Three to five channels. Drives marketing-team focus in year 1.",
+      category: "Recruitment",
+      advanced: true,
+    },
+    {
+      name: "typical_decision_timeline_days",
+      label: "Days from first call to signed agreement",
+      type: "integer",
+      placeholder: "60",
+      helpText:
+        "Used for sales forecasting and capacity planning. Typical range: 45–120 days for emerging franchisors.",
+      category: "Recruitment",
+      advanced: true,
+    },
+
+    // ── Discovery Day & screening ──────────────────────────────────────────
+    {
+      name: "discovery_day_format",
+      label: "Discovery Day format",
+      type: "select",
+      helpText:
+        "How candidates meet you and the team before signing. In-person at HQ is the gold standard for emerging franchisors — it builds the trust that closes the deal.",
+      options: [
+        { value: "in_person_hq", label: "In-person at headquarters" },
+        { value: "virtual", label: "Virtual / video" },
+        { value: "hybrid", label: "Hybrid — virtual screen, in-person decision day" },
+      ],
+      category: "Discovery Day",
+    },
+    {
+      name: "discovery_day_duration_hours",
+      label: "Discovery Day duration (hours)",
+      type: "integer",
+      placeholder: "6",
+      helpText: "Typical: 4–8 hours. Long enough to see how they react under fatigue.",
+      category: "Discovery Day",
+      advanced: true,
+    },
+    {
+      name: "background_check_required",
+      label: "Background check required?",
+      type: "boolean",
+      helpText:
+        "Most franchisors say yes — protects the brand if a candidate has a criminal or fraud history.",
+      category: "Discovery Day",
+      advanced: true,
+    },
+    {
+      name: "credit_check_required",
+      label: "Credit check required?",
+      type: "boolean",
+      helpText: "Standard for any deal that requires SBA financing.",
+      category: "Discovery Day",
+      advanced: true,
+    },
+    {
+      name: "references_required_count",
+      label: "Personal/business references required",
+      type: "integer",
+      placeholder: "3",
+      helpText:
+        "How many references each candidate must provide. Typical: 3 personal + 2 business.",
+      category: "Discovery Day",
+      advanced: true,
+    },
+  ],
+};
+
 // ---------------------------------------------------------------------------
 // Registry & helpers
 // ---------------------------------------------------------------------------
 
 /**
  * Per-chapter schema registry. Add entries here as schemas are designed.
- * The remaining 12 chapters are pending Eric+Jason review of the
- * foundational four — we do NOT want to design them in parallel because
+ *
+ * Currently registered (the four foundational chapters under
+ * Eric+Jason review):
+ *
+ *   - business_overview     (light hybrid)
+ *   - unit_economics        (heavy structured)
+ *   - franchise_economics   (heavy structured)
+ *   - franchisee_profile    (heavy structured)
+ *
+ * Deferred to Phase 1.5b (lighter footprint when designed):
+ *
+ *   - brand_voice — will be ~6-8 fields once we revisit. The v1 was
+ *     scoped too heavily (20 fields anchored on a marketing-agency
+ *     mental model). The chapter still exists in the Memory schema —
+ *     it just has no field schema yet, so the editor renders prose-
+ *     only and the agent drafts content_md without structured anchors.
+ *
+ * The remaining 11 chapters are pending Eric+Jason review of the four
+ * foundational ones. We do NOT want to design them in parallel because
  * the conventions established here (field naming, category groupings,
- * advanced-flag philosophy, helpText voice) need to stick.
+ * advanced-flag philosophy, helpText voice) need to stick first.
  */
 export const CHAPTER_SCHEMAS: Partial<Record<MemoryFileSlug, ChapterSchema>> = {
-  brand_voice: BRAND_VOICE,
   business_overview: BUSINESS_OVERVIEW,
   unit_economics: UNIT_ECONOMICS,
   franchise_economics: FRANCHISE_ECONOMICS,
+  franchisee_profile: FRANCHISEE_PROFILE,
 };
 
 /**
