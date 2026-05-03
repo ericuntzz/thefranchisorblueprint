@@ -120,14 +120,30 @@ export function ChapterCard({
               remarkPlugins={[remarkGfm]}
               // Strip the embedded `<!-- claim:X -->` anchors from the
               // visible render — they're meaningful to the provenance
-              // layer, not to the human reader. We do this by skipping
-              // the rendering of HTML comments via the components map.
+              // layer, not to the human reader.
               skipHtml={true}
             >
-              {contentMd.replace(/<!--\s*claim:[^>]*-->/g, "")}
+              {contentMd
+                // Drop claim anchors (they're stored in customer_memory_provenance).
+                .replace(/<!--\s*claim:[^>]*-->/g, "")
+                // Drop the trailing ```json provenance``` fenced block
+                // when the agent included it. Provenance is rendered in
+                // the dedicated panel below — leaving the raw JSON in
+                // the prose makes the chapter unreadable AND blew out the
+                // page width via the un-wrappable `<code>` block.
+                .replace(/```json(?:\s*provenance)?\s*\n[\s\S]*?\n```\s*$/i, "")
+                .trim()}
             </ReactMarkdown>
           </div>
           <style jsx>{`
+            .chapter-prose {
+              /* Long URLs / tokens in scraped content (e.g.
+                 "https://www.thefranchisorblueprint.com/opengraph-image?9425c002f44aadf5"
+                 from the brand_voice scrape) will otherwise blow out the
+                 grid track and cause page-wide horizontal overflow. */
+              overflow-wrap: anywhere;
+              word-break: break-word;
+            }
             .chapter-prose :global(h1),
             .chapter-prose :global(h2) {
               font-weight: 700;
@@ -167,6 +183,22 @@ export function ChapterCard({
               padding: 0.1em 0.35em;
               border-radius: 0.25em;
               font-size: 0.85em;
+            }
+            /* Defensive: any future fenced code block scrolls inside its
+               own box rather than blowing out the chapter card width. */
+            .chapter-prose :global(pre) {
+              max-width: 100%;
+              overflow-x: auto;
+              background: rgb(245 245 244);
+              padding: 0.85em 1em;
+              border-radius: 0.5em;
+              margin: 0.85em 0;
+              font-size: 0.85em;
+              line-height: 1.4;
+            }
+            .chapter-prose :global(pre code) {
+              background: transparent;
+              padding: 0;
             }
             .chapter-prose :global(blockquote) {
               border-left: 3px solid rgb(202 138 4 / 0.45);
@@ -212,7 +244,7 @@ export function ChapterCard({
             </div>
           </footer>
           {showProvenance && (
-            <div className="mt-4 rounded-lg bg-grey-1 border border-navy/10 px-4 py-3 text-xs text-grey-3 space-y-2">
+            <div className="mt-4 rounded-xl bg-grey-1 border border-navy/10 px-4 py-3 text-xs text-grey-3 space-y-2">
               {provenance.map((p) => (
                 <div key={p.id} className="flex gap-2">
                   <span className="font-mono text-gold-warm flex-shrink-0">

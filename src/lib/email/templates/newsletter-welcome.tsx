@@ -101,7 +101,7 @@ export function NewsletterWelcomeEmail({ email }: NewsletterWelcomePayload) {
 
 export function newsletterWelcomeText(p: NewsletterWelcomePayload): string {
   return [
-    `Welcome to The Franchisor Blueprint blog!`,
+    `Welcome to The Franchisor Blueprint blog.`,
     ``,
     `Thanks for subscribing. You'll get one franchise-development insight per week - frameworks, walkthroughs, and case studies from someone who's spent 30+ years inside this industry.`,
     ``,

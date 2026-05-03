@@ -167,8 +167,12 @@ export default async function BlueprintLabPage() {
               </div>
             </aside>
 
-            {/* Chapter cards */}
-            <div className="space-y-6">
+            {/* Chapter cards. min-w-0 is critical: as a grid item in a
+                `220px_1fr` track, this column would otherwise expand to
+                its intrinsic content width (especially with no
+                word-breaking on long markdown lines) and push the page
+                into horizontal overflow at every breakpoint. */}
+            <div className="space-y-6 min-w-0">
               {MEMORY_FILES.map((slug) => {
                 const row = memoryBySlug.get(slug);
                 const provenance = provenanceBySlug.get(slug) ?? [];

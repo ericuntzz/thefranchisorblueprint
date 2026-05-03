@@ -33,6 +33,18 @@ export function TypedHeading({
   const [caretVisible, setCaretVisible] = useState(true);
 
   useEffect(() => {
+    // Respect prefers-reduced-motion: render the full text immediately
+    // (no per-character animation) and hide the caret. The blink CSS rule
+    // is also disabled by the @media query below as a belt-and-suspenders.
+    const prefersReducedMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    if (prefersReducedMotion) {
+      setShown(text);
+      setCaretVisible(false);
+      return;
+    }
+
     let i = 0;
     setShown("");
     const start = setTimeout(() => {
@@ -68,6 +80,9 @@ export function TypedHeading({
         }
         .typed-caret {
           animation: typed-caret-blink 0.85s step-end infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .typed-caret { animation: none; opacity: 0.7; }
         }
       `}</style>
     </span>

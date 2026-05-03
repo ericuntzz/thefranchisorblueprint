@@ -179,6 +179,9 @@ export function IntakeClient({ firstName, initialWebsiteUrl }: Props) {
               .active-pulse {
                 animation: active-pulse 3.5s ease-in-out infinite;
               }
+              @media (prefers-reduced-motion: reduce) {
+                .active-pulse { animation: none; }
+              }
             `}</style>
           </div>
         ) : null}

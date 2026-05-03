@@ -157,6 +157,9 @@ export function JasonChatDock({ pageContext, firstName }: Props) {
           .jason-dock-breathe {
             animation: jason-breathe 2.6s ease-in-out infinite;
           }
+          @media (prefers-reduced-motion: reduce) {
+            .jason-dock-breathe { animation: none; opacity: 1; }
+          }
         `}</style>
       </button>
     );

@@ -339,7 +339,7 @@ function FloatingCapabilityCard() {
           </div>
           <div className="min-w-0">
             <div className="text-[7px] font-bold tracking-[0.14em] text-gold uppercase">
-              Capability 04
+              Mastery 04
             </div>
             <div className="text-[10px] font-extrabold text-white leading-tight truncate">
               Codify Your Operations
