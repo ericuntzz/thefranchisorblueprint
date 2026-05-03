@@ -102,22 +102,31 @@ function HR() {
 
 function Table({ children }: { children?: ReactNode }) {
   return (
-    <div className="overflow-x-auto my-6">
-      <table className="w-full border-collapse border border-navy/10 rounded-lg overflow-hidden text-sm">
+    <div className="overflow-x-auto my-8 rounded-lg border border-navy/10 shadow-sm">
+      <table className="w-full border-collapse text-sm md:text-[15px]">
         {children}
       </table>
     </div>
   );
 }
+function THead({ children }: { children?: ReactNode }) {
+  return <thead className="bg-navy text-white">{children}</thead>;
+}
+function TBody({ children }: { children?: ReactNode }) {
+  return <tbody className="[&>tr:nth-child(even)]:bg-grey-1/40">{children}</tbody>;
+}
+function TR({ children }: { children?: ReactNode }) {
+  return <tr className="border-b border-navy/5 last:border-0">{children}</tr>;
+}
 function TH({ children }: { children?: ReactNode }) {
   return (
-    <th className="bg-grey-1 text-navy font-bold text-left px-4 py-3 border-b border-navy/10">
+    <th className="text-white font-semibold text-left px-4 py-3 text-sm tracking-wide">
       {children}
     </th>
   );
 }
 function TD({ children }: { children?: ReactNode }) {
-  return <td className="px-4 py-3 text-grey-3 border-b border-navy/5 align-top">{children}</td>;
+  return <td className="px-4 py-3 text-grey-3 align-top leading-relaxed">{children}</td>;
 }
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {
@@ -135,6 +144,9 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     code: Code,
     hr: HR,
     table: Table,
+    thead: THead,
+    tbody: TBody,
+    tr: TR,
     th: TH,
     td: TD,
     ...components,

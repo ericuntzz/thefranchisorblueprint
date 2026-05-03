@@ -4,7 +4,9 @@ import createMDX from "@next/mdx";
 const withMDX = createMDX({
   extension: /\.mdx?$/,
   options: {
-    remarkPlugins: [],
+    // Turbopack requires serializable plugin references — pass as string
+    // tuples ([packageName, options]) so the loader can resolve them itself.
+    remarkPlugins: [["remark-gfm", {}]],
     rehypePlugins: [],
   },
 });
