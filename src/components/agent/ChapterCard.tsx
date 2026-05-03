@@ -202,9 +202,9 @@ export function ChapterCard({
   }
 
   return (
-    <article id={`chapter-${slug}`} className="rounded-2xl border border-navy/10 bg-white p-6 md:p-8 scroll-mt-20">
+    <article id={`chapter-${slug}`} className="rounded-2xl border border-navy/10 bg-white p-5 sm:p-6 md:p-8 scroll-mt-20">
       <header className="mb-4 flex items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0 flex-1">
           <div className="text-[10px] uppercase tracking-[0.18em] text-gold-warm font-bold mb-1">
             <span className="font-mono">{slug}</span>
             {schema && filledFieldCount.total > 0 && !editing && (
@@ -213,7 +213,7 @@ export function ChapterCard({
               </span>
             )}
           </div>
-          <h2 className="text-navy font-extrabold text-xl md:text-2xl leading-tight">
+          <h2 className="text-navy font-extrabold text-xl md:text-2xl leading-tight break-words">
             {title}
           </h2>
           {schema && editing && (
@@ -222,7 +222,9 @@ export function ChapterCard({
             </p>
           )}
         </div>
-        <ConfidencePill confidence={confidence} />
+        <div className="flex-shrink-0">
+          <ConfidencePill confidence={confidence} />
+        </div>
       </header>
 
       {editing && schema ? (
@@ -385,19 +387,25 @@ export function ChapterCard({
               margin: 1.25em 0;
             }
           `}</style>
-          <footer className="mt-5 pt-4 border-t border-navy/5 flex flex-wrap items-center justify-between gap-2 text-xs text-grey-4">
+          {/* Footer wraps to a second row on narrow screens. Each
+              button has `py-1.5` so the tap target hits the ~30px
+              comfortable-touch threshold (44px is the iOS guideline
+              minimum, but for grouped controls of this density the
+              perceived target is a bit larger thanks to the row's
+              line-height and visual whitespace). */}
+          <footer className="mt-5 pt-4 border-t border-navy/5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs text-grey-4">
             <span className="inline-flex items-center gap-1.5">
               <Clock size={11} />
               {lastUpdatedBy && updatedAt
                 ? `Updated by ${lastUpdatedBy === "scraper" ? "the scraper" : lastUpdatedBy} ${formatRelative(updatedAt)}`
                 : "Never updated"}
             </span>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               {provenance.length > 0 && (
                 <button
                   type="button"
                   onClick={() => setShowProvenance((v) => !v)}
-                  className="inline-flex items-center gap-1 text-grey-3 hover:text-navy transition-colors"
+                  className="inline-flex items-center gap-1 text-grey-3 hover:text-navy transition-colors py-1.5"
                 >
                   <ShieldCheck size={11} />
                   {showProvenance
@@ -411,7 +419,7 @@ export function ChapterCard({
                 <button
                   type="button"
                   onClick={() => setEditing(true)}
-                  className="inline-flex items-center gap-1 text-grey-3 hover:text-navy font-semibold transition-colors"
+                  className="inline-flex items-center gap-1 text-grey-3 hover:text-navy font-semibold transition-colors py-1.5"
                 >
                   <Pencil size={11} /> Edit fields
                 </button>
@@ -420,7 +428,7 @@ export function ChapterCard({
                 type="button"
                 onClick={openDraftModal}
                 disabled={drafting}
-                className="text-gold-warm hover:text-gold-dark font-semibold disabled:opacity-50"
+                className="text-gold-warm hover:text-gold-dark font-semibold disabled:opacity-50 py-1.5"
               >
                 {drafting ? "Redrafting…" : "Redraft with Jason"}
               </button>
@@ -1050,12 +1058,18 @@ function SectionBlock({
           placeholder="Type this section. Markdown supported (**bold**, - lists, [links](url))…"
           autoFocus
         />
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 text-[11px] text-emerald-700">
-            <Lock size={11} /> Your words are locked once saved — Jason
-            won&apos;t rewrite them.
+        {/* Lock-message + buttons row. Stacks vertically on small
+            screens where the message is too long to share a row with
+            two buttons. */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-start gap-1.5 text-[11px] text-emerald-700">
+            <Lock size={11} className="mt-0.5 flex-shrink-0" />
+            <span>
+              Your words are locked once saved — Jason won&apos;t rewrite
+              them.
+            </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-end gap-2 flex-shrink-0">
             <button
               type="button"
               onClick={() => {
@@ -1094,8 +1108,11 @@ function SectionBlock({
     );
   }
 
-  // READING MODE — for unheaded section 0, just render body + hover-edit
-  // pill. There's no toggle row.
+  // READING MODE — for unheaded section 0, just render body + edit
+  // pill. The pill is always visible on touch devices (max-md:
+  // breakpoint) and only hover-revealed on hover-capable screens.
+  // Touch users never get hover, so a hover-only affordance was
+  // effectively invisible to them.
   if (heading == null) {
     return (
       <div className="relative group/sec my-2 -mx-2 px-2 py-1 rounded-lg transition-colors hover:bg-cream/40">
@@ -1105,7 +1122,7 @@ function SectionBlock({
         <button
           type="button"
           onClick={onStartEdit}
-          className="absolute top-2 right-2 inline-flex items-center gap-1.5 bg-navy text-cream font-bold text-[10px] uppercase tracking-[0.1em] px-3 py-1.5 rounded-full hover:bg-gold hover:text-navy shadow-sm opacity-0 group-hover/sec:opacity-100 transition-opacity"
+          className="absolute top-2 right-2 inline-flex items-center gap-1.5 bg-navy text-cream font-bold text-[10px] uppercase tracking-[0.1em] px-3 py-1.5 rounded-full hover:bg-gold hover:text-navy shadow-sm transition-opacity opacity-100 md:opacity-0 md:group-hover/sec:opacity-100 focus-visible:opacity-100"
           title="Edit this section"
         >
           <Pencil size={10} /> Edit
@@ -1119,15 +1136,18 @@ function SectionBlock({
   const needsInputCount = (body.match(/\[NEEDS INPUT:/gi) ?? []).length;
   return (
     <div className="my-1 border-b border-navy/5 last:border-b-0">
-      {/* Toggle row — full-width clickable. The Edit pill is layered
-          on top in the open state so it doesn't double-trigger the
-          toggle when clicked. */}
-      <div className="relative group/sec">
+      {/* Toggle row + Edit pill as flex siblings. Earlier the Edit
+          pill was absolutely positioned, which worked for the
+          desktop hover-only state but overlapped the heading text
+          on mobile when the pill was forced visible. Sibling layout
+          handles both — chevron + heading take the available width,
+          pill takes its intrinsic width, no overlap. */}
+      <div className="flex items-center gap-2 group/sec">
         <button
           type="button"
           onClick={onToggle}
           aria-expanded={isOpen}
-          className="w-full flex items-center gap-2 py-2 text-left hover:text-gold transition-colors"
+          className="flex items-center gap-2 flex-1 min-w-0 py-2 text-left hover:text-gold transition-colors"
         >
           <ChevronRight
             size={14}
@@ -1135,24 +1155,24 @@ function SectionBlock({
               isOpen ? "rotate-90" : ""
             }`}
           />
-          <span className="font-bold text-navy text-[15px] flex-1">
+          <span className="font-bold text-navy text-[15px] truncate">
             {headingText}
           </span>
           {needsInputCount > 0 && !isOpen && (
-            <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+            <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full flex-shrink-0">
               <AlertCircle size={9} />
-              {needsInputCount} needs input
+              <span className="hidden sm:inline">
+                {needsInputCount} needs input
+              </span>
+              <span className="sm:hidden">{needsInputCount}</span>
             </span>
           )}
         </button>
         {isOpen && (
           <button
             type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onStartEdit();
-            }}
-            className="absolute top-1.5 right-0 inline-flex items-center gap-1.5 bg-navy text-cream font-bold text-[10px] uppercase tracking-[0.1em] px-3 py-1.5 rounded-full hover:bg-gold hover:text-navy shadow-sm opacity-0 group-hover/sec:opacity-100 transition-opacity"
+            onClick={onStartEdit}
+            className="inline-flex items-center gap-1.5 bg-navy text-cream font-bold text-[10px] uppercase tracking-[0.1em] px-3 py-1.5 rounded-full hover:bg-gold hover:text-navy shadow-sm transition-opacity opacity-100 md:opacity-0 md:group-hover/sec:opacity-100 focus-visible:opacity-100 flex-shrink-0"
             title="Edit this section"
           >
             <Pencil size={10} /> Edit

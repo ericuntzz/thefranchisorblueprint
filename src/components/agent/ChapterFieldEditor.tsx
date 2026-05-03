@@ -186,8 +186,10 @@ export function ChapterFieldEditor({
         </div>
       )}
 
-      {/* Save bar */}
-      <div className="sticky bottom-0 -mx-6 md:-mx-8 -mb-6 md:-mb-8 px-6 md:px-8 py-4 bg-white border-t border-navy/10 flex items-center justify-end gap-2">
+      {/* Save bar — sticky at the bottom of the form. The negative
+          margins must mirror the chapter card's padding (p-5 sm:p-6
+          md:p-8) so the bar bleeds edge-to-edge of the card. */}
+      <div className="sticky bottom-0 -mx-5 sm:-mx-6 md:-mx-8 -mb-5 sm:-mb-6 md:-mb-8 px-5 sm:px-6 md:px-8 py-4 bg-white border-t border-navy/10 flex items-center justify-end gap-2">
         <button
           type="button"
           onClick={onCancel}

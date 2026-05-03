@@ -116,7 +116,7 @@ export default async function BlueprintLabPage() {
       <main className="min-h-[calc(100vh-200px)] bg-cream">
         {/* Back to portal */}
         <div className="border-b border-navy/5 bg-white">
-          <div className="max-w-[1200px] mx-auto px-6 md:px-8 py-3 flex items-center justify-between">
+          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 py-3 flex items-center justify-between">
             <Link
               href="/portal"
               className="inline-flex items-center gap-1.5 text-grey-3 hover:text-navy text-sm font-semibold transition-colors"
@@ -132,7 +132,7 @@ export default async function BlueprintLabPage() {
 
         {/* Hero */}
         <section className="bg-white border-b border-navy/5">
-          <div className="max-w-[1200px] mx-auto px-6 md:px-8 py-10 md:py-12">
+          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 py-8 sm:py-10 md:py-12">
             <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase mb-3 border-b-2 border-gold pb-1">
               Your living document
             </span>
@@ -166,8 +166,8 @@ export default async function BlueprintLabPage() {
         </section>
 
         {/* Chapter grid */}
-        <section className="py-10 md:py-14">
-          <div className="max-w-[1200px] mx-auto px-6 md:px-8 grid md:grid-cols-[220px_1fr] gap-8">
+        <section className="py-8 sm:py-10 md:py-14">
+          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 grid md:grid-cols-[220px_1fr] gap-6 md:gap-8">
             {/* Sidebar TOC */}
             <aside className="hidden md:block">
               <div className="sticky top-6">
