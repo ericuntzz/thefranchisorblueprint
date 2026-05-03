@@ -35,7 +35,9 @@ import type {
 } from "@/lib/supabase/types";
 import { ChapterAttachments } from "./ChapterAttachments";
 import { DraftWithJasonModal } from "./DraftWithJasonModal";
+import { ReadinessPill } from "./ReadinessPill";
 import type { MemoryFileSlug } from "@/lib/memory/files";
+import type { ReadinessState } from "@/lib/memory/readiness";
 import { type ChapterSchema, type FieldDef } from "@/lib/memory/schemas";
 import { isValidMemoryFileSlug } from "@/lib/memory/files";
 import {
@@ -53,6 +55,10 @@ type Props = {
   title: string;
   contentMd: string;
   confidence: "verified" | "inferred" | "draft" | "empty";
+  /** Pre-computed readiness state — drives the unified ReadinessPill
+   *  + the Approve button visibility. Computed in the page from the
+   *  same readiness lib that powers the Command Center. */
+  readinessState: ReadinessState;
   lastUpdatedBy: "agent" | "user" | "jason" | "scraper" | null;
   updatedAt: string | null;
   provenance: CustomerMemoryProvenance[];
@@ -70,6 +76,25 @@ type Props = {
   }>;
   /** Structured fields for THIS chapter. Empty object if none yet. */
   fields: Record<string, FieldValue>;
+  /** Per-field provenance metadata, fed into ChapterFieldEditor so
+   *  it can render small "From your website / your answer / Jason
+   *  inferred" trust labels under each filled input. */
+  fieldStatus?: Record<
+    string,
+    {
+      source:
+        | "voice_session"
+        | "upload"
+        | "form"
+        | "agent_inference"
+        | "research"
+        | "scraper"
+        | "user_correction"
+        | "user_typed";
+      updated_at?: string;
+      note?: string;
+    }
+  >;
   /** Cross-chapter field state — for computed-field formulas. */
   otherChaptersFields: MemoryFieldsMap;
   /**
@@ -98,6 +123,14 @@ type Props = {
     body: string;
     heading?: string | null;
   }) => Promise<void>;
+  /**
+   * Server action to flip the chapter's confidence column. Used for
+   * the Approve flow ("→ verified") and re-open for edits ("→ draft").
+   */
+  setConfidence: (args: {
+    slug: string;
+    confidence: "verified" | "inferred" | "draft";
+  }) => Promise<void>;
 };
 
 export function ChapterCard({
@@ -105,16 +138,19 @@ export function ChapterCard({
   title,
   contentMd,
   confidence,
+  readinessState,
   lastUpdatedBy,
   updatedAt,
   provenance,
   attachments,
   allAttachmentsByChapter,
   fields,
+  fieldStatus,
   otherChaptersFields,
   schema,
   saveFields,
   saveSection,
+  setConfidence,
 }: Props) {
   const [drafting, setDrafting] = useState(false);
   const [draftError, setDraftError] = useState<string | null>(null);
@@ -122,6 +158,23 @@ export function ChapterCard({
   const [showProvenance, setShowProvenance] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draftModalOpen, setDraftModalOpen] = useState(false);
+  const [approving, setApproving] = useState(false);
+
+  // Approve / re-open handler. Flips confidence on the server and
+  // hard-reloads so the ReadinessPill reflects the new state. (Soft
+  // reload would also work — using window.reload to match the
+  // existing pattern across this file.)
+  async function flipConfidence(next: "verified" | "draft") {
+    if (approving) return;
+    setApproving(true);
+    try {
+      await setConfidence({ slug, confidence: next });
+      if (typeof window !== "undefined") window.location.reload();
+    } catch (err) {
+      console.error("flipConfidence failed:", err);
+      setApproving(false);
+    }
+  }
 
   // Click handler for the Draft / Redraft buttons. Just opens the
   // pre-draft modal — the actual API call happens when the customer
@@ -223,7 +276,7 @@ export function ChapterCard({
           )}
         </div>
         <div className="flex-shrink-0">
-          <ConfidencePill confidence={confidence} />
+          <ReadinessPill state={readinessState} />
         </div>
       </header>
 
@@ -231,6 +284,7 @@ export function ChapterCard({
         <ChapterFieldEditor
           schema={schema}
           initialFields={fields}
+          fieldStatus={fieldStatus}
           otherChaptersFields={otherChaptersFields}
           onSave={handleSaveFields}
           onCancel={() => setEditing(false)}
@@ -432,6 +486,33 @@ export function ChapterCard({
               >
                 {drafting ? "Redrafting…" : "Redraft with Jason"}
               </button>
+              {/* Approve / re-open. Visible only on populated chapters
+                  (the empty state has its own CTAs). When already
+                  verified, the button flips to "Re-open for edits"
+                  which sets confidence back to "draft" so the
+                  customer can iterate. */}
+              {confidence === "verified" ? (
+                <button
+                  type="button"
+                  onClick={() => void flipConfidence("draft")}
+                  disabled={approving}
+                  className="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-900 font-semibold disabled:opacity-50 py-1.5"
+                  title="Re-open for edits"
+                >
+                  <ShieldCheck size={11} />
+                  {approving ? "…" : "Verified · re-open"}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => void flipConfidence("verified")}
+                  disabled={approving}
+                  className="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-900 font-semibold disabled:opacity-50 py-1.5"
+                >
+                  <ShieldCheck size={11} />
+                  {approving ? "Approving…" : "Approve as verified"}
+                </button>
+              )}
             </div>
           </footer>
           {showProvenance && (

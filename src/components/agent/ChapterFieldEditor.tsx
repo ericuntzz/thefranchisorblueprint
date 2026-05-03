@@ -43,9 +43,31 @@ import type { MemoryFileSlug } from "@/lib/memory/files";
 
 type FieldValue = string | number | boolean | string[] | null;
 
+/** Trust signals: where each filled field's value came from. Mirrors
+ *  the `field_status[name].source` enum on customer_memory. Used to
+ *  render a small "From your website / your answer / Jason inferred"
+ *  subtext under each input — explainability without overwhelming
+ *  the form. */
+type FieldSource =
+  | "voice_session"
+  | "upload"
+  | "form"
+  | "agent_inference"
+  | "research"
+  | "scraper"
+  | "user_correction"
+  | "user_typed";
+
 type Props = {
   schema: ChapterSchema;
   initialFields: Record<string, FieldValue>;
+  /** Per-field provenance from customer_memory.field_status. Optional
+   *  — when a field has no entry we fall back to "no badge". Empty
+   *  object on a fresh chapter. */
+  fieldStatus?: Record<
+    string,
+    { source: FieldSource; updated_at?: string; note?: string } | undefined
+  >;
   /**
    * Field values from OTHER chapters — needed to compute cross-chapter
    * derivations (e.g. franchisee_profile.minimum_liquid_capital depends
@@ -60,6 +82,7 @@ type Props = {
 export function ChapterFieldEditor({
   schema,
   initialFields,
+  fieldStatus,
   otherChaptersFields,
   onSave,
   onCancel,
@@ -162,6 +185,10 @@ export function ChapterFieldEditor({
                     value={values[fd.name] ?? null}
                     computedValue={computedNumber}
                     onChange={(v) => update(fd.name, v)}
+                    sourceLabel={sourceLabelFor(
+                      fieldStatus?.[fd.name]?.source,
+                      values[fd.name] ?? null,
+                    )}
                   />
                 );
               })}
@@ -228,12 +255,16 @@ function FieldInput({
   value,
   computedValue,
   onChange,
+  sourceLabel,
 }: {
   fieldDef: FieldDef;
   slug: MemoryFileSlug;
   value: FieldValue;
   computedValue: number | null;
   onChange: (v: FieldValue) => void;
+  /** "From your website" / "Jason inferred" / etc. — null when the
+   *  field has no source recorded (typically: empty fields). */
+  sourceLabel: string | null;
 }) {
   const isComputed = hasCalc(slug, fieldDef.name);
   // Derived-default: editable, but if the customer hasn't typed
@@ -278,8 +309,52 @@ function FieldInput({
       {fieldDef.helpText && !isComputed && (
         <p className="text-xs text-grey-4 leading-relaxed">{fieldDef.helpText}</p>
       )}
+      {sourceLabel && !isComputed && (
+        <p className="text-[10px] uppercase tracking-[0.14em] text-grey-4 font-bold">
+          {sourceLabel}
+        </p>
+      )}
     </div>
   );
+}
+
+/**
+ * Map a field's source enum + value-presence to a customer-facing
+ * one-line trust label. Returns null when there's nothing meaningful
+ * to show (empty field, unrecognized source).
+ *
+ * The label is intentionally short — it sits below the input as a
+ * passive trust signal, not a feature. IBM's AI explainability
+ * guidance: explanations should help, not overwhelm the task.
+ */
+function sourceLabelFor(
+  source: string | undefined,
+  value: FieldValue,
+): string | null {
+  if (value == null) return null;
+  if (typeof value === "string" && value.trim() === "") return null;
+  if (Array.isArray(value) && value.length === 0) return null;
+  if (!source) return null;
+  switch (source) {
+    case "scraper":
+      return "From your website";
+    case "agent_inference":
+      return "Jason inferred this";
+    case "voice_session":
+      return "From your voice intake";
+    case "upload":
+      return "From an upload";
+    case "research":
+      return "From research";
+    case "user_correction":
+      return "You corrected this in chat";
+    case "user_typed":
+      return "You typed this";
+    case "form":
+      return "You answered this";
+    default:
+      return null;
+  }
 }
 
 function FieldLabel({

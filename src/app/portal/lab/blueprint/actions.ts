@@ -21,7 +21,7 @@ import { readMemoryFile, writeMemoryFields } from "@/lib/memory";
 import { isValidMemoryFileSlug } from "@/lib/memory/files";
 import { stripLockMarkers, wrapAsLocked } from "@/lib/memory/locks";
 import { replaceSection } from "@/lib/memory/sections";
-import type { Purchase } from "@/lib/supabase/types";
+import type { CustomerMemory, Purchase } from "@/lib/supabase/types";
 
 type FieldValue = string | number | boolean | string[] | null;
 
@@ -214,4 +214,58 @@ export async function saveChapterSection(args: {
   }
 
   revalidatePath("/portal/lab/blueprint");
+}
+
+/**
+ * Promote a chapter's confidence to a new value (typically "verified"
+ * via the customer hitting Approve, or back to "draft" if they want
+ * to re-open for edits). The Command Center + ReadinessPill pick this
+ * up on next render to flip the chapter from amber → green.
+ *
+ * v1 model is per-chapter, not per-section. Section-level approval is
+ * a future enhancement once we see how customers actually use this.
+ */
+export async function setChapterConfidence(args: {
+  slug: string;
+  confidence: CustomerMemory["confidence"];
+}): Promise<void> {
+  if (!isValidMemoryFileSlug(args.slug)) {
+    throw new Error(`Unknown chapter: ${args.slug}`);
+  }
+  const valid: CustomerMemory["confidence"][] = ["verified", "inferred", "draft"];
+  if (!valid.includes(args.confidence)) {
+    throw new Error(`Invalid confidence: ${args.confidence}`);
+  }
+
+  const supabase = await getSupabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not signed in.");
+
+  const { data: purchasesData } = await supabase
+    .from("purchases")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("status", "paid")
+    .limit(1);
+  const purchases = (purchasesData ?? []) as Purchase[];
+  if (purchases.length === 0) throw new Error("No active purchase.");
+
+  const admin = getSupabaseAdmin();
+  const { error } = await admin
+    .from("customer_memory")
+    .update({
+      confidence: args.confidence,
+      last_updated_by: "user",
+    })
+    .eq("user_id", user.id)
+    .eq("file_slug", args.slug);
+  if (error) {
+    console.error("[actions] setChapterConfidence failed:", error.message);
+    throw new Error(`Save failed: ${error.message}`);
+  }
+
+  revalidatePath("/portal/lab/blueprint");
+  revalidatePath("/portal");
 }

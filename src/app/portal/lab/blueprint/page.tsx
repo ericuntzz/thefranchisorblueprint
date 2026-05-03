@@ -18,7 +18,11 @@ import { ChapterCard } from "@/components/agent/ChapterCard";
 import { JasonChatDock } from "@/components/agent/JasonChatDock";
 import { TypedHeading } from "@/components/agent/TypedHeading";
 import { SiteFooter } from "@/components/SiteFooter";
-import { saveChapterSection, saveMemoryFields } from "./actions";
+import { saveChapterSection, saveMemoryFields, setChapterConfidence } from "./actions";
+import {
+  computeChapterReadiness,
+  indexMemoryRows,
+} from "@/lib/memory/readiness";
 
 export const metadata: Metadata = {
   title: "Your Franchisor Blueprint | The Franchisor Blueprint",
@@ -110,6 +114,21 @@ export default async function BlueprintLabPage() {
     const att = (memoryBySlug.get(s)?.attachments ?? []) as ChapterAttachment[];
     return att.length > 0 ? [{ slug: s, attachments: att }] : [];
   });
+
+  // Per-chapter readiness state — drives the unified ReadinessPill on
+  // each card and keeps the visual language consistent with the
+  // Command Center checklist on /portal.
+  const chapterReadiness = computeChapterReadiness(
+    indexMemoryRows(
+      Array.from(memoryBySlug.values()).map((r) => ({
+        file_slug: r.file_slug,
+        content_md: r.content_md,
+        fields: r.fields,
+        confidence: r.confidence,
+        attachments: r.attachments ?? [],
+      })),
+    ),
+  );
 
   return (
     <>
@@ -234,15 +253,18 @@ export default async function BlueprintLabPage() {
                     title={MEMORY_FILE_TITLES[slug]}
                     contentMd={content}
                     confidence={confidence}
+                    readinessState={chapterReadiness[slug]?.state ?? "gray"}
                     lastUpdatedBy={row?.last_updated_by ?? null}
                     updatedAt={row?.updated_at ?? null}
                     provenance={provenance}
                     attachments={(row?.attachments ?? []) as ChapterAttachment[]}
                     allAttachmentsByChapter={allAttachmentsByChapter}
                     fields={fields}
+                    fieldStatus={(row?.field_status ?? undefined) as Parameters<typeof ChapterCard>[0]["fieldStatus"]}
                     otherChaptersFields={otherChaptersFields}
                     schema={schema}
                     saveFields={saveMemoryFields}
+                    setConfidence={setChapterConfidence}
                     saveSection={saveChapterSection}
                   />
                 );
