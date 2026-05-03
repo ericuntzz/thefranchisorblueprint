@@ -90,6 +90,10 @@ export function DraftWithJasonModal({
   const [uploadErr, setUploadErr] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitErr, setSubmitErr] = useState<string | null>(null);
+  // True while a draggable file is hovering the dropzone. Used to highlight
+  // the border + background so the customer gets immediate visual feedback
+  // that the area is "armed."
+  const [dragActive, setDragActive] = useState(false);
 
   // ESC closes; trap is intentionally light — page underneath is
   // still scrollable but the modal is centered and high-z so any
@@ -120,6 +124,53 @@ export function DraftWithJasonModal({
       else next.add(id);
       return next;
     });
+  }
+
+  // Native HTML5 drag-and-drop wiring for the upload zone. The dropzone
+  // is a <label> wrapping a hidden <input type="file"> — that gives us
+  // click-to-choose for free (clicking the label opens the OS file
+  // picker, which fires the input's `change` event). But drag-and-drop
+  // requires explicit handlers: the browser's default on a `drop` event
+  // is to *navigate to* the dropped file (or open it in a new tab),
+  // which is why dropping a file did nothing useful before this. The
+  // four handlers below intercept the gesture and pipe the file through
+  // `uploadFile()`.
+  //
+  // `dragOver` and `dragEnter` MUST call preventDefault — that's the
+  // contract that tells the browser "yes, this element accepts drops."
+  // Without it, the drop event never fires.
+  function onDragEnter(e: React.DragEvent<HTMLLabelElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (uploading || submitting) return;
+    setDragActive(true);
+  }
+  function onDragOver(e: React.DragEvent<HTMLLabelElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (uploading || submitting) return;
+    // Hint the cursor — improves the UX in browsers that don't already.
+    e.dataTransfer.dropEffect = "copy";
+    if (!dragActive) setDragActive(true);
+  }
+  function onDragLeave(e: React.DragEvent<HTMLLabelElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    // Bubbling drag events fire dragleave when entering child elements,
+    // so we only clear the highlight when the drag has truly left the
+    // label's bounding box. relatedTarget is the element being entered;
+    // null means we've left the document, and otherwise we check
+    // containment.
+    const next = e.relatedTarget as Node | null;
+    if (!next || !e.currentTarget.contains(next)) setDragActive(false);
+  }
+  function onDrop(e: React.DragEvent<HTMLLabelElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (uploading || submitting) return;
+    const file = e.dataTransfer?.files?.[0];
+    if (file) void uploadFile(file);
   }
 
   async function uploadFile(file: File) {
@@ -165,22 +216,42 @@ export function DraftWithJasonModal({
     }
   }
 
+  // Has the customer typed notes or changed selections? If so, a
+  // backdrop click is more likely to be an accidental dismiss than
+  // an intent to abandon. We require an explicit close.
+  const hasUnsavedInput =
+    extraContext.trim().length > 0 ||
+    sessionUploads.length > 0 ||
+    // Selection drift from "default = this chapter's attachments" means
+    // the customer has touched the checkbox list.
+    !setEqualsByMembership(
+      selectedIds,
+      thisChapterAttachments.map((a) => a.id),
+    );
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/40 backdrop-blur-sm"
+      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-2 sm:p-4 bg-navy/40 backdrop-blur-sm"
       onClick={(e) => {
         // Click on backdrop closes — but only if we're not in the
-        // middle of an upload or submit (would be jarring).
-        if (e.target === e.currentTarget && !submitting && !uploading) {
+        // middle of an upload/submit (would be jarring) AND the user
+        // hasn't typed anything yet. Once they have unsaved input,
+        // require explicit close so a stray tap doesn't wipe their work.
+        if (
+          e.target === e.currentTarget &&
+          !submitting &&
+          !uploading &&
+          !hasUnsavedInput
+        ) {
           onClose();
         }
       }}
     >
-      <div className="bg-white rounded-2xl shadow-2xl max-w-[640px] w-full max-h-[90vh] flex flex-col">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-[640px] w-full max-h-[92vh] flex flex-col">
         {/* Header */}
-        <div className="px-6 pt-6 pb-4 border-b border-navy/5">
+        <div className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-navy/5">
           <div className="flex items-start justify-between gap-3 mb-1">
-            <div>
+            <div className="min-w-0">
               <div className="text-[10px] uppercase tracking-[0.18em] text-gold-warm font-bold mb-0.5">
                 {isRedraft ? "Redraft" : "Draft"} with Jason
               </div>
@@ -192,8 +263,9 @@ export function DraftWithJasonModal({
               type="button"
               onClick={onClose}
               disabled={submitting || uploading}
-              className="text-grey-3 hover:text-navy transition-colors disabled:opacity-50"
+              className="-mr-1 -mt-1 p-2 rounded-full text-grey-3 hover:text-navy hover:bg-grey-1 transition-colors disabled:opacity-50 flex-shrink-0"
               title="Close"
+              aria-label="Close"
             >
               <X size={18} />
             </button>
@@ -206,7 +278,7 @@ export function DraftWithJasonModal({
 
         {/* Body — scrollable so long attachment lists don't blow out
             the viewport. */}
-        <div className="px-6 py-5 space-y-5 overflow-y-auto">
+        <div className="px-5 sm:px-6 py-5 space-y-5 overflow-y-auto">
           {/* Free-form instruction */}
           <div>
             <label className="block text-[11px] uppercase tracking-[0.16em] text-gold-warm font-bold mb-2">
@@ -228,7 +300,15 @@ export function DraftWithJasonModal({
               Add a new reference
             </label>
             <label
-              className={`flex items-center gap-2 rounded-lg border-2 border-dashed border-navy/20 bg-cream/30 px-4 py-3 text-xs hover:border-gold hover:bg-gold/5 cursor-pointer transition-colors ${
+              onDragEnter={onDragEnter}
+              onDragOver={onDragOver}
+              onDragLeave={onDragLeave}
+              onDrop={onDrop}
+              className={`flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-1 sm:gap-2 rounded-lg border-2 border-dashed px-4 py-3 text-xs cursor-pointer transition-colors ${
+                dragActive
+                  ? "border-gold bg-gold/15 ring-2 ring-gold/30"
+                  : "border-navy/20 bg-cream/30 hover:border-gold hover:bg-gold/5"
+              } ${
                 uploading || submitting ? "opacity-60 cursor-not-allowed" : ""
               }`}
             >
@@ -237,14 +317,26 @@ export function DraftWithJasonModal({
                   <Loader2 size={16} className="animate-spin text-gold-warm" />
                   <span className="text-navy font-semibold">Uploading…</span>
                 </>
+              ) : dragActive ? (
+                <span className="inline-flex items-center gap-2">
+                  <Upload size={16} className="text-gold flex-shrink-0" />
+                  <span className="text-navy font-bold">
+                    Release to upload
+                  </span>
+                </span>
               ) : (
                 <>
-                  <Upload size={16} className="text-gold-warm" />
-                  <span className="text-navy font-semibold">
-                    Drop a file or click to choose
+                  <span className="inline-flex items-center gap-2">
+                    <Upload
+                      size={16}
+                      className="text-gold-warm flex-shrink-0"
+                    />
+                    <span className="text-navy font-semibold">
+                      Drop a file or click to choose
+                    </span>
                   </span>
-                  <span className="text-grey-4">
-                    — auto-attached to this chapter and pre-selected below
+                  <span className="text-grey-4 sm:before:content-['—_'] sm:before:mr-0.5">
+                    auto-attached + pre-selected below
                   </span>
                 </>
               )}
@@ -255,6 +347,8 @@ export function DraftWithJasonModal({
                 onChange={(e) => {
                   const f = e.target.files?.[0];
                   if (f) uploadFile(f);
+                  // Reset so picking the same file twice in a row still fires.
+                  e.target.value = "";
                 }}
               />
             </label>
@@ -332,7 +426,7 @@ export function DraftWithJasonModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-navy/5 bg-cream/20 flex items-center justify-end gap-2 rounded-b-2xl">
+        <div className="px-5 sm:px-6 py-4 border-t border-navy/5 bg-cream/20 flex items-center justify-end gap-2 rounded-b-2xl">
           <button
             type="button"
             onClick={onClose}
@@ -361,6 +455,18 @@ export function DraftWithJasonModal({
       </div>
     </div>
   );
+}
+
+/**
+ * True iff the set contains exactly the members listed (regardless of
+ * order). Used to detect whether the customer has touched the
+ * checkbox list — if it's still equal to this-chapter-default, a
+ * backdrop click is safe to dismiss.
+ */
+function setEqualsByMembership<T>(set: Set<T>, members: T[]): boolean {
+  if (set.size !== members.length) return false;
+  for (const m of members) if (!set.has(m)) return false;
+  return true;
 }
 
 function AttachmentCheckRow({
