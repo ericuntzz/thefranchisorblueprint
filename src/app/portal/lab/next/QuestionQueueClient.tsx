@@ -58,17 +58,20 @@ export function QuestionQueueClient({
   // items so the UI can show progress without a server round-trip.
   // A page refresh recomputes the canonical queue.
   const queue = initialQueue;
-  const [index, setIndex] = useState(0);
   const [draft, setDraft] = useState<FieldValue>(null);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [completed, setCompleted] = useState<Set<string>>(new Set());
-  // Visited stack — Back pops the most recent visited index so the
-  // customer always lands on the question they were just looking at,
-  // not just the previous slot in the queue (which could be a Skipped
-  // item they haven't seen). Eric's bug report: "I hit Back but it
-  // didn't bring me to the last question I answered."
-  const [visited, setVisited] = useState<number[]>([]);
+  // Navigation: index + visited stack as ONE atomic state object.
+  // Earlier had them as two separate useStates and Back skipped two
+  // questions instead of one — race-prone because the Back handler
+  // read `visited` from the closure while React batched updates from
+  // the immediately-prior advance. Single setNav() pop avoids it.
+  const [nav, setNav] = useState<{ index: number; visited: number[] }>({
+    index: 0,
+    visited: [],
+  });
+  const index = nav.index;
 
   const current = queue[index];
   const phaseStart =
@@ -138,17 +141,17 @@ export function QuestionQueueClient({
   }
 
   function advance() {
-    setVisited((v) => [...v, index]);
-    setIndex((i) => i + 1);
+    setNav((n) => ({ index: n.index + 1, visited: [...n.visited, n.index] }));
     setDraft(null);
     setErr(null);
   }
 
   function back() {
-    if (visited.length === 0) return;
-    const previous = visited[visited.length - 1];
-    setVisited((v) => v.slice(0, -1));
-    setIndex(previous);
+    setNav((n) => {
+      if (n.visited.length === 0) return n;
+      const previous = n.visited[n.visited.length - 1];
+      return { index: previous, visited: n.visited.slice(0, -1) };
+    });
     setDraft(null);
     setErr(null);
   }
@@ -185,7 +188,7 @@ export function QuestionQueueClient({
         err={err}
         onSave={onSave}
         onSkip={onSkip}
-        onBack={visited.length > 0 ? back : null}
+        onBack={nav.visited.length > 0 ? back : null}
       />
     </div>
   );
