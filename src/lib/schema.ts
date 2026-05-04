@@ -163,6 +163,35 @@ export function breadcrumbSchema(items: BreadcrumbItem[]) {
   };
 }
 
+type CollectionPageParams = {
+  url: string; // path, no domain
+  name: string;
+  description: string;
+  itemCount: number;
+  itemUrls: string[]; // member URLs (paths)
+};
+export function collectionPageSchema(p: CollectionPageParams) {
+  const url = `${SITE_URL}${p.url}`;
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "@id": `${url}#collection`,
+    url,
+    name: p.name,
+    description: p.description,
+    isPartOf: { "@id": `${SITE_URL}/#website` },
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: p.itemCount,
+      itemListElement: p.itemUrls.map((u, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        url: u.startsWith("http") ? u : `${SITE_URL}${u}`,
+      })),
+    },
+  };
+}
+
 type BlogPostingParams = {
   slug: string;
   title: string;

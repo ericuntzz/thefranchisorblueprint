@@ -29,11 +29,13 @@ We are franchise development consultants — not attorneys. We help business own
 - Contact: https://www.thefranchisorblueprint.com/contact
 
 ## State-by-state franchise guides
-We publish a guide for franchising a business in every U.S. state and the District of Columbia, covering FDD registration requirements, regulating agencies, filing fees, and review timelines. Format: https://www.thefranchisorblueprint.com/franchise-your-business-in/[state-slug]
+Hub: https://www.thefranchisorblueprint.com/franchise-by-state — browsable index of all 50 states + DC, grouped by FDD registration tier.
+We publish a detail guide for franchising a business in every U.S. state and the District of Columbia, covering FDD registration requirements, regulating agencies, filing fees, and review timelines. Format: https://www.thefranchisorblueprint.com/franchise-your-business-in/[state-slug]
 Examples: /franchise-your-business-in/california, /franchise-your-business-in/new-york, /franchise-your-business-in/texas, /franchise-your-business-in/florida.
 
 ## Industry-by-industry franchise guides
-We publish a guide for franchising businesses in 16 major sectors, covering typical royalty rates, franchise fees, Item 7 ranges, unit economics, and common stall patterns. Format: https://www.thefranchisorblueprint.com/franchise-your/[industry-slug]/business
+Hub: https://www.thefranchisorblueprint.com/franchise-by-industry — browsable index of all 16 sector guides, grouped by category (food service, service, health & wellness, education, real estate, hospitality).
+We publish a detail guide for franchising businesses in 16 major sectors, covering typical royalty rates, franchise fees, Item 7 ranges, unit economics, and common stall patterns. Format: https://www.thefranchisorblueprint.com/franchise-your/[industry-slug]/business
 Examples: /franchise-your/quick-service-restaurant/business, /franchise-your/fitness/business, /franchise-your/home-services/business, /franchise-your/senior-care/business.
 
 ## Frequently Asked Questions

@@ -55,7 +55,7 @@ export default async function IndustryPage({ params }: { params: Params }) {
     <>
       <JsonLd data={breadcrumbSchema([
         { name: "Home", url: "/" },
-        { name: "Franchise by Industry", url: "/franchise-your/quick-service-restaurant/business" },
+        { name: "Franchise by Industry", url: "/franchise-by-industry" },
         { name: industry.name, url: `/franchise-your/${industry.slug}/business` },
       ])} />
       <JsonLd data={faqPageSchema(faqs)} />
@@ -76,7 +76,7 @@ export default async function IndustryPage({ params }: { params: Params }) {
           <nav aria-label="Breadcrumb" className="mb-6 text-xs text-grey-4 tracking-wide">
             <Link href="/" className="hover:text-gold transition-colors">Home</Link>
             <span className="mx-2 opacity-40">/</span>
-            <Link href="/blog" className="hover:text-gold transition-colors">Resources</Link>
+            <Link href="/franchise-by-industry" className="hover:text-gold transition-colors">Franchise by Industry</Link>
             <span className="mx-2 opacity-40">/</span>
             <span className="text-navy">{industry.name}</span>
           </nav>

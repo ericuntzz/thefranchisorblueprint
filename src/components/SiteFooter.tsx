@@ -32,6 +32,8 @@ export function SiteFooter() {
               <li><Link href="/programs" className="hover:text-gold-warm transition-colors">Programs</Link></li>
               <li><Link href="/pricing" className="hover:text-gold-warm transition-colors">Pricing</Link></li>
               <li><Link href="/blog" className="hover:text-gold-warm transition-colors">Blog</Link></li>
+              <li><Link href="/franchise-by-state" className="hover:text-gold-warm transition-colors">Franchise by State</Link></li>
+              <li><Link href="/franchise-by-industry" className="hover:text-gold-warm transition-colors">Franchise by Industry</Link></li>
             </ul>
           </div>
           <div>

@@ -18,6 +18,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/strategy-call/builder`, lastModified: now, changeFrequency: "yearly", priority: 0.7 },
     { url: `${SITE_URL}/assessment`, lastModified: now, changeFrequency: "yearly", priority: 0.8 },
     { url: `${SITE_URL}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${SITE_URL}/franchise-by-state`, lastModified: now, changeFrequency: "monthly", priority: 0.85 },
+    { url: `${SITE_URL}/franchise-by-industry`, lastModified: now, changeFrequency: "monthly", priority: 0.85 },
     { url: `${SITE_URL}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${SITE_URL}/terms`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${SITE_URL}/earnings-disclaimer`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },

@@ -61,7 +61,7 @@ export default async function StatePage({ params }: { params: Params }) {
     <>
       <JsonLd data={breadcrumbSchema([
         { name: "Home", url: "/" },
-        { name: "Franchise Your Business by State", url: "/franchise-your-business-in/california" },
+        { name: "Franchise by State", url: "/franchise-by-state" },
         { name: state.name, url: `/franchise-your-business-in/${state.slug}` },
       ])} />
       <JsonLd data={faqPageSchema(faqs)} />
@@ -82,9 +82,9 @@ export default async function StatePage({ params }: { params: Params }) {
           <nav aria-label="Breadcrumb" className="mb-6 text-xs text-grey-4 tracking-wide">
             <Link href="/" className="hover:text-gold transition-colors">Home</Link>
             <span className="mx-2 opacity-40">/</span>
-            <Link href="/blog" className="hover:text-gold transition-colors">Resources</Link>
+            <Link href="/franchise-by-state" className="hover:text-gold transition-colors">Franchise by State</Link>
             <span className="mx-2 opacity-40">/</span>
-            <span className="text-navy">Franchise Your Business in {state.name}</span>
+            <span className="text-navy">{state.name}</span>
           </nav>
 
           <div className="text-gold-warm font-bold text-xs tracking-[0.18em] uppercase mb-4 border-b-2 border-gold pb-1 inline-block">
