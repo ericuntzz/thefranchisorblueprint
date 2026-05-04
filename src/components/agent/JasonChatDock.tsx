@@ -38,8 +38,15 @@ import {
   MessageCircle,
   Send,
   Sparkles,
+  Upload,
   X,
 } from "lucide-react";
+import { CHAPTER_DOC_PROMPTS } from "@/lib/memory/doc-prompts";
+import {
+  isValidMemoryFileSlug,
+  MEMORY_FILE_TITLES,
+  type MemoryFileSlug,
+} from "@/lib/memory/files";
 
 type ChatTurn = {
   role: "user" | "assistant";
@@ -88,6 +95,129 @@ type Props = {
 const OPENER_DEFAULT =
   "I'm Jason. I've got everything we know about your business loaded — ask me anything about the next step in your Blueprint, or just tell me what you're working on.";
 
+/**
+ * Starter chips — clickable suggestions surfaced under the greeting
+ * when the chat first opens. Each chip is a short user-message that
+ * the customer can send with one click. The set is derived from
+ * pageContext so the suggestions land where the customer is right
+ * now (chapter page → "got an X doc?", queue → "what would speed
+ * this up?", dashboard → "where do I start?").
+ *
+ * Keep the count tight (3 max). More than that and the chip strip
+ * starts feeling like a menu, not a nudge.
+ */
+type StarterChip = {
+  /** What's shown on the chip face. Keep short. */
+  label: string;
+  /** What gets sent as the user message when the chip is clicked.
+   *  The model has full Memory context, so the chip text just has
+   *  to express intent — Jason fills in the rest. */
+  send: string;
+  /** Optional leading icon. Default is no icon (just text). */
+  icon?: "upload" | "sparkle";
+};
+
+function getStarterChips(pageContext: string | undefined): StarterChip[] {
+  const ctx = (pageContext ?? "").toLowerCase();
+  // Per-chapter context: extract the slug from /portal/chapter/[slug].
+  const chapterMatch = ctx.match(/\/portal\/chapter\/([a-z_]+)/);
+  if (chapterMatch && isValidMemoryFileSlug(chapterMatch[1])) {
+    const slug = chapterMatch[1] as MemoryFileSlug;
+    const prompt = CHAPTER_DOC_PROMPTS[slug];
+    const title = MEMORY_FILE_TITLES[slug];
+    if (prompt) {
+      return [
+        {
+          label: `Got a ${prompt.shortLabel}?`,
+          send: `I have a ${prompt.shortLabel} I can share — what's the best way to upload it for the ${title} chapter?`,
+          icon: "upload",
+        },
+        {
+          label: `Help me draft ${title}`,
+          send: `Walk me through what I need to finish the ${title} chapter.`,
+          icon: "sparkle",
+        },
+        {
+          label: "What docs would help?",
+          send: `What documents would speed up the ${title} chapter?`,
+        },
+      ];
+    }
+  }
+
+  // Question Queue context.
+  if (ctx.includes("/portal/lab/next")) {
+    return [
+      {
+        label: "What docs speed this up?",
+        send: "What documents could I upload to skip a chunk of these questions?",
+        icon: "upload",
+      },
+      {
+        label: "I have a P&L — where?",
+        send: "I have a P&L statement — what's the best way to upload it?",
+        icon: "upload",
+      },
+      {
+        label: "What's most important?",
+        send: "Of the questions in front of me, which ones most affect the FDD quality?",
+      },
+    ];
+  }
+
+  // Day-1 intake context.
+  if (ctx.includes("/portal/lab/intake")) {
+    return [
+      {
+        label: "What docs should I gather?",
+        send: "What documents should I dig up before I keep going?",
+        icon: "upload",
+      },
+      {
+        label: "Skip — what's next?",
+        send: "If I skip the doc uploads, what should I expect from the next steps?",
+      },
+    ];
+  }
+
+  // Blueprint canvas (assembled view).
+  if (ctx.includes("/portal/lab/blueprint")) {
+    return [
+      {
+        label: "What's missing?",
+        send: "Looking at my Blueprint as a whole, what's the most important thing missing?",
+      },
+      {
+        label: "Help me prioritize",
+        send: "Which chapters should I focus on next?",
+      },
+      {
+        label: "Got more docs to share",
+        send: "I have more documents to share — where's the best place to upload them?",
+        icon: "upload",
+      },
+    ];
+  }
+
+  // Default (dashboard / other).
+  return [
+    {
+      label: "What's the fastest way to start?",
+      send: "What's the fastest way to make progress on my Blueprint right now?",
+      icon: "sparkle",
+    },
+    {
+      label: "I have docs to upload",
+      send: "I have a few documents I want to upload — where's the best place to put them?",
+      icon: "upload",
+    },
+    {
+      label: "What's blocking me?",
+      send: "What's blocking my Blueprint from being attorney-ready?",
+    },
+  ];
+}
+
 export function JasonChatDock({ pageContext, firstName }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -132,8 +262,11 @@ export function JasonChatDock({ pageContext, firstName }: Props) {
       .map((i) => ({ role: i.role, content: i.text }));
   }, [transcript]);
 
-  const send = useCallback(async () => {
-    const trimmed = draft.trim();
+  const send = useCallback(async (override?: string) => {
+    // Allow override for chip-click sends (where the message text
+    // doesn't go through the textarea draft state). Falls back to
+    // draft for the normal Send-button path.
+    const trimmed = (override ?? draft).trim();
     if (!trimmed || streaming) return;
 
     const userBubble: TranscriptItem = {
@@ -409,6 +542,33 @@ export function JasonChatDock({ pageContext, firstName }: Props) {
             />
           );
         })}
+
+        {/* Starter chips — only render right after the greeting,
+            before the customer's typed anything. Chips are
+            context-aware: chapter-page → "Got an X doc?", queue →
+            "What docs speed this up?", dashboard → "Where do I
+            start?". One click sends the chip's `send` text as a
+            user message; Jason's full Memory + tool access then
+            handles the rest. */}
+        {transcript.length === 1 &&
+          transcript[0].kind === "bubble" &&
+          transcript[0].role === "assistant" &&
+          !streaming && (
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {getStarterChips(pageContext).map((chip, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => void send(chip.send)}
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold text-navy bg-white hover:bg-gold hover:text-navy border border-navy/15 hover:border-gold rounded-full px-3 py-1.5 transition-colors"
+                >
+                  {chip.icon === "upload" && <Upload size={10} />}
+                  {chip.icon === "sparkle" && <Sparkles size={10} />}
+                  {chip.label}
+                </button>
+              ))}
+            </div>
+          )}
         {streaming &&
           transcript.length > 0 &&
           transcript[transcript.length - 1].kind === "bubble" &&
@@ -439,7 +599,7 @@ export function JasonChatDock({ pageContext, firstName }: Props) {
           />
           <button
             type="button"
-            onClick={send}
+            onClick={() => void send()}
             disabled={streaming || !draft.trim()}
             aria-label="Send message"
             className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gold text-navy hover:bg-gold-dark disabled:opacity-40 disabled:hover:bg-gold transition-colors"
