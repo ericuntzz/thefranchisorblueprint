@@ -115,6 +115,34 @@ export function chapterTitle(slug: MemoryFileSlug): string {
 }
 
 /**
+ * Per-phase "anchor chapter" — the single chapter inside the phase
+ * the customer is most likely to have a real document for. Used by
+ * the Question Queue's phase-transition card to surface the right
+ * doc-prompt at exactly the moment they cross into a new phase
+ * (e.g., entering Economics → "Got a P&L?"). Picking one anchor
+ * per phase (rather than all of them) keeps the transition card
+ * focused on the highest-leverage upload — fan-out via auto-classify
+ * spreads the doc across the rest of the phase's chapters anyway.
+ *
+ * Choices reflect what's most-likely-to-already-exist in a real
+ * operator's filing cabinet:
+ *   - Discover    → business_overview   (pitch deck / About page)
+ *   - Economics   → unit_economics      (P&L)
+ *   - Operations  → operating_model     (ops manual)
+ *   - People      → training_program    (training manual)
+ *   - Growth      → marketing_fund      (marketing/ad-fund doc)
+ *   - Compliance  → compliance_legal    (existing FDD / attorney letter)
+ */
+export const PHASE_DOC_ANCHOR: Record<PhaseId, MemoryFileSlug> = {
+  discover: "business_overview",
+  economics: "unit_economics",
+  operations: "operating_model",
+  people: "training_program",
+  growth: "marketing_fund",
+  compliance: "compliance_legal",
+};
+
+/**
  * Sanity check at module load — every chapter slug should belong to
  * exactly one phase. If we add a slug to MEMORY_FILES without
  * registering it here, the next dev-server restart logs a warning so

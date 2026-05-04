@@ -33,7 +33,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { QueueItem, QueueSummary } from "@/lib/memory/queue";
-import type { PhaseId } from "@/lib/memory/phases";
+import { PHASE_DOC_ANCHOR, type PhaseId } from "@/lib/memory/phases";
 import { SchemaFieldInput } from "@/components/agent/SchemaFieldInput";
 import { DocPromptCard } from "@/components/agent/DocPromptCard";
 import { docPromptFor } from "@/lib/memory/doc-prompts";
@@ -75,6 +75,16 @@ export function QuestionQueueClient({
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [completed, setCompleted] = useState<Set<string>>(new Set());
+  // Phase-transition cards we've already shown this session. When the
+  // customer crosses Discover → Economics, we render a celebration +
+  // "got a P&L?" card BEFORE the next question; once they hit
+  // Continue we mark the phase id seen so a Back / Save round-trip
+  // doesn't replay the same card. Per-session only — a refresh
+  // re-shows the transitions, which is fine: the docs they want to
+  // upload haven't moved.
+  const [seenTransitions, setSeenTransitions] = useState<Set<PhaseId>>(
+    new Set(),
+  );
   // Navigation: index + visited stack as ONE atomic state object.
   // Earlier had them as two separate useStates and Back skipped two
   // questions instead of one — race-prone because the Back handler
@@ -95,6 +105,18 @@ export function QuestionQueueClient({
   const current = queue[index];
   const phaseStart =
     index === 0 || queue[index - 1]?.phase.id !== current?.phase.id;
+  // Show the transition card on every NEW phase boundary (not the
+  // very first phase — there's no "previous phase" to celebrate).
+  // Once dismissed for a given phase id, we skip it on revisits.
+  const previousPhase =
+    index > 0 ? queue[index - 1]?.phase ?? null : null;
+  const showTransition =
+    phaseStart &&
+    index > 0 &&
+    !!current &&
+    !!previousPhase &&
+    previousPhase.id !== current.phase.id &&
+    !seenTransitions.has(current.phase.id);
 
   const phaseProgress = useMemo(() => {
     if (!current) return null;
@@ -251,12 +273,37 @@ export function QuestionQueueClient({
         progress={phaseProgress}
       />
 
+      {/* Phase-transition card — celebrates the phase the customer
+          just completed and surfaces a phase-anchored doc prompt
+          ("Got a P&L?" entering Economics) before revealing the
+          next question. One-shot per phase id per session. */}
+      {showTransition && previousPhase && (
+        <PhaseTransitionCard
+          previousPhase={previousPhase}
+          nextPhase={current.phase}
+          anchorSlug={PHASE_DOC_ANCHOR[current.phase.id]}
+          anchorAttachmentCount={
+            attachmentCountBySlug[PHASE_DOC_ANCHOR[current.phase.id]] ?? 0
+          }
+          onContinue={() => {
+            setSeenTransitions((prev) => {
+              const next = new Set(prev);
+              next.add(current.phase.id);
+              return next;
+            });
+          }}
+        />
+      )}
+
       {/* Inline doc-prompt — compact variant. Surfaces when the
           current question's chapter has zero attachments AND we
           have a prompt configured. The customer can drop a doc and
           skip a chunk of typing on this whole chapter. Hidden once
-          they've added something OR dismissed the prompt. */}
-      {(attachmentCountBySlug[current.slug] ?? 0) === 0 &&
+          they've added something OR dismissed the prompt.
+          Suppressed while the phase-transition card is active so
+          we don't double-stack two upload affordances. */}
+      {!showTransition &&
+        (attachmentCountBySlug[current.slug] ?? 0) === 0 &&
         docPromptFor(current.slug as MemoryFileSlug) && (
           <DocPromptCard
             key={`prompt-${current.slug}`}
@@ -274,20 +321,90 @@ export function QuestionQueueClient({
           unmounts + remounts the QuestionCard, triggering the CSS
           animation. Direction reflects forward (Save / Skip) vs
           backward (Back) navigation so the slide direction matches
-          the customer's mental model. */}
-      <div className="relative overflow-hidden">
-        <QuestionCard
-          key={current.id}
-          item={current}
-          value={draft}
-          onChange={setDraft}
-          saving={saving}
-          err={err}
-          direction={lastDirection}
-          onSave={onSave}
-          onSkip={onSkip}
-          onBack={nav.visited.length > 0 ? back : null}
-        />
+          the customer's mental model. Hidden behind the phase
+          transition card until the customer hits Continue. */}
+      {!showTransition && (
+        <div className="relative overflow-hidden">
+          <QuestionCard
+            key={current.id}
+            item={current}
+            value={draft}
+            onChange={setDraft}
+            saving={saving}
+            err={err}
+            direction={lastDirection}
+            onSave={onSave}
+            onSkip={onSkip}
+            onBack={nav.visited.length > 0 ? back : null}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * PhaseTransitionCard — shown once per session at every phase
+ * boundary. Celebrates the phase the customer just finished and
+ * surfaces a phase-anchored doc-prompt for the chapter most likely
+ * to have a real document attached. Customer hits Continue → we
+ * mark the phase id seen → the next question reveals.
+ */
+function PhaseTransitionCard({
+  previousPhase,
+  nextPhase,
+  anchorSlug,
+  anchorAttachmentCount,
+  onContinue,
+}: {
+  previousPhase: { id: PhaseId; title: string };
+  nextPhase: { id: PhaseId; title: string; subtitle: string };
+  anchorSlug: MemoryFileSlug;
+  anchorAttachmentCount: number;
+  onContinue: () => void;
+}) {
+  const anchorPrompt = docPromptFor(anchorSlug);
+  // If the customer already attached something to the anchor
+  // chapter, drop the doc-prompt section but still show the
+  // celebration — they earned the moment of progress.
+  const showDocPrompt = anchorAttachmentCount === 0 && !!anchorPrompt;
+
+  return (
+    <div className="rounded-2xl border-2 border-emerald-300 bg-gradient-to-br from-emerald-50 to-cream/40 p-5 sm:p-6">
+      <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-emerald-700 font-bold mb-2">
+        <CheckCircle2 size={12} />
+        {previousPhase.title} phase complete
+      </div>
+      <h2 className="text-navy font-extrabold text-2xl md:text-3xl leading-tight mb-1">
+        Next up: {nextPhase.title}.
+      </h2>
+      <p className="text-grey-3 text-sm leading-relaxed mb-5 max-w-[560px]">
+        {nextPhase.subtitle}
+      </p>
+
+      {showDocPrompt && anchorPrompt && (
+        <div className="mb-5">
+          <DocPromptCard
+            slug={anchorSlug}
+            prompt={anchorPrompt}
+          />
+        </div>
+      )}
+
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-emerald-200/60">
+        <div className="text-[11px] text-emerald-900/70 font-semibold">
+          {showDocPrompt
+            ? "Drop a doc to skip a chunk of typing — or continue and answer the questions."
+            : "Already gave us material here — continue when you're ready."}
+        </div>
+        <button
+          type="button"
+          onClick={onContinue}
+          className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-xs uppercase tracking-[0.1em] px-5 py-3 rounded-full hover:bg-gold-dark transition-colors"
+        >
+          Continue to {nextPhase.title}
+          <ArrowRight size={12} />
+        </button>
       </div>
     </div>
   );
