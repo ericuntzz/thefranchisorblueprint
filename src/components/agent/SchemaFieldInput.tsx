@@ -20,7 +20,8 @@
  * through different surfaces.
  */
 
-import { CheckCircle2, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { CheckCircle2, Plus, Trash2, X } from "lucide-react";
 import type { FieldDef } from "@/lib/memory/schemas";
 
 type FieldValue = string | number | boolean | string[] | null;
@@ -267,28 +268,184 @@ export function SchemaFieldInput({
       );
 
     case "list_short":
-    case "list_long": {
-      const arr = Array.isArray(value) ? (value as string[]) : [];
-      const text = arr.join("\n");
-      const isLong = fieldDef.type === "list_long";
+    case "list_long":
       return (
-        <textarea
-          value={text}
-          onChange={(e) => {
-            const next = e.target.value
-              .split("\n")
-              .map((s) => s.trim())
-              .filter(Boolean);
-            onChange(next.length > 0 ? next : null);
-          }}
+        <ListTextarea
+          fieldDef={fieldDef}
+          value={value}
+          onChange={onChange}
           placeholder={ph}
-          rows={isLong ? 6 : 3}
           autoFocus={autoFocus}
-          className={`${inputClass} resize-y ${isLong ? "min-h-[140px]" : "min-h-[88px]"}`}
+          inputClass={inputClass}
         />
       );
-    }
+
+    case "color_list":
+      return (
+        <ColorListInput
+          value={value}
+          onChange={onChange}
+          autoFocus={autoFocus}
+        />
+      );
   }
+}
+
+/**
+ * List textarea — preserves raw text locally so trailing spaces and
+ * mid-typing whitespace don't get stripped on every keystroke. Earlier
+ * version trimmed every line in the onChange and re-derived the
+ * textarea value from the stored array, which made the space bar feel
+ * broken (you'd type a space and watch it vanish on the next render).
+ *
+ * Pattern: local rawText holds what the user typed verbatim. We
+ * derive the canonical array (trimmed, blank-line-stripped) and push
+ * it to the parent on each keystroke. When the parent's value
+ * changes externally (different from our derived array), we resync
+ * rawText so the field reflects the new external state.
+ */
+function ListTextarea({
+  fieldDef,
+  value,
+  onChange,
+  placeholder,
+  autoFocus,
+  inputClass,
+}: {
+  fieldDef: FieldDef;
+  value: FieldValue;
+  onChange: (v: FieldValue) => void;
+  placeholder: string | undefined;
+  autoFocus?: boolean;
+  inputClass: string;
+}) {
+  const arr = Array.isArray(value) ? (value as string[]) : [];
+  const isLong = fieldDef.type === "list_long";
+  const [rawText, setRawText] = useState<string>(arr.join("\n"));
+  const lastDerivedRef = useRef<string[]>(arr);
+
+  // Sync from parent only when the canonical array drifts from what
+  // we last derived (e.g. after a server reload or a parent reset).
+  // Otherwise we'd clobber the user's in-progress whitespace.
+  useEffect(() => {
+    const sameMembers =
+      arr.length === lastDerivedRef.current.length &&
+      arr.every((v, i) => v === lastDerivedRef.current[i]);
+    if (!sameMembers) {
+      setRawText(arr.join("\n"));
+      lastDerivedRef.current = arr;
+    }
+  }, [arr]);
+
+  return (
+    <textarea
+      value={rawText}
+      onChange={(e) => {
+        const text = e.target.value;
+        setRawText(text);
+        const next = text
+          .split("\n")
+          .map((s) => s.trim())
+          .filter(Boolean);
+        lastDerivedRef.current = next;
+        onChange(next.length > 0 ? next : null);
+      }}
+      placeholder={placeholder}
+      rows={isLong ? 6 : 3}
+      autoFocus={autoFocus}
+      className={`${inputClass} resize-y ${isLong ? "min-h-[140px]" : "min-h-[88px]"}`}
+    />
+  );
+}
+
+/**
+ * Color list input — multiple colors with a "+ Add color" affordance.
+ * Each row is a color swatch + hex text input + remove button.
+ *
+ * Used by brand_voice's `brand_colors` field. Replaces the old
+ * single-color "primary" + single-color "secondary" approach with one
+ * extensible list — a brand might have a primary, an accent, a dark,
+ * a light, and a hover. This handles all of them.
+ *
+ * Stored as `string[]` of hex codes ("#1F3D2C") for jsonb portability.
+ */
+function ColorListInput({
+  value,
+  onChange,
+  autoFocus,
+}: {
+  value: FieldValue;
+  onChange: (v: FieldValue) => void;
+  autoFocus?: boolean;
+}) {
+  const colors = Array.isArray(value) ? (value as string[]) : [];
+  // Always show at least one row so the customer has somewhere to
+  // start; never auto-prune the last row (the customer would lose
+  // their picker on it).
+  const rows = colors.length > 0 ? colors : [""];
+
+  function setAt(i: number, hex: string) {
+    const next = rows.slice();
+    next[i] = hex;
+    pushNonEmpty(next);
+  }
+  function removeAt(i: number) {
+    const next = rows.slice();
+    next.splice(i, 1);
+    pushNonEmpty(next);
+  }
+  function add() {
+    pushNonEmpty([...rows, ""]);
+  }
+  function pushNonEmpty(next: string[]) {
+    const cleaned = next.filter((s) => s.trim().length > 0);
+    onChange(cleaned.length > 0 ? cleaned : null);
+  }
+
+  return (
+    <div className="space-y-2">
+      {rows.map((hex, i) => {
+        const swatch = /^#[0-9a-f]{6}$/i.test(hex.trim()) ? hex.trim() : "#1F3D2C";
+        return (
+          <div key={i} className="flex items-center gap-2">
+            <input
+              type="color"
+              value={swatch}
+              onChange={(e) => setAt(i, e.target.value)}
+              className="h-10 w-14 rounded-lg border border-navy/15 cursor-pointer flex-shrink-0"
+              aria-label={`Color ${i + 1} picker`}
+            />
+            <input
+              type="text"
+              value={hex}
+              onChange={(e) => setAt(i, e.target.value)}
+              placeholder="#1F3D2C"
+              autoFocus={autoFocus && i === 0}
+              className="flex-1 rounded-lg border border-navy/15 bg-white px-3 py-2 text-[14px] text-navy placeholder-grey-4 placeholder:italic focus:border-gold focus:ring-2 focus:ring-gold/20 outline-none transition font-mono uppercase"
+            />
+            {rows.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeAt(i)}
+                className="p-2 text-grey-3 hover:text-red-700 transition-colors flex-shrink-0"
+                aria-label={`Remove color ${i + 1}`}
+                title="Remove color"
+              >
+                <Trash2 size={14} />
+              </button>
+            )}
+          </div>
+        );
+      })}
+      <button
+        type="button"
+        onClick={add}
+        className="inline-flex items-center gap-1.5 text-navy hover:text-gold border-2 border-dashed border-navy/20 hover:border-gold rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] transition-colors"
+      >
+        <Plus size={12} /> Add another color
+      </button>
+    </div>
+  );
 }
 
 /**

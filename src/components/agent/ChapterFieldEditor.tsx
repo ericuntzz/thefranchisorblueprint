@@ -41,6 +41,7 @@ import {
 } from "@/lib/calc";
 import type { MemoryFileSlug } from "@/lib/memory/files";
 import { lookupIndustryValue } from "@/lib/memory/industry-lookup";
+import { SchemaFieldInput } from "./SchemaFieldInput";
 
 type FieldValue = string | number | boolean | string[] | null;
 
@@ -89,9 +90,12 @@ export function ChapterFieldEditor({
   onCancel,
 }: Props) {
   const [values, setValues] = useState<Record<string, FieldValue>>(initialFields);
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Eric: "concerned a user won't see the [advanced] button and won't
+  // complete the section." Drop the toggle — render every field
+  // up-front so nothing is hidden behind a press.
+  const showAdvanced = true;
 
   // Compute all formula values from current state. Recomputed on every
   // edit so live computed fields (EBITDA margin, payback period, etc.)
@@ -119,10 +123,6 @@ export function ChapterFieldEditor({
     return groups;
   }, [schema.fields]);
 
-  const hasAdvanced = useMemo(
-    () => schema.fields.some((f) => f.advanced),
-    [schema.fields],
-  );
 
   const update = (name: string, value: FieldValue) => {
     setValues((prev) => ({ ...prev, [name]: value }));
@@ -216,16 +216,6 @@ export function ChapterFieldEditor({
           </fieldset>
         );
       })}
-
-      {hasAdvanced && (
-        <button
-          type="button"
-          onClick={() => setShowAdvanced((v) => !v)}
-          className="text-xs text-grey-3 hover:text-navy font-semibold transition-colors"
-        >
-          {showAdvanced ? "Hide advanced fields" : "Show advanced fields"}
-        </button>
-      )}
 
       {error && (
         <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-800">
@@ -685,30 +675,19 @@ function FieldControl({
       );
 
     case "list_short":
-    case "list_long": {
-      // For v1 simplicity, both list types use a textarea where each
-      // line becomes an array entry. We strip blank lines on save.
-      // A more elaborate per-item editor (drag-to-reorder, individual
-      // fields) is a v2 enhancement.
-      const arr = Array.isArray(value) ? (value as string[]) : [];
-      const text = arr.join("\n");
-      const isLong = fieldDef.type === "list_long";
+    case "list_long":
+    case "color_list":
+      // List + color-list cases delegate to SchemaFieldInput so the
+      // raw-text-preserving + multi-color-with-+button behavior
+      // matches the queue exactly. Earlier per-keystroke trim here
+      // was the "space bar doesn't work" bug Eric reported.
       return (
-        <textarea
-          value={text}
-          onChange={(e) => {
-            const next = e.target.value
-              .split("\n")
-              .map((s) => s.trim())
-              .filter(Boolean);
-            onChange(next.length > 0 ? next : null);
-          }}
-          placeholder={placeholderFor(fieldDef.placeholder)}
-          rows={isLong ? 6 : 3}
-          className={`${inputClass} resize-y ${isLong ? "min-h-[140px]" : "min-h-[72px]"}`}
+        <SchemaFieldInput
+          fieldDef={fieldDef}
+          value={value}
+          onChange={onChange}
         />
       );
-    }
   }
 }
 

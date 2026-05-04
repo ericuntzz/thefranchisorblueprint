@@ -28,6 +28,7 @@ import {
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
+  Globe,
   Loader2,
   Sparkles,
 } from "lucide-react";
@@ -40,6 +41,9 @@ type FieldValue = string | number | boolean | string[] | null;
 type Props = {
   initialQueue: QueueItem[];
   initialSummary: QueueSummary;
+  /** True when the customer has already added a website (and we ran
+   *  the scrape). Suppresses the "skip the typing" banner. */
+  hasWebsite: boolean;
   /** Server action — single-field save. */
   save: (args: {
     slug: string;
@@ -51,6 +55,7 @@ type Props = {
 export function QuestionQueueClient({
   initialQueue,
   initialSummary,
+  hasWebsite,
   save,
 }: Props) {
   // The queue is a snapshot taken at page load. We don't mutate it
@@ -72,6 +77,12 @@ export function QuestionQueueClient({
     visited: [],
   });
   const index = nav.index;
+  // Slide direction for the question-card transition. "forward" =
+  // Save/Skip (new card slides in from the right). "back" = Back
+  // (new card slides in from the left). Initial render = "forward".
+  const [lastDirection, setLastDirection] = useState<"forward" | "back">(
+    "forward",
+  );
 
   const current = queue[index];
   const phaseStart =
@@ -141,12 +152,14 @@ export function QuestionQueueClient({
   }
 
   function advance() {
+    setLastDirection("forward");
     setNav((n) => ({ index: n.index + 1, visited: [...n.visited, n.index] }));
     setDraft(null);
     setErr(null);
   }
 
   function back() {
+    setLastDirection("back");
     setNav((n) => {
       if (n.visited.length === 0) return n;
       const previous = n.visited[n.visited.length - 1];
@@ -158,10 +171,59 @@ export function QuestionQueueClient({
 
   return (
     <div className="space-y-5">
-      {/* Slim progress bar only — the prior "Question X of Y · 11
-          required · 52 optional" microcopy was too much info up
-          front. The phase intro carries phase context; the bar
-          carries overall position. */}
+      {/* Website prompt — top-of-queue affordance when the customer
+          hasn't pre-filled from their site yet. Eric: "ensure the
+          website ingestion question is asked early on in this flow."
+          One click → /portal/lab/intake which scrapes + auto-fills
+          the foundational chapters. Subsequent queue questions then
+          become reviews rather than blanks. */}
+      {!hasWebsite && (
+        <div className="rounded-2xl bg-navy text-cream px-5 py-4 flex items-start gap-3">
+          <Globe size={18} className="text-gold mt-0.5 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <div className="text-[10px] uppercase tracking-[0.18em] text-gold font-bold mb-0.5">
+              Skip a chunk of the typing
+            </div>
+            <p className="text-cream/90 text-sm leading-relaxed">
+              Add your website and Jason will pre-fill the foundational
+              chapters. The questions in this queue then become
+              quick reviews instead of blanks to fill in from scratch.
+            </p>
+          </div>
+          <Link
+            href="/portal/lab/intake"
+            className="inline-flex items-center gap-1.5 bg-gold text-navy hover:bg-gold-dark font-bold text-[11px] uppercase tracking-[0.12em] px-4 py-2 rounded-full transition-colors flex-shrink-0"
+          >
+            Add website
+            <ArrowRight size={11} />
+          </Link>
+        </div>
+      )}
+
+      {/* Inline nav — Eric: "bring them down and place them above
+          the yellow/white progress bar." Removes the separate white
+          nav strip from the page so the buttons live in the
+          question flow rather than a header band that competes for
+          attention with the question itself. */}
+      <div className="flex items-center justify-between gap-3">
+        <Link
+          href="/portal"
+          className="inline-flex items-center gap-1.5 text-navy bg-cream hover:bg-navy hover:text-cream border-2 border-navy/20 hover:border-navy font-bold text-[11px] uppercase tracking-[0.12em] px-4 py-2 rounded-full transition-colors"
+        >
+          <ArrowLeft size={12} />
+          Back to portal
+        </Link>
+        <Link
+          href="/portal/lab/blueprint"
+          className="inline-flex items-center gap-1.5 text-navy bg-cream hover:bg-navy hover:text-cream border-2 border-navy/20 hover:border-navy font-bold text-[11px] uppercase tracking-[0.12em] px-4 py-2 rounded-full transition-colors"
+        >
+          View full Blueprint
+          <ArrowRight size={12} />
+        </Link>
+      </div>
+
+      {/* Slim progress bar — the phase intro carries phase context;
+          this bar carries overall position. */}
       <div className="h-1 rounded-full bg-grey-1 overflow-hidden">
         <div
           className="h-full bg-gold transition-all duration-300"
@@ -171,25 +233,35 @@ export function QuestionQueueClient({
         />
       </div>
 
-      {phaseStart && (
-        <PhaseIntroBlock
-          id={current.phase.id}
-          title={current.phase.title}
-          subtitle={current.phase.subtitle}
-          progress={phaseProgress}
-        />
-      )}
-
-      <QuestionCard
-        item={current}
-        value={draft}
-        onChange={setDraft}
-        saving={saving}
-        err={err}
-        onSave={onSave}
-        onSkip={onSkip}
-        onBack={nav.visited.length > 0 ? back : null}
+      {/* Phase intro stays visible for the whole phase. Customer
+          always knows which phase they're in + how far through;
+          counter updates as they advance. */}
+      <PhaseIntroBlock
+        id={current.phase.id}
+        title={current.phase.title}
+        subtitle={current.phase.subtitle}
+        progress={phaseProgress}
       />
+
+      {/* Slide-in transition — re-keyed on each question so React
+          unmounts + remounts the QuestionCard, triggering the CSS
+          animation. Direction reflects forward (Save / Skip) vs
+          backward (Back) navigation so the slide direction matches
+          the customer's mental model. */}
+      <div className="relative overflow-hidden">
+        <QuestionCard
+          key={current.id}
+          item={current}
+          value={draft}
+          onChange={setDraft}
+          saving={saving}
+          err={err}
+          direction={lastDirection}
+          onSave={onSave}
+          onSkip={onSkip}
+          onBack={nav.visited.length > 0 ? back : null}
+        />
+      </div>
     </div>
   );
 }
@@ -237,6 +309,7 @@ function QuestionCard({
   onChange,
   saving,
   err,
+  direction,
   onSave,
   onSkip,
   onBack,
@@ -246,6 +319,7 @@ function QuestionCard({
   onChange: (v: FieldValue) => void;
   saving: boolean;
   err: string | null;
+  direction: "forward" | "back";
   onSave: () => void;
   onSkip: () => void;
   onBack: (() => void) | null;
@@ -253,13 +327,68 @@ function QuestionCard({
   const fd = item.fieldDef;
   const canSave = !saving && value !== null && !valueIsEmpty(value);
 
+  // Enter advances when valid. Multi-line inputs (textarea, list,
+  // markdown) need Enter for newlines, so for those we require
+  // Cmd/Ctrl+Enter. Single-line inputs save on plain Enter.
+  function onKeyDownAdvance(e: React.KeyboardEvent) {
+    if (e.key !== "Enter") return;
+    const isMultiline =
+      fd.type === "textarea" ||
+      fd.type === "markdown" ||
+      fd.type === "list_short" ||
+      fd.type === "list_long";
+    const cmdOrCtrl = e.metaKey || e.ctrlKey;
+    if (isMultiline && !cmdOrCtrl) return;
+    if (!canSave) return;
+    e.preventDefault();
+    onSave();
+  }
+
   return (
-    <div className="rounded-2xl border border-navy/10 bg-white p-5 sm:p-6 md:p-8">
+    <div
+      className={`rounded-2xl border border-navy/10 bg-white p-5 sm:p-6 md:p-8 ${
+        direction === "forward"
+          ? "queue-card-forward"
+          : "queue-card-back"
+      }`}
+      onKeyDown={onKeyDownAdvance}
+    >
+      <style jsx>{`
+        @keyframes queue-card-in-right {
+          from {
+            transform: translateX(24px);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        @keyframes queue-card-in-left {
+          from {
+            transform: translateX(-24px);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        .queue-card-forward {
+          animation: queue-card-in-right 220ms ease-out;
+        }
+        .queue-card-back {
+          animation: queue-card-in-left 220ms ease-out;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .queue-card-forward,
+          .queue-card-back {
+            animation: none;
+          }
+        }
+      `}</style>
       <div className="text-[10px] uppercase tracking-[0.16em] text-gold-warm font-bold mb-2">
         {item.chapterTitle}
-        {item.isRequired && (
-          <span className="ml-2 text-red-700">· Required</span>
-        )}
       </div>
       <h2 className="text-navy font-extrabold text-xl md:text-2xl leading-tight mb-2">
         {fd.label}

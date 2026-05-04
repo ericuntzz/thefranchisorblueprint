@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
@@ -56,6 +56,12 @@ export default async function GuidedNextPage() {
   if (purchases.length === 0) redirect("/portal");
   const profile = (profileRow ?? null) as Profile | null;
   const firstName = profile?.full_name?.split(" ")[0] ?? null;
+  // Has the customer already pre-filled from their website? Profiles
+  // stores the URL once they've used /portal/lab/intake at least
+  // once. We use this to gate a "skip the typing — add your website"
+  // banner at the top of the queue + on brand-related cards.
+  const hasWebsite =
+    !!(profile?.website_url && profile.website_url.trim().length > 0);
 
   // Read every chapter's fields jsonb so the queue can scan the full
   // Memory state. Service-role client because the queue page is a
@@ -82,34 +88,10 @@ export default async function GuidedNextPage() {
   return (
     <>
       <main className="min-h-[calc(100vh-200px)] bg-cream">
-        {/* Top nav — both anchors styled as matched ghost-pill buttons.
-            Eric: "they should be the same color/font/size + a little
-            more character to them." Same shape, same weight, same
-            font scale; the leading icon flips left/right to denote
-            direction. */}
-        <div className="border-b border-navy/5 bg-white">
-          <div className="max-w-[1000px] mx-auto px-4 sm:px-6 md:px-8 py-3 flex items-center justify-between gap-3">
-            <Link
-              href="/portal"
-              className="inline-flex items-center gap-1.5 text-navy bg-cream hover:bg-navy hover:text-cream border-2 border-navy/20 hover:border-navy font-bold text-[11px] uppercase tracking-[0.12em] px-4 py-2 rounded-full transition-colors"
-            >
-              <ArrowLeft size={12} />
-              Back to portal
-            </Link>
-            <Link
-              href="/portal/lab/blueprint"
-              className="inline-flex items-center gap-1.5 text-navy bg-cream hover:bg-navy hover:text-cream border-2 border-navy/20 hover:border-navy font-bold text-[11px] uppercase tracking-[0.12em] px-4 py-2 rounded-full transition-colors"
-            >
-              View full Blueprint
-              <ArrowRight size={12} />
-            </Link>
-          </div>
-        </div>
+        {/* Top nav lives INSIDE the queue client (above the progress
+            bar) so the buttons sit in the question flow rather than
+            a separate header band. Per Eric's feedback. */}
 
-        {/* Surface — wider container per Eric's "section should be a
-            little larger" feedback. Bumped from max-w-[760px] to
-            max-w-[900px] so the question card breathes more on
-            laptops + medium-density screens. */}
         <section className="py-10 md:py-16">
           <div className="max-w-[900px] mx-auto px-4 sm:px-6 md:px-8">
             {queue.length === 0 ? (
@@ -118,6 +100,7 @@ export default async function GuidedNextPage() {
               <QuestionQueueClient
                 initialQueue={queue}
                 initialSummary={summary}
+                hasWebsite={hasWebsite}
                 save={saveQueueAnswer}
               />
             )}

@@ -256,6 +256,7 @@ export type FieldType =
   | "year"
   | "date"
   | "color"
+  | "color_list"
   | "url"
   | "email"
   | "boolean"
@@ -2993,22 +2994,14 @@ const BRAND_VOICE: ChapterSchema = {
         "How would you describe the way your brand talks to a writer who'd never met you?",
     },
     {
-      name: "brand_color_primary",
-      label: "Primary brand color",
-      type: "color",
+      name: "brand_colors",
+      label: "Brand colors",
+      type: "color_list",
       required: true,
       category: "Visual",
       placeholder: "#1F3D2C",
       helpText:
-        "The dominant color on signage, packaging, and website. Hex code if you know it; the picker is fine if you don't.",
-    },
-    {
-      name: "brand_color_secondary",
-      label: "Secondary / accent color",
-      type: "color",
-      category: "Visual",
-      placeholder: "#D9A86B",
-      helpText: "Used for accents and highlights. Optional.",
+        "Your brand palette — primary, accent, neutrals, anything you use consistently. Pick a color or paste hex codes; add as many as you need.",
     },
     {
       name: "typography_pairing",
