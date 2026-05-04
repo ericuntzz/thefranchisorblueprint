@@ -32,6 +32,7 @@ import {
   isValidMemoryFileSlug,
 } from "@/lib/memory";
 import { fetchSiteArtifacts } from "@/lib/agent/scrape";
+import { extractDocText } from "@/lib/agent/extract-doc-text";
 import type { ChapterAttachment, Purchase } from "@/lib/supabase/types";
 
 export const runtime = "nodejs";
@@ -130,16 +131,28 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Best-effort excerpt extraction. For text-like files we can read
-    // the buffer directly; opaque types (PDF/DOCX/images) get a
-    // placeholder so Opus knows the file exists even if it can't read
-    // the bytes yet. PDF/DOCX parsing is a Phase 1.5b followup.
+    // Best-effort excerpt extraction.
+    //   - Text-like files (.txt, .md, .json, .csv): read buffer
+    //     directly. Cap at 2K chars; small docs land entirely in
+    //     the prompt.
+    //   - PDF/DOCX: run through pdf-parse / mammoth. ~12K char cap.
+    //     Failure → placeholder.
+    //   - Everything else (images, opaque binaries, etc.): placeholder.
     let excerpt: string | null = null;
     if (TEXTLIKE_MIME.test(file.type) || /\.(txt|md|markdown|csv|json)$/i.test(file.name)) {
       const text = buf.toString("utf-8");
       excerpt = text.slice(0, 2000);
     } else {
-      excerpt = `(${file.type || "binary file"} attached — content not yet ingested by the agent.)`;
+      const extracted = await extractDocText({
+        buffer: buf,
+        mimeType: file.type || null,
+        fileName: file.name,
+      });
+      if (extracted) {
+        excerpt = extracted;
+      } else {
+        excerpt = `(${file.type || "binary file"} attached — content not yet ingested by the agent.)`;
+      }
     }
 
     const attachment: ChapterAttachment = {
