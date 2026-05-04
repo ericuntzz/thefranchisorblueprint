@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
@@ -82,18 +82,6 @@ export default async function BlueprintLabPage() {
     provenanceBySlug.set(row.file_slug, list);
   }
 
-  // Quick stats for the hero — how far along is the Blueprint?
-  // A chapter "counts" as filled if it has prose OR any structured
-  // fields populated (Phase 1.5a — fields can exist without prose).
-  const filledCount = MEMORY_FILES.filter((s) => {
-    const row = memoryBySlug.get(s);
-    if (!row) return false;
-    if (row.content_md && row.content_md.trim().length > 0) return true;
-    if (row.fields && Object.keys(row.fields).length > 0) return true;
-    return false;
-  }).length;
-  const pct = Math.round((filledCount / MEMORY_FILES.length) * 100);
-
   // Build a cross-chapter fields map so ChapterCard can pass it down
   // to the field editor for cross-chapter computed-field formulas
   // (e.g. franchisee_profile.minimum_liquid_capital_dollars derives
@@ -133,25 +121,10 @@ export default async function BlueprintLabPage() {
   return (
     <>
       <main className="min-h-[calc(100vh-200px)] bg-cream">
-        {/* Top nav — promoted to matched ghost-pill buttons. The
-            primary action on this page is "go back to where you do
-            the actual editing", so the Back to dashboard button is
-            now visually equal to (not de-emphasized against) the
-            page's secondary actions. */}
-        <div className="border-b border-navy/5 bg-white">
-          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 py-3 flex items-center justify-between gap-3">
-            <Link
-              href="/portal"
-              className="inline-flex items-center gap-1.5 text-navy bg-cream hover:bg-navy hover:text-cream border-2 border-navy/20 hover:border-navy font-bold text-[11px] uppercase tracking-[0.12em] px-4 py-2 rounded-full transition-colors"
-            >
-              <ArrowLeft size={12} />
-              Back to dashboard
-            </Link>
-            <span className="text-xs uppercase tracking-wider text-gold-warm font-bold">
-              /lab · in development
-            </span>
-          </div>
-        </div>
+        {/* Top nav strip removed — duplicated the navy "Back to your
+            dashboard" CTA inside the hero, and the "/lab · in
+            development" tag was stale once the lab promoted out of
+            in-development status (LabDiscovery card removed). */}
 
         {/* Hero — explicit "this is the assembled view" framing so
             the customer doesn't confuse this with the per-chapter
@@ -189,18 +162,11 @@ export default async function BlueprintLabPage() {
                 Back to your dashboard
               </Link>
             </div>
-            <div className="mt-5 flex flex-wrap items-center gap-4">
-              <div className="rounded-full bg-navy text-cream px-5 py-2 text-sm font-bold">
-                {filledCount} / {MEMORY_FILES.length} chapters started ·{" "}
-                {pct}%
-              </div>
-              <Link
-                href="/portal/lab/intake"
-                className="inline-flex items-center gap-2 text-navy font-semibold text-sm hover:text-gold transition-colors"
-              >
-                Pre-fill from your website <ArrowRight size={13} />
-              </Link>
-            </div>
+            {/* "X / 16 chapters started" pill + "Pre-fill from your
+                website" link removed — readiness % belongs on the
+                Command Center on the dashboard (single source of
+                truth), and the intake flow has its own discovery
+                surface there too. Was duplicate guidance. */}
           </div>
         </section>
 
