@@ -119,7 +119,6 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
   const startedSlugs = new Set(progress.map((p) => p.capability_slug));
   const completedCount = visibleCaps.filter((c) => completedSlugs.has(c.slug)).length;
   const totalCount = visibleCaps.length;
-  const percentComplete = Math.round((completedCount / totalCount) * 100);
   const isAllComplete = completedCount === totalCount;
   const lockedCaps = CAPABILITIES.filter((c) => c.minTier > tier);
 
@@ -217,8 +216,8 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
               </h1>
               <p className="text-grey-3 text-base md:text-lg mt-2 max-w-[640px]">
                 {isFirstRun
-                  ? "Your franchisor operating system — 9 capabilities, 4 phases. Start with the Audit (about 60 minutes) and you'll know whether your business is franchise-ready."
-                  : `Your franchisor operating system — ${completedCount} of ${totalCount} capabilities complete.`}
+                  ? "Your franchisor operating system. Start with the Audit (about 60 minutes) and you'll know whether your business is franchise-ready."
+                  : "Your franchisor operating system."}
               </p>
             </div>
             <div className="flex items-stretch gap-3">
@@ -328,12 +327,19 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
                 </Link>
                 .
               </p>
-              <ul className="grid sm:grid-cols-2 gap-2 text-sm text-grey-3">
+              <ul className="grid sm:grid-cols-2 gap-x-4 gap-y-2.5 text-sm text-grey-3">
                 {lockedCaps.map((cap) => (
-                  <li key={cap.slug} className="flex items-center gap-2">
-                    <span className="w-1 h-1 rounded-full bg-grey-4" />
-                    <span>{cap.title}</span>
-                    <span className="text-[10px] text-grey-4 font-semibold uppercase">Tier {cap.minTier}+</span>
+                  <li key={cap.slug} className="flex items-center gap-2.5">
+                    <Circle
+                      size={6}
+                      strokeWidth={0}
+                      className="flex-shrink-0 fill-grey-4"
+                      aria-hidden
+                    />
+                    <span className="flex-1 min-w-0 truncate">{cap.title}</span>
+                    <span className="flex-shrink-0 text-[10px] text-grey-4 font-semibold uppercase tracking-wider tabular-nums">
+                      Tier {cap.minTier}+
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -404,44 +410,6 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
         />
       )}
     </>
-  );
-}
-
-function ProgressMeter({
-  percent,
-  completed,
-  total,
-}: {
-  percent: number;
-  completed: number;
-  total: number;
-}) {
-  return (
-    <div className="bg-gradient-to-br from-navy to-navy-light text-white rounded-2xl px-6 md:px-8 py-6 md:py-7 shadow-[0_18px_40px_rgba(30,58,95,0.18)]">
-      <div className="flex items-baseline justify-between mb-3">
-        <div className="text-[11px] font-bold tracking-[0.16em] uppercase text-gold">
-          % Franchise Ready
-        </div>
-        <div className="text-white font-extrabold text-3xl md:text-4xl tabular-nums leading-none">
-          {percent}%
-        </div>
-      </div>
-      <div
-        className="h-3 w-full bg-white/10 rounded-full overflow-hidden ring-1 ring-white/5"
-        role="progressbar"
-        aria-valuenow={percent}
-        aria-valuemin={0}
-        aria-valuemax={100}
-      >
-        <div
-          className="h-full bg-gradient-to-r from-gold via-gold to-gold-warm rounded-full transition-all shadow-[0_0_12px_rgba(212,162,76,0.5)]"
-          style={{ width: `${percent}%` }}
-        />
-      </div>
-      <div className="text-white/70 text-xs md:text-sm mt-3 font-medium">
-        {completed} of {total} capabilities marked complete
-      </div>
-    </div>
   );
 }
 
@@ -1004,5 +972,3 @@ function RevokedAccessView({
   );
 }
 
-// Suppress unused-warning until tier-aware nav uses it.
-void Sparkles;
