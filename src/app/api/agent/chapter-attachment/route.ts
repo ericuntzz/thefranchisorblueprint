@@ -33,7 +33,9 @@ import {
 } from "@/lib/memory";
 import { fetchSiteArtifacts } from "@/lib/agent/scrape";
 import { extractDocText } from "@/lib/agent/extract-doc-text";
+import { classifyAttachmentToChapters } from "@/lib/agent/classify-attachment";
 import type { ChapterAttachment, Purchase } from "@/lib/supabase/types";
+import type { MemoryFileSlug } from "@/lib/memory/files";
 
 export const runtime = "nodejs";
 // File uploads can be a few MB; allow a longer window than the default 10s.
@@ -92,6 +94,15 @@ export async function POST(req: NextRequest) {
     }
     const slug = form.get("slug");
     const file = form.get("file");
+    // `autoClassify=true` opts into Sonnet-driven multi-chapter
+    // routing. The intake flow sends this flag so a doc dropped on
+    // the Operations step can also fan out to recipes_and_menu /
+    // training_program / etc. when relevant. The per-chapter
+    // attachment composer leaves this off so a file dropped on a
+    // specific chapter stays scoped there.
+    const autoClassifyRaw = form.get("autoClassify");
+    const autoClassify =
+      autoClassifyRaw === "true" || autoClassifyRaw === "1";
     if (typeof slug !== "string" || !isValidMemoryFileSlug(slug)) {
       return NextResponse.json(
         { error: `Invalid or missing slug` },
@@ -167,8 +178,58 @@ export async function POST(req: NextRequest) {
     };
 
     await appendAttachment({ userId, slug, attachment });
+
+    // Auto-classification fan-out — only when explicitly opted-in.
+    // The Sonnet call is best-effort; failure here is not surfaced
+    // to the customer (the primary attachment already landed). We
+    // attach the SAME ChapterAttachment object to each additional
+    // slug — one logical document, multiple chapter pointers, all
+    // referencing the same underlying storage object.
+    let alsoAttachedTo: MemoryFileSlug[] = [];
+    if (autoClassify) {
+      try {
+        const additional = await classifyAttachmentToChapters({
+          primarySlug: slug,
+          fileName: file.name,
+          excerpt,
+        });
+        for (const otherSlug of additional) {
+          // Mint a distinct id per chapter row so deletes from one
+          // chapter don't ripple into others. The shared `ref`
+          // (storage path) is what makes it the same logical doc.
+          const fanOut: ChapterAttachment = {
+            ...attachment,
+            id: mintAttachmentId(),
+            // Excerpt + size carry through unchanged so each
+            // chapter's draft pipeline reads the same content.
+          };
+          await appendAttachment({
+            userId,
+            slug: otherSlug,
+            attachment: fanOut,
+          });
+          alsoAttachedTo.push(otherSlug);
+        }
+      } catch (err) {
+        // Non-fatal — primary attachment already saved.
+        console.warn(
+          "[chapter-attachment] auto-classify fan-out failed:",
+          err instanceof Error ? err.message : err,
+        );
+        alsoAttachedTo = [];
+      }
+    }
+
     revalidatePath("/portal/lab/blueprint");
-    return NextResponse.json({ ok: true, attachment });
+    if (alsoAttachedTo.length > 0) {
+      for (const s of alsoAttachedTo)
+        revalidatePath(`/portal/chapter/${s}`);
+    }
+    return NextResponse.json({
+      ok: true,
+      attachment,
+      alsoAttachedTo,
+    });
   }
 
   // ---- Link save branch ------------------------------------------------

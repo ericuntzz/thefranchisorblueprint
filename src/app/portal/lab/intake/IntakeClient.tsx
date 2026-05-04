@@ -44,7 +44,11 @@ import {
 import Link from "next/link";
 import { JasonChatDock } from "@/components/agent/JasonChatDock";
 import { TypedHeading } from "@/components/agent/TypedHeading";
-import type { MemoryFileSlug } from "@/lib/memory/files";
+import {
+  MEMORY_FILE_TITLES,
+  isValidMemoryFileSlug,
+  type MemoryFileSlug,
+} from "@/lib/memory/files";
 
 type ScrapeResponse = {
   ok: true;
@@ -484,7 +488,13 @@ function UploadStepCard({
   step: UploadStep;
   onAdvance: () => void;
 }) {
-  type Uploaded = { id: string; label: string };
+  type Uploaded = {
+    id: string;
+    label: string;
+    /** Additional chapter slugs the auto-classifier fanned the
+     *  file out to (does NOT include the primary step slug). */
+    alsoAttachedTo: string[];
+  };
   const [uploads, setUploads] = useState<Uploaded[]>([]);
   const [uploading, setUploading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -497,6 +507,11 @@ function UploadStepCard({
       const fd = new FormData();
       fd.append("slug", step.slug);
       fd.append("file", file);
+      // Intake uploads always opt into auto-classification — a
+      // first-run customer's "operations manual" is overwhelmingly
+      // likely to also feed training_program, recipes_and_menu,
+      // and vendor_supply_chain. Sonnet decides; we fan out.
+      fd.append("autoClassify", "true");
       const res = await fetch("/api/agent/chapter-attachment", {
         method: "POST",
         body: fd,
@@ -509,12 +524,14 @@ function UploadStepCard({
       }
       const j = (await res.json()) as {
         attachment?: { id?: string; label?: string };
+        alsoAttachedTo?: string[];
       };
       setUploads((prev) => [
         ...prev,
         {
           id: j.attachment?.id ?? `local-${Date.now()}`,
           label: j.attachment?.label ?? file.name,
+          alsoAttachedTo: j.alsoAttachedTo ?? [],
         },
       ]);
     } catch (e) {
@@ -621,23 +638,36 @@ function UploadStepCard({
 
       {uploads.length > 0 && (
         <ul className="mb-4 space-y-1.5">
-          {uploads.map((u) => (
-            <li
-              key={u.id}
-              className="flex items-center gap-2 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 text-xs"
-            >
-              <CheckCircle2
-                size={13}
-                className="text-emerald-600 flex-shrink-0"
-              />
-              <span className="text-navy font-semibold truncate">
-                {u.label}
-              </span>
-              <span className="text-emerald-700 ml-auto text-[10px] uppercase tracking-wider font-bold">
-                Uploaded
-              </span>
-            </li>
-          ))}
+          {uploads.map((u) => {
+            const fanOutTitles = u.alsoAttachedTo
+              .filter(isValidMemoryFileSlug)
+              .map((s) => MEMORY_FILE_TITLES[s]);
+            return (
+              <li
+                key={u.id}
+                className="rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 text-xs"
+              >
+                <div className="flex items-center gap-2">
+                  <CheckCircle2
+                    size={13}
+                    className="text-emerald-600 flex-shrink-0"
+                  />
+                  <span className="text-navy font-semibold truncate">
+                    {u.label}
+                  </span>
+                  <span className="text-emerald-700 ml-auto text-[10px] uppercase tracking-wider font-bold">
+                    Uploaded
+                  </span>
+                </div>
+                {fanOutTitles.length > 0 && (
+                  <p className="mt-1 ml-5 text-[11px] text-emerald-800/80 leading-snug">
+                    <span className="font-semibold">Also indexed to:</span>{" "}
+                    {fanOutTitles.join(" · ")}
+                  </p>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
 
