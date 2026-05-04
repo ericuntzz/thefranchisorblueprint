@@ -17,11 +17,10 @@ export function PortalNav({ displayName, email, tier }: PortalNavProps) {
     <nav className="bg-white border-b border-navy/10 sticky top-0 z-30">
       <div className="max-w-[1200px] mx-auto px-6 md:px-8 h-[72px] flex items-center justify-between">
         <Link href="/portal" className="flex items-center gap-3">
-          {/* Icon-only mark — the brand wordmark sat next to it AND
-              was baked into the previous PNG, so customers saw "The
-              Franchisor Blueprint" twice. The icon alone is enough
-              identification inside the portal; the "Customer Portal"
-              caption tells them where they are. */}
+          {/* Icon-only mark — switched away from the stacked
+              icon+wordmark PNG so the brand name doesn't appear
+              twice (the wordmark to the right of the icon is the
+              typeset version). */}
           <Image
             src="/icon-master.png"
             alt="The Franchisor Blueprint"
@@ -29,9 +28,12 @@ export function PortalNav({ displayName, email, tier }: PortalNavProps) {
             height={52}
             priority
           />
-          <span className="hidden md:inline text-grey-4 text-[11px] uppercase tracking-[0.14em] font-semibold leading-tight">
-            Customer Portal
-          </span>
+          <div className="hidden md:flex flex-col leading-tight">
+            <span className="text-navy font-bold text-sm">The Franchisor Blueprint</span>
+            <span className="text-grey-4 text-[11px] uppercase tracking-[0.14em] font-semibold">
+              Customer Portal
+            </span>
+          </div>
         </Link>
 
         <div className="flex items-center gap-3 md:gap-5">
