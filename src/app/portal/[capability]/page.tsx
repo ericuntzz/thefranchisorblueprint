@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import {
-  CAPABILITIES,
   PHASES,
   capabilitiesForTier,
   getCapability,
@@ -251,7 +250,7 @@ export default async function CapabilityDetailPage({ params }: PageProps) {
                     Add phase coaching <ArrowRight size={14} />
                   </Link>
                   <a
-                    href="mailto:team@thefranchisorblueprint.com?subject=Help%20with%20{cap.title}"
+                    href={`mailto:team@thefranchisorblueprint.com?subject=Help%20with%20${encodeURIComponent(cap.title)}`}
                     className="inline-flex items-center gap-2 text-navy font-semibold text-sm underline hover:text-gold-warm transition-colors"
                   >
                     Email a question instead
@@ -360,5 +359,3 @@ export default async function CapabilityDetailPage({ params }: PageProps) {
   );
 }
 
-// Suppress import-only-for-types warning
-void CAPABILITIES;

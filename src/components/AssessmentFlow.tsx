@@ -327,7 +327,7 @@ export function AssessmentFlow({ source }: { source?: string }) {
         {stage.kind === "intro" && (
           <IntroCard onStart={() => void resumeOrStart(null)} />
         )}
-        {stage.kind === "question" && session && (
+        {stage.kind === "question" && session && QUESTIONS[stage.index] && (
           <QuestionCard
             question={QUESTIONS[stage.index]}
             index={stage.index}
@@ -391,10 +391,10 @@ function IntroCard({ onStart }: { onStart: () => void }) {
         Honest answers. Honest score. A real next step.
       </h2>
       <p className="text-grey-3 text-base md:text-lg leading-relaxed max-w-[640px] mx-auto mb-8">
-        We&apos;ll walk through 15 questions across 7 areas — the same ones a
-        franchise attorney and your first franchisees will care about. You&apos;ll
-        get an honest score and a tailored next step. No email required to
-        start.
+        We&apos;ll walk through 15 questions across 7 readiness categories — the
+        same ones a franchise attorney and your first franchisees will care
+        about. You&apos;ll get an honest score and a tailored next step. No
+        email required to start.
       </p>
       <button
         onClick={onStart}
@@ -414,7 +414,14 @@ function ProgressBar({ progress, label }: { progress: number; label: string }) {
         <span>{label}</span>
         <span>{Math.round(progress * 100)}%</span>
       </div>
-      <div className="h-1.5 bg-navy/10 rounded-full overflow-hidden">
+      <div
+        className="h-1.5 bg-navy/10 rounded-full overflow-hidden"
+        role="progressbar"
+        aria-valuenow={Math.round(progress * 100)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={label}
+      >
         <div
           className="h-full bg-gradient-to-r from-gold to-gold-warm transition-[width] duration-500 ease-out"
           style={{ width: `${Math.max(2, progress * 100)}%` }}
@@ -460,6 +467,7 @@ function QuestionCard({
             <button
               key={a.letter}
               onClick={() => onAnswer(a.letter)}
+              aria-pressed={isSelected}
               className={`w-full text-left rounded-xl border-2 px-5 py-4 transition-all flex gap-4 items-start ${
                 isSelected
                   ? "border-gold bg-cream-light shadow-[0_4px_16px_rgba(212,175,55,0.18)]"

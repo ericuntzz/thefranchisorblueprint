@@ -28,8 +28,6 @@ import {
   ArrowRight,
   ChevronDown,
   ChevronUp,
-  Lock,
-  Pencil,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
@@ -502,8 +500,3 @@ function formatRelative(iso: string): string {
   return new Date(iso).toLocaleDateString();
 }
 
-// Pencil + Lock are imported above so future iterations can reuse
-// them in this file without re-importing. Suppress the unused-binding
-// noise from TS strict mode.
-void Pencil;
-void Lock;

@@ -11,7 +11,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { getSupabaseServer } from "@/lib/supabase/server";
-import { PRODUCTS, upgradeProductFor } from "@/lib/products";
+import { upgradeProductFor } from "@/lib/products";
 import {
   getActiveOffersForUser,
   isPromoActive,
@@ -292,5 +292,3 @@ function TopTierView({ firstName }: { firstName: string | null }) {
     </section>
   );
 }
-
-void PRODUCTS;

@@ -7,6 +7,7 @@ import {
   Calendar,
   CheckCircle2,
   CreditCard,
+  ExternalLink,
   Mail,
   RefreshCw,
   ShieldCheck,
@@ -286,7 +287,7 @@ export default async function AccountPage({ searchParams }: PageProps) {
                     type="submit"
                     className="inline-flex items-center gap-2 text-navy font-semibold text-sm hover:text-gold-warm transition-colors cursor-pointer"
                   >
-                    <ExternalIcon />
+                    <ExternalLink size={14} className="text-grey-3" />
                     Open Stripe billing portal — invoices &amp; payment methods
                   </button>
                 </form>
@@ -349,13 +350,16 @@ export default async function AccountPage({ searchParams }: PageProps) {
                 <div className="text-[10px] font-bold tracking-[0.16em] uppercase text-grey-4 mb-2">
                   Past sessions
                 </div>
-                <ul className="space-y-1.5">
+                <ul className="space-y-2">
                   {pastSessions.slice(0, 8).map((s) => (
                     <li
                       key={s.id}
-                      className="flex items-center gap-3 text-grey-3 text-sm"
+                      className="flex items-center gap-2.5 text-grey-3 text-sm"
                     >
-                      <span className="w-1 h-1 rounded-full bg-grey-4" />
+                      <span
+                        className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-grey-4/60"
+                        aria-hidden
+                      />
                       <span>{formatDateTime(s.scheduled_at)}</span>
                       <span className="text-xs text-grey-4 italic">
                         ({s.status})
@@ -459,12 +463,6 @@ function Field({
   );
 }
 
-function ExternalIcon() {
-  // Simple right-arrow-with-square icon (re-exporting lucide ExternalLink
-  // would be one more import for one use)
-  return <RefreshCw size={14} className="text-grey-3" />;
-}
-
 function FlashBanner({
   kind,
   message,
@@ -489,5 +487,3 @@ function FlashBanner({
     </div>
   );
 }
-
-void Sparkles;

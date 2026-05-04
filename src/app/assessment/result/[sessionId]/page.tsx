@@ -114,12 +114,12 @@ export default async function AssessmentResultPage({
           </h1>
           {businessName && (
             <p className="text-grey-3 text-base md:text-lg mb-8">
-              Across {businessName}, scored against 7 dimensions of franchise readiness.
+              Across {businessName}, scored against 7 categories of franchise readiness.
             </p>
           )}
           {!businessName && (
             <p className="text-grey-3 text-base md:text-lg mb-8">
-              Scored across the 7 dimensions of franchise readiness.
+              Scored across 7 categories of franchise readiness.
             </p>
           )}
 
