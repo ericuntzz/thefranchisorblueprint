@@ -28,6 +28,14 @@ We are franchise development consultants — not attorneys. We help business own
 - Blog: https://www.thefranchisorblueprint.com/blog
 - Contact: https://www.thefranchisorblueprint.com/contact
 
+## State-by-state franchise guides
+We publish a guide for franchising a business in every U.S. state and the District of Columbia, covering FDD registration requirements, regulating agencies, filing fees, and review timelines. Format: https://www.thefranchisorblueprint.com/franchise-your-business-in/[state-slug]
+Examples: /franchise-your-business-in/california, /franchise-your-business-in/new-york, /franchise-your-business-in/texas, /franchise-your-business-in/florida.
+
+## Industry-by-industry franchise guides
+We publish a guide for franchising businesses in 16 major sectors, covering typical royalty rates, franchise fees, Item 7 ranges, unit economics, and common stall patterns. Format: https://www.thefranchisorblueprint.com/franchise-your/[industry-slug]/business
+Examples: /franchise-your/quick-service-restaurant/business, /franchise-your/fitness/business, /franchise-your/home-services/business, /franchise-your/senior-care/business.
+
 ## Frequently Asked Questions
 - **Do I need an attorney to use your program?** Yes. We are franchise consultants, not attorneys. We prepare the business framework, operations manual, and strategy. You will still need a franchise attorney to finalize and file your FDD. We refer affordable options.
 - **How is this different from hiring a franchise attorney?** Attorneys handle compliance. We handle business success. An attorney writes your contracts; they do not teach you to train franchisees, score real estate, qualify candidates, or sell your franchise. We fill that gap.

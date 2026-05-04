@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
 import { allPosts } from "@/lib/blog";
+import { allStates } from "@/lib/franchise-states";
+import { allIndustries } from "@/lib/franchise-industries";
 import { SITE_URL } from "@/lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -29,5 +31,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticRoutes, ...blogRoutes];
+  // Programmatic state pages — 51 entries (50 + DC)
+  const stateRoutes: MetadataRoute.Sitemap = allStates.map((s) => ({
+    url: `${SITE_URL}/franchise-your-business-in/${s.slug}`,
+    lastModified: now,
+    changeFrequency: "monthly",
+    priority: 0.6,
+  }));
+
+  // Programmatic industry pages — 16 sectors
+  const industryRoutes: MetadataRoute.Sitemap = allIndustries.map((i) => ({
+    url: `${SITE_URL}/franchise-your/${i.slug}/business`,
+    lastModified: now,
+    changeFrequency: "monthly",
+    priority: 0.6,
+  }));
+
+  return [...staticRoutes, ...blogRoutes, ...stateRoutes, ...industryRoutes];
 }
