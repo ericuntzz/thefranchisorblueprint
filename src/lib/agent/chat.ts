@@ -76,6 +76,36 @@ export type ChatEvent =
 const MAX_TOOL_ROUNDS = 6;
 
 /**
+ * Chat-mode style addendum. The base system prompt is tuned for
+ * drafting chapter-quality long-form output; in the chat dock that
+ * register is way too verbose and reads as condescending. This
+ * second system block tells Jason to talk like a senior advisor
+ * over Slack: tight, plain, no preamble, no recap, no bullet
+ * dumps unless asked.
+ *
+ * Kept as a SEPARATE system text block (no cache_control) so the
+ * primary prompt cache prefix above stays intact — only this
+ * addendum gets re-sent on every chat turn.
+ */
+const CHAT_STYLE_DIRECTIVE = `
+<chat_mode>
+You're in the in-portal chat dock right now, not drafting a chapter. The customer reads your reply between other things — they don't want a polished essay, they want the answer.
+
+Style rules for chat:
+- Default to 1–3 sentences. Stretch only when the question genuinely needs the air.
+- No preamble. No "Great question." No "Let me think about this." No restating what they asked. Open on the answer.
+- No recap of what's already in the conversation. They were there.
+- No bullet lists unless the answer is genuinely a list of 3+ peer items the customer needs to scan. Prefer prose.
+- No headings. No bold-faced section titles. Inline emphasis (one or two **bolded** phrases per turn) is fine when it actually helps a fast read; don't bold every other word.
+- Markdown renders properly in this dock — \`**bold**\`, \`*italic*\`, \`\`code\`\`, \`[links](url)\`, and \`-\` lists all display the way you'd expect. Use them sparingly.
+- Numbers, dollar amounts, percentages — always inline, never in a table.
+- If the customer asks "should I…?" give an opinion and one reason. Don't enumerate considerations.
+- If you need information you don't have, ask one focused question — not a discovery checklist.
+
+When you DO need to be longer (e.g. explaining FDD Item 19 the first time, or walking through their specific unit economics), still cut every sentence that doesn't advance the answer.
+</chat_mode>`.trim();
+
+/**
  * Run a single chat turn end-to-end, yielding ChatEvents as they arrive.
  *
  * Tool-use loop:
@@ -161,6 +191,12 @@ export async function* streamChatEvents(args: {
             type: "text",
             text: systemPrompt,
             cache_control: CACHE_1H,
+          },
+          // Chat brevity addendum — uncached so we can tune it
+          // without invalidating the big system-prompt cache.
+          {
+            type: "text",
+            text: CHAT_STYLE_DIRECTIVE,
           },
         ],
         thinking: { type: "adaptive" },

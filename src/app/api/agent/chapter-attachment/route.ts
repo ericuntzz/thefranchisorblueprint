@@ -78,6 +78,35 @@ async function requireUser(): Promise<
 }
 
 export async function POST(req: NextRequest) {
+  // Top-level try/catch so an uncaught throw anywhere downstream
+  // produces a logged error + a structured JSON 500 instead of a
+  // bare Vercel function-crash response. Without this wrap we lose
+  // the stack trace in serverless and the customer sees a useless
+  // "HTTP 500" — we can't repro the bug ourselves.
+  try {
+    return await handlePOST(req);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    const stack = err instanceof Error ? err.stack : undefined;
+    console.error(
+      "[chapter-attachment] uncaught error:",
+      message,
+      stack ? `\n${stack}` : "",
+    );
+    return NextResponse.json(
+      {
+        error: "Upload failed",
+        // Surface the underlying message so the customer sees
+        // something meaningful in the chat-dock error chip rather
+        // than a bare "HTTP 500".
+        detail: message,
+      },
+      { status: 500 },
+    );
+  }
+}
+
+async function handlePOST(req: NextRequest): Promise<NextResponse> {
   const auth = await requireUser();
   if (!auth.ok) return auth.res;
   const userId = auth.userId;

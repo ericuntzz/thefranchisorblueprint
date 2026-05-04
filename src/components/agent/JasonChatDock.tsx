@@ -42,6 +42,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { CHAPTER_DOC_PROMPTS } from "@/lib/memory/doc-prompts";
 import {
   isValidMemoryFileSlug,
@@ -359,7 +360,26 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
       });
     };
 
-    const appendDelta = (delta: string) => {
+    // --- Typewriter buffer ---------------------------------------
+    // Anthropic streams tokens, but each text_delta is usually a
+    // chunk (a few characters to a sentence). Pushing each chunk
+    // straight into state makes the UI jump in big visible steps.
+    // Instead we accumulate incoming text in a buffer and drain it
+    // into the active bubble at a steady, readable pace via
+    // requestAnimationFrame.
+    //
+    // Drain rate is mildly adaptive: we always emit at least
+    // BASE_RATE chars/frame, but if the buffer gets long (the
+    // network burst was big or the stream is way ahead of the
+    // typewriter) we accelerate so the customer never waits more
+    // than a couple of frames behind reality. Stream-end flushes
+    // immediately so there's no lingering delay after the model
+    // is genuinely done.
+    const buffer = { text: "" };
+    let rafId: number | null = null;
+    const BASE_RATE = 2; // chars per frame ≈ 120/sec at 60fps
+
+    const flushChunk = (chunk: string) => {
       ensureBubble();
       setTranscript((t) => {
         const i = activeBubble.index;
@@ -367,13 +387,53 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
         const copy = t.slice();
         const item = copy[i];
         if (item && item.kind === "bubble") {
-          copy[i] = { ...item, text: item.text + delta };
+          copy[i] = { ...item, text: item.text + chunk };
         }
         return copy;
       });
     };
 
+    const drainTick = () => {
+      const pending = buffer.text;
+      if (pending.length === 0) {
+        rafId = null;
+        return;
+      }
+      // Adaptive: catch up faster when the buffer is long so the
+      // typewriter doesn't lag visibly behind a finished stream.
+      const rate =
+        pending.length > 200
+          ? Math.max(BASE_RATE, Math.ceil(pending.length / 30))
+          : BASE_RATE;
+      const take = Math.min(rate, pending.length);
+      const chunk = pending.slice(0, take);
+      buffer.text = pending.slice(take);
+      flushChunk(chunk);
+      rafId = requestAnimationFrame(drainTick);
+    };
+
+    const appendDelta = (delta: string) => {
+      buffer.text += delta;
+      if (rafId == null && typeof requestAnimationFrame !== "undefined") {
+        rafId = requestAnimationFrame(drainTick);
+      }
+    };
+
+    /** Drain the buffer immediately and stop the rAF loop. Used
+     *  when we hit a tool_call (need to commit text before the
+     *  card lands) or stream end (don't make the user wait). */
+    const flushBuffer = () => {
+      if (rafId != null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+      const remaining = buffer.text;
+      buffer.text = "";
+      if (remaining) flushChunk(remaining);
+    };
+
     const lockBubble = () => {
+      flushBuffer();
       activeBubble.index = null;
     };
 
@@ -456,6 +516,10 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
         ];
       });
     } finally {
+      // Drain any text the typewriter buffer is still holding so
+      // the customer never sees a gap between "Thinking…" turning
+      // off and the last sentence of the reply landing.
+      flushBuffer();
       setStreaming(false);
       abortRef.current = null;
       // If any tool fired during this turn, refresh the page data
@@ -517,14 +581,19 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
     }
   }, [draft, streaming, historyForServer, pageContext, router]);
 
-  // Cmd/Ctrl+Enter sends; plain Enter inserts newline (founders type fast,
-  // this matches every modern chat surface so muscle memory transfers).
+  // Enter sends; Shift+Enter inserts a newline. This matches the
+  // muscle memory of every modern chat surface (ChatGPT, Claude.ai,
+  // Slack, iMessage, Discord). Cmd/Ctrl+Enter still sends too, for
+  // anyone with the inverse habit from earlier composers.
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        void send();
-      }
+      if (e.key !== "Enter") return;
+      if (e.shiftKey) return; // newline
+      // IME composition (Japanese / Chinese / Korean input methods)
+      // — don't intercept Enter while a candidate is being chosen.
+      if (e.nativeEvent.isComposing) return;
+      e.preventDefault();
+      void send();
     },
     [send],
   );
@@ -575,8 +644,14 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
         if (!res.ok) {
           const j = (await res.json().catch(() => ({}))) as {
             error?: string;
+            detail?: string;
           };
-          throw new Error(j.error ?? `HTTP ${res.status}`);
+          // Prefer `detail` when the server set it — that's the
+          // actual underlying error message; `error` is the
+          // category. Fall back to status code if both missing.
+          throw new Error(
+            j.detail ?? j.error ?? `HTTP ${res.status}`,
+          );
         }
         const j = (await res.json()) as {
           attachment?: { label?: string };
@@ -871,7 +946,7 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
           </button>
         </div>
         <div className="mt-1.5 px-1 text-[10px] text-grey-4">
-          ⌘↵ to send · drop a file anywhere on the dock · esc to close
+          enter to send · shift+enter for newline · drop a file · esc to close
         </div>
       </div>
     </div>
@@ -888,6 +963,9 @@ function Bubble({
   streaming?: boolean;
 }) {
   if (role === "user") {
+    // User messages render as plain text — the customer typed them,
+    // so any markdown-looking characters are literal, not formatting
+    // to interpret.
     return (
       <div className="flex justify-end">
         <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-navy text-cream px-3.5 py-2 text-[13px] leading-relaxed whitespace-pre-wrap">
@@ -902,16 +980,111 @@ function Bubble({
   if (!text && !streaming) return null;
   return (
     <div className="flex justify-start">
-      <div className="max-w-[88%] rounded-2xl rounded-tl-sm bg-white border border-navy/10 text-navy px-3.5 py-2 text-[13px] leading-relaxed whitespace-pre-wrap">
-        {text}
+      <div className="max-w-[88%] rounded-2xl rounded-tl-sm bg-white border border-navy/10 text-navy px-3.5 py-2 text-[13px] leading-relaxed jason-md">
+        <MarkdownBubble text={text} />
         {streaming && (
           <span
             className="inline-block w-1.5 h-4 ml-0.5 align-text-bottom bg-navy/40 animate-pulse"
             aria-hidden="true"
           />
         )}
+        <style jsx>{`
+          /* Lightweight markdown styling tuned for the chat dock —
+             react-markdown emits semantic tags (<p>, <strong>, <em>,
+             <ul>, <ol>, <code>, <a>) and we style them inline here
+             so we don't have to bring along a full prose stylesheet. */
+          .jason-md :global(p) {
+            margin: 0;
+          }
+          .jason-md :global(p + p) {
+            margin-top: 0.6em;
+          }
+          .jason-md :global(strong) {
+            font-weight: 700;
+          }
+          .jason-md :global(em) {
+            font-style: italic;
+          }
+          .jason-md :global(ul),
+          .jason-md :global(ol) {
+            margin: 0.4em 0;
+            padding-left: 1.1em;
+          }
+          .jason-md :global(li) {
+            margin: 0.15em 0;
+          }
+          .jason-md :global(li > p) {
+            display: inline;
+          }
+          .jason-md :global(code) {
+            background: rgba(30, 58, 95, 0.06);
+            border-radius: 4px;
+            padding: 0.05em 0.3em;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 0.92em;
+          }
+          .jason-md :global(pre) {
+            background: rgba(30, 58, 95, 0.06);
+            border-radius: 6px;
+            padding: 0.5em 0.7em;
+            overflow-x: auto;
+            margin: 0.5em 0;
+            font-size: 0.9em;
+          }
+          .jason-md :global(a) {
+            color: rgb(217, 158, 56);
+            text-decoration: underline;
+            text-underline-offset: 2px;
+          }
+          .jason-md :global(a:hover) {
+            color: rgb(180, 122, 28);
+          }
+          .jason-md :global(blockquote) {
+            border-left: 3px solid rgba(30, 58, 95, 0.18);
+            padding-left: 0.7em;
+            margin: 0.4em 0;
+            color: rgba(30, 58, 95, 0.75);
+          }
+          .jason-md :global(h1),
+          .jason-md :global(h2),
+          .jason-md :global(h3) {
+            font-weight: 700;
+            font-size: inherit;
+            margin: 0.4em 0 0.2em;
+          }
+        `}</style>
       </div>
     </div>
+  );
+}
+
+/**
+ * Renders Jason's assistant text as markdown via react-markdown.
+ * The component is split out so the streaming cursor span renders
+ * after the markdown block (otherwise react-markdown would try to
+ * interpret the cursor markup as content).
+ *
+ * `linkTarget` opens links in a new tab — chat is not the page,
+ * we don't want a click to navigate the dock away from itself.
+ */
+function MarkdownBubble({ text }: { text: string }) {
+  return (
+    <ReactMarkdown
+      components={{
+        a: ({ href, children, ...props }) => (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            {...props}
+          >
+            {children}
+          </a>
+        ),
+      }}
+    >
+      {text}
+    </ReactMarkdown>
   );
 }
 

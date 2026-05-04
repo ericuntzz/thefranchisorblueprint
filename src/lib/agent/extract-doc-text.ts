@@ -20,19 +20,8 @@
  */
 
 import "server-only";
-import * as pdfParseModule from "pdf-parse";
+import { PDFParse } from "pdf-parse";
 import mammoth from "mammoth";
-
-// pdf-parse ships both CJS (default export) and ESM (named).
-// Reach into either shape so the type-checker stays happy and the
-// runtime works under both bundling modes.
-const pdfParse: (
-  data: Buffer | Uint8Array,
-) => Promise<{ text: string; numpages: number }> =
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (pdfParseModule as any).default ?? (pdfParseModule as any).pdfParse ??
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (pdfParseModule as any);
 
 /** Truncate excerpts to bound prompt size. Opus 4.7's 1M context
  *  is roomy, but we still want to keep individual attachment
@@ -70,8 +59,14 @@ export async function extractDocText(args: {
 }
 
 async function extractPdf(buffer: Buffer): Promise<string | null> {
+  // pdf-parse 2.x ships a class-based API. The constructor accepts
+  // a `data` Uint8Array (auto-converts from Buffer) and the loader
+  // is async via `getText()`. We always destroy the doc afterward so
+  // the underlying pdfjs document closes cleanly in serverless.
+  let parser: PDFParse | null = null;
   try {
-    const result = await pdfParse(buffer);
+    parser = new PDFParse({ data: new Uint8Array(buffer) });
+    const result = await parser.getText();
     const text = (result.text ?? "").trim();
     if (!text) return null;
     return truncate(text);
@@ -81,6 +76,12 @@ async function extractPdf(buffer: Buffer): Promise<string | null> {
       err instanceof Error ? err.message : err,
     );
     return null;
+  } finally {
+    try {
+      await parser?.destroy();
+    } catch {
+      /* best-effort cleanup */
+    }
   }
 }
 
