@@ -126,7 +126,7 @@ export function DocPromptCard({ slug, prompt, compact }: Props) {
             className="text-amber-700 mt-0.5 flex-shrink-0"
           />
           <div className="text-sm text-amber-950 leading-snug pr-1">
-            <span className="font-semibold">Got a {prompt.shortLabel}?</span>{" "}
+            <span className="font-semibold">Got {prompt.shortLabel}?</span>{" "}
             <label
               className={`underline decoration-amber-400 decoration-2 underline-offset-2 cursor-pointer hover:text-amber-900 ${uploading ? "opacity-60 cursor-not-allowed" : ""}`}
             >

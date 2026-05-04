@@ -126,10 +126,14 @@ function getStarterChips(pageContext: string | undefined): StarterChip[] {
     const prompt = CHAPTER_DOC_PROMPTS[slug];
     const title = MEMORY_FILE_TITLES[slug];
     if (prompt) {
+      // Drop the leading article — telegraphic UI copy reads
+      // naturally ("Got brand guidelines?" / "Got ops manual?")
+      // and avoids the a/an + singular/plural agreement issues
+      // we'd otherwise have to encode per shortLabel.
       return [
         {
-          label: `Got a ${prompt.shortLabel}?`,
-          send: `I have a ${prompt.shortLabel} I can share — what's the best way to upload it for the ${title} chapter?`,
+          label: `Got ${prompt.shortLabel}?`,
+          send: `I have ${prompt.shortLabel} I can share — what's the best way to upload it for the ${title} chapter?`,
           icon: "upload",
         },
         {
