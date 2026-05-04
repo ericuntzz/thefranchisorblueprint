@@ -16,7 +16,6 @@ import { getChapterSchema } from "@/lib/memory/schemas";
 import type { MemoryFieldsMap } from "@/lib/calc";
 import { ChapterCard } from "@/components/agent/ChapterCard";
 import { JasonChatDock } from "@/components/agent/JasonChatDock";
-import { TypedHeading } from "@/components/agent/TypedHeading";
 import { BlueprintTOC } from "@/components/portal/BlueprintTOC";
 import { SiteFooter } from "@/components/SiteFooter";
 import { saveChapterSection, saveMemoryFields, setChapterConfidence } from "./actions";
@@ -122,52 +121,31 @@ export default async function BlueprintLabPage() {
   return (
     <>
       <main className="min-h-[calc(100vh-200px)] bg-cream">
-        {/* Top nav strip removed — duplicated the navy "Back to your
-            dashboard" CTA inside the hero, and the "/lab · in
-            development" tag was stale once the lab promoted out of
-            in-development status (LabDiscovery card removed). */}
-
-        {/* Hero — explicit "this is the assembled view" framing so
-            the customer doesn't confuse this with the per-chapter
-            editing surface. Edit individual chapters from the
-            dashboard or the per-chapter pages. */}
+        {/* Hero — sets the mental model: this is the assembled
+            document, not a form. Per-chapter editing happens from
+            the dashboard. */}
         <section className="bg-white border-b border-navy/5">
-          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 py-8 sm:py-10 md:py-12">
-            <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase mb-3 border-b-2 border-gold pb-1">
-              Assembled view · Final touchup mode
+          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-12 md:py-16">
+            <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase mb-4 border-b-2 border-gold pb-1">
+              Assembled view
             </span>
-            <h1 className="text-3xl md:text-5xl font-extrabold text-navy leading-tight mb-3">
-              <TypedHeading
-                text={
-                  firstName
-                    ? `${firstName}'s Franchisor Blueprint`
-                    : "Your Franchisor Blueprint"
-                }
-              />
+            <h1 className="text-3xl md:text-5xl font-extrabold text-navy leading-[1.1] tracking-tight mb-4">
+              {firstName
+                ? `${firstName}'s Franchisor Blueprint`
+                : "Your Franchisor Blueprint"}
             </h1>
-            <p className="text-grey-3 text-base md:text-lg max-w-[680px] mb-3">
-              The sixteen chapters compiled into one document — the closest
-              preview of what your attorney will receive at export time.
+            <p className="text-grey-3 text-base md:text-lg max-w-[640px] leading-relaxed mb-6">
+              All {MEMORY_FILES.length} chapters, compiled into one document —
+              the closest preview of what your attorney will see when
+              you&apos;re ready to file.
             </p>
-            <p className="text-grey-4 text-sm max-w-[680px] mb-5 italic">
-              This page is for reading + final touchups. To answer questions
-              and edit fields, head back to your dashboard and pick a
-              chapter — each one has its own focused workspace.
-            </p>
-            <div className="flex flex-wrap items-center gap-3">
-              <Link
-                href="/portal"
-                className="inline-flex items-center gap-2 bg-navy text-cream font-bold text-xs uppercase tracking-[0.1em] px-5 py-3 rounded-full hover:bg-navy-dark transition-colors"
-              >
-                <ArrowLeft size={13} />
-                Back to your dashboard
-              </Link>
-            </div>
-            {/* "X / 16 chapters started" pill + "Pre-fill from your
-                website" link removed — readiness % belongs on the
-                Command Center on the dashboard (single source of
-                truth), and the intake flow has its own discovery
-                surface there too. Was duplicate guidance. */}
+            <Link
+              href="/portal"
+              className="inline-flex items-center gap-2 bg-navy text-cream font-bold text-xs uppercase tracking-[0.1em] px-5 py-3 rounded-full hover:bg-navy-dark transition-colors"
+            >
+              <ArrowLeft size={13} />
+              Back to your dashboard
+            </Link>
           </div>
         </section>
 
@@ -190,10 +168,10 @@ export default async function BlueprintLabPage() {
             </aside>
 
             {/* Chapter cards. min-w-0 is critical: as a grid item in a
-                `220px_1fr` track, this column would otherwise expand to
-                its intrinsic content width (especially with no
-                word-breaking on long markdown lines) and push the page
-                into horizontal overflow at every breakpoint. */}
+                `260px_1fr` track, this column would otherwise expand
+                to its intrinsic content width (especially with no
+                word-breaking on long markdown lines) and push the
+                page into horizontal overflow at every breakpoint. */}
             <div className="space-y-6 min-w-0">
               {MEMORY_FILES.map((slug) => {
                 const row = memoryBySlug.get(slug);
@@ -241,6 +219,34 @@ export default async function BlueprintLabPage() {
                   />
                 );
               })}
+
+              {/* End-of-document affordance — gives the customer a
+                  visual sense of arrival after scrolling all 16
+                  chapters, plus a way back to the dashboard without
+                  scrolling all the way up. Lives in the same column
+                  as the chapter cards so it inherits the document's
+                  rhythm. */}
+              <div className="rounded-2xl border border-navy/10 bg-white px-6 sm:px-8 py-7 text-center">
+                <div className="text-[10px] uppercase tracking-[0.18em] text-gold-warm font-bold mb-2">
+                  End of Blueprint
+                </div>
+                <h2 className="text-navy font-extrabold text-lg md:text-xl mb-2">
+                  You&apos;ve reached the end
+                </h2>
+                <p className="text-grey-3 text-sm md:text-[15px] leading-relaxed max-w-[440px] mx-auto mb-5">
+                  That&apos;s all {MEMORY_FILES.length} chapters. To answer
+                  questions or edit fields, head back to the dashboard
+                  and pick a chapter — each one has its own focused
+                  workspace.
+                </p>
+                <Link
+                  href="/portal"
+                  className="inline-flex items-center gap-2 bg-navy text-cream font-bold text-xs uppercase tracking-[0.1em] px-5 py-2.5 rounded-full hover:bg-navy-dark transition-colors"
+                >
+                  <ArrowLeft size={13} />
+                  Back to your dashboard
+                </Link>
+              </div>
             </div>
           </div>
         </section>
