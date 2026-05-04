@@ -94,6 +94,17 @@ export function ChapterAttachments({ slug, attachments }: Props) {
         </ul>
       )}
 
+      {/* Empty-state value-prop. The big DocPromptCard is the
+          primary surface above this; this is the persistent
+          fallback once the prompt is dismissed or for chapters
+          where it's already been seen. */}
+      {attachments.length === 0 && !composerOpen && (
+        <p className="text-xs text-grey-4 italic mb-2">
+          Drop docs here so Jason can pull from them. Most chapters
+          benefit from at least one reference.
+        </p>
+      )}
+
       {composerOpen && (
         <AttachmentComposer
           slug={slug}

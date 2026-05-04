@@ -45,8 +45,10 @@ import type { MemoryFieldsMap } from "@/lib/calc";
 import type { ReadinessState } from "@/lib/memory/readiness";
 import { ChapterFieldEditor } from "@/components/agent/ChapterFieldEditor";
 import { ChapterAttachments } from "@/components/agent/ChapterAttachments";
+import { DocPromptCard } from "@/components/agent/DocPromptCard";
 import { DraftWithJasonModal } from "@/components/agent/DraftWithJasonModal";
 import { ReadinessPill } from "@/components/agent/ReadinessPill";
+import { docPromptFor } from "@/lib/memory/doc-prompts";
 
 type FieldValue = string | number | boolean | string[] | null;
 
@@ -238,6 +240,17 @@ export function FocusedChapterClient(props: Props) {
           <ReadinessPill state={readinessState} />
         </div>
       </header>
+
+      {/* Doc-prompt banner — Eric's "skip the typing" affordance.
+          Surfaces above the field editor when this chapter has zero
+          attachments AND we have a prompt configured for it. Once
+          the customer uploads OR dismisses, it disappears. */}
+      {attachments.length === 0 && docPromptFor(slug) && (
+        <DocPromptCard
+          slug={slug}
+          prompt={docPromptFor(slug) as NonNullable<ReturnType<typeof docPromptFor>>}
+        />
+      )}
 
       {/* Field editor — primary surface. */}
       {schema ? (
