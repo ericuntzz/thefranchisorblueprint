@@ -27,7 +27,8 @@
  */
 
 import { useEffect, useState, type MouseEvent } from "react";
-import { Check } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Check } from "lucide-react";
 
 export interface BlueprintTOCItem {
   slug: string;
@@ -110,7 +111,7 @@ export function BlueprintTOC({ items }: BlueprintTOCProps) {
         </div>
         <div className="text-grey-4 text-xs">{items.length} chapters</div>
       </div>
-      <ol className="space-y-0.5 pb-2">
+      <ol className="space-y-0.5">
         {items.map(({ slug, title, filled }, idx) => {
           const isActive = activeSlug === slug;
           return (
@@ -162,6 +163,28 @@ export function BlueprintTOC({ items }: BlueprintTOCProps) {
           );
         })}
       </ol>
+
+      {/* "Continue building" CTA mirrors the end-of-doc closing card.
+          Lives at the bottom of the TOC scroll area so it appears
+          when the customer scrolls the sidebar list to the end —
+          same forward push as the closing card, but reachable
+          without scrolling the whole document. */}
+      <div className="mt-5 pt-4 border-t border-navy/10">
+        <Link
+          href="/portal/lab/next"
+          className="group flex items-center justify-between gap-2 rounded-full bg-gold text-navy hover:bg-gold-dark font-bold text-[11px] uppercase tracking-[0.1em] pl-4 pr-3 py-2.5 transition-colors"
+        >
+          <span>Continue building</span>
+          <ArrowRight
+            size={13}
+            className="transition-transform group-hover:translate-x-0.5"
+          />
+        </Link>
+        <p className="mt-2 text-[11px] text-grey-4 leading-snug">
+          Pick up where you left off — Jason has the next question
+          ready.
+        </p>
+      </div>
     </nav>
   );
 }
