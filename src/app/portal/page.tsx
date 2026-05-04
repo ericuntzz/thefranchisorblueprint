@@ -3,12 +3,11 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import {
   ArrowRight,
-  ArrowUpRight,
   Calendar,
   CheckCircle2,
-  Circle,
   Clock,
   FileText,
+  Globe,
   ShieldOff,
   Sparkles,
   Trophy,
@@ -17,14 +16,6 @@ import {
 } from "lucide-react";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import {
-  CAPABILITIES,
-  PHASES,
-  capabilitiesByPhase,
-  capabilitiesForTier,
-  type Capability,
-  type CapabilityPhase,
-} from "@/lib/capabilities";
 import {
   computeChapterReadiness,
   indexMemoryRows,
@@ -38,7 +29,6 @@ import {
 } from "@/lib/memory/queue";
 import { CommandCenter } from "@/components/portal/CommandCenter";
 import { DeliverableChecklist } from "@/components/portal/DeliverableChecklist";
-import { PortalResumeBanner } from "@/components/portal/PortalResumeBanner";
 import type { CustomerMemory as CM } from "@/lib/supabase/types";
 import {
   getActiveOffersForUser,
@@ -48,7 +38,6 @@ import { OfferCountdown } from "@/components/OfferCountdown";
 import { JasonChatDock } from "@/components/agent/JasonChatDock";
 import { getProduct, type ProductSlug } from "@/lib/products";
 import type {
-  CapabilityProgress,
   Profile,
   Purchase,
   Tier,
@@ -81,23 +70,17 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
   } = await supabase.auth.getUser();
   if (!user) redirect("/portal/login");
 
-  const [
-    { data: profileData },
-    { data: purchasesData },
-    { data: progressData },
-  ] = await Promise.all([
+  const [{ data: profileData }, { data: purchasesData }] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
     supabase
       .from("purchases")
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
-    supabase.from("capability_progress").select("*").eq("user_id", user.id),
   ]);
 
   const profile = profileData as Profile | null;
   const purchases = (purchasesData ?? []) as Purchase[];
-  const progress = (progressData ?? []) as CapabilityProgress[];
 
   const paidPurchases = purchases.filter((p) => p.status === "paid");
   const refundedPurchases = purchases.filter((p) => p.status === "refunded");
@@ -109,48 +92,6 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
   }
 
   const tier = (Math.max(...paidPurchases.map((p) => p.tier)) as Tier);
-  const visibleCaps = capabilitiesForTier(tier);
-  const phaseGroups = capabilitiesByPhase(tier);
-  // Updated: a row in capability_progress now means "viewed" (not necessarily
-  // "completed"). Use completed_at to determine actual completion.
-  const completedSlugs = new Set(
-    progress.filter((p) => p.completed_at).map((p) => p.capability_slug),
-  );
-  const startedSlugs = new Set(progress.map((p) => p.capability_slug));
-  const completedCount = visibleCaps.filter((c) => completedSlugs.has(c.slug)).length;
-  const totalCount = visibleCaps.length;
-  const isAllComplete = completedCount === totalCount;
-  const lockedCaps = CAPABILITIES.filter((c) => c.minTier > tier);
-
-  // First not-yet-completed capability in journey order — surfaced as "next step"
-  const nextCapability = visibleCaps.find((c) => !completedSlugs.has(c.slug)) ?? null;
-
-  // The "current phase" is the phase containing the first not-yet-completed
-  // capability. Used for visual hierarchy (current = highlighted, completed
-  // = de-emphasized, future = dimmed).
-  const currentPhase: CapabilityPhase | null = nextCapability?.phase ?? null;
-  const phaseOrder: CapabilityPhase[] = ["discover", "architect", "activate", "acquire"];
-  function phaseState(phase: CapabilityPhase): "completed" | "current" | "future" {
-    const caps = phaseGroups[phase];
-    if (caps.length === 0) return "future";
-    const allDone = caps.every((c) => completedSlugs.has(c.slug));
-    if (allDone) return "completed";
-    if (phase === currentPhase) return "current";
-    // Phases before currentPhase that aren't all-done are still "current"-ish;
-    // phases after are future.
-    const currentIdx = currentPhase ? phaseOrder.indexOf(currentPhase) : 99;
-    return phaseOrder.indexOf(phase) < currentIdx ? "current" : "future";
-  }
-
-  // Phase 1 complete = "Discover" phase done. This is the moment we surface
-  // the upgrade prompt prominently (per upgrade strategy).
-  const phase1Caps = phaseGroups.discover;
-  const phase1Done = phase1Caps.length > 0 && phase1Caps.every((c) => completedSlugs.has(c.slug));
-
-  // First-run detection: a brand-new customer has zero capability rows AND
-  // zero completed slugs. We surface a dedicated "Day 1 — Start with Audit"
-  // hero in place of the standard "Your next move" CTA.
-  const isFirstRun = startedSlugs.size === 0 && completedCount === 0;
 
   // Days since the customer joined (profile created_at). Used for the
   // "Day X of your journey" marker in the hero.
@@ -181,6 +122,23 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
   const queueItems = computeQuestionQueue(memoryFieldsFromRows(memoryIndexed));
   const queueSummary = summarizeQueue(queueItems);
   const queueEstimateMin = estimateMinutes(queueItems);
+
+  // ---- Milestone fire conditions ----
+  // Originally these were keyed on the 9-capability system (started/
+  // completed_capability rows). Phase 2A migrated the canonical
+  // progress signal to the 16-chapter Memory readiness percentage,
+  // so the celebratory moments (Day 1 hero, halfway-upgrade-pitch,
+  // final-readiness review) are now keyed on readinessPct thresholds:
+  //
+  //   isFirstRun        readinessPct === 0   no Memory data yet
+  //   midwayThere       >= 50               halfway, upgrade pitch lands
+  //   isAllComplete     >= 95               close enough to call done
+  //
+  // Tweak thresholds here if the feel of those moments shifts; the
+  // underlying scoring is in lib/memory/readiness.
+  const isFirstRun = readinessPct === 0;
+  const midwayThere = readinessPct >= 50;
+  const isAllComplete = readinessPct >= 95;
 
   // Active 48hr promo offer — surfaced via the inline UpgradeBanner component
   const offers = tier < 3 ? await getActiveOffersForUser(user.id) : [];
@@ -270,83 +228,29 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
         <PromoBanner offer={activePromo} tier={tier} />
       )}
 
-      {/* ===== Phase 1 complete → upgrade hero card (more prominent) ===== */}
-      {phase1Done && !isAllComplete && tier < 3 && (
-        <Phase1UpgradeHero
+      {/* ===== Halfway → upgrade hero card (fires at 50% readiness) ===== */}
+      {midwayThere && !isAllComplete && tier < 3 && (
+        <MidwayUpgradeHero
           firstName={firstName}
           tier={tier}
           coachingCredits={profile?.coaching_credits ?? 0}
         />
       )}
 
-      {/* ===== Final readiness milestone ===== */}
+      {/* ===== Final readiness milestone (fires at 95% readiness) ===== */}
       {isAllComplete && <FinalReadinessCard firstName={firstName} />}
 
       {/* ===== Day 1 onboarding (first-time visitors only) ===== */}
-      {!isAllComplete && isFirstRun && nextCapability && (
-        <Day1OnboardingHero firstName={firstName} firstCap={nextCapability} />
+      {!isAllComplete && isFirstRun && (
+        <Day1OnboardingHero firstName={firstName} />
       )}
 
-      {/* ===== Next step CTA — floating bottom banner =====
-          Replaces the prior inline section. Uses the same floating-
-          bottom-banner pattern as AssessmentResumeBanner so the
-          customer learns one consistent place to look for "what's
-          next." Rendered near the end of the file (alongside the
-          chat dock) so it doesn't get a layout slot here. */}
-
-      {/* ===== Phases ===== */}
-      <section className="py-12 md:py-16">
-        <div className="max-w-[1200px] mx-auto px-6 md:px-8 space-y-12 md:space-y-16">
-          {(Object.keys(PHASES) as CapabilityPhase[]).map((phaseKey) => {
-            const phase = PHASES[phaseKey];
-            const caps = phaseGroups[phaseKey];
-            if (caps.length === 0) return null;
-            const phaseDone = caps.every((c) => completedSlugs.has(c.slug));
-            const state = phaseState(phaseKey);
-            return (
-              <PhaseSection
-                key={phaseKey}
-                number={phase.number}
-                label={phase.label}
-                tagline={phase.tagline}
-                caps={caps}
-                completedSlugs={completedSlugs}
-                state={state}
-                phaseDone={phaseDone}
-              />
-            );
-          })}
-
-          {lockedCaps.length > 0 && (
-            <div className="bg-white rounded-2xl border border-navy/10 p-6 md:p-8">
-              <h3 className="text-navy font-bold text-base mb-2">Available with a higher tier</h3>
-              <p className="text-grey-3 text-sm mb-4">
-                These capabilities unlock when you upgrade. Want to talk through it?{" "}
-                <Link href="/strategy-call" className="text-navy font-semibold underline">
-                  Book a strategy call
-                </Link>
-                .
-              </p>
-              <ul className="grid sm:grid-cols-2 gap-x-4 gap-y-2.5 text-sm text-grey-3">
-                {lockedCaps.map((cap) => (
-                  <li key={cap.slug} className="flex items-center gap-2.5">
-                    <Circle
-                      size={6}
-                      strokeWidth={0}
-                      className="flex-shrink-0 fill-grey-4"
-                      aria-hidden
-                    />
-                    <span className="flex-1 min-w-0 truncate">{cap.title}</span>
-                    <span className="flex-shrink-0 text-[10px] text-grey-4 font-semibold uppercase tracking-wider tabular-nums">
-                      Tier {cap.minTier}+
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      </section>
+      {/* The 9-capability Phases section was removed in the Phase 2A
+          dashboard cleanup. Progress is now tracked against the
+          16-chapter Memory system; the Command Center + Deliverable
+          Checklist above are the canonical "what's next" surface.
+          The /portal/[capability] detail pages remain reachable as
+          deep links for customers who arrive at them directly. */}
 
       {/* ===== Tier-specific sections (Tier 2/3 scaffolding) ===== */}
       {tier >= 2 && <CoachingPanel tier={tier} />}
@@ -389,195 +293,14 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
         </div>
       </section>
 
-      {/* Lab discovery card removed — the Command Center +
-          DeliverableChecklist are now the canonical entry points
-          to /portal/lab/blueprint, so the dashed "in development"
-          card was duplicate guidance competing with them for
-          attention. Lab routes remain reachable from the Command
-          Center, JasonChatDock, and ChapterCard. */}
-
       <JasonChatDock pageContext="/portal (dashboard)" firstName={firstName} />
 
-      {/* Floating "Continue where you left off / Your next move" banner.
-          Mirrors the AssessmentResumeBanner pattern. Skipped on first-
-          run (the Day 1 hero already guides them) and when everything
-          is complete. */}
-      {!isAllComplete && !isFirstRun && nextCapability && (
-        <PortalResumeBanner
-          capabilitySlug={nextCapability.slug}
-          capabilityTitle={nextCapability.title}
-          isReturning={startedSlugs.has(nextCapability.slug)}
-        />
-      )}
+      {/* Floating PortalResumeBanner removed: the Command Center
+          high on the page already surfaces "what's next" with live
+          next-question copy + a single primary CTA. The floating
+          banner was duplicate guidance and the underlying nextCap
+          data went away with the 9-cap migration. */}
     </>
-  );
-}
-
-function PhaseSection({
-  number,
-  label,
-  tagline,
-  caps,
-  completedSlugs,
-  phaseDone,
-  state,
-}: {
-  number: number;
-  label: string;
-  tagline: string;
-  caps: Capability[];
-  completedSlugs: Set<string>;
-  phaseDone: boolean;
-  state: "completed" | "current" | "future";
-}) {
-  const completedInPhase = caps.filter((c) => completedSlugs.has(c.slug)).length;
-
-  // Visual treatment per phase state — completed dims slightly, current
-  // gets a gold ring + "you are here" pill, future is faded.
-  const containerClass =
-    state === "completed"
-      ? "bg-white rounded-3xl border-2 border-green-200 shadow-[0_4px_18px_rgba(22,163,74,0.06)] overflow-hidden opacity-90"
-      : state === "current"
-        ? "bg-white rounded-3xl border-2 border-gold shadow-[0_12px_36px_rgba(212,162,76,0.18)] overflow-hidden ring-1 ring-gold/30"
-        : "bg-white/70 rounded-3xl border-2 border-navy/10 shadow-[0_4px_14px_rgba(30,58,95,0.04)] overflow-hidden opacity-75";
-
-  const stripClass =
-    state === "completed"
-      ? "bg-gradient-to-r from-green-400 via-green-500 to-green-400"
-      : state === "current"
-        ? "bg-gradient-to-r from-gold via-gold-warm to-gold"
-        : "bg-gradient-to-r from-navy/15 via-navy/25 to-navy/15";
-
-  const badgeClass =
-    state === "completed"
-      ? "bg-green-100 text-green-700 ring-green-50"
-      : state === "current"
-        ? "bg-gradient-to-br from-navy to-navy-light text-gold ring-gold/30"
-        : "bg-grey-1 text-grey-4 ring-grey-1/50";
-
-  return (
-    <div className={containerClass}>
-      <div className={`h-1.5 ${stripClass}`} aria-hidden />
-
-      <div className="p-6 md:p-9">
-        {/* Phase header with numbered badge */}
-        <div className="flex items-start gap-4 mb-6 md:mb-7">
-          <div
-            className={`flex-shrink-0 w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center font-extrabold text-lg md:text-xl ring-4 transition-colors ${badgeClass}`}
-            aria-hidden
-          >
-            {phaseDone ? <CheckCircle2 size={22} /> : number}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-2 mb-1">
-              <span
-                className={`text-[10px] font-bold tracking-[0.18em] uppercase ${
-                  state === "future" ? "text-grey-4" : "text-gold-warm"
-                }`}
-              >
-                Phase {number}
-              </span>
-              {state === "completed" && (
-                <div className="flex items-center gap-1 text-[10px] font-bold tracking-[0.16em] uppercase text-green-700 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
-                  <CheckCircle2 size={11} />
-                  Phase complete
-                </div>
-              )}
-              {state === "current" && (
-                <>
-                  <span className="text-[10px] font-bold tracking-[0.16em] uppercase text-navy bg-gold/20 px-2 py-0.5 rounded-full border border-gold/40">
-                    You are here
-                  </span>
-                  {completedInPhase > 0 && (
-                    <span className="text-[10px] font-semibold tracking-wider uppercase text-grey-4 bg-grey-1 px-2 py-0.5 rounded-full">
-                      {completedInPhase} of {caps.length}
-                    </span>
-                  )}
-                </>
-              )}
-              {state === "future" && (
-                <span className="text-[10px] font-semibold tracking-wider uppercase text-grey-4 bg-grey-1 px-2 py-0.5 rounded-full">
-                  Coming up
-                </span>
-              )}
-            </div>
-            <h2
-              className={`font-extrabold text-2xl md:text-3xl mb-1 leading-tight ${
-                state === "future" ? "text-navy/70" : "text-navy"
-              }`}
-            >
-              {label}
-            </h2>
-            <p
-              className={`text-base md:text-lg ${
-                state === "future" ? "text-grey-4" : "text-grey-3"
-              }`}
-            >
-              {tagline}
-            </p>
-          </div>
-        </div>
-
-        {/* Capability cards */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-          {caps.map((cap) => (
-            <CapabilityCard key={cap.slug} cap={cap} completed={completedSlugs.has(cap.slug)} />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CapabilityCard({ cap, completed }: { cap: Capability; completed: boolean }) {
-  const comingSoon = !cap.storagePath;
-  return (
-    <Link
-      href={`/portal/${cap.slug}`}
-      className={`group relative bg-white rounded-2xl border-2 p-5 md:p-6 transition-all flex flex-col ${
-        completed
-          ? "border-green-300 bg-gradient-to-br from-white to-green-50/50 shadow-[0_4px_14px_rgba(22,163,74,0.10)]"
-          : "border-navy/15 shadow-[0_2px_10px_rgba(30,58,95,0.05)] hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(30,58,95,0.18)] hover:border-gold/50"
-      }`}
-    >
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2">
-          {completed ? (
-            <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
-              <CheckCircle2 size={16} className="text-green-700" />
-            </div>
-          ) : (
-            <div className="w-6 h-6 rounded-full bg-grey-1 border-2 border-navy/15 flex items-center justify-center">
-              <span className="text-[10px] font-extrabold text-grey-4 tabular-nums">
-                {String(cap.number).padStart(2, "0")}
-              </span>
-            </div>
-          )}
-          <span className="text-[10px] font-bold tracking-[0.16em] uppercase text-gold-warm">
-            {completed ? `Mastery ${String(cap.number).padStart(2, "0")}` : cap.verb}
-          </span>
-        </div>
-        <ArrowUpRight
-          size={18}
-          className="text-grey-4 group-hover:text-gold transition-colors"
-        />
-      </div>
-      <h3 className="text-navy font-extrabold text-lg mb-2 leading-tight">
-        {cap.title}
-      </h3>
-      <p className="text-grey-3 text-sm leading-relaxed flex-1 mb-4">
-        {cap.description}
-      </p>
-      <div className="flex items-center gap-2 text-[11px] text-grey-4 font-semibold uppercase tracking-wider pt-3 border-t border-navy/5">
-        <FileText size={12} />
-        <span>{cap.format}</span>
-        {comingSoon && (
-          <span className="text-[10px] text-gold-warm font-bold tracking-[0.12em] uppercase ml-auto">
-            Coming soon
-          </span>
-        )}
-      </div>
-    </Link>
   );
 }
 
@@ -590,7 +313,7 @@ function FinalReadinessCard({ firstName }: { firstName: string | null }) {
             <Trophy size={28} />
           </div>
           <div className="text-[11px] font-bold tracking-[0.18em] uppercase text-gold mb-3">
-            All capabilities complete
+            Blueprint complete
           </div>
           <h2 className="text-white text-3xl md:text-4xl font-extrabold mb-3">
             {firstName ? `${firstName}, you're franchise ready` : "You're franchise ready"}
@@ -672,13 +395,7 @@ function ProjectPanel() {
   );
 }
 
-function Day1OnboardingHero({
-  firstName,
-  firstCap,
-}: {
-  firstName: string | null;
-  firstCap: Capability;
-}) {
+function Day1OnboardingHero({ firstName }: { firstName: string | null }) {
   return (
     <section className="bg-gradient-to-br from-navy to-navy-light text-white py-10 md:py-14 border-b border-gold/30">
       <div className="max-w-[1200px] mx-auto px-6 md:px-8">
@@ -688,19 +405,28 @@ function Day1OnboardingHero({
               Day 1 — Start Here
             </div>
             <h2 className="text-white text-3xl md:text-4xl font-extrabold mb-4 leading-tight">
-              {firstName ? `${firstName}, your first 60 minutes` : "Your first 60 minutes"}
+              {firstName
+                ? `${firstName}, let's start with your website`
+                : "Let's start with your website"}
             </h2>
             <p className="text-white/85 text-base md:text-lg leading-relaxed mb-6">
-              Before anything else, run the <strong className="text-white">{firstCap.title}</strong>. It&apos;s a 150-point checklist that maps your business against the franchise-ready bar — and it&apos;s the one document that tells you whether you should keep going (or wait six months and fix some things first).
+              Drop your URL and Jason will pre-fill what he can — concept, brand voice, daily operations basics. Then he walks you through the questions that build the rest of your Blueprint. Most people are 25% complete after their first session.
             </p>
-            <div className="flex flex-wrap items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3">
               <Link
-                href={`/portal/${firstCap.slug}`}
-                className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-9 py-4 rounded-full hover:bg-gold-dark transition-colors"
+                href="/portal/lab/intake"
+                className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-8 py-4 rounded-full hover:bg-gold-dark transition-colors"
               >
-                Start the {firstCap.verb} <ArrowRight size={16} />
+                <Globe size={15} />
+                Pre-fill from your website
+                <ArrowRight size={15} />
               </Link>
-              <span className="text-white/60 text-sm">~60 minutes</span>
+              <Link
+                href="/portal/lab/next"
+                className="inline-flex items-center gap-2 text-white/80 hover:text-white border-2 border-white/20 hover:border-white/40 font-bold text-sm uppercase tracking-[0.1em] px-6 py-3.5 rounded-full transition-colors"
+              >
+                Skip — start answering questions
+              </Link>
             </div>
           </div>
           <div className="hidden md:block">
@@ -711,19 +437,19 @@ function Day1OnboardingHero({
               <ol className="space-y-3 text-white/85 text-sm leading-relaxed">
                 <li className="flex gap-3">
                   <span className="flex-shrink-0 w-5 h-5 rounded-full bg-gold/20 text-gold flex items-center justify-center text-[10px] font-bold">1</span>
-                  <span>Today: Run the Audit (~60 min)</span>
+                  <span>Today: Pre-fill from your website (~5 min)</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="flex-shrink-0 w-5 h-5 rounded-full bg-gold/20 text-gold flex items-center justify-center text-[10px] font-bold">2</span>
-                  <span>This week: Model your unit economics</span>
+                  <span>Today: Answer the first questions Jason needs (~30 min)</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="flex-shrink-0 w-5 h-5 rounded-full bg-gold/20 text-gold flex items-center justify-center text-[10px] font-bold">3</span>
-                  <span>Within 1–2 days: Onboarding call with Jason</span>
+                  <span>This week: Fill in the rest of your Blueprint</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="flex-shrink-0 w-5 h-5 rounded-full bg-gold/20 text-gold flex items-center justify-center text-[10px] font-bold">4</span>
-                  <span>Months 1–3: The Architect phase (the real work)</span>
+                  <span>Within 1–2 days: Onboarding call with Jason</span>
                 </li>
               </ol>
             </div>
@@ -820,7 +546,7 @@ function PromoBanner({ offer, tier }: { offer: UpgradeOffer; tier: Tier }) {
   );
 }
 
-function Phase1UpgradeHero({
+function MidwayUpgradeHero({
   firstName,
   tier,
   coachingCredits,
@@ -841,12 +567,12 @@ function Phase1UpgradeHero({
   // Tier 2 buyers DO have credits — push them toward booking instead of
   // buying more coaching.
   const headline = firstName
-    ? `${firstName}, you've validated you're ready`
-    : "You've validated you're ready";
+    ? `${firstName}, you're well into your Blueprint`
+    : "You're well into your Blueprint";
 
   const body = isTier1
-    ? "The next phase (Architect) is where 80% of your time gets spent and where 1:1 coaching dramatically compresses the timeline. Want a coach for the hard parts?"
-    : `You've got ${coachingCredits} coaching ${coachingCredits === 1 ? "call" : "calls"} included. Architect is where most Navigator customers use them — book your first session for this phase.`;
+    ? "The hardest chapters are still ahead — unit economics, royalty structure, FDD posture. 1:1 coaching dramatically compresses the timeline through them. Want a coach for the hard parts?"
+    : `You've got ${coachingCredits} coaching ${coachingCredits === 1 ? "call" : "calls"} included. Most Navigator customers spend them on the back half of the Blueprint — book your first session.`;
 
   return (
     <section className="py-10 md:py-14 bg-cream border-b border-gold/30">
@@ -857,7 +583,7 @@ function Phase1UpgradeHero({
           </div>
           <div className="flex-1 min-w-[260px]">
             <div className="text-[10px] font-bold tracking-[0.18em] uppercase text-gold-warm mb-2">
-              Phase 1 complete
+              Halfway there
             </div>
             <h2 className="text-navy font-extrabold text-xl md:text-2xl mb-2">
               {headline}
