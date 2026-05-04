@@ -35,6 +35,9 @@ import {
 import type { QueueItem, QueueSummary } from "@/lib/memory/queue";
 import type { PhaseId } from "@/lib/memory/phases";
 import { SchemaFieldInput } from "@/components/agent/SchemaFieldInput";
+import { DocPromptCard } from "@/components/agent/DocPromptCard";
+import { docPromptFor } from "@/lib/memory/doc-prompts";
+import type { MemoryFileSlug } from "@/lib/memory/files";
 
 type FieldValue = string | number | boolean | string[] | null;
 
@@ -44,6 +47,10 @@ type Props = {
   /** True when the customer has already added a website (and we ran
    *  the scrape). Suppresses the "skip the typing" banner. */
   hasWebsite: boolean;
+  /** Per-chapter attachment count. Drives the inline doc-prompt
+   *  banner — only show when current chapter has zero attachments
+   *  (else the customer already gave us material for it). */
+  attachmentCountBySlug: Record<string, number>;
   /** Server action — single-field save. */
   save: (args: {
     slug: string;
@@ -56,6 +63,7 @@ export function QuestionQueueClient({
   initialQueue,
   initialSummary,
   hasWebsite,
+  attachmentCountBySlug,
   save,
 }: Props) {
   // The queue is a snapshot taken at page load. We don't mutate it
@@ -242,6 +250,25 @@ export function QuestionQueueClient({
         subtitle={current.phase.subtitle}
         progress={phaseProgress}
       />
+
+      {/* Inline doc-prompt — compact variant. Surfaces when the
+          current question's chapter has zero attachments AND we
+          have a prompt configured. The customer can drop a doc and
+          skip a chunk of typing on this whole chapter. Hidden once
+          they've added something OR dismissed the prompt. */}
+      {(attachmentCountBySlug[current.slug] ?? 0) === 0 &&
+        docPromptFor(current.slug as MemoryFileSlug) && (
+          <DocPromptCard
+            key={`prompt-${current.slug}`}
+            slug={current.slug}
+            prompt={
+              docPromptFor(
+                current.slug as MemoryFileSlug,
+              ) as NonNullable<ReturnType<typeof docPromptFor>>
+            }
+            compact
+          />
+        )}
 
       {/* Slide-in transition — re-keyed on each question so React
           unmounts + remounts the QuestionCard, triggering the CSS

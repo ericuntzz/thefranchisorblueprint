@@ -63,23 +63,30 @@ export default async function GuidedNextPage() {
   const hasWebsite =
     !!(profile?.website_url && profile.website_url.trim().length > 0);
 
-  // Read every chapter's fields jsonb so the queue can scan the full
-  // Memory state. Service-role client because the queue page is a
-  // server component reading the customer's own data — RLS would
-  // also work but we already use admin elsewhere on this surface.
+  // Read every chapter's fields + attachments. Service-role client
+  // because the queue page is a server component reading the
+  // customer's own data — RLS would also work but we already use
+  // admin elsewhere on this surface. Attachments feed the inline
+  // doc-prompt banner: only show the prompt for chapters that have
+  // zero attachments (no point asking for an ops manual if they've
+  // already uploaded one).
   const admin = getSupabaseAdmin();
   const { data: memoryRows } = await admin
     .from("customer_memory")
-    .select("file_slug, fields")
+    .select("file_slug, fields, attachments")
     .eq("user_id", user.id);
 
   const allFields: MemoryFieldsMap = {};
+  const attachmentCountBySlug: Record<string, number> = {};
   for (const row of (memoryRows ?? []) as Pick<
     CustomerMemory,
-    "file_slug" | "fields"
+    "file_slug" | "fields" | "attachments"
   >[]) {
     allFields[row.file_slug as keyof MemoryFieldsMap] = (row.fields ??
       {}) as Record<string, string | number | boolean | string[] | null>;
+    attachmentCountBySlug[row.file_slug] = Array.isArray(row.attachments)
+      ? row.attachments.length
+      : 0;
   }
 
   const queue = computeQuestionQueue(allFields);
@@ -101,6 +108,7 @@ export default async function GuidedNextPage() {
                 initialQueue={queue}
                 initialSummary={summary}
                 hasWebsite={hasWebsite}
+                attachmentCountBySlug={attachmentCountBySlug}
                 save={saveQueueAnswer}
               />
             )}
