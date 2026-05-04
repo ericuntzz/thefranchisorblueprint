@@ -43,23 +43,23 @@ export function CommandCenter({
   const allCaughtUp = queue.total === 0;
 
   return (
-    <section className="rounded-2xl border border-navy/10 bg-white p-5 sm:p-6 md:p-8 shadow-[0_8px_24px_rgba(30,58,95,0.06)]">
+    <section className="rounded-2xl bg-navy text-cream p-5 sm:p-6 md:p-8 shadow-[0_12px_32px_rgba(30,58,95,0.18)]">
       <div className="flex items-baseline justify-between gap-3 mb-2">
-        <span className="text-[10px] uppercase tracking-[0.18em] text-gold-warm font-bold">
+        <span className="text-[10px] uppercase tracking-[0.18em] text-gold font-bold">
           Franchise Readiness
         </span>
-        <span className="text-[10px] uppercase tracking-[0.14em] text-grey-4 font-bold">
+        <span className="text-[10px] uppercase tracking-[0.14em] text-cream/70 font-bold">
           {readinessPct}% complete
         </span>
       </div>
-      <h1 className="text-navy font-extrabold text-2xl md:text-4xl leading-tight mb-3">
+      <h1 className="text-cream font-extrabold text-2xl md:text-4xl leading-tight mb-3">
         {firstName
           ? `${firstName}'s Blueprint is ${readinessPct}% complete`
           : `Your Blueprint is ${readinessPct}% complete`}
       </h1>
 
-      {/* Progress bar — single visual that anchors the headline. */}
-      <div className="h-2 rounded-full bg-grey-1 overflow-hidden mb-6">
+      {/* Progress bar — gold gradient pops against navy. */}
+      <div className="h-2 rounded-full bg-cream/15 overflow-hidden mb-6">
         <div
           className="h-full bg-gradient-to-r from-gold to-gold-warm transition-all duration-500"
           style={{ width: `${readinessPct}%` }}
@@ -77,18 +77,18 @@ export function CommandCenter({
         />
       )}
 
-      {/* Secondary actions — discoverable but de-emphasized. */}
-      <div className="mt-5 pt-5 border-t border-navy/5 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
+      {/* Secondary actions — readable on navy. */}
+      <div className="mt-5 pt-5 border-t border-cream/10 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
         <Link
           href="/portal/lab/blueprint"
-          className="inline-flex items-center gap-1.5 text-grey-3 hover:text-navy font-semibold transition-colors py-1.5"
+          className="inline-flex items-center gap-1.5 text-cream/70 hover:text-gold font-semibold transition-colors py-1.5"
         >
           <ListChecks size={12} />
           View full Blueprint
         </Link>
         <Link
           href="/portal/lab/intake"
-          className="inline-flex items-center gap-1.5 text-grey-3 hover:text-navy font-semibold transition-colors py-1.5"
+          className="inline-flex items-center gap-1.5 text-cream/70 hover:text-gold font-semibold transition-colors py-1.5"
         >
           <Globe size={12} />
           Pre-fill from your website
@@ -111,23 +111,23 @@ function NextStepPanel({
 }) {
   const phase = phaseForSlug(next.slug);
   return (
-    <div className="rounded-xl bg-cream/50 border border-navy/10 p-4 sm:p-5">
+    <div className="rounded-xl bg-cream/10 border border-cream/15 p-4 sm:p-5">
       <div className="flex items-baseline gap-2 mb-2 text-[10px] uppercase tracking-[0.16em] font-bold">
-        <span className="text-gold-warm">Next up</span>
+        <span className="text-gold">Next up</span>
         {phase && (
-          <span className="text-navy/60">· {phase.title} phase</span>
+          <span className="text-cream/60">· {phase.title} phase</span>
         )}
       </div>
-      <div className="text-navy font-bold text-lg md:text-xl leading-tight mb-1.5">
+      <div className="text-cream font-bold text-lg md:text-xl leading-tight mb-1.5">
         {next.fieldDef.label}
       </div>
       {next.fieldDef.helpText && (
-        <p className="text-grey-3 text-sm leading-relaxed mb-3 max-w-[600px]">
+        <p className="text-cream/70 text-sm leading-relaxed mb-3 max-w-[600px]">
           {next.fieldDef.helpText}
         </p>
       )}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="text-xs text-grey-4 leading-relaxed">
+        <div className="text-xs text-cream/60 leading-relaxed">
           {totalLeft} {totalLeft === 1 ? "question" : "questions"} left ·{" "}
           {requiredLeft} required · ~{estimateMin} min total
         </div>
@@ -146,11 +146,11 @@ function NextStepPanel({
 
 function CaughtUpPanel() {
   return (
-    <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 sm:p-5">
-      <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-emerald-700 mb-1.5">
+    <div className="rounded-xl bg-emerald-500/15 border border-emerald-400/30 p-4 sm:p-5">
+      <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-emerald-300 mb-1.5">
         You&apos;re caught up
       </div>
-      <p className="text-emerald-900/85 text-sm leading-relaxed mb-4 max-w-[600px]">
+      <p className="text-cream/85 text-sm leading-relaxed mb-4 max-w-[600px]">
         Every required question is answered. Time to redraft chapters with the
         new context, or open advanced questions if you want to dig deeper.
       </p>

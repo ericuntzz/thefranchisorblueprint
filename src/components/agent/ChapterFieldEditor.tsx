@@ -40,6 +40,7 @@ import {
   type MemoryFieldsMap,
 } from "@/lib/calc";
 import type { MemoryFileSlug } from "@/lib/memory/files";
+import { lookupIndustryValue } from "@/lib/memory/industry-lookup";
 
 type FieldValue = string | number | boolean | string[] | null;
 
@@ -177,6 +178,24 @@ export function ChapterFieldEditor({
                 const cv = computedValues[fd.name];
                 const computedNumber =
                   typeof cv === "number" ? cv : null;
+                // Industry-suggested value for fields that declare
+                // suggestedFrom: industry_lookup. Pulled fresh from
+                // either local values (if we're editing
+                // business_overview) or otherChaptersFields. Returns
+                // null when industry isn't set or there's no mapping.
+                const industryCategory =
+                  schema.slug === "business_overview"
+                    ? (values["industry_category"] as string | null)
+                    : ((otherChaptersFields.business_overview?.[
+                        "industry_category"
+                      ] as string | null) ?? null);
+                const industrySuggestion =
+                  fd.suggestedFrom?.kind === "industry_lookup"
+                    ? lookupIndustryValue({
+                        industryCategory,
+                        fieldName: fd.name,
+                      })
+                    : null;
                 return (
                   <FieldInput
                     key={fd.name}
@@ -184,6 +203,7 @@ export function ChapterFieldEditor({
                     slug={schema.slug}
                     value={values[fd.name] ?? null}
                     computedValue={computedNumber}
+                    industrySuggestion={industrySuggestion}
                     onChange={(v) => update(fd.name, v)}
                     sourceLabel={sourceLabelFor(
                       fieldStatus?.[fd.name]?.source,
@@ -254,6 +274,7 @@ function FieldInput({
   slug,
   value,
   computedValue,
+  industrySuggestion,
   onChange,
   sourceLabel,
 }: {
@@ -261,6 +282,10 @@ function FieldInput({
   slug: MemoryFileSlug;
   value: FieldValue;
   computedValue: number | null;
+  /** Industry-lookup suggestion (number for currency/percentage,
+   *  string for NAICS-like codes). Null when there's no mapping or
+   *  the customer hasn't set their industry yet. */
+  industrySuggestion: string | number | null;
   onChange: (v: FieldValue) => void;
   /** "From your website" / "Jason inferred" / etc. — null when the
    *  field has no source recorded (typically: empty fields). */
@@ -306,6 +331,27 @@ function FieldInput({
           </span>
         </button>
       )}
+      {/* Industry-lookup suggestion. Same affordance as the derived-
+          default pill above but the source is the static industry
+          benchmarks (lib/memory/industry-lookup.ts). Only renders
+          when the field is currently empty AND we have a value. */}
+      {!isComputed &&
+        industrySuggestion != null &&
+        (value == null || value === "" || value === 0) && (
+          <button
+            type="button"
+            onClick={() => onChange(industrySuggestion as FieldValue)}
+            className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-800 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-full px-2.5 py-0.5 transition-colors"
+          >
+            <Sparkles size={10} />
+            Use industry suggestion:{" "}
+            <span className="tabular-nums">
+              {typeof industrySuggestion === "number"
+                ? formatNumeric(fieldDef.type, industrySuggestion)
+                : industrySuggestion}
+            </span>
+          </button>
+        )}
       {fieldDef.helpText && !isComputed && (
         <p className="text-xs text-grey-4 leading-relaxed">{fieldDef.helpText}</p>
       )}
@@ -554,16 +600,22 @@ function FieldControl({
       );
     }
 
-    case "date":
+    case "date": {
+      // Cap at today unless the field opts into future dates (see
+      // FieldDef.allowFutureDate). Founding/opening dates etc.
+      // shouldn't accept "next year".
+      const todayIso = new Date().toISOString().slice(0, 10);
       return (
         <input
           type="date"
           value={(value as string) ?? ""}
           onChange={(e) => onChange(e.target.value || null)}
           required={fieldDef.required}
+          max={fieldDef.allowFutureDate ? undefined : todayIso}
           className={inputClass}
         />
       );
+    }
 
     case "color": {
       const v = (value as string) ?? "#000000";

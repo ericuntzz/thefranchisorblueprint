@@ -36,6 +36,7 @@ import type { MemoryFieldsMap } from "@/lib/calc";
 import { hasCalc } from "@/lib/calc";
 import { PHASES, type PhaseDef, phaseForSlug } from "./phases";
 import { MEMORY_FILE_TITLES } from "./files";
+import { lookupIndustryValue } from "./industry-lookup";
 
 export type QueueItem = {
   /** Stable identifier — used as a React key + URL fragment. */
@@ -48,6 +49,11 @@ export type QueueItem = {
    *  optional). Required fields lead the queue; optional fields fall
    *  to the bottom of their phase. */
   isRequired: boolean;
+  /** When the field declares `suggestedFrom: industry_lookup` AND
+   *  the customer's industry has been resolved, this carries the
+   *  suggested value so the client can render a "Use suggested" pill
+   *  next to the input. Null otherwise. */
+  industrySuggestion: string | number | null;
 };
 
 /**
@@ -59,13 +65,20 @@ export function computeQuestionQueue(
 ): QueueItem[] {
   const out: QueueItem[] = [];
 
+  // Resolve the customer's industry once for the whole pass.
+  // Industry-lookup fields will surface their suggestion against
+  // this; if it's null the suggestion is just absent and the field
+  // still appears (the customer types their own value).
+  const industryCategory =
+    (memory.business_overview?.["industry_category"] as
+      | string
+      | undefined) ?? null;
+
   // Walk phases in canonical order. WITHIN a phase, push every
   // required item first (in chapter+schema order), then every
   // optional item. This keeps phase boundaries intact so the
   // QuestionQueueClient's "you're entering Economics" intro lands at
-  // the right moment — earlier passes interleaved phases by sorting
-  // all-required before all-optional, which broke the phase progress
-  // counter and the "last question of Discover" footer.
+  // the right moment.
   for (const phase of PHASES) {
     const phaseRequired: QueueItem[] = [];
     const phaseOptional: QueueItem[] = [];
@@ -77,13 +90,19 @@ export function computeQuestionQueue(
         if (fd.advanced) continue;
         if (hasCalc(slug, fd.name)) continue;
         if (fd.computed) continue;
-        // Fields that depend on an industry-lookup table get skipped
-        // until those tables ship — they'd return "—" right now and
-        // confuse the customer.
-        if (fd.suggestedFrom?.kind === "industry_lookup") continue;
 
         const v = filled[fd.name];
         if (isFieldFilled(v)) continue;
+
+        // Resolve industry-lookup suggestion (returns null when
+        // industry isn't set, or the field doesn't have a mapping).
+        const industrySuggestion =
+          fd.suggestedFrom?.kind === "industry_lookup"
+            ? lookupIndustryValue({
+                industryCategory,
+                fieldName: fd.name,
+              })
+            : null;
 
         const item: QueueItem = {
           id: `${slug}.${fd.name}`,
@@ -92,6 +111,7 @@ export function computeQuestionQueue(
           chapterTitle: MEMORY_FILE_TITLES[slug],
           fieldDef: fd,
           isRequired: !!fd.required,
+          industrySuggestion,
         };
         if (fd.required) phaseRequired.push(item);
         else phaseOptional.push(item);

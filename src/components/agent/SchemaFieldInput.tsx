@@ -176,7 +176,13 @@ export function SchemaFieldInput({
       );
     }
 
-    case "date":
+    case "date": {
+      // Cap at today by default — most schema dates ("founded",
+      // "first location opened") can't legitimately be in the future.
+      // Schemas opt out via `allowFutureDate: true` for forward-
+      // looking fields ("planned launch date"). Eric's bug: queue
+      // accepted a future founding date.
+      const todayIso = new Date().toISOString().slice(0, 10);
       return (
         <input
           type="date"
@@ -184,9 +190,11 @@ export function SchemaFieldInput({
           onChange={(e) => onChange(e.target.value || null)}
           required={fieldDef.required}
           autoFocus={autoFocus}
+          max={fieldDef.allowFutureDate ? undefined : todayIso}
           className={inputClass}
         />
       );
+    }
 
     case "color": {
       const v = (value as string) ?? "#1E3A5F";

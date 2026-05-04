@@ -298,6 +298,11 @@ export type FieldDef = {
   /** For numeric types — soft validation hint, not enforced server-side. */
   min?: number;
   max?: number;
+  /** For `date` type — when true, allow dates in the future. Default
+   *  is false (date inputs cap at today). Useful for fields like
+   *  "founding date" or "first location opened" where future is
+   *  meaningless; opt out for fields like "planned launch date". */
+  allowFutureDate?: boolean;
   /**
    * If true, hidden by default in the UI; revealed by an "Show advanced"
    * toggle. Use for fields that 90% of customers won't touch but that
@@ -2926,8 +2931,120 @@ const COMPETITOR_LANDSCAPE: ChapterSchema = {
  * Each schema's comment header notes the audit gap. Jason should review
  * for fields specific to TFB's framework that I missed.
  */
+// ---------------------------------------------------------------------------
+// brand_voice — the deferred Phase 1.5b chapter, now landing.
+//
+// Light hybrid. Cypress Lane example values shown in placeholders
+// follow the operator-voice rule: no marketing-speak ("brand
+// equity", "value proposition", "tone of voice"); plain English
+// the founder would use ("how your team talks", "your colors").
+//
+// The brand-voice content drives FDD Item 1 boilerplate, the
+// operations manual's "How we sound" section, and the marketing
+// playbook. It's also what the agent reads when adapting prose to
+// the customer's voice on later chapter drafts — so even minimal
+// inputs here meaningfully improve the rest.
+// ---------------------------------------------------------------------------
+const BRAND_VOICE: ChapterSchema = {
+  slug: "brand_voice",
+  title: "Brand Standards",
+  description:
+    "How your brand looks and sounds — the visual + verbal identity franchisees inherit and have to honor.",
+  compilesInto: "FDD Item 1, Operations Manual §3 (Brand Standards), Marketing Playbook",
+  fields: [
+    {
+      name: "brand_name",
+      label: "Brand name",
+      type: "text",
+      required: true,
+      category: "Identity",
+      placeholder: "Cypress Lane Coffee",
+      helpText:
+        "The exact wording you want franchisees to use on every sign, package, and document.",
+    },
+    {
+      name: "tagline",
+      label: "Tagline or slogan",
+      type: "text",
+      category: "Identity",
+      placeholder: "Slow coffee, small streets.",
+      helpText:
+        "Short. Memorable. The line you put on the side of the cup. Skip if you don't have one yet.",
+    },
+    {
+      name: "voice_adjectives",
+      label: "Voice in 3–5 words",
+      type: "list_short",
+      required: true,
+      category: "Voice",
+      placeholder: "Warm\nWelcoming\nCraft-honest\nNeighborly\nUn-corporate",
+      helpText:
+        "How your brand sounds when it talks. One word per line.",
+    },
+    {
+      name: "voice_description",
+      label: "Voice in a sentence or two",
+      type: "textarea",
+      required: true,
+      category: "Voice",
+      placeholder:
+        "We sound like a friendly barista, not a corporate brochure. We use plain words, ask about the customer's day, and never pretend to be more than a good cup of coffee.",
+      helpText:
+        "How would you describe the way your brand talks to a writer who'd never met you?",
+    },
+    {
+      name: "brand_color_primary",
+      label: "Primary brand color",
+      type: "color",
+      required: true,
+      category: "Visual",
+      placeholder: "#1F3D2C",
+      helpText:
+        "The dominant color on signage, packaging, and website. Hex code if you know it; the picker is fine if you don't.",
+    },
+    {
+      name: "brand_color_secondary",
+      label: "Secondary / accent color",
+      type: "color",
+      category: "Visual",
+      placeholder: "#D9A86B",
+      helpText: "Used for accents and highlights. Optional.",
+    },
+    {
+      name: "typography_pairing",
+      label: "Typography",
+      type: "text",
+      category: "Visual",
+      placeholder: "Tiempos Headline (display) / Inter (body)",
+      helpText:
+        "The fonts you use, in priority order. If you don't know the names, describe the vibe ('hand-drawn serif + simple sans').",
+    },
+    {
+      name: "logo_url",
+      label: "Logo file or URL",
+      type: "url",
+      category: "Visual",
+      placeholder: "https://example.com/brand/logo.svg",
+      helpText:
+        "Public link to your primary logo (SVG/PNG preferred). You can also attach the file via the References panel.",
+    },
+    {
+      name: "things_to_avoid",
+      label: "Words / styles to avoid",
+      type: "list_short",
+      category: "Voice",
+      advanced: true,
+      placeholder:
+        "Exclamation marks\n\"Synergy\"\nStock-photo lifestyle imagery\nAll-caps headlines",
+      helpText:
+        "Anything that's off-brand. Saves the agent from drafting copy you'll just have to rewrite.",
+    },
+  ],
+};
+
 export const CHAPTER_SCHEMAS: Partial<Record<MemoryFileSlug, ChapterSchema>> = {
   business_overview: BUSINESS_OVERVIEW,
+  brand_voice: BRAND_VOICE,
   unit_economics: UNIT_ECONOMICS,
   franchise_economics: FRANCHISE_ECONOMICS,
   franchisee_profile: FRANCHISEE_PROFILE,

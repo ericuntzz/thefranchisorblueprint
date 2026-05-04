@@ -63,12 +63,16 @@ export function QuestionQueueClient({
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [completed, setCompleted] = useState<Set<string>>(new Set());
+  // Visited stack — Back pops the most recent visited index so the
+  // customer always lands on the question they were just looking at,
+  // not just the previous slot in the queue (which could be a Skipped
+  // item they haven't seen). Eric's bug report: "I hit Back but it
+  // didn't bring me to the last question I answered."
+  const [visited, setVisited] = useState<number[]>([]);
 
   const current = queue[index];
   const phaseStart =
     index === 0 || queue[index - 1]?.phase.id !== current?.phase.id;
-  const phaseEnd =
-    !!current && queue[index + 1]?.phase.id !== current.phase.id;
 
   const phaseProgress = useMemo(() => {
     if (!current) return null;
@@ -134,31 +138,27 @@ export function QuestionQueueClient({
   }
 
   function advance() {
+    setVisited((v) => [...v, index]);
     setIndex((i) => i + 1);
     setDraft(null);
     setErr(null);
   }
 
   function back() {
-    if (index === 0) return;
-    setIndex((i) => i - 1);
+    if (visited.length === 0) return;
+    const previous = visited[visited.length - 1];
+    setVisited((v) => v.slice(0, -1));
+    setIndex(previous);
     setDraft(null);
     setErr(null);
   }
 
   return (
     <div className="space-y-5">
-      {/* Top progress strip — overall queue position. Lightweight; the
-          phase header below carries the heavier visual. */}
-      <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.16em] text-grey-3 font-bold">
-        <span>
-          Question {index + 1} of {queue.length}
-        </span>
-        <span>
-          {initialSummary.totalRequired} required ·{" "}
-          {initialSummary.totalOptional} optional
-        </span>
-      </div>
+      {/* Slim progress bar only — the prior "Question X of Y · 11
+          required · 52 optional" microcopy was too much info up
+          front. The phase intro carries phase context; the bar
+          carries overall position. */}
       <div className="h-1 rounded-full bg-grey-1 overflow-hidden">
         <div
           className="h-full bg-gold transition-all duration-300"
@@ -185,14 +185,8 @@ export function QuestionQueueClient({
         err={err}
         onSave={onSave}
         onSkip={onSkip}
-        onBack={index > 0 ? back : null}
+        onBack={visited.length > 0 ? back : null}
       />
-
-      {phaseEnd && (
-        <p className="text-[11px] text-grey-4 text-center italic">
-          Last question of {current.phase.title}. Next up: a fresh phase.
-        </p>
-      )}
     </div>
   );
 }
@@ -273,7 +267,7 @@ function QuestionCard({
         </p>
       )}
 
-      <div className="mb-5">
+      <div className="mb-2">
         <SchemaFieldInput
           fieldDef={fd}
           value={value}
@@ -281,6 +275,26 @@ function QuestionCard({
           autoFocus
         />
       </div>
+
+      {/* Industry-suggested value (when the field declares
+          suggestedFrom: industry_lookup AND we resolved a profile
+          from the customer's industry_category). The customer can
+          one-click accept the suggestion or type their own answer. */}
+      {item.industrySuggestion != null &&
+        (value == null || valueIsEmpty(value)) && (
+          <button
+            type="button"
+            onClick={() => onChange(item.industrySuggestion as FieldValue)}
+            className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-800 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-full px-3 py-1.5 transition-colors mb-4"
+          >
+            <Sparkles size={11} />
+            Use industry suggestion:{" "}
+            <span className="tabular-nums">
+              {formatSuggestion(fd.type, item.industrySuggestion)}
+            </span>
+          </button>
+        )}
+      {item.industrySuggestion == null && <div className="mb-3" />}
 
       {err && (
         <div className="mb-3 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-800">
@@ -335,4 +349,25 @@ function valueIsEmpty(v: FieldValue): boolean {
   if (typeof v === "string") return v.trim().length === 0;
   if (Array.isArray(v)) return v.length === 0;
   return false;
+}
+
+/**
+ * Format an industry-suggested value for the "Use suggestion" pill.
+ * Currency gets a "$" prefix; percentage gets a "%" suffix; otherwise
+ * passthrough.
+ */
+function formatSuggestion(
+  type: QueueItem["fieldDef"]["type"],
+  v: string | number,
+): string {
+  if (typeof v === "number") {
+    if (type === "currency") {
+      return `$${v.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+    }
+    if (type === "percentage") {
+      return `${v}%`;
+    }
+    return v.toLocaleString("en-US");
+  }
+  return v;
 }

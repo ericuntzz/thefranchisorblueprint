@@ -82,19 +82,23 @@ export default async function GuidedNextPage() {
   return (
     <>
       <main className="min-h-[calc(100vh-200px)] bg-cream">
-        {/* Top nav */}
+        {/* Top nav — both anchors styled as matched ghost-pill buttons.
+            Eric: "they should be the same color/font/size + a little
+            more character to them." Same shape, same weight, same
+            font scale; the leading icon flips left/right to denote
+            direction. */}
         <div className="border-b border-navy/5 bg-white">
-          <div className="max-w-[900px] mx-auto px-4 sm:px-6 md:px-8 py-3 flex items-center justify-between">
+          <div className="max-w-[1000px] mx-auto px-4 sm:px-6 md:px-8 py-3 flex items-center justify-between gap-3">
             <Link
               href="/portal"
-              className="inline-flex items-center gap-1.5 text-grey-3 hover:text-navy text-sm font-semibold transition-colors"
+              className="inline-flex items-center gap-1.5 text-navy bg-cream hover:bg-navy hover:text-cream border-2 border-navy/20 hover:border-navy font-bold text-[11px] uppercase tracking-[0.12em] px-4 py-2 rounded-full transition-colors"
             >
-              <ArrowLeft size={14} />
+              <ArrowLeft size={12} />
               Back to portal
             </Link>
             <Link
               href="/portal/lab/blueprint"
-              className="inline-flex items-center gap-1.5 text-grey-3 hover:text-navy text-xs font-semibold transition-colors"
+              className="inline-flex items-center gap-1.5 text-navy bg-cream hover:bg-navy hover:text-cream border-2 border-navy/20 hover:border-navy font-bold text-[11px] uppercase tracking-[0.12em] px-4 py-2 rounded-full transition-colors"
             >
               View full Blueprint
               <ArrowRight size={12} />
@@ -102,9 +106,12 @@ export default async function GuidedNextPage() {
           </div>
         </div>
 
-        {/* Surface */}
-        <section className="py-8 md:py-14">
-          <div className="max-w-[760px] mx-auto px-4 sm:px-6 md:px-8">
+        {/* Surface — wider container per Eric's "section should be a
+            little larger" feedback. Bumped from max-w-[760px] to
+            max-w-[900px] so the question card breathes more on
+            laptops + medium-density screens. */}
+        <section className="py-10 md:py-16">
+          <div className="max-w-[900px] mx-auto px-4 sm:px-6 md:px-8">
             {queue.length === 0 ? (
               <AllCaughtUpPanel firstName={firstName} />
             ) : (

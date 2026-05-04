@@ -231,19 +231,21 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
             </div>
           </div>
 
-          {/* Progress bar — single source of truth on "where am I" */}
-          <ProgressMeter percent={percentComplete} completed={completedCount} total={totalCount} />
+          {/* Legacy capability-progress meter intentionally removed —
+              the Command Center below now owns the "% complete /
+              what's next" surface, scored against the 16-chapter
+              Blueprint instead of the older 9-capability framing. */}
         </div>
       </section>
 
       {/* ===== Franchise Readiness Command Center ===== */}
-      {/* Phase 2A surface — guided next-best-step + deliverable
-          checklist. Sits between the welcome hero and the legacy
-          capability journey so customers landing on /portal see the
-          guided path first. The /portal/lab/blueprint canvas remains
-          available as the "expert mode" via the Command Center's
+      {/* The primary surface for DIY buyers — guided next-best-step
+          + deliverable checklist. Now leads with a navy hero (since
+          the legacy "% FRANCHISE READY" navy block was removed from
+          the welcome hero above). The /portal/lab/blueprint canvas
+          remains available as expert mode via the Command Center's
           secondary "View full Blueprint" link. */}
-      <section className="bg-cream py-8 md:py-12 border-b border-navy/5">
+      <section className="bg-cream py-6 md:py-10 border-b border-navy/5">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 space-y-6">
           <CommandCenter
             firstName={firstName}
