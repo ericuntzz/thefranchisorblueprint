@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
@@ -220,32 +220,40 @@ export default async function BlueprintLabPage() {
                 );
               })}
 
-              {/* End-of-document affordance — gives the customer a
-                  visual sense of arrival after scrolling all 16
-                  chapters, plus a way back to the dashboard without
-                  scrolling all the way up. Lives in the same column
-                  as the chapter cards so it inherits the document's
-                  rhythm. */}
-              <div className="rounded-2xl border border-navy/10 bg-white px-6 sm:px-8 py-7 text-center">
+              {/* End-of-document affordance. Customer can edit
+                  inline on this page, so the closing isn't a "go
+                  elsewhere to edit" message — it's a forward push
+                  into the guided question queue (/portal/lab/next)
+                  where Jason walks them through the next thing
+                  that's missing. Secondary "back to dashboard" stays
+                  as a quieter exit option. */}
+              <div className="rounded-2xl border border-navy/10 bg-white px-6 sm:px-8 py-8 text-center">
                 <div className="text-[10px] uppercase tracking-[0.18em] text-gold-warm font-bold mb-2">
                   End of Blueprint
                 </div>
                 <h2 className="text-navy font-extrabold text-lg md:text-xl mb-2">
                   You&apos;ve reached the end
                 </h2>
-                <p className="text-grey-3 text-sm md:text-[15px] leading-relaxed max-w-[440px] mx-auto mb-5">
-                  That&apos;s all {MEMORY_FILES.length} chapters. To answer
-                  questions or edit fields, head back to the dashboard
-                  and pick a chapter — each one has its own focused
-                  workspace.
+                <p className="text-grey-3 text-sm md:text-[15px] leading-relaxed max-w-[460px] mx-auto mb-6">
+                  That&apos;s the full document. Pick up where you left off —
+                  Jason has the next question ready when you are.
                 </p>
-                <Link
-                  href="/portal"
-                  className="inline-flex items-center gap-2 bg-navy text-cream font-bold text-xs uppercase tracking-[0.1em] px-5 py-2.5 rounded-full hover:bg-navy-dark transition-colors"
-                >
-                  <ArrowLeft size={13} />
-                  Back to your dashboard
-                </Link>
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <Link
+                    href="/portal/lab/next"
+                    className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-xs uppercase tracking-[0.1em] px-6 py-3 rounded-full hover:bg-gold-dark transition-colors"
+                  >
+                    Continue building
+                    <ArrowRight size={13} />
+                  </Link>
+                  <Link
+                    href="/portal"
+                    className="inline-flex items-center gap-2 text-grey-3 hover:text-navy font-semibold text-xs uppercase tracking-[0.1em] px-3 py-2 transition-colors"
+                  >
+                    <ArrowLeft size={13} />
+                    Back to dashboard
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
