@@ -38,6 +38,7 @@ import {
 } from "@/lib/memory/queue";
 import { CommandCenter } from "@/components/portal/CommandCenter";
 import { DeliverableChecklist } from "@/components/portal/DeliverableChecklist";
+import { PortalResumeBanner } from "@/components/portal/PortalResumeBanner";
 import type { CustomerMemory as CM } from "@/lib/supabase/types";
 import {
   getActiveOffersForUser,
@@ -287,34 +288,12 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
         <Day1OnboardingHero firstName={firstName} firstCap={nextCapability} />
       )}
 
-      {/* ===== Next step CTA (returning customers) ===== */}
-      {!isAllComplete && !isFirstRun && nextCapability && (
-        <section className="bg-cream border-b border-gold/20 py-7">
-          <div className="max-w-[1200px] mx-auto px-6 md:px-8">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-navy to-navy-light flex items-center justify-center text-gold">
-                  <ArrowRight size={20} />
-                </div>
-                <div>
-                  <div className="text-[10px] font-bold tracking-[0.16em] uppercase text-gold-warm mb-1">
-                    {startedSlugs.has(nextCapability.slug) ? "Continue where you left off" : "Your next move"}
-                  </div>
-                  <div className="text-navy font-bold text-base md:text-lg">
-                    {nextCapability.title}
-                  </div>
-                </div>
-              </div>
-              <Link
-                href={`/portal/${nextCapability.slug}`}
-                className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-7 py-3.5 rounded-full hover:bg-gold-dark transition-colors"
-              >
-                Continue <ArrowRight size={15} />
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
+      {/* ===== Next step CTA — floating bottom banner =====
+          Replaces the prior inline section. Uses the same floating-
+          bottom-banner pattern as AssessmentResumeBanner so the
+          customer learns one consistent place to look for "what's
+          next." Rendered near the end of the file (alongside the
+          chat dock) so it doesn't get a layout slot here. */}
 
       {/* ===== Phases ===== */}
       <section className="py-12 md:py-16">
@@ -412,6 +391,18 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
       <LabDiscovery />
 
       <JasonChatDock pageContext="/portal (dashboard)" firstName={firstName} />
+
+      {/* Floating "Continue where you left off / Your next move" banner.
+          Mirrors the AssessmentResumeBanner pattern. Skipped on first-
+          run (the Day 1 hero already guides them) and when everything
+          is complete. */}
+      {!isAllComplete && !isFirstRun && nextCapability && (
+        <PortalResumeBanner
+          capabilitySlug={nextCapability.slug}
+          capabilityTitle={nextCapability.title}
+          isReturning={startedSlugs.has(nextCapability.slug)}
+        />
+      )}
     </>
   );
 }
