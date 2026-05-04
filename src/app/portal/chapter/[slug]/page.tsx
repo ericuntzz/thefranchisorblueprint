@@ -8,7 +8,6 @@ import {
   type ChapterAttachment,
   type CustomerMemory,
   type CustomerMemoryProvenance,
-  type Profile,
   type Purchase,
 } from "@/lib/supabase/types";
 import {
@@ -22,7 +21,6 @@ import {
   indexMemoryRows,
 } from "@/lib/memory/readiness";
 import type { MemoryFieldsMap } from "@/lib/calc";
-import { JasonChatDock } from "@/components/agent/JasonChatDock";
 import { SiteFooter } from "@/components/SiteFooter";
 import {
   saveChapterSection,
@@ -76,18 +74,16 @@ export default async function FocusedChapterPage({ params }: Props) {
   if (!user)
     redirect(`/portal/login?next=/portal/chapter/${encodeURIComponent(slug)}`);
 
-  const [{ data: profileRow }, { data: purchasesData }] = await Promise.all([
-    supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
-    supabase
-      .from("purchases")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("status", "paid"),
-  ]);
+  // Profile/full_name now read at the layout level (drives the
+  // Jason chat greeting). Chapter page only needs to gate on a
+  // paid purchase.
+  const { data: purchasesData } = await supabase
+    .from("purchases")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("status", "paid");
   const purchases = (purchasesData ?? []) as Purchase[];
   if (purchases.length === 0) redirect("/portal");
-  const profile = (profileRow ?? null) as Profile | null;
-  const firstName = profile?.full_name?.split(" ")[0] ?? null;
 
   // Load every chapter's row in one query — we need the current
   // chapter's data for the editor AND every other chapter's fields
@@ -239,10 +235,6 @@ export default async function FocusedChapterPage({ params }: Props) {
         </section>
       </main>
       <SiteFooter />
-      <JasonChatDock
-        pageContext={`/portal/chapter/${slug}`}
-        firstName={firstName}
-      />
     </>
   );
 }

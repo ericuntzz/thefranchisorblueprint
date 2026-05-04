@@ -11,7 +11,6 @@ import {
 } from "@/lib/supabase/types";
 import { computeQuestionQueue, summarizeQueue } from "@/lib/memory/queue";
 import type { MemoryFieldsMap } from "@/lib/calc";
-import { JasonChatDock } from "@/components/agent/JasonChatDock";
 import { SiteFooter } from "@/components/SiteFooter";
 import { QuestionQueueClient } from "./QuestionQueueClient";
 import { saveQueueAnswer } from "./actions";
@@ -116,7 +115,6 @@ export default async function GuidedNextPage() {
         </section>
       </main>
       <SiteFooter />
-      <JasonChatDock pageContext="/portal/lab/next" firstName={firstName} />
     </>
   );
 }

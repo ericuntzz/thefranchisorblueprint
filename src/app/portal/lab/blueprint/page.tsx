@@ -15,7 +15,6 @@ import { MEMORY_FILES, MEMORY_FILE_TITLES } from "@/lib/memory/files";
 import { getChapterSchema } from "@/lib/memory/schemas";
 import type { MemoryFieldsMap } from "@/lib/calc";
 import { ChapterCard } from "@/components/agent/ChapterCard";
-import { JasonChatDock } from "@/components/agent/JasonChatDock";
 import { BlueprintTOC } from "@/components/portal/BlueprintTOC";
 import { SiteFooter } from "@/components/SiteFooter";
 import { saveChapterSection, saveMemoryFields, setChapterConfidence } from "./actions";
@@ -260,7 +259,6 @@ export default async function BlueprintLabPage() {
         </section>
       </main>
       <SiteFooter />
-      <JasonChatDock pageContext="/portal/lab/blueprint" firstName={firstName} />
     </>
   );
 }

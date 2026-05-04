@@ -30,12 +30,13 @@ import {
   useRef,
   useState,
 } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   CheckCircle2,
   AlertTriangle,
   Loader2,
   MessageCircle,
+  Paperclip,
   Send,
   Sparkles,
   Upload,
@@ -86,7 +87,10 @@ type ChatEvent =
   | { type: "error"; message: string };
 
 type Props = {
-  /** A short string describing what the user is currently looking at. */
+  /** Optional override for what the user is currently looking at.
+   *  When omitted, the dock derives this from `usePathname()` so
+   *  the layout-level mount automatically reflects whichever route
+   *  the customer is on without per-page wiring. */
   pageContext?: string;
   /** Customer's first name, for the friendly opener. */
   firstName?: string | null;
@@ -222,18 +226,31 @@ function getStarterChips(pageContext: string | undefined): StarterChip[] {
   ];
 }
 
-export function JasonChatDock({ pageContext, firstName }: Props) {
+export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
+  // Prefer the explicit prop (legacy per-page mounts) but fall back
+  // to the live pathname so the layout-level mount stays accurate
+  // as the customer navigates without unmounting the dock.
+  const pageContext = pageContextProp ?? pathname ?? "";
   const [open, setOpen] = useState(false);
   const [transcript, setTranscript] = useState<TranscriptItem[]>([]);
   const [draft, setDraft] = useState("");
   const [streaming, setStreaming] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  // Tracks whether the customer is parked near the bottom of the
+  // transcript. We only auto-scroll on new content when this is true,
+  // so reading earlier messages doesn't get yanked back down whenever
+  // a delta or tool card lands.
+  const nearBottomRef = useRef(true);
 
-  // Greet on first open. We never persist history across page loads in
-  // v1 — that's a Phase 2 concern. The Memory snapshot goes in via the
-  // server every turn anyway, so the agent always has full context.
+  // Greet on first open. The dock is layout-mounted now, so this only
+  // fires on the very first open of a session. Subsequent navigations
+  // keep the existing transcript intact — open/close is purely visual.
   useEffect(() => {
     if (open && transcript.length === 0) {
       const greeting = firstName
@@ -243,11 +260,38 @@ export function JasonChatDock({ pageContext, firstName }: Props) {
     }
   }, [open, transcript.length, firstName]);
 
-  // Auto-scroll the panel to bottom whenever new content lands.
+  // Auto-scroll only when the customer is already near the bottom.
+  // If they've scrolled up to read earlier messages, leave them
+  // alone — we don't want the dock fighting their scroll position.
   useEffect(() => {
     const el = scrollRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (!el) return;
+    if (nearBottomRef.current) el.scrollTop = el.scrollHeight;
   }, [transcript]);
+
+  // Update nearBottomRef as the customer scrolls. ~80px slack so
+  // wheel/trackpad inertia near the bottom still counts as "at
+  // bottom" — otherwise auto-scroll stops feeling alive.
+  function onTranscriptScroll() {
+    const el = scrollRef.current;
+    if (!el) return;
+    nearBottomRef.current =
+      el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+  }
+
+  // Esc closes the dock. Mounted on window so it works even while
+  // focus is in the textarea.
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setOpen(false);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
 
   // Cancel any in-flight stream when the dock unmounts.
   useEffect(() => {
@@ -289,10 +333,12 @@ export function JasonChatDock({ pageContext, firstName }: Props) {
     ];
 
     // Track the in-flight assistant bubble (we mutate its text as
-    // text deltas arrive). React state can't do "append to last
-    // string" cleanly, so we keep the index of the active bubble in
-    // a ref + use functional setState updates.
-    let activeBubbleIndex: number | null = null;
+    // text deltas arrive). React 18 batches updates from awaited
+    // promise callbacks, so a `let` mutated inside one functional
+    // updater isn't reliably visible to the next one — promote to
+    // an object ref so the read in appendDelta sees the write from
+    // ensureBubble even across batched flushes.
+    const activeBubble = { index: null as number | null };
     let toolFired = false;
 
     const ensureBubble = () => {
@@ -300,7 +346,7 @@ export function JasonChatDock({ pageContext, firstName }: Props) {
         // If the last item is an assistant bubble, reuse it.
         const last = t[t.length - 1];
         if (last && last.kind === "bubble" && last.role === "assistant") {
-          activeBubbleIndex = t.length - 1;
+          activeBubble.index = t.length - 1;
           return t;
         }
         // Otherwise, append a fresh empty assistant bubble.
@@ -308,7 +354,7 @@ export function JasonChatDock({ pageContext, firstName }: Props) {
           ...t,
           { kind: "bubble" as const, role: "assistant" as const, text: "" },
         ];
-        activeBubbleIndex = next.length - 1;
+        activeBubble.index = next.length - 1;
         return next;
       });
     };
@@ -316,18 +362,19 @@ export function JasonChatDock({ pageContext, firstName }: Props) {
     const appendDelta = (delta: string) => {
       ensureBubble();
       setTranscript((t) => {
-        if (activeBubbleIndex == null) return t;
+        const i = activeBubble.index;
+        if (i == null) return t;
         const copy = t.slice();
-        const item = copy[activeBubbleIndex];
+        const item = copy[i];
         if (item && item.kind === "bubble") {
-          copy[activeBubbleIndex] = { ...item, text: item.text + delta };
+          copy[i] = { ...item, text: item.text + delta };
         }
         return copy;
       });
     };
 
     const lockBubble = () => {
-      activeBubbleIndex = null;
+      activeBubble.index = null;
     };
 
     const ctl = new AbortController();
@@ -378,16 +425,36 @@ export function JasonChatDock({ pageContext, firstName }: Props) {
         }
       }
     } catch (err) {
+      // Don't surface the user's own abort as an "error" — that
+      // happens when they navigate away mid-stream. The dock is
+      // layout-mounted now so this is rare, but still possible.
+      const isAbort =
+        err instanceof DOMException && err.name === "AbortError";
       const msg =
         err instanceof Error ? err.message : "Something went sideways.";
-      setTranscript((t) => [
-        ...t,
-        {
-          kind: "bubble",
-          role: "assistant",
-          text: `I hit an error: ${msg}. Mind trying again? If it keeps happening, ping support.`,
-        },
-      ]);
+      setTranscript((t) => {
+        // Mark any still-"running" tool cards as error so we don't
+        // leave a permanent spinner sitting in the transcript when
+        // the stream dies before we hear back about a tool result.
+        const cleaned = t.map((item) =>
+          item.kind === "tool" && item.status === "running"
+            ? {
+                ...item,
+                status: "error" as const,
+                summary: "Tool didn't finish — try again.",
+              }
+            : item,
+        );
+        if (isAbort) return cleaned;
+        return [
+          ...cleaned,
+          {
+            kind: "bubble" as const,
+            role: "assistant" as const,
+            text: `I hit an error: ${msg}. Mind trying again? If it keeps happening, ping support.`,
+          },
+        ];
+      });
     } finally {
       setStreaming(false);
       abortRef.current = null;
@@ -462,6 +529,143 @@ export function JasonChatDock({ pageContext, firstName }: Props) {
     [send],
   );
 
+  /**
+   * Upload a file dropped or attached in the chat dock. The file
+   * lands at `business_overview` (the most general primary chapter)
+   * with `autoClassify=true` so Sonnet fans it out to the chapters
+   * it actually belongs to. We surface the in-flight + result state
+   * as a tool-card-style row in the transcript, then auto-fire a
+   * follow-up chat turn so Jason reads the new excerpt and tells
+   * the customer what he extracted.
+   *
+   * Why business_overview as the default primary: every chapter is
+   * a candidate for the doc, but the classifier will only attach
+   * the file to chapters it's actually relevant for. Picking a
+   * neutral, almost-always-relevant primary minimizes the chance
+   * that the file lands somewhere wrong if the classifier returns
+   * an empty fan-out list.
+   */
+  const uploadFile = useCallback(
+    async (file: File) => {
+      if (uploading || streaming) return;
+      setUploading(true);
+      // Use the chat timestamp as a card id so the running → ok/error
+      // transition lands on the same row.
+      const cardId = `upload-${Date.now()}`;
+      setTranscript((t) => [
+        ...t,
+        {
+          kind: "tool",
+          id: cardId,
+          status: "running",
+          summary: `Uploading ${file.name}…`,
+        },
+      ]);
+      try {
+        const fd = new FormData();
+        fd.append("slug", "business_overview");
+        fd.append("file", file);
+        // Same fan-out behavior as the intake flow — one drop, many
+        // chapters get the doc indexed.
+        fd.append("autoClassify", "true");
+        const res = await fetch("/api/agent/chapter-attachment", {
+          method: "POST",
+          body: fd,
+        });
+        if (!res.ok) {
+          const j = (await res.json().catch(() => ({}))) as {
+            error?: string;
+          };
+          throw new Error(j.error ?? `HTTP ${res.status}`);
+        }
+        const j = (await res.json()) as {
+          attachment?: { label?: string };
+          alsoAttachedTo?: string[];
+        };
+        const fanOutTitles = (j.alsoAttachedTo ?? [])
+          .filter(isValidMemoryFileSlug)
+          .map((s) => MEMORY_FILE_TITLES[s]);
+        const summary =
+          fanOutTitles.length > 0
+            ? `${file.name} attached + indexed to: Business Overview · ${fanOutTitles.join(" · ")}`
+            : `${file.name} attached to Business Overview.`;
+        setTranscript((t) =>
+          t.map((item) =>
+            item.kind === "tool" && item.id === cardId
+              ? { ...item, status: "ok" as const, summary }
+              : item,
+          ),
+        );
+        // Refresh server data so chapter pages underneath the dock
+        // see the new attachment without a manual reload.
+        router.refresh();
+        // Auto-fire a follow-up so Jason reads the new excerpt and
+        // tells the customer what he found relevant. The Memory
+        // snapshot built server-side will include the just-saved
+        // attachment record (excerpt + label), so Jason sees it.
+        // Small delay so the success card renders first and the
+        // customer registers the upload before Jason starts typing.
+        setTimeout(() => {
+          void send(
+            `I just uploaded ${file.name}. Read it and tell me what you found that's most useful for the Blueprint.`,
+          );
+        }, 250);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Upload failed.";
+        setTranscript((t) =>
+          t.map((item) =>
+            item.kind === "tool" && item.id === cardId
+              ? {
+                  ...item,
+                  status: "error" as const,
+                  summary: `Couldn't upload ${file.name}: ${msg}`,
+                }
+              : item,
+          ),
+        );
+      } finally {
+        setUploading(false);
+      }
+    },
+    [uploading, streaming, router, send],
+  );
+
+  // Drag-drop handlers on the dock body. We accept the first file
+  // dropped — multi-file uploads sequentialize cleanly through the
+  // attach button if the customer needs that.
+  function onDockDragEnter(e: React.DragEvent<HTMLDivElement>) {
+    if (uploading || streaming) return;
+    if (!Array.from(e.dataTransfer.types).includes("Files")) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(true);
+  }
+  function onDockDragOver(e: React.DragEvent<HTMLDivElement>) {
+    if (uploading || streaming) return;
+    if (!Array.from(e.dataTransfer.types).includes("Files")) return;
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  function onDockDragLeave(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    // Only clear when the drag genuinely leaves the dock outer
+    // rectangle. Without this guard, dragLeave fires every time
+    // the cursor crosses any child boundary (header, transcript,
+    // composer) and the overlay flickers.
+    const next = e.relatedTarget as Node | null;
+    if (next && e.currentTarget.contains(next)) return;
+    setDragActive(false);
+  }
+  function onDockDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (uploading || streaming) return;
+    const file = e.dataTransfer.files?.[0];
+    if (file) void uploadFile(file);
+  }
+
   if (!open) {
     return (
       <button
@@ -493,7 +697,29 @@ export function JasonChatDock({ pageContext, firstName }: Props) {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex w-[380px] max-w-[calc(100vw-2rem)] flex-col rounded-2xl border border-navy/10 bg-cream shadow-[0_24px_48px_rgba(30,58,95,0.28)]">
+    <div
+      className={`fixed bottom-6 right-6 z-50 flex w-[380px] max-w-[calc(100vw-2rem)] flex-col rounded-2xl border bg-cream shadow-[0_24px_48px_rgba(30,58,95,0.28)] transition-colors ${
+        dragActive ? "border-gold ring-4 ring-gold/30" : "border-navy/10"
+      }`}
+      onDragEnter={onDockDragEnter}
+      onDragOver={onDockDragOver}
+      onDragLeave={onDockDragLeave}
+      onDrop={onDockDrop}
+    >
+      {/* Drop overlay — visible only while a file is being dragged
+          over the dock so the customer gets immediate "yes I see
+          it, drop here" feedback. */}
+      {dragActive && (
+        <div className="absolute inset-0 z-10 rounded-2xl bg-cream/95 backdrop-blur-sm flex flex-col items-center justify-center pointer-events-none">
+          <Upload size={28} className="text-gold mb-2" />
+          <div className="text-navy font-bold text-sm">
+            Drop to attach
+          </div>
+          <div className="text-grey-3 text-xs mt-0.5">
+            Jason will read it and route it to the right chapters.
+          </div>
+        </div>
+      )}
       {/* Header */}
       <header className="flex items-center justify-between gap-2 border-b border-navy/10 bg-navy text-cream px-4 py-3 rounded-t-2xl">
         <div className="flex items-center gap-2.5">
@@ -521,6 +747,7 @@ export function JasonChatDock({ pageContext, firstName }: Props) {
       {/* Transcript */}
       <div
         ref={scrollRef}
+        onScroll={onTranscriptScroll}
         className="flex-1 overflow-y-auto px-4 py-3 space-y-3"
         style={{ maxHeight: "min(60vh, 480px)" }}
       >
@@ -592,13 +819,41 @@ export function JasonChatDock({ pageContext, firstName }: Props) {
       {/* Composer */}
       <div className="border-t border-navy/10 p-3">
         <div className="flex items-end gap-2">
+          {/* Attach button — opens the native file picker. Same
+              upload pipeline as drag-drop. Hidden file input is
+              the standard accessible pattern. */}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading || streaming}
+            aria-label="Attach a file"
+            title="Attach a file (Jason will route it to the right chapters)"
+            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-navy/60 hover:text-navy hover:bg-navy/5 disabled:opacity-40 disabled:hover:bg-transparent transition-colors"
+          >
+            {uploading ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Paperclip size={16} />
+            )}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="sr-only"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void uploadFile(f);
+              // Clear so the same file can be picked again later.
+              e.target.value = "";
+            }}
+          />
           <textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={onKeyDown}
             disabled={streaming}
             rows={2}
-            placeholder="Ask anything, or paste a note about your business…"
+            placeholder="Ask anything, drop a doc, or paste a note…"
             className="flex-1 resize-none rounded-lg border border-navy/15 bg-white px-3 py-2 text-[13px] text-navy placeholder-grey-4 focus:border-gold focus:ring-2 focus:ring-gold/20 outline-none transition disabled:opacity-50"
           />
           <button
@@ -616,7 +871,7 @@ export function JasonChatDock({ pageContext, firstName }: Props) {
           </button>
         </div>
         <div className="mt-1.5 px-1 text-[10px] text-grey-4">
-          ⌘↵ to send · Jason has full context of your Blueprint
+          ⌘↵ to send · drop a file anywhere on the dock · esc to close
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { PortalNav } from "@/components/PortalNav";
+import { JasonChatDock } from "@/components/agent/JasonChatDock";
 import type { Profile, Purchase, Tier } from "@/lib/supabase/types";
 
 export default async function PortalLayout({ children }: { children: ReactNode }) {
@@ -25,6 +26,10 @@ export default async function PortalLayout({ children }: { children: ReactNode }
     ? Math.max(...purchases.map((p) => p.tier))
     : 1) as Tier;
 
+  // First name from full_name, used for Jason's greeting.
+  const firstName =
+    profile?.full_name?.trim().split(/\s+/)[0] ?? null;
+
   return (
     <div className="min-h-screen flex flex-col bg-grey-1/40">
       <PortalNav
@@ -33,6 +38,11 @@ export default async function PortalLayout({ children }: { children: ReactNode }
         tier={tier}
       />
       <main className="flex-1">{children}</main>
+      {/* Mounted once at the layout level so chat state (transcript,
+          open/closed, draft, in-flight stream) survives client-side
+          navigation between portal pages. The dock derives its
+          pageContext from usePathname() internally. */}
+      <JasonChatDock firstName={firstName} />
     </div>
   );
 }

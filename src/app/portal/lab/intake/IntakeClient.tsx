@@ -42,7 +42,6 @@ import {
   Upload,
 } from "lucide-react";
 import Link from "next/link";
-import { JasonChatDock } from "@/components/agent/JasonChatDock";
 import { TypedHeading } from "@/components/agent/TypedHeading";
 import {
   MEMORY_FILE_TITLES,
@@ -264,10 +263,6 @@ export function IntakeClient({ firstName, initialWebsiteUrl }: Props) {
         </div>
       </div>
 
-      <JasonChatDock
-        pageContext="/portal/lab/intake (Day 1)"
-        firstName={firstName}
-      />
     </>
   );
 }
