@@ -138,7 +138,7 @@ function PhaseGroup({
           return (
             <li key={slug}>
               <Link
-                href={`/portal/lab/blueprint#chapter-${slug}`}
+                href={`/portal/chapter/${slug}`}
                 className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs transition-colors ${STATE_ROW[r.state]}`}
               >
                 <span

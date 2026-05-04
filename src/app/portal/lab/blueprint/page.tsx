@@ -133,15 +133,19 @@ export default async function BlueprintLabPage() {
   return (
     <>
       <main className="min-h-[calc(100vh-200px)] bg-cream">
-        {/* Back to portal */}
+        {/* Top nav — promoted to matched ghost-pill buttons. The
+            primary action on this page is "go back to where you do
+            the actual editing", so the Back to dashboard button is
+            now visually equal to (not de-emphasized against) the
+            page's secondary actions. */}
         <div className="border-b border-navy/5 bg-white">
-          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 py-3 flex items-center justify-between">
+          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 py-3 flex items-center justify-between gap-3">
             <Link
               href="/portal"
-              className="inline-flex items-center gap-1.5 text-grey-3 hover:text-navy text-sm font-semibold transition-colors"
+              className="inline-flex items-center gap-1.5 text-navy bg-cream hover:bg-navy hover:text-cream border-2 border-navy/20 hover:border-navy font-bold text-[11px] uppercase tracking-[0.12em] px-4 py-2 rounded-full transition-colors"
             >
-              <ArrowLeft size={14} />
-              Back to portal
+              <ArrowLeft size={12} />
+              Back to dashboard
             </Link>
             <span className="text-xs uppercase tracking-wider text-gold-warm font-bold">
               /lab · in development
@@ -149,11 +153,14 @@ export default async function BlueprintLabPage() {
           </div>
         </div>
 
-        {/* Hero */}
+        {/* Hero — explicit "this is the assembled view" framing so
+            the customer doesn't confuse this with the per-chapter
+            editing surface. Edit individual chapters from the
+            dashboard or the per-chapter pages. */}
         <section className="bg-white border-b border-navy/5">
           <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 py-8 sm:py-10 md:py-12">
             <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase mb-3 border-b-2 border-gold pb-1">
-              Your living document
+              Assembled view · Final touchup mode
             </span>
             <h1 className="text-3xl md:text-5xl font-extrabold text-navy leading-tight mb-3">
               <TypedHeading
@@ -164,12 +171,25 @@ export default async function BlueprintLabPage() {
                 }
               />
             </h1>
-            <p className="text-grey-3 text-base md:text-lg max-w-[680px] mb-5">
-              One document, sixteen chapters, growing as you and Jason feed it.
-              At export time, this compiles into the polished bundle your
-              attorney needs.
+            <p className="text-grey-3 text-base md:text-lg max-w-[680px] mb-3">
+              The sixteen chapters compiled into one document — the closest
+              preview of what your attorney will receive at export time.
             </p>
-            <div className="flex flex-wrap items-center gap-4">
+            <p className="text-grey-4 text-sm max-w-[680px] mb-5 italic">
+              This page is for reading + final touchups. To answer questions
+              and edit fields, head back to your dashboard and pick a
+              chapter — each one has its own focused workspace.
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                href="/portal"
+                className="inline-flex items-center gap-2 bg-navy text-cream font-bold text-xs uppercase tracking-[0.1em] px-5 py-3 rounded-full hover:bg-navy-dark transition-colors"
+              >
+                <ArrowLeft size={13} />
+                Back to your dashboard
+              </Link>
+            </div>
+            <div className="mt-5 flex flex-wrap items-center gap-4">
               <div className="rounded-full bg-navy text-cream px-5 py-2 text-sm font-bold">
                 {filledCount} / {MEMORY_FILES.length} chapters started ·{" "}
                 {pct}%
