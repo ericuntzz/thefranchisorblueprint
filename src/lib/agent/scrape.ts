@@ -306,6 +306,22 @@ CRITICAL OUTPUT RULES:
       ]
     : [];
 
+  // Combined source material — both extraction calls below benefit
+  // from seeing the synthesized summaries AND the raw scrape so they
+  // can pull facts from either.
+  const sourceMaterial = [
+    businessOverviewSummary,
+    brandVoiceSummary,
+    artifacts.title ? `Site title: ${artifacts.title}` : "",
+    artifacts.metaDescription
+      ? `Meta description: ${artifacts.metaDescription}`
+      : "",
+    `Home page text:\n${artifacts.homeText}`,
+    artifacts.aboutText ? `About page text:\n${artifacts.aboutText}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+
   if (brandVoiceSummary) {
     await upsertMemoryWithProvenance({
       userId: args.userId,
@@ -319,7 +335,37 @@ CRITICAL OUTPUT RULES:
       lastUpdatedBy: "scraper",
       provenance: [homeProvenance, ...aboutProvenance],
     });
+
+    // Extract brand_voice structured fields from the synthesized
+    // brand voice summary. brand_name / tagline / voice_adjectives /
+    // voice_description / typography_pairing / things_to_avoid all
+    // pull from prose Claude already wrote. brand_colors usually
+    // aren't extractable from prose alone — leave for the customer
+    // to fill in. Eric's feedback: brand questions shouldn't appear
+    // when a website is set; this fix auto-fills as much as
+    // possible from the scrape so the queue surfaces only the gaps.
+    try {
+      const extractedBV = await extractFieldsFromContent({
+        slug: "brand_voice",
+        content: brandVoiceSummary,
+        contextNotes: sourceMaterial,
+      });
+      if (Object.keys(extractedBV).length > 0) {
+        await writeMemoryFields({
+          userId: args.userId,
+          slug: "brand_voice",
+          changes: extractedBV,
+          source: "scraper",
+        });
+      }
+    } catch (err) {
+      console.error(
+        "[scrape] brand_voice field extraction failed (non-fatal):",
+        err instanceof Error ? err.message : err,
+      );
+    }
   }
+
   if (businessOverviewSummary) {
     await upsertMemoryWithProvenance({
       userId: args.userId,
@@ -330,26 +376,11 @@ CRITICAL OUTPUT RULES:
       provenance: [homeProvenance, ...aboutProvenance],
     });
 
-    // Extract structured field values too. Eric's feedback: opening
-    // "Edit fields" on a scraped chapter should show the facts the
-    // scrape inferred (founder, locations, year founded, etc.) — not
-    // a blank form. Source = "scraper" so the field-status audit log
-    // reflects where the values came from. Best-effort: if extraction
-    // fails or returns nothing, the prose still ships.
+    // Extract business_overview structured fields. Reuses the
+    // sourceMaterial composed above so both extraction passes see
+    // the same scrape context. Best-effort: if extraction fails the
+    // prose still ships.
     try {
-      const sourceMaterial = [
-        businessOverviewSummary,
-        brandVoiceSummary,
-        artifacts.title ? `Site title: ${artifacts.title}` : "",
-        artifacts.metaDescription
-          ? `Meta description: ${artifacts.metaDescription}`
-          : "",
-        `Home page text:\n${artifacts.homeText}`,
-        artifacts.aboutText ? `About page text:\n${artifacts.aboutText}` : "",
-      ]
-        .filter(Boolean)
-        .join("\n\n");
-
       const extracted = await extractFieldsFromContent({
         slug: "business_overview",
         content: businessOverviewSummary,

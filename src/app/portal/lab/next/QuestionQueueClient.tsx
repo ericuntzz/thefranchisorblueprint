@@ -330,8 +330,16 @@ function QuestionCard({
   // Enter advances when valid. Multi-line inputs (textarea, list,
   // markdown) need Enter for newlines, so for those we require
   // Cmd/Ctrl+Enter. Single-line inputs save on plain Enter.
+  //
+  // CRITICAL: ignore Enter when the focused element is a button.
+  // Buttons natively fire `click` on Enter, so the click handler
+  // (onSave on Save & Next) ALREADY runs. If we also process the
+  // bubbling keydown here, onSave fires twice → index advances by
+  // two → "skipping a card" bug Eric reported.
   function onKeyDownAdvance(e: React.KeyboardEvent) {
     if (e.key !== "Enter") return;
+    const target = e.target as HTMLElement | null;
+    if (target && target.tagName === "BUTTON") return;
     const isMultiline =
       fd.type === "textarea" ||
       fd.type === "markdown" ||
