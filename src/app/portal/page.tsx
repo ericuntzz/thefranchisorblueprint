@@ -35,7 +35,6 @@ import {
   isPromoActive,
 } from "@/lib/upgrade-offers";
 import { OfferCountdown } from "@/components/OfferCountdown";
-import { JasonChatDock } from "@/components/agent/JasonChatDock";
 import { getProduct, type ProductSlug } from "@/lib/products";
 import type {
   Profile,
@@ -257,7 +256,7 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
       {tier >= 3 && <ProjectPanel />}
 
       {/* ===== Onboarding + support ===== */}
-      <section className="pb-16 md:pb-24">
+      <section className="pt-12 md:pt-16 pb-16 md:pb-24">
         <div className="max-w-[1200px] mx-auto px-6 md:px-8">
           <div className="grid md:grid-cols-2 gap-5">
             <div className="bg-white rounded-2xl border border-navy/10 p-6 md:p-7 flex gap-4">
@@ -292,8 +291,6 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
           </div>
         </div>
       </section>
-
-      <JasonChatDock pageContext="/portal (dashboard)" firstName={firstName} />
 
       {/* Floating PortalResumeBanner removed: the Command Center
           high on the page already surfaces "what's next" with live
@@ -337,7 +334,7 @@ function FinalReadinessCard({ firstName }: { firstName: string | null }) {
 
 function CoachingPanel({ tier }: { tier: Tier }) {
   return (
-    <section className="pb-12 md:pb-16">
+    <section className="pt-12 md:pt-16 pb-12 md:pb-16">
       <div className="max-w-[1200px] mx-auto px-6 md:px-8">
         <div className="bg-white rounded-2xl border border-navy/10 p-6 md:p-8">
           <div className="flex items-baseline gap-3 mb-2">
