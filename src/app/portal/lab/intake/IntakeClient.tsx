@@ -1,28 +1,50 @@
 "use client";
 
 /**
- * Day 1 wow flow — runs at /portal/lab/intake.
+ * Day 1 multi-step intake — runs at /portal/lab/intake.
  *
- * State machine:
- *   1. Idle: show URL field (pre-filled from profile/assessment if known).
- *   2. Scraping: stream the agent's progress while the website scraper
- *      runs. The scrape endpoint isn't itself streamed — we show our own
- *      progress narration with timed reveals so the page never feels
- *      frozen during the 5-15s of latency.
- *   3. Done: show what we extracted (title, og image, brand voice + story
- *      previews) with a CTA to view the full Blueprint.
- *   4. Error: graceful fail with retry.
+ * Walks new customers through a card-by-card sequence that captures
+ * the most pre-fillable inputs in the first 5 minutes:
  *
- * Mounting the JasonChatDock here lets the customer ask Jason questions
- * about what just happened, which is the magic part — they SEE the
- * agent already knows about their business.
+ *   1. Website URL (scrape) — same wow-moment as before, narrated
+ *      progress + previews of what we extracted.
+ *   2. Operations docs — ops manuals, opening checklists, SOPs.
+ *      Routes to operating_model.
+ *   3. Brand + marketing — guidelines, marketing plans, screenshots.
+ *      Routes to brand_voice.
+ *   4. Training + people — training manuals, employee handbook.
+ *      Routes to training_program.
+ *   5. Financials — P&L, COGS, fee schedule.
+ *      Routes to unit_economics.
+ *   6. Legal — existing FDD, attorney letters.
+ *      Routes to compliance_legal.
+ *   7. Done — "Let's build your Blueprint" → /portal.
+ *
+ * Each step has Skip + Next. Files in upload steps drag-drop OR
+ * click; multiple files per step. Slide transition between steps
+ * matches the question queue.
+ *
+ * Design rationale (per Eric): customers don't always know what
+ * docs to bring up-front. Walking them through one category at a
+ * time gives them time to think + go look + come back, and the
+ * skip option means low-friction completion for customers who
+ * don't have everything.
  */
 
-import { useEffect, useRef, useState } from "react";
-import { ArrowRight, CheckCircle2, Globe, Loader2, Sparkles } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  Globe,
+  Loader2,
+  Sparkles,
+  Upload,
+} from "lucide-react";
 import Link from "next/link";
 import { JasonChatDock } from "@/components/agent/JasonChatDock";
 import { TypedHeading } from "@/components/agent/TypedHeading";
+import type { MemoryFileSlug } from "@/lib/memory/files";
 
 type ScrapeResponse = {
   ok: true;
@@ -49,11 +71,219 @@ const PROGRESS_STEPS = [
   { delay: 11000, label: "Drafting your Concept & Story chapter…" },
 ];
 
-type Phase = "idle" | "scraping" | "done" | "error";
+type UploadStep = {
+  kind: "upload";
+  slug: MemoryFileSlug;
+  /** Eyebrow label, e.g. "Operations". */
+  category: string;
+  /** Big card heading. */
+  title: string;
+  /** One-sentence prompt. */
+  subtitle: string;
+  /** Example doc names rendered as scannable chips. */
+  examples: string[];
+};
+
+type Step =
+  | { kind: "url" }
+  | UploadStep
+  | { kind: "done" };
+
+const UPLOAD_STEPS: UploadStep[] = [
+  {
+    kind: "upload",
+    slug: "operating_model",
+    category: "Operations",
+    title: "Got an ops manual or opening checklist?",
+    subtitle:
+      "Drop anything that describes how a single location runs day-to-day. Jason will pull procedures, timings, and standards out of it.",
+    examples: [
+      "operations manual",
+      "opening checklist",
+      "closing procedures",
+      "shift handoff doc",
+      "POS / inventory SOPs",
+    ],
+  },
+  {
+    kind: "upload",
+    slug: "brand_voice",
+    category: "Brand + marketing",
+    title: "Got brand guidelines or marketing materials?",
+    subtitle:
+      "Style guides, brand books, marketing plans, ad creative, or even a screenshot of your homepage all help Jason match your voice.",
+    examples: [
+      "brand guidelines",
+      "style guide",
+      "marketing plan",
+      "logo + assets",
+      "homepage screenshots",
+    ],
+  },
+  {
+    kind: "upload",
+    slug: "training_program",
+    category: "Training + people",
+    title: "Got training materials or HR docs?",
+    subtitle:
+      "Training manuals, onboarding curricula, employee handbooks, transcripts of training videos — anything that teaches new staff.",
+    examples: [
+      "training manual",
+      "employee handbook",
+      "onboarding curriculum",
+      "video transcripts",
+      "HR policies",
+    ],
+  },
+  {
+    kind: "upload",
+    slug: "unit_economics",
+    category: "Financials",
+    title: "Got a P&L, COGS breakdown, or fee schedule?",
+    subtitle:
+      "Anything with the numbers. Jason will pull AUV, COGS percentages, royalty rates, and investment ranges so you don't have to retype them.",
+    examples: [
+      "P&L",
+      "COGS breakdown",
+      "investment summary",
+      "fee schedule",
+      "revenue model",
+    ],
+  },
+  {
+    kind: "upload",
+    slug: "compliance_legal",
+    category: "Legal",
+    title: "Got an existing FDD or attorney correspondence?",
+    subtitle:
+      "If you've started an FDD, have a franchise agreement template, or letters from your attorney, drop them here so Jason mirrors the legal posture you're already working toward.",
+    examples: [
+      "existing FDD",
+      "franchise agreement template",
+      "attorney letter",
+      "state registration",
+    ],
+  },
+];
+
+const TOTAL_STEPS = 1 + UPLOAD_STEPS.length + 1; // url + uploads + done
 
 export function IntakeClient({ firstName, initialWebsiteUrl }: Props) {
+  // Step machine. The customer always starts at the URL step; we
+  // advance via Next/Skip. Direction drives the slide-transition
+  // animation (forward = right→left, back = left→right).
+  const [stepIdx, setStepIdx] = useState(0);
+  const [direction, setDirection] = useState<"forward" | "back">("forward");
+
+  const steps: Step[] = useMemo(
+    () => [{ kind: "url" }, ...UPLOAD_STEPS, { kind: "done" }],
+    [],
+  );
+  const step = steps[stepIdx];
+
+  function next() {
+    setDirection("forward");
+    setStepIdx((i) => Math.min(i + 1, steps.length - 1));
+  }
+  function back() {
+    setDirection("back");
+    setStepIdx((i) => Math.max(i - 1, 0));
+  }
+
+  return (
+    <>
+      <div className="max-w-[920px] mx-auto px-4 sm:px-6 md:px-8 py-10 md:py-14">
+        {/* Welcome heading + slim progress strip */}
+        <div className="mb-6">
+          <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase mb-3 border-b-2 border-gold pb-1">
+            Day 1 · Pre-fill from what you already have
+          </span>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-navy leading-tight">
+            <TypedHeading
+              text={firstName ? `Welcome, ${firstName}.` : "Welcome."}
+            />
+          </h1>
+          <p className="mt-3 text-grey-3 text-base md:text-lg max-w-[680px]">
+            A few quick steps to seed your Blueprint with everything you
+            already have. Each step is skippable — you can come back to
+            any of them from your dashboard.
+          </p>
+        </div>
+
+        <div className="mb-5 h-1 rounded-full bg-grey-1 overflow-hidden">
+          <div
+            className="h-full bg-gold transition-all duration-300"
+            style={{
+              width: `${Math.round(((stepIdx + 1) / TOTAL_STEPS) * 100)}%`,
+            }}
+          />
+        </div>
+
+        {/* Step counter + back affordance — sits inline above the
+            card so the customer always knows where they are. */}
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <span className="text-[10px] uppercase tracking-[0.16em] text-grey-3 font-bold">
+            Step {stepIdx + 1} of {TOTAL_STEPS}
+          </span>
+          {stepIdx > 0 && (
+            <button
+              type="button"
+              onClick={back}
+              className="inline-flex items-center gap-1.5 text-grey-3 hover:text-navy text-xs font-semibold transition-colors"
+            >
+              <ArrowLeft size={11} />
+              Back a step
+            </button>
+          )}
+        </div>
+
+        {/* Step body — re-keyed so React unmounts/remounts the card
+            on every step change, triggering the slide animation. */}
+        <div className="relative overflow-hidden">
+          {step.kind === "url" && (
+            <UrlStepCard
+              key="step-url"
+              direction={direction}
+              initialWebsiteUrl={initialWebsiteUrl}
+              onAdvance={next}
+            />
+          )}
+          {step.kind === "upload" && (
+            <UploadStepCard
+              key={`step-upload-${step.slug}`}
+              direction={direction}
+              step={step}
+              onAdvance={next}
+            />
+          )}
+          {step.kind === "done" && <DoneStepCard key="step-done" direction={direction} />}
+        </div>
+      </div>
+
+      <JasonChatDock
+        pageContext="/portal/lab/intake (Day 1)"
+        firstName={firstName}
+      />
+    </>
+  );
+}
+
+/* ---------------------------------------------------------------- */
+/* Step 1 — Website URL                                             */
+/* ---------------------------------------------------------------- */
+
+function UrlStepCard({
+  direction,
+  initialWebsiteUrl,
+  onAdvance,
+}: {
+  direction: "forward" | "back";
+  initialWebsiteUrl: string | null;
+  onAdvance: () => void;
+}) {
   const [websiteUrl, setWebsiteUrl] = useState(initialWebsiteUrl ?? "");
-  const [phase, setPhase] = useState<Phase>("idle");
+  type Phase = "idle" | "scraping" | "done" | "error";
+  const [phase, setPhase] = useState<Phase>(initialWebsiteUrl ? "idle" : "idle");
   const [progressIdx, setProgressIdx] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ScrapeResponse | null>(null);
@@ -74,10 +304,6 @@ export function IntakeClient({ firstName, initialWebsiteUrl }: Props) {
     setError(null);
     setPhase("scraping");
     setProgressIdx(0);
-
-    // Fire off the timed progress narration. These are intentionally
-    // generous — the scrape is real work and we'd rather understate
-    // progress than overpromise.
     timersRef.current.forEach(clearTimeout);
     timersRef.current = PROGRESS_STEPS.map((step, idx) =>
       setTimeout(() => setProgressIdx(idx), step.delay),
@@ -97,7 +323,6 @@ export function IntakeClient({ firstName, initialWebsiteUrl }: Props) {
           ("error" in json && json.error) || `Scrape failed (${res.status})`;
         throw new Error(msg);
       }
-      // Snap to "done" the moment we have results; cancel pending steps.
       timersRef.current.forEach(clearTimeout);
       setProgressIdx(PROGRESS_STEPS.length - 1);
       setResult(json);
@@ -110,227 +335,458 @@ export function IntakeClient({ firstName, initialWebsiteUrl }: Props) {
   }
 
   return (
-    <>
-      <div className="max-w-[920px] mx-auto px-6 md:px-8 py-12 md:py-16">
-        {/* ===== Welcome heading (typed) ===== */}
-        <div className="mb-8">
-          <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase mb-3 border-b-2 border-gold pb-1">
-            Day 1 · Pre-fill from your website
-          </span>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-navy leading-tight">
-            <TypedHeading
-              text={firstName ? `Welcome, ${firstName}.` : "Welcome."}
-            />
-          </h1>
-          <p className="mt-3 text-grey-3 text-base md:text-lg max-w-[680px]">
-            Drop your website link and I&apos;ll learn your brand, voice, and
-            concept story before we even talk. By the time you&apos;re done
-            reading this paragraph, I&apos;ll be ~30% of the way to drafting
-            your Blueprint.
+    <SlideCard direction={direction}>
+      <div className="text-[10px] uppercase tracking-[0.16em] text-gold-warm font-bold mb-2 flex items-center gap-1.5">
+        <Globe size={11} />
+        Your website
+      </div>
+      <h2 className="text-navy font-extrabold text-2xl md:text-3xl leading-tight mb-2">
+        Have a site? Let&apos;s start there.
+      </h2>
+      <p className="text-grey-3 text-sm leading-relaxed mb-5 max-w-[640px]">
+        Drop your URL and Jason reads your site, drafts your Brand Standards
+        + Concept & Story chapters, and pulls structured facts (founder,
+        locations, year founded) automatically. Takes about 15 seconds.
+      </p>
+
+      {(phase === "idle" || phase === "error") && (
+        <>
+          <input
+            type="url"
+            value={websiteUrl}
+            onChange={(e) => setWebsiteUrl(e.target.value)}
+            placeholder="thefranchisorblueprint.com"
+            className="w-full rounded-lg border border-navy/15 bg-white px-4 py-3 text-[15px] text-navy placeholder-grey-4 placeholder:italic focus:border-gold focus:ring-2 focus:ring-gold/20 outline-none transition mb-3"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                void startScrape();
+              }
+            }}
+          />
+          {error && (
+            <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-800 mb-3">
+              {error}
+            </div>
+          )}
+        </>
+      )}
+
+      {phase === "scraping" && (
+        <div className="rounded-xl border border-navy/10 bg-cream/40 p-4 mb-3">
+          <div className="mb-3 flex items-center gap-2">
+            <Loader2 size={14} className="text-gold animate-spin" />
+            <div className="text-navy font-bold text-xs">
+              Working on{" "}
+              <span className="font-mono text-gold-warm">{websiteUrl}</span>…
+            </div>
+          </div>
+          <ul className="space-y-2">
+            {PROGRESS_STEPS.map((s, idx) => {
+              const isPast = idx < progressIdx;
+              const isCurrent = idx === progressIdx;
+              return (
+                <li
+                  key={s.label}
+                  className={`flex items-center gap-2.5 text-[13px] ${
+                    isPast
+                      ? "text-grey-3"
+                      : isCurrent
+                        ? "text-navy font-semibold"
+                        : "text-grey-4 opacity-50"
+                  }`}
+                >
+                  {isPast ? (
+                    <CheckCircle2
+                      size={12}
+                      className="text-emerald-500 flex-shrink-0"
+                    />
+                  ) : isCurrent ? (
+                    <Loader2
+                      size={12}
+                      className="text-gold animate-spin flex-shrink-0"
+                    />
+                  ) : (
+                    <span className="block w-3 h-3 rounded-full border border-grey-4/40 flex-shrink-0" />
+                  )}
+                  {s.label}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+
+      {phase === "done" && result && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-4 mb-3">
+          <div className="flex items-center gap-2 text-emerald-700 mb-1">
+            <CheckCircle2 size={14} />
+            <span className="text-xs font-bold uppercase tracking-wider">
+              Pre-fill complete
+            </span>
+          </div>
+          <p className="text-navy text-sm">
+            Read your home page
+            {result.foundAboutPage ? " + About page" : ""}.
+            {" "}Drafted{" "}
+            <strong className="font-bold">Brand Standards</strong> +{" "}
+            <strong className="font-bold">Concept &amp; Story</strong>.
           </p>
         </div>
+      )}
 
-        {/* ===== URL form / scraping / done ===== */}
-        {phase === "idle" || phase === "error" ? (
-          <div className="rounded-2xl border-2 border-navy/10 bg-white p-6 md:p-8 shadow-[0_8px_28px_rgba(30,58,95,0.08)]">
-            <label className="block">
-              <span className="block text-navy font-semibold text-sm mb-2 flex items-center gap-2">
-                <Globe size={14} className="text-gold" />
-                Your business website
-              </span>
-              <input
-                type="url"
-                value={websiteUrl}
-                onChange={(e) => setWebsiteUrl(e.target.value)}
-                placeholder="thefranchisorblueprint.com"
-                className="w-full rounded-lg border border-navy/15 bg-white px-4 py-3 text-[15px] text-navy focus:border-gold focus:ring-2 focus:ring-gold/20 outline-none transition"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    void startScrape();
-                  }
-                }}
-              />
-            </label>
-            {error && (
-              <div className="mt-3 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-800">
-                {error}
-              </div>
-            )}
+      <StepFooter
+        onSkip={onAdvance}
+        skipLabel="Skip — I don't have a site yet"
+        primary={
+          phase === "done" ? (
+            <button
+              type="button"
+              onClick={onAdvance}
+              className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-xs uppercase tracking-[0.1em] px-5 py-3 rounded-full hover:bg-gold-dark transition-colors"
+            >
+              Continue
+              <ArrowRight size={12} />
+            </button>
+          ) : phase === "scraping" ? (
+            <span className="inline-flex items-center gap-2 bg-cream text-grey-3 font-bold text-xs uppercase tracking-[0.1em] px-5 py-3 rounded-full">
+              <Loader2 size={12} className="animate-spin" />
+              Working…
+            </span>
+          ) : (
             <button
               type="button"
               onClick={() => void startScrape()}
               disabled={!websiteUrl.trim()}
-              className="mt-5 w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-7 py-4 rounded-full hover:bg-gold-dark disabled:opacity-50 transition-colors active-pulse"
+              className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-xs uppercase tracking-[0.1em] px-5 py-3 rounded-full hover:bg-gold-dark disabled:opacity-50 transition-colors"
             >
-              <Sparkles size={15} />
-              Pre-fill my Blueprint
-              <ArrowRight size={15} />
+              <Sparkles size={12} />
+              Pre-fill from my site
+              <ArrowRight size={12} />
             </button>
-            <p className="mt-3 text-xs text-grey-4">
-              Takes about 15 seconds. We don&apos;t share your URL — it&apos;s
-              just used to seed your private Blueprint Memory.
-            </p>
-            <style jsx>{`
-              @keyframes active-pulse {
-                0%, 100% { transform: scale(1); }
-                50% { transform: scale(1.02); }
-              }
-              .active-pulse {
-                animation: active-pulse 3.5s ease-in-out infinite;
-              }
-              @media (prefers-reduced-motion: reduce) {
-                .active-pulse { animation: none; }
-              }
-            `}</style>
-          </div>
-        ) : null}
-
-        {phase === "scraping" && (
-          <div className="rounded-2xl border-2 border-navy/10 bg-white p-6 md:p-8 shadow-[0_8px_28px_rgba(30,58,95,0.08)]">
-            <div className="mb-4 flex items-center gap-3">
-              <Loader2 size={18} className="text-gold animate-spin" />
-              <div className="text-navy font-bold text-sm">
-                Working on{" "}
-                <span className="font-mono text-gold-warm">{websiteUrl}</span>…
-              </div>
-            </div>
-            <ul className="space-y-2.5">
-              {PROGRESS_STEPS.map((step, idx) => {
-                const isPast = idx < progressIdx;
-                const isCurrent = idx === progressIdx;
-                return (
-                  <li
-                    key={step.label}
-                    className={`flex items-center gap-3 text-sm ${
-                      isPast
-                        ? "text-grey-3"
-                        : isCurrent
-                          ? "text-navy font-semibold"
-                          : "text-grey-4 opacity-50"
-                    }`}
-                  >
-                    {isPast ? (
-                      <CheckCircle2 size={14} className="text-emerald-500 flex-shrink-0" />
-                    ) : isCurrent ? (
-                      <Loader2 size={14} className="text-gold animate-spin flex-shrink-0" />
-                    ) : (
-                      <span className="block w-3.5 h-3.5 rounded-full border border-grey-4/40 flex-shrink-0" />
-                    )}
-                    {step.label}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        )}
-
-        {phase === "done" && result && (
-          <div className="space-y-6">
-            <div className="rounded-2xl border-2 border-emerald-200 bg-emerald-50/40 p-6 md:p-8">
-              <div className="mb-3 flex items-center gap-2 text-emerald-700">
-                <CheckCircle2 size={18} />
-                <span className="text-sm font-bold uppercase tracking-wider">
-                  Pre-fill complete
-                </span>
-              </div>
-              <h2 className="text-navy font-extrabold text-xl mb-3">
-                I learned about{" "}
-                <span className="text-gold-warm">
-                  {result.title ?? new URL(result.websiteUrl).hostname}
-                </span>
-              </h2>
-              {result.metaDescription && (
-                <p className="text-grey-3 text-sm italic mb-4">
-                  &ldquo;{result.metaDescription}&rdquo;
-                </p>
-              )}
-              <ul className="text-sm text-grey-3 space-y-1.5 mb-5">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 size={13} className="text-emerald-500" />
-                  Pulled your home page
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 size={13} className="text-emerald-500" />
-                  {result.foundAboutPage
-                    ? "Pulled your About page"
-                    : "(No About page found — we worked from the home page)"}
-                </li>
-                {result.ogImage && (
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 size={13} className="text-emerald-500" />
-                    Captured your logo / hero image
-                  </li>
-                )}
-              </ul>
-            </div>
-
-            {result.brandVoicePreview && (
-              <PreviewCard
-                label="Brand Standards · draft"
-                slug="brand_voice"
-                excerpt={result.brandVoicePreview}
-              />
-            )}
-            {result.businessOverviewPreview && (
-              <PreviewCard
-                label="Concept & Story · draft"
-                slug="business_overview"
-                excerpt={result.businessOverviewPreview}
-              />
-            )}
-
-            <div className="flex flex-wrap gap-3 pt-2">
-              <Link
-                href="/portal/lab/blueprint"
-                className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-7 py-4 rounded-full hover:bg-gold-dark transition-colors"
-              >
-                Open the full Blueprint
-                <ArrowRight size={15} />
-              </Link>
-              <button
-                type="button"
-                onClick={() => {
-                  setPhase("idle");
-                  setResult(null);
-                }}
-                className="inline-flex items-center gap-2 bg-transparent text-navy border-2 border-navy font-bold text-sm uppercase tracking-[0.1em] px-7 py-4 rounded-full hover:bg-navy hover:text-cream transition-colors"
-              >
-                Try a different URL
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <JasonChatDock pageContext="/portal/lab/intake (Day 1)" firstName={firstName} />
-    </>
+          )
+        }
+      />
+    </SlideCard>
   );
 }
 
-function PreviewCard({
-  label,
-  slug,
-  excerpt,
+/* ---------------------------------------------------------------- */
+/* Steps 2-6 — Document upload by category                          */
+/* ---------------------------------------------------------------- */
+
+function UploadStepCard({
+  direction,
+  step,
+  onAdvance,
 }: {
-  label: string;
-  slug: string;
-  excerpt: string;
+  direction: "forward" | "back";
+  step: UploadStep;
+  onAdvance: () => void;
+}) {
+  type Uploaded = { id: string; label: string };
+  const [uploads, setUploads] = useState<Uploaded[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+
+  async function uploadOne(file: File) {
+    setErr(null);
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("slug", step.slug);
+      fd.append("file", file);
+      const res = await fetch("/api/agent/chapter-attachment", {
+        method: "POST",
+        body: fd,
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(
+          (j as { error?: string }).error ?? `HTTP ${res.status}`,
+        );
+      }
+      const j = (await res.json()) as {
+        attachment?: { id?: string; label?: string };
+      };
+      setUploads((prev) => [
+        ...prev,
+        {
+          id: j.attachment?.id ?? `local-${Date.now()}`,
+          label: j.attachment?.label ?? file.name,
+        },
+      ]);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function uploadMany(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    for (const file of Array.from(files)) {
+      // Sequential to keep server load + visible progress predictable.
+      // Three or four files per step is the typical case; not worth
+      // the complexity of parallel uploads for the variance.
+      // eslint-disable-next-line no-await-in-loop
+      await uploadOne(file);
+    }
+  }
+
+  function onDragEnter(e: React.DragEvent<HTMLLabelElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (uploading) return;
+    setDragActive(true);
+  }
+  function onDragOver(e: React.DragEvent<HTMLLabelElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!dragActive) setDragActive(true);
+  }
+  function onDragLeave(e: React.DragEvent<HTMLLabelElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+  }
+  function onDrop(e: React.DragEvent<HTMLLabelElement>) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (uploading) return;
+    void uploadMany(e.dataTransfer.files);
+  }
+
+  return (
+    <SlideCard direction={direction}>
+      <div className="text-[10px] uppercase tracking-[0.16em] text-gold-warm font-bold mb-2 flex items-center gap-1.5">
+        <Upload size={11} />
+        {step.category}
+      </div>
+      <h2 className="text-navy font-extrabold text-2xl md:text-3xl leading-tight mb-2">
+        {step.title}
+      </h2>
+      <p className="text-grey-3 text-sm leading-relaxed mb-3 max-w-[640px]">
+        {step.subtitle}
+      </p>
+
+      <div className="flex flex-wrap gap-1.5 mb-4">
+        {step.examples.map((ex) => (
+          <span
+            key={ex}
+            className="inline-flex items-center text-[10px] uppercase tracking-wider font-bold text-grey-3 bg-grey-1 border border-navy/10 px-2 py-0.5 rounded-full"
+          >
+            {ex}
+          </span>
+        ))}
+      </div>
+
+      <label
+        onDragEnter={onDragEnter}
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
+        onDrop={onDrop}
+        className={`flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-8 text-sm transition-colors cursor-pointer mb-4 ${
+          dragActive
+            ? "border-gold bg-gold/10"
+            : "border-navy/20 bg-cream/40 hover:border-gold hover:bg-gold/5"
+        } ${uploading ? "opacity-60 cursor-not-allowed" : ""}`}
+      >
+        {uploading ? (
+          <>
+            <Loader2 size={20} className="animate-spin text-gold-warm" />
+            <span className="text-navy font-semibold">Uploading…</span>
+          </>
+        ) : (
+          <>
+            <Upload size={20} className="text-gold-warm" />
+            <span className="text-navy font-semibold">
+              Drop files or click to choose
+            </span>
+            <span className="text-grey-4 text-xs">
+              PDF, DOC, TXT, MD, or images · multiple files OK
+            </span>
+          </>
+        )}
+        <input
+          type="file"
+          className="sr-only"
+          multiple
+          disabled={uploading}
+          onChange={(e) => void uploadMany(e.target.files)}
+        />
+      </label>
+
+      {uploads.length > 0 && (
+        <ul className="mb-4 space-y-1.5">
+          {uploads.map((u) => (
+            <li
+              key={u.id}
+              className="flex items-center gap-2 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 text-xs"
+            >
+              <CheckCircle2
+                size={13}
+                className="text-emerald-600 flex-shrink-0"
+              />
+              <span className="text-navy font-semibold truncate">
+                {u.label}
+              </span>
+              <span className="text-emerald-700 ml-auto text-[10px] uppercase tracking-wider font-bold">
+                Uploaded
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {err && (
+        <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-800 mb-3">
+          {err}
+        </div>
+      )}
+
+      <StepFooter
+        onSkip={onAdvance}
+        skipLabel={
+          uploads.length > 0
+            ? `Continue (${uploads.length} uploaded)`
+            : "Skip — I don't have these"
+        }
+        primary={
+          uploads.length > 0 ? (
+            <button
+              type="button"
+              onClick={onAdvance}
+              className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-xs uppercase tracking-[0.1em] px-5 py-3 rounded-full hover:bg-gold-dark transition-colors"
+            >
+              Continue
+              <ArrowRight size={12} />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onAdvance}
+              className="inline-flex items-center gap-2 bg-cream text-navy hover:bg-navy hover:text-cream border-2 border-navy/20 hover:border-navy font-bold text-xs uppercase tracking-[0.1em] px-5 py-3 rounded-full transition-colors"
+            >
+              Skip for now
+              <ArrowRight size={12} />
+            </button>
+          )
+        }
+      />
+    </SlideCard>
+  );
+}
+
+/* ---------------------------------------------------------------- */
+/* Step 7 — Done                                                    */
+/* ---------------------------------------------------------------- */
+
+function DoneStepCard({ direction }: { direction: "forward" | "back" }) {
+  return (
+    <SlideCard direction={direction}>
+      <div className="text-[10px] uppercase tracking-[0.16em] text-emerald-700 font-bold mb-2 flex items-center gap-1.5">
+        <CheckCircle2 size={11} />
+        That&apos;s the intake
+      </div>
+      <h2 className="text-navy font-extrabold text-2xl md:text-3xl leading-tight mb-3">
+        Time to build your Blueprint.
+      </h2>
+      <p className="text-grey-3 text-base leading-relaxed mb-5 max-w-[640px]">
+        Jason has everything you just gave him loaded. He&apos;ll pre-fill
+        what he can across the 16 chapters; you&apos;ll see &ldquo;Suggested
+        / Inferred&rdquo; markers showing which fields to verify. Anything
+        you skipped, you can always come back to from your dashboard.
+      </p>
+      <Link
+        href="/portal"
+        className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-6 py-3 rounded-full hover:bg-gold-dark transition-colors"
+      >
+        <Sparkles size={14} />
+        Open my dashboard
+        <ArrowRight size={14} />
+      </Link>
+    </SlideCard>
+  );
+}
+
+/* ---------------------------------------------------------------- */
+/* Shared bits                                                      */
+/* ---------------------------------------------------------------- */
+
+function SlideCard({
+  direction,
+  children,
+}: {
+  direction: "forward" | "back";
+  children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-navy/10 bg-white p-5 md:p-6">
-      <div className="mb-2 flex items-center justify-between">
-        <span className="text-xs uppercase tracking-[0.14em] text-gold-warm font-bold">
-          {label}
-        </span>
-        <span className="text-[10px] uppercase tracking-wider text-grey-4">
-          chapter: {slug}
-        </span>
-      </div>
-      <p className="text-navy text-sm leading-relaxed whitespace-pre-wrap">
-        {excerpt}
-        {excerpt.length >= 280 && <span className="text-grey-4">…</span>}
-      </p>
+    <div
+      className={`rounded-2xl border border-navy/10 bg-white p-5 sm:p-6 md:p-8 shadow-[0_8px_28px_rgba(30,58,95,0.08)] ${
+        direction === "forward" ? "intake-slide-forward" : "intake-slide-back"
+      }`}
+    >
+      <style jsx>{`
+        @keyframes intake-slide-in-right {
+          from {
+            transform: translateX(28px);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        @keyframes intake-slide-in-left {
+          from {
+            transform: translateX(-28px);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        .intake-slide-forward {
+          animation: intake-slide-in-right 240ms ease-out;
+        }
+        .intake-slide-back {
+          animation: intake-slide-in-left 240ms ease-out;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .intake-slide-forward,
+          .intake-slide-back {
+            animation: none;
+          }
+        }
+      `}</style>
+      {children}
+    </div>
+  );
+}
+
+function StepFooter({
+  onSkip,
+  skipLabel,
+  primary,
+}: {
+  onSkip: () => void;
+  skipLabel: string;
+  primary: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2 pt-4 border-t border-navy/5">
+      <button
+        type="button"
+        onClick={onSkip}
+        className="text-grey-3 hover:text-navy text-xs font-semibold py-2 transition-colors"
+      >
+        {skipLabel}
+      </button>
+      {primary}
     </div>
   );
 }
