@@ -447,10 +447,7 @@ function QuestionCard({
         progress={progress}
         label={`Question ${index + 1} of ${total} · ${category.shortLabel}`}
       />
-      <div className="mb-1 text-[10px] font-bold tracking-[0.18em] uppercase text-gold-warm border-b-2 border-gold inline-block pb-0.5">
-        Category {category.number} · {category.title}
-      </div>
-      <h2 className="text-2xl md:text-3xl font-bold text-navy leading-tight mt-3 mb-2">
+      <h2 className="text-2xl md:text-3xl font-bold text-navy leading-tight mt-6 mb-2">
         {question.prompt}
       </h2>
       {question.helper && (
