@@ -2,7 +2,7 @@ import Image from "next/image";
 
 const clients = [
   { name: "Costa Vida", src: "/clients/costa-vida.png" },
-  { name: "Black Rifle Coffee Company", src: "/clients/black-rifle.png" },
+  { name: "High Point Coffee", src: "/clients/high-point-coffee.png" },
   { name: "Cyberbacker", src: "/clients/cyberbacker.png" },
   { name: "Bajio Mexican Grill", src: "/clients/bajio.png" },
 ];
