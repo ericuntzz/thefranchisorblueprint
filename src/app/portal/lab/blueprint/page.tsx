@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
@@ -17,6 +17,7 @@ import type { MemoryFieldsMap } from "@/lib/calc";
 import { ChapterCard } from "@/components/agent/ChapterCard";
 import { JasonChatDock } from "@/components/agent/JasonChatDock";
 import { TypedHeading } from "@/components/agent/TypedHeading";
+import { BlueprintTOC } from "@/components/portal/BlueprintTOC";
 import { SiteFooter } from "@/components/SiteFooter";
 import { saveChapterSection, saveMemoryFields, setChapterConfidence } from "./actions";
 import {
@@ -173,60 +174,19 @@ export default async function BlueprintLabPage() {
         {/* Chapter grid */}
         <section className="py-8 sm:py-10 md:py-14">
           <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 grid md:grid-cols-[260px_1fr] gap-6 md:gap-10">
-            {/* Sidebar TOC.
-                Redesigned: larger status circles (so the green ✓ reads
-                at a glance instead of a 6px dot), each row is a real
-                rounded hit-target with hover bg, more vertical
-                breathing room, eyebrow tied to brand gold instead of
-                muted grey. Column widened from 220→260 so titles like
-                "Unit Economics & Financials" don't truncate. */}
+            {/* Sidebar TOC — see components/portal/BlueprintTOC for
+                scrollspy + sticky-overflow behavior. The page stays
+                server-rendered; this island hydrates only the TOC. */}
             <aside className="hidden md:block">
-              <nav className="sticky top-6" aria-label="Chapters">
-                <div className="mb-4 pb-4 border-b border-navy/10">
-                  <div className="text-[10px] uppercase tracking-[0.18em] text-gold-warm font-bold mb-1">
-                    Your Blueprint
-                  </div>
-                  <div className="text-grey-4 text-xs">
-                    {MEMORY_FILES.length} chapters
-                  </div>
-                </div>
-                <ol className="space-y-0.5">
-                  {MEMORY_FILES.map((slug, idx) => {
-                    const filled =
-                      (memoryBySlug.get(slug)?.content_md ?? "").trim().length >
-                      0;
-                    return (
-                      <li key={slug}>
-                        <a
-                          href={`#chapter-${slug}`}
-                          className="group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-grey-3 hover:text-navy hover:bg-white transition-colors"
-                        >
-                          <span className="font-mono text-[10px] tabular-nums text-grey-4 group-hover:text-gold-warm w-5 text-right transition-colors">
-                            {String(idx + 1).padStart(2, "0")}
-                          </span>
-                          <span
-                            className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center transition-colors ${
-                              filled
-                                ? "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200"
-                                : "bg-white text-grey-4 ring-1 ring-grey-3/35 group-hover:ring-navy/20"
-                            }`}
-                            aria-label={filled ? "Filled" : "Empty"}
-                          >
-                            {filled ? (
-                              <Check size={10} strokeWidth={3} />
-                            ) : (
-                              <span className="block w-1 h-1 rounded-full bg-current" />
-                            )}
-                          </span>
-                          <span className="text-[13px] font-medium leading-snug">
-                            {MEMORY_FILE_TITLES[slug]}
-                          </span>
-                        </a>
-                      </li>
-                    );
-                  })}
-                </ol>
-              </nav>
+              <BlueprintTOC
+                items={MEMORY_FILES.map((slug) => ({
+                  slug,
+                  title: MEMORY_FILE_TITLES[slug],
+                  filled:
+                    (memoryBySlug.get(slug)?.content_md ?? "").trim().length >
+                    0,
+                }))}
+              />
             </aside>
 
             {/* Chapter cards. min-w-0 is critical: as a grid item in a
