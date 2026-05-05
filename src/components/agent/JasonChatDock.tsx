@@ -34,14 +34,17 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   CheckCircle2,
   AlertTriangle,
+  History,
   Loader2,
   Maximize2,
   MessageCircle,
+  MessageSquarePlus,
   Mic,
   Minimize2,
   Paperclip,
   Send,
   Sparkles,
+  Trash2,
   Upload,
   X,
 } from "lucide-react";
@@ -56,6 +59,22 @@ import {
 type ChatTurn = {
   role: "user" | "assistant";
   content: string;
+};
+
+/**
+ * One past chat archived via the "+ New chat" button. We keep a
+ * small list of these (server-capped at 10) so the customer can
+ * pull a recent conversation back into the active slot if they
+ * cleared it by accident or want to revisit context. ID is
+ * generated client-side; preview is the first ~80 chars of the
+ * first user message so the dropdown row reads as something
+ * recognizable, not just a date.
+ */
+type SavedChatThread = {
+  id: string;
+  archivedAt: string;
+  preview: string;
+  transcript: TranscriptItem[];
 };
 
 /**
@@ -229,6 +248,41 @@ function getStatusLine(pathname: string): string {
 }
 
 /**
+ * Render a relative-time string for the chat-history dropdown
+ * rows ("just now", "2h ago", "yesterday", "Mar 4"). Uses the
+ * customer's locale for the absolute fallback so dates read
+ * naturally in their region. Defensively wrapped — a malformed
+ * timestamp returns an empty string rather than throwing.
+ */
+function formatRelative(iso: string): string {
+  let then: number;
+  try {
+    then = new Date(iso).getTime();
+    if (Number.isNaN(then)) return "";
+  } catch {
+    return "";
+  }
+  const diffMs = Date.now() - then;
+  const diffMin = Math.floor(diffMs / 60_000);
+  if (diffMin < 1) return "just now";
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  const diffDay = Math.floor(diffHr / 24);
+  if (diffDay === 1) return "yesterday";
+  if (diffDay < 7) return `${diffDay}d ago`;
+  // Older — fall back to a short month/day label.
+  try {
+    return new Date(then).toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    return "";
+  }
+}
+
+/**
  * Starter chips — clickable suggestions surfaced under the greeting
  * when the chat first opens. Each chip is a short user-message that
  * the customer can send with one click. The set is derived from
@@ -389,6 +443,13 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
   // wants to peek-and-collapse. Preference is sticky via localStorage
   // so a customer who collapses to compact stays collapsed.
   const [expanded, setExpanded] = useState(true);
+  // Past chats archived via the "+ New chat" button. Server-capped
+  // at 10. Whenever this flips, we POST it back so the dropdown
+  // stays in sync across reloads.
+  const [savedThreads, setSavedThreads] = useState<SavedChatThread[]>([]);
+  // Whether the history dropdown is currently open. Click-outside
+  // closes via a window listener while open.
+  const [historyOpen, setHistoryOpen] = useState(false);
   // Save debouncer — schedules a chat-history POST a beat after
   // the transcript settles so we don't hammer the endpoint on
   // every streamed delta.
@@ -414,11 +475,12 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
   // opened the dock under.
   const persistedHistoryRef = useRef<TranscriptItem[]>([]);
 
-  // Load any persisted transcript from the previous session. Fires
-  // once on mount. The transcript itself isn't applied yet — it
-  // gets spliced in by the greeting effect once the dock opens,
-  // under a fresh context-aware greeting. Failure is non-fatal —
-  // we just fall through to the empty-history path.
+  // Load any persisted transcript + saved chat history from the
+  // previous session. Fires once on mount. The transcript itself
+  // isn't applied yet — it gets spliced in by the greeting effect
+  // once the dock opens, under a fresh context-aware greeting.
+  // Failure is non-fatal — we just fall through to the empty-history
+  // path.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -431,10 +493,16 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
           if (!cancelled) setHistoryLoaded(true);
           return;
         }
-        const j = (await res.json()) as { transcript?: TranscriptItem[] };
+        const j = (await res.json()) as {
+          transcript?: TranscriptItem[];
+          savedThreads?: SavedChatThread[];
+        };
         if (cancelled) return;
         if (Array.isArray(j.transcript)) {
           persistedHistoryRef.current = j.transcript;
+        }
+        if (Array.isArray(j.savedThreads)) {
+          setSavedThreads(j.savedThreads);
         }
         setHistoryLoaded(true);
       } catch {
@@ -481,14 +549,20 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
     }
   }, [open, transcript.length, firstName, pathname, historyLoaded]);
 
-  // Persist the transcript to Supabase a beat after it settles.
-  // Debounce window covers the streaming case — we don't want to
-  // POST on every character delta, only after the model finishes
-  // and the buffer drains. 1.5s after the last change is plenty.
+  // Persist the active transcript to Supabase a beat after it
+  // settles. Debounce window covers the streaming case — we don't
+  // want to POST on every character delta, only after the model
+  // finishes and the buffer drains. 1.5s after the last change
+  // is plenty.
   //
   // Greetings and dividers are stripped before save so the next
   // session starts with a fresh, current-page-aware opener and
   // doesn't double up on resume markers.
+  //
+  // Saved threads are NOT touched here — they're persisted
+  // eagerly inside the startNewChat / restoreThread / deleteSaved
+  // handlers because each of those is a discrete user-driven
+  // action, not a stream of small updates worth debouncing.
   useEffect(() => {
     if (!historyLoaded) return; // don't overwrite server-side data
                                 // before we've even loaded it
@@ -1024,6 +1098,203 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
   );
 
   /**
+   * "+ New chat" — archive the current conversation into the
+   * saved-threads list and start fresh. Greetings and dividers
+   * are stripped from the archive (they're regenerated on every
+   * open so they shouldn't persist), and an empty conversation
+   * is skipped entirely (nothing to save). After clearing, the
+   * greeting effect fires a fresh context-aware opener.
+   */
+  const startNewChat = useCallback(() => {
+    if (streaming) return;
+    setHistoryOpen(false);
+
+    // Pull the persistable subset of the current transcript —
+    // skip greeting bubbles, dividers, and in-flight tool cards.
+    const archivable = transcript.filter((item) => {
+      if (item.kind === "divider") return false;
+      if (item.kind === "bubble" && item.isGreeting) return false;
+      if (item.kind === "tool" && item.status === "running") return false;
+      return true;
+    });
+
+    // First user message → preview text. If there's no user
+    // message yet (rare — they've only seen Jason talk), fall
+    // back to the first assistant text or a generic label.
+    const firstUserMsg = archivable.find(
+      (i) => i.kind === "bubble" && i.role === "user",
+    );
+    const firstAnyText = archivable.find((i) => i.kind === "bubble");
+    const previewSource =
+      firstUserMsg && firstUserMsg.kind === "bubble"
+        ? firstUserMsg.text
+        : firstAnyText && firstAnyText.kind === "bubble"
+          ? firstAnyText.text
+          : "(empty chat)";
+    const preview =
+      previewSource.length > 80
+        ? previewSource.slice(0, 80) + "…"
+        : previewSource;
+
+    // Skip archiving an empty / greeting-only conversation —
+    // archiving "fresh greeting only" rows would clutter the
+    // history dropdown with placeholders.
+    let nextSaved = savedThreads;
+    if (archivable.length > 0) {
+      const archive: SavedChatThread = {
+        id: `${Date.now().toString(36)}${Math.floor(Math.random() * 1e6).toString(36)}`,
+        archivedAt: new Date().toISOString(),
+        preview,
+        transcript: archivable,
+      };
+      nextSaved = [archive, ...savedThreads].slice(0, 10);
+      setSavedThreads(nextSaved);
+    }
+
+    // Reset persisted-history ref so the next greeting open
+    // doesn't splice the just-archived chat back in under a
+    // "picking up" divider.
+    persistedHistoryRef.current = [];
+    setTranscript([]);
+    setDraft("");
+
+    // Push to server immediately so a refresh doesn't lose the
+    // archive operation (the debounced save would also catch it
+    // but eagerness matches the customer's mental model).
+    void fetch("/api/agent/chat-history", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        transcript: [],
+        savedThreads: nextSaved,
+      }),
+    }).catch((err) => {
+      console.warn("[jason-ai] new-chat archive save failed:", err);
+    });
+  }, [streaming, transcript, savedThreads]);
+
+  /**
+   * Restore a saved thread back into the active slot. The
+   * currently-active conversation gets archived too (if
+   * non-empty) so loading a past chat doesn't silently destroy
+   * what the customer has now. Effectively a "swap" — the
+   * customer can always undo by restoring the other one.
+   */
+  const restoreThread = useCallback(
+    (threadId: string) => {
+      if (streaming) return;
+      const target = savedThreads.find((t) => t.id === threadId);
+      if (!target) return;
+
+      // Archive whatever's currently active (mirrors the
+      // archive logic in startNewChat).
+      const archivableCurrent = transcript.filter((item) => {
+        if (item.kind === "divider") return false;
+        if (item.kind === "bubble" && item.isGreeting) return false;
+        if (item.kind === "tool" && item.status === "running") return false;
+        return true;
+      });
+
+      let nextSaved = savedThreads.filter((t) => t.id !== threadId);
+      if (archivableCurrent.length > 0) {
+        const firstUser = archivableCurrent.find(
+          (i) => i.kind === "bubble" && i.role === "user",
+        );
+        const firstAny = archivableCurrent.find((i) => i.kind === "bubble");
+        const previewSrc =
+          firstUser && firstUser.kind === "bubble"
+            ? firstUser.text
+            : firstAny && firstAny.kind === "bubble"
+              ? firstAny.text
+              : "(empty chat)";
+        const preview =
+          previewSrc.length > 80
+            ? previewSrc.slice(0, 80) + "…"
+            : previewSrc;
+        nextSaved = [
+          {
+            id: `${Date.now().toString(36)}${Math.floor(Math.random() * 1e6).toString(36)}`,
+            archivedAt: new Date().toISOString(),
+            preview,
+            transcript: archivableCurrent,
+          },
+          ...nextSaved,
+        ].slice(0, 10);
+      }
+
+      setSavedThreads(nextSaved);
+      setHistoryOpen(false);
+
+      // Build the restored transcript — fresh context-aware
+      // greeting at the top, then a "Restored from earlier"
+      // divider, then the saved thread's content. Same shape
+      // the resume-on-mount flow uses.
+      const greetingItem: TranscriptItem = {
+        kind: "bubble",
+        role: "assistant",
+        text: getContextGreeting({
+          pathname: pathname ?? "",
+          firstName,
+        }),
+        isGreeting: true,
+      };
+      setTranscript([
+        greetingItem,
+        { kind: "divider", label: "Restored from earlier" },
+        ...target.transcript,
+      ]);
+
+      // Eager save so a refresh doesn't lose the swap.
+      void fetch("/api/agent/chat-history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          transcript: target.transcript,
+          savedThreads: nextSaved,
+        }),
+      }).catch((err) => {
+        console.warn("[jason-ai] restore save failed:", err);
+      });
+    },
+    [streaming, savedThreads, transcript, pathname, firstName],
+  );
+
+  /**
+   * Drop a single saved thread from the history list (the trash
+   * icon on each row). Doesn't touch the active transcript.
+   */
+  const deleteSavedThread = useCallback(
+    (threadId: string) => {
+      const nextSaved = savedThreads.filter((t) => t.id !== threadId);
+      setSavedThreads(nextSaved);
+      void fetch("/api/agent/chat-history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ savedThreads: nextSaved }),
+      }).catch((err) => {
+        console.warn("[jason-ai] delete saved thread failed:", err);
+      });
+    },
+    [savedThreads],
+  );
+
+  // Click-outside for the history dropdown.
+  useEffect(() => {
+    if (!historyOpen) return;
+    function onDown(e: MouseEvent) {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest("[data-jason-history-popover]")) return;
+      if (target?.closest("[data-jason-history-toggle]")) return;
+      setHistoryOpen(false);
+    }
+    window.addEventListener("mousedown", onDown);
+    return () => window.removeEventListener("mousedown", onDown);
+  }, [historyOpen]);
+
+  /**
    * Upload a file dropped or attached in the chat dock. The file
    * lands at `business_overview` (the most general primary chapter)
    * with `autoClassify=true` so Sonnet fans it out to the chapters
@@ -1240,7 +1511,40 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 relative">
+          {/* + New chat — archives the current conversation into
+              the saved-threads list and starts fresh. Disabled
+              while streaming so a click mid-reply doesn't lose
+              the in-flight content. */}
+          <button
+            type="button"
+            aria-label="Start a new chat"
+            title="New chat (current conversation gets saved to history)"
+            onClick={startNewChat}
+            disabled={streaming}
+            className="rounded-full p-1.5 text-cream/70 hover:bg-cream/10 transition-colors disabled:opacity-40"
+          >
+            <MessageSquarePlus size={15} />
+          </button>
+          {/* History — opens a dropdown of saved past chats.
+              Only renders when there's at least one to show. */}
+          {savedThreads.length > 0 && (
+            <button
+              type="button"
+              data-jason-history-toggle
+              aria-label="Open chat history"
+              aria-expanded={historyOpen}
+              title="Past chats"
+              onClick={() => setHistoryOpen((v) => !v)}
+              className={`rounded-full p-1.5 transition-colors ${
+                historyOpen
+                  ? "bg-cream/15 text-cream"
+                  : "text-cream/70 hover:bg-cream/10"
+              }`}
+            >
+              <History size={15} />
+            </button>
+          )}
           <button
             type="button"
             aria-label={expanded ? "Collapse chat" : "Expand chat"}
@@ -1258,6 +1562,55 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
           >
             <X size={16} />
           </button>
+
+          {/* History dropdown — anchored to the right under the
+              header buttons. Click a row to restore that chat
+              (current conversation gets archived in the swap so
+              nothing is lost). Trash icon drops a single past
+              chat from the list. */}
+          {historyOpen && savedThreads.length > 0 && (
+            <div
+              data-jason-history-popover
+              className="absolute right-0 top-full mt-2 w-[320px] max-w-[calc(100vw-3rem)] rounded-xl border border-navy/10 bg-cream shadow-[0_16px_36px_rgba(30,58,95,0.24)] overflow-hidden z-10"
+            >
+              <div className="px-3 py-2 border-b border-navy/10 text-[10px] uppercase tracking-[0.16em] font-bold text-grey-3">
+                Past chats
+              </div>
+              <ul className="max-h-[260px] overflow-y-auto">
+                {savedThreads.map((thread) => (
+                  <li
+                    key={thread.id}
+                    className="border-b border-navy/5 last:border-b-0"
+                  >
+                    <div className="flex items-start gap-1 px-3 py-2 hover:bg-navy/5 transition-colors">
+                      <button
+                        type="button"
+                        onClick={() => restoreThread(thread.id)}
+                        disabled={streaming}
+                        className="flex-1 text-left disabled:opacity-50"
+                      >
+                        <div className="text-[12px] text-navy leading-snug line-clamp-2">
+                          {thread.preview}
+                        </div>
+                        <div className="text-[10px] uppercase tracking-wider font-semibold text-grey-4 mt-0.5">
+                          {formatRelative(thread.archivedAt)}
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteSavedThread(thread.id)}
+                        aria-label="Delete this saved chat"
+                        title="Delete"
+                        className="flex-shrink-0 p-1 text-grey-4 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </header>
 

@@ -138,6 +138,10 @@ export type ChatHistory = {
    *  into the server boundary; the API route validates shape on the
    *  way in and out. */
   transcript: unknown[];
+  /** Past chats archived via the "+ New chat" button. Each entry is
+   *  a structured `SavedChatThread` (defined client-side); the API
+   *  route validates shape and caps array length on write. */
+  saved_threads: unknown[];
   updated_at: string;
 };
 
@@ -426,6 +430,7 @@ export type Database = {
         Insert: {
           user_id: string;
           transcript?: unknown[];
+          saved_threads?: unknown[];
           updated_at?: string;
         };
         Update: Partial<Omit<ChatHistory, "user_id">>;
