@@ -62,6 +62,27 @@ type ChatTurn = {
 };
 
 /**
+ * A proactive nudge fetched from /api/agent/nudge — Stage 4 of
+ * the Jason AI buildout. When non-null, the closed pill picks
+ * up a notification dot + teaser text, and the dock greeting on
+ * next open uses this prose instead of the generic context
+ * greeting. Dismissals tracked client-side in localStorage by
+ * `id` so a customer doesn't see the same nudge repeatedly.
+ */
+type Nudge = {
+  id: string;
+  greeting: string;
+  starter?: string;
+  pillTeaser: string;
+};
+
+/** localStorage key that holds the array of dismissed nudge ids. */
+const DISMISSED_NUDGES_KEY = "jason-ai-dismissed-nudges";
+/** Cap dismissed-id list size — older ones drop off so the
+ *  customer eventually sees a recurring nudge again. */
+const MAX_DISMISSED_NUDGES = 50;
+
+/**
  * One past chat archived via the "+ New chat" button. We keep a
  * small list of these (server-capped at 10) so the customer can
  * pull a recent conversation back into the active slot if they
@@ -245,6 +266,40 @@ function getStatusLine(pathname: string): string {
   if (pathname.includes("/portal/account")) return "Account settings";
   if (pathname.includes("/portal/upgrade")) return "Tier upgrade";
   return "Online · Memory loaded";
+}
+
+/**
+ * Read the dismissed-nudge id list from localStorage. Defensive
+ * around storage exceptions (private mode, quota errors) and
+ * malformed JSON — returns an empty list rather than throwing.
+ */
+function readDismissedNudges(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(DISMISSED_NUDGES_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((x): x is string => typeof x === "string");
+  } catch {
+    return [];
+  }
+}
+
+function isNudgeDismissed(id: string): boolean {
+  return readDismissedNudges().includes(id);
+}
+
+function markNudgeDismissed(id: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const list = readDismissedNudges();
+    if (list.includes(id)) return;
+    const next = [id, ...list].slice(0, MAX_DISMISSED_NUDGES);
+    window.localStorage.setItem(DISMISSED_NUDGES_KEY, JSON.stringify(next));
+  } catch {
+    /* ignore — nudge will simply re-fire next mount */
+  }
 }
 
 /**
@@ -450,6 +505,14 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
   // Whether the history dropdown is currently open. Click-outside
   // closes via a window listener while open.
   const [historyOpen, setHistoryOpen] = useState(false);
+  // Proactive nudge fetched from /api/agent/nudge on mount. When
+  // present and not dismissed, the closed pill shows a notification
+  // dot + teaser, and the next open's greeting is the nudge prose.
+  const [pendingNudge, setPendingNudge] = useState<Nudge | null>(null);
+  // Tracks whether the current transcript was opened with a nudge
+  // (vs a context greeting). Used to render the optional nudge
+  // starter chip below the greeting on first open.
+  const [activeNudge, setActiveNudge] = useState<Nudge | null>(null);
   // Save debouncer — schedules a chat-history POST a beat after
   // the transcript settles so we don't hammer the endpoint on
   // every streamed delta.
@@ -514,6 +577,39 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
     };
   }, []);
 
+  // Fetch any pending proactive nudge once on mount. Runs in
+  // parallel with the chat-history load — the greeting effect
+  // waits for both to settle before deciding what to show.
+  // Failures are non-fatal (no nudge → standard greeting flow).
+  const [nudgeFetched, setNudgeFetched] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/agent/nudge", {
+          method: "GET",
+          credentials: "include",
+        });
+        if (!res.ok) {
+          if (!cancelled) setNudgeFetched(true);
+          return;
+        }
+        const j = (await res.json()) as { nudge?: Nudge | null };
+        if (cancelled) return;
+        const incoming = j.nudge ?? null;
+        if (incoming && !isNudgeDismissed(incoming.id)) {
+          setPendingNudge(incoming);
+        }
+        setNudgeFetched(true);
+      } catch {
+        if (!cancelled) setNudgeFetched(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Greet on first open. Always emits a fresh, context-aware
   // greeting line tied to the CURRENT pathname — never the stale
   // greeting from whatever page the customer was on the last time
@@ -522,18 +618,28 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
   // divider so the conversation continuity stays without freezing
   // the opener.
   //
-  // Gated on `historyLoaded` so the greeting doesn't flash before
-  // the persisted history arrives.
+  // Special case: if the server has surfaced a proactive nudge
+  // (Stage 4), that prose becomes the greeting instead of the
+  // generic context line — and we mark it dismissed in
+  // localStorage so the same nudge doesn't fire on the next
+  // mount until conditions change.
+  //
+  // Gated on `historyLoaded` AND `nudgeFetched` so the greeting
+  // doesn't flash before either signal lands.
   useEffect(() => {
-    if (!historyLoaded) return;
+    if (!historyLoaded || !nudgeFetched) return;
     if (open && transcript.length === 0) {
+      const usingNudge = pendingNudge != null;
+      const greetingText = usingNudge
+        ? pendingNudge.greeting
+        : getContextGreeting({
+            pathname: pathname ?? "",
+            firstName,
+          });
       const greetingItem: TranscriptItem = {
         kind: "bubble",
         role: "assistant",
-        text: getContextGreeting({
-          pathname: pathname ?? "",
-          firstName,
-        }),
+        text: greetingText,
         isGreeting: true,
       };
       const persisted = persistedHistoryRef.current;
@@ -546,8 +652,23 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
           ...persisted,
         ]);
       }
+      // Lock in the nudge for the starter-chip render, then
+      // mark it dismissed + clear the pill notification.
+      if (usingNudge) {
+        setActiveNudge(pendingNudge);
+        markNudgeDismissed(pendingNudge.id);
+        setPendingNudge(null);
+      }
     }
-  }, [open, transcript.length, firstName, pathname, historyLoaded]);
+  }, [
+    open,
+    transcript.length,
+    firstName,
+    pathname,
+    historyLoaded,
+    nudgeFetched,
+    pendingNudge,
+  ]);
 
   // Persist the active transcript to Supabase a beat after it
   // settles. Debounce window covers the streaming case — we don't
@@ -1438,18 +1559,41 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
   }
 
   if (!open) {
+    // Closed-pill state. When a proactive nudge is pending, the
+    // pill picks up a small notification dot AND swaps its label
+    // text to the nudge's pillTeaser so the customer sees Jason
+    // AI has something to say without us auto-opening the dock
+    // (auto-open would be too aggressive).
+    const hasNudge = pendingNudge != null;
+    const pillLabel = hasNudge ? pendingNudge.pillTeaser : "Ask Jason AI";
     return (
       <button
         type="button"
-        aria-label="Open chat with Jason AI"
+        aria-label={
+          hasNudge
+            ? `Open chat with Jason AI — ${pendingNudge.pillTeaser}`
+            : "Open chat with Jason AI"
+        }
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-full bg-navy text-cream px-4 py-3 shadow-[0_12px_28px_rgba(30,58,95,0.28)] hover:shadow-[0_16px_36px_rgba(30,58,95,0.36)] transition-all jason-dock-breathe"
+        className={`fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-full px-4 py-3 transition-all ${
+          hasNudge
+            ? // Nudge-active: gold ring, gold accent dot, slightly
+              // brighter shadow so the pill catches the eye.
+              "bg-navy text-cream ring-2 ring-gold/60 shadow-[0_16px_36px_rgba(30,58,95,0.36)] jason-dock-pulse"
+            : "bg-navy text-cream shadow-[0_12px_28px_rgba(30,58,95,0.28)] hover:shadow-[0_16px_36px_rgba(30,58,95,0.36)] jason-dock-breathe"
+        }`}
       >
         <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-gold to-gold-warm text-navy font-bold text-sm tracking-wider">
           JS
-          <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-navy" />
+          <span
+            className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-navy ${
+              hasNudge ? "bg-gold" : "bg-emerald-400"
+            }`}
+          />
         </span>
-        <span className="text-sm font-semibold tracking-tight">Ask Jason AI</span>
+        <span className="text-sm font-semibold tracking-tight max-w-[180px] truncate">
+          {pillLabel}
+        </span>
         <MessageCircle size={16} className="text-cream/70" />
         <style jsx>{`
           @keyframes jason-breathe {
@@ -1459,8 +1603,25 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
           .jason-dock-breathe {
             animation: jason-breathe 2.6s ease-in-out infinite;
           }
+          /* Stronger pulse for nudge-active state — opacity sweep
+             + gold ring expansion so the pill telegraphs "I have
+             something for you" without yelling. */
+          @keyframes jason-pulse {
+            0%, 100% {
+              box-shadow: 0 0 0 0 rgba(212, 168, 83, 0.55),
+                          0 16px 36px rgba(30, 58, 95, 0.36);
+            }
+            50% {
+              box-shadow: 0 0 0 10px rgba(212, 168, 83, 0),
+                          0 16px 36px rgba(30, 58, 95, 0.36);
+            }
+          }
+          .jason-dock-pulse {
+            animation: jason-pulse 2s ease-in-out infinite;
+          }
           @media (prefers-reduced-motion: reduce) {
-            .jason-dock-breathe { animation: none; opacity: 1; }
+            .jason-dock-breathe,
+            .jason-dock-pulse { animation: none; opacity: 1; }
           }
         `}</style>
       </button>
@@ -1516,52 +1677,57 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
               the saved-threads list and starts fresh. Disabled
               while streaming so a click mid-reply doesn't lose
               the in-flight content. */}
-          <button
-            type="button"
-            aria-label="Start a new chat"
-            title="New chat (current conversation gets saved to history)"
-            onClick={startNewChat}
-            disabled={streaming}
-            className="rounded-full p-1.5 text-cream/70 hover:bg-cream/10 transition-colors disabled:opacity-40"
-          >
-            <MessageSquarePlus size={15} />
-          </button>
+          <Tooltip label="New chat" side="bottom">
+            <button
+              type="button"
+              aria-label="Start a new chat"
+              onClick={startNewChat}
+              disabled={streaming}
+              className="rounded-full p-1.5 text-cream/70 hover:bg-cream/10 transition-colors disabled:opacity-40"
+            >
+              <MessageSquarePlus size={15} />
+            </button>
+          </Tooltip>
           {/* History — opens a dropdown of saved past chats.
               Only renders when there's at least one to show. */}
           {savedThreads.length > 0 && (
+            <Tooltip label="Chat history" side="bottom">
+              <button
+                type="button"
+                data-jason-history-toggle
+                aria-label="Open chat history"
+                aria-expanded={historyOpen}
+                onClick={() => setHistoryOpen((v) => !v)}
+                className={`rounded-full p-1.5 transition-colors ${
+                  historyOpen
+                    ? "bg-cream/15 text-cream"
+                    : "text-cream/70 hover:bg-cream/10"
+                }`}
+              >
+                <History size={15} />
+              </button>
+            </Tooltip>
+          )}
+          <Tooltip label={expanded ? "Collapse" : "Expand"} side="bottom">
             <button
               type="button"
-              data-jason-history-toggle
-              aria-label="Open chat history"
-              aria-expanded={historyOpen}
-              title="Past chats"
-              onClick={() => setHistoryOpen((v) => !v)}
-              className={`rounded-full p-1.5 transition-colors ${
-                historyOpen
-                  ? "bg-cream/15 text-cream"
-                  : "text-cream/70 hover:bg-cream/10"
-              }`}
+              aria-label={expanded ? "Collapse chat" : "Expand chat"}
+              onClick={() => setExpanded((v) => !v)}
+              className="rounded-full p-1.5 text-cream/70 hover:bg-cream/10 transition-colors"
             >
-              <History size={15} />
+              {expanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
             </button>
-          )}
-          <button
-            type="button"
-            aria-label={expanded ? "Collapse chat" : "Expand chat"}
-            title={expanded ? "Collapse" : "Expand"}
-            onClick={() => setExpanded((v) => !v)}
-            className="rounded-full p-1.5 text-cream/70 hover:bg-cream/10 transition-colors"
-          >
-            {expanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-          </button>
-          <button
-            type="button"
-            aria-label="Close chat"
-            onClick={() => setOpen(false)}
-            className="rounded-full p-1.5 text-cream/70 hover:bg-cream/10 transition-colors"
-          >
-            <X size={16} />
-          </button>
+          </Tooltip>
+          <Tooltip label="Close" side="bottom">
+            <button
+              type="button"
+              aria-label="Close chat"
+              onClick={() => setOpen(false)}
+              className="rounded-full p-1.5 text-cream/70 hover:bg-cream/10 transition-colors"
+            >
+              <X size={16} />
+            </button>
+          </Tooltip>
 
           {/* History dropdown — anchored to the right under the
               header buttons. Click a row to restore that chat
@@ -1652,6 +1818,30 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
           );
         })}
 
+        {/* Nudge starter chip — when the dock opened with a
+            proactive nudge as the greeting, surface its
+            single-click follow-up first. Highlighted gold (vs
+            the muted context chips below) because the customer's
+            attention is already on it. */}
+        {transcript.length === 1 &&
+          transcript[0].kind === "bubble" &&
+          transcript[0].role === "assistant" &&
+          !streaming &&
+          activeNudge?.starter && (
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  if (activeNudge.starter) void send(activeNudge.starter);
+                }}
+                className="inline-flex items-center gap-1.5 text-[11px] font-bold text-navy bg-gold hover:bg-gold-dark border border-gold rounded-full px-3 py-1.5 transition-colors"
+              >
+                <Sparkles size={10} />
+                {activeNudge.starter}
+              </button>
+            </div>
+          )}
+
         {/* Starter chips — only render right after the greeting,
             before the customer's typed anything. Chips are
             context-aware: chapter-page → "Got an X doc?", queue →
@@ -1700,20 +1890,21 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
           {/* Attach button — opens the native file picker. Same
               upload pipeline as drag-drop. Hidden file input is
               the standard accessible pattern. */}
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading || streaming}
-            aria-label="Attach a file"
-            title="Attach a file (Jason will route it to the right chapters)"
-            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-navy/60 hover:text-navy hover:bg-navy/5 disabled:opacity-40 disabled:hover:bg-transparent transition-colors"
-          >
-            {uploading ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Paperclip size={16} />
-            )}
-          </button>
+          <Tooltip label="Attach a file" side="top">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading || streaming}
+              aria-label="Attach a file"
+              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-navy/60 hover:text-navy hover:bg-navy/5 disabled:opacity-40 disabled:hover:bg-transparent transition-colors"
+            >
+              {uploading ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Paperclip size={16} />
+              )}
+            </button>
+          </Tooltip>
           <input
             ref={fileInputRef}
             type="file"
@@ -1754,50 +1945,52 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
               live transcripts feed straight into the draft so the
               customer can edit before sending. */}
           {voiceSupported && (
+            <Tooltip
+              label={recording ? "Stop recording" : "Dictate"}
+              side="top"
+            >
+              <button
+                type="button"
+                onClick={toggleRecording}
+                disabled={streaming || uploading}
+                aria-label={recording ? "Stop recording" : "Dictate a message"}
+                className={`relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-colors ${
+                  recording
+                    ? "bg-red-500 text-white hover:bg-red-600 jason-mic-pulse"
+                    : "text-navy/60 hover:text-navy hover:bg-navy/5 disabled:opacity-40 disabled:hover:bg-transparent"
+                }`}
+              >
+                <Mic size={16} />
+                <style jsx>{`
+                  @keyframes jason-mic-pulse {
+                    0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55); }
+                    50%      { box-shadow: 0 0 0 7px rgba(239, 68, 68, 0); }
+                  }
+                  .jason-mic-pulse {
+                    animation: jason-mic-pulse 1.4s ease-in-out infinite;
+                  }
+                  @media (prefers-reduced-motion: reduce) {
+                    .jason-mic-pulse { animation: none; }
+                  }
+                `}</style>
+              </button>
+            </Tooltip>
+          )}
+          <Tooltip label="Send" side="top">
             <button
               type="button"
-              onClick={toggleRecording}
-              disabled={streaming || uploading}
-              aria-label={recording ? "Stop recording" : "Dictate a message"}
-              title={
-                recording
-                  ? "Stop recording"
-                  : "Dictate a message (click to start, click again to stop)"
-              }
-              className={`relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-colors ${
-                recording
-                  ? "bg-red-500 text-white hover:bg-red-600 jason-mic-pulse"
-                  : "text-navy/60 hover:text-navy hover:bg-navy/5 disabled:opacity-40 disabled:hover:bg-transparent"
-              }`}
+              onClick={() => void send()}
+              disabled={streaming || !draft.trim()}
+              aria-label="Send message"
+              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gold text-navy hover:bg-gold-dark disabled:opacity-40 disabled:hover:bg-gold transition-colors"
             >
-              <Mic size={16} />
-              <style jsx>{`
-                @keyframes jason-mic-pulse {
-                  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55); }
-                  50%      { box-shadow: 0 0 0 7px rgba(239, 68, 68, 0); }
-                }
-                .jason-mic-pulse {
-                  animation: jason-mic-pulse 1.4s ease-in-out infinite;
-                }
-                @media (prefers-reduced-motion: reduce) {
-                  .jason-mic-pulse { animation: none; }
-                }
-              `}</style>
+              {streaming ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Send size={15} />
+              )}
             </button>
-          )}
-          <button
-            type="button"
-            onClick={() => void send()}
-            disabled={streaming || !draft.trim()}
-            aria-label="Send message"
-            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gold text-navy hover:bg-gold-dark disabled:opacity-40 disabled:hover:bg-gold transition-colors"
-          >
-            {streaming ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Send size={15} />
-            )}
-          </button>
+          </Tooltip>
         </div>
         {/* Footer hint deliberately removed — the affordances
             (paperclip, mic, send) speak for themselves and the
@@ -1941,6 +2134,41 @@ function MarkdownBubble({ text }: { text: string }) {
     >
       {text}
     </ReactMarkdown>
+  );
+}
+
+/**
+ * Lightweight hover-tooltip wrapper. Each header / composer
+ * action gets one of these so the customer learns what the
+ * icons mean without us having to label them inline. Native
+ * `title=` attributes have an inconsistent ~700ms browser
+ * delay and styling we can't control; this matches the dock's
+ * palette and shows immediately.
+ *
+ * `side` controls whether the bubble pops above (composer
+ * buttons in the bottom row) or below (header buttons at top).
+ */
+function Tooltip({
+  label,
+  side,
+  children,
+}: {
+  label: string;
+  side: "top" | "bottom";
+  children: React.ReactNode;
+}) {
+  return (
+    <span className="relative group inline-flex items-center">
+      {children}
+      <span
+        role="tooltip"
+        className={`pointer-events-none absolute left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-navy text-cream text-[10px] font-bold uppercase tracking-wider px-2 py-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-100 z-30 shadow-[0_4px_12px_rgba(30,58,95,0.24)] ${
+          side === "top" ? "bottom-full mb-1.5" : "top-full mt-1.5"
+        }`}
+      >
+        {label}
+      </span>
+    </span>
   );
 }
 
