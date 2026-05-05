@@ -2051,6 +2051,17 @@ function Bubble({
           .jason-md :global(strong) {
             font-weight: 700;
           }
+          /* Action-question highlight. Applied by MarkdownBubble's
+             custom <strong> renderer when the bolded text ends with
+             '?'. Pulls the customer's eye to the handoff in long
+             responses without a heavy callout block. */
+          .jason-md :global(.jason-question) {
+            font-weight: 700;
+            text-decoration: underline;
+            text-decoration-color: #bc8a36; /* gold-warm */
+            text-decoration-thickness: 2px;
+            text-underline-offset: 3px;
+          }
           .jason-md :global(em) {
             font-style: italic;
           }
@@ -2113,10 +2124,20 @@ function Bubble({
  * after the markdown block (otherwise react-markdown would try to
  * interpret the cursor markup as content).
  *
+ * Question highlighting: in long responses Jason often ends with the
+ * actionable question — "do you have a P&L for either West Jordan
+ * or Murray I can work from?" — and customers skim past it. We pre-
+ * process the text to wrap the LAST sentence-ending-in-? in markdown
+ * bold, then style any bold-ending-in-? with a gold-warm underline
+ * (the `.jason-question` class in the bubble's styled-jsx). The
+ * effect: the customer's eye lands on the handoff. Bold gives weight,
+ * underline says "actionable, your turn."
+ *
  * `linkTarget` opens links in a new tab — chat is not the page,
  * we don't want a click to navigate the dock away from itself.
  */
 function MarkdownBubble({ text }: { text: string }) {
+  const processed = highlightFinalQuestion(text);
   return (
     <ReactMarkdown
       components={{
@@ -2130,11 +2151,81 @@ function MarkdownBubble({ text }: { text: string }) {
             {children}
           </a>
         ),
+        strong: ({ children, ...props }) => {
+          // Flatten children to detect bold-ending-in-? — Jason's
+          // actionable-question pattern. Plain string children cover
+          // the common case; nested-markdown bolds (rare) just fall
+          // through to default bold styling.
+          const flat = Array.isArray(children)
+            ? children
+                .map((c) => (typeof c === "string" ? c : ""))
+                .join("")
+            : typeof children === "string"
+              ? children
+              : "";
+          const isQuestion = flat.trimEnd().endsWith("?");
+          return (
+            <strong
+              className={isQuestion ? "jason-question" : undefined}
+              {...props}
+            >
+              {children}
+            </strong>
+          );
+        },
       }}
     >
-      {text}
+      {processed}
     </ReactMarkdown>
   );
+}
+
+/**
+ * Wrap the last sentence-ending-in-? in markdown bold so the
+ * `<strong>` renderer can apply the question-highlight class.
+ *
+ * The matcher walks back from the last `?` to the nearest sentence
+ * boundary (`. ! ?` followed by whitespace, OR a paragraph break,
+ * OR the start of the message). If the sentence is already inside
+ * a markdown bold (`**…**`) or contains bold tokens, we skip — Jason
+ * already chose the emphasis, no need to fight him for it.
+ *
+ * Token-cheap: pure string ops, runs once per render. No regex
+ * across the whole text, no markdown re-parsing.
+ */
+export function highlightFinalQuestion(text: string): string {
+  if (!text) return text;
+  const lastQ = text.lastIndexOf("?");
+  if (lastQ === -1) return text;
+
+  // Walk back to find where the question's sentence starts. Bounds:
+  //   (a) prior sentence end: . ! ? followed by whitespace
+  //   (b) paragraph break: \n\n
+  //   (c) start of text
+  let start = 0;
+  for (let i = lastQ - 1; i >= 0; i--) {
+    const ch = text[i];
+    if ((ch === "." || ch === "!" || ch === "?") && /\s/.test(text[i + 1] ?? "")) {
+      start = i + 1;
+      break;
+    }
+    if (ch === "\n" && text[i - 1] === "\n") {
+      start = i + 1;
+      break;
+    }
+  }
+  // Skip leading whitespace inside the captured sentence.
+  while (start < lastQ && /\s/.test(text[start])) start++;
+
+  const before = text.slice(0, start);
+  const sentence = text.slice(start, lastQ + 1);
+  const after = text.slice(lastQ + 1);
+
+  // Don't double-wrap if Jason (or the prompt) already bolded it,
+  // and don't disrupt sentences that contain inline bold tokens.
+  if (sentence.includes("**")) return text;
+
+  return `${before}**${sentence}**${after}`;
 }
 
 /**
