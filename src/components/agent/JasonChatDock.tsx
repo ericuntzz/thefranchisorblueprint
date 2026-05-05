@@ -98,7 +98,80 @@ type Props = {
 };
 
 const OPENER_DEFAULT =
-  "I'm Jason. I've got everything we know about your business loaded — ask me anything about the next step in your Blueprint, or just tell me what you're working on.";
+  "I'm Jason AI — Jason's playbooks plus everything we know about your business, loaded and ready. What are you working on?";
+
+/**
+ * Context-aware greeting. The dock used to open on a generic
+ * "ask me anything" line which forced the customer to invent a
+ * question. This version reads the current pathname and opens
+ * with intent — naming the chapter / surface they're on and
+ * proposing a concrete next move. Result: Jason AI feels embedded
+ * in their work, not parked in the corner waiting to be summoned.
+ *
+ * The greeting is purely client-derived (pathname + firstName) so
+ * it lands instantly without a server round-trip. Future pass can
+ * layer on a server-fetched activity feed for "since you were
+ * last here, I drafted X" copy.
+ */
+function getContextGreeting(args: {
+  pathname: string;
+  firstName: string | null | undefined;
+}): string {
+  const { pathname, firstName } = args;
+  const hi = firstName ? `Hey ${firstName} — ` : "";
+
+  // Per-chapter greeting names the chapter and proposes the move.
+  const chapterMatch = pathname.match(/\/portal\/chapter\/([a-z_]+)/);
+  if (chapterMatch && isValidMemoryFileSlug(chapterMatch[1])) {
+    const slug = chapterMatch[1] as MemoryFileSlug;
+    const title = MEMORY_FILE_TITLES[slug];
+    return `${hi}you're on **${title}**. Want me to draft what I've got, or do you want to think it through first? Drop a doc anytime and I'll pull what I can.`;
+  }
+
+  if (pathname.includes("/portal/lab/next")) {
+    return `${hi}let's burn through the queue. Stuck on a question? Drop a doc and I'll skip a chunk of these for you. Or just tell me what's on your mind.`;
+  }
+
+  if (pathname.includes("/portal/lab/intake")) {
+    return `${hi}walk me through your business or drop a doc — pitch deck, ops manual, P&L, whatever you've got. I'll start a draft from anything you give me.`;
+  }
+
+  if (pathname.includes("/portal/lab/blueprint")) {
+    return `${hi}looking at your Blueprint as a whole. Want me to flag what's still missing, or pick a chapter to push forward?`;
+  }
+
+  if (pathname.includes("/portal/chapter")) {
+    return `${hi}what chapter do you want to push on? I've got everything we know about your business loaded.`;
+  }
+
+  if (pathname.includes("/portal/coaching")) {
+    return `${hi}prepping for a coaching call? Tell me what you want to cover and I'll pull the Memory together.`;
+  }
+
+  // /portal dashboard or anywhere else.
+  return `${hi}what do you want to work on? I can pick up where you left off, draft a chapter, read a doc you drop here, or just talk through what's on your mind.`;
+}
+
+/**
+ * Status-line copy shown in the dock header, under the "Jason AI"
+ * name. Reflects whatever the customer is currently looking at so
+ * the dock feels like an assistant tracking with them, not a
+ * generic chatbot. During a stream this is overridden with
+ * "Thinking…".
+ */
+function getStatusLine(pathname: string): string {
+  const chapterMatch = pathname.match(/\/portal\/chapter\/([a-z_]+)/);
+  if (chapterMatch && isValidMemoryFileSlug(chapterMatch[1])) {
+    return `Reading ${MEMORY_FILE_TITLES[chapterMatch[1] as MemoryFileSlug]}`;
+  }
+  if (pathname.includes("/portal/lab/next")) return "Watching the question queue";
+  if (pathname.includes("/portal/lab/intake")) return "Watching intake";
+  if (pathname.includes("/portal/lab/blueprint")) return "Reading the full Blueprint";
+  if (pathname.includes("/portal/coaching")) return "Coaching mode";
+  if (pathname.includes("/portal/account")) return "Account settings";
+  if (pathname.includes("/portal/upgrade")) return "Tier upgrade";
+  return "Online · Memory loaded";
+}
 
 /**
  * Starter chips — clickable suggestions surfaced under the greeting
@@ -252,14 +325,18 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
   // Greet on first open. The dock is layout-mounted now, so this only
   // fires on the very first open of a session. Subsequent navigations
   // keep the existing transcript intact — open/close is purely visual.
+  // The greeting is computed from the current pathname + firstName so
+  // Jason AI opens with intent ("you're on Unit Economics — want to
+  // draft it?") instead of a generic "ask me anything."
   useEffect(() => {
     if (open && transcript.length === 0) {
-      const greeting = firstName
-        ? `Hi ${firstName} — I'm Jason. I've got everything we know about your business loaded. Ask me anything about the next step in your Blueprint, or tell me what you're working on.`
-        : OPENER_DEFAULT;
+      const greeting = getContextGreeting({
+        pathname: pathname ?? "",
+        firstName,
+      });
       setTranscript([{ kind: "bubble", role: "assistant", text: greeting }]);
     }
-  }, [open, transcript.length, firstName]);
+  }, [open, transcript.length, firstName, pathname]);
 
   // Auto-scroll only when the customer is already near the bottom.
   // If they've scrolled up to read earlier messages, leave them
@@ -745,7 +822,7 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
     return (
       <button
         type="button"
-        aria-label="Open chat with Jason"
+        aria-label="Open chat with Jason AI"
         onClick={() => setOpen(true)}
         className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-full bg-navy text-cream px-4 py-3 shadow-[0_12px_28px_rgba(30,58,95,0.28)] hover:shadow-[0_16px_36px_rgba(30,58,95,0.36)] transition-all jason-dock-breathe"
       >
@@ -753,7 +830,7 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
           JS
           <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-navy" />
         </span>
-        <span className="text-sm font-semibold tracking-tight">Ask Jason</span>
+        <span className="text-sm font-semibold tracking-tight">Ask Jason AI</span>
         <MessageCircle size={16} className="text-cream/70" />
         <style jsx>{`
           @keyframes jason-breathe {
@@ -803,9 +880,9 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
             <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-navy" />
           </span>
           <div className="leading-tight">
-            <div className="text-sm font-bold">Jason</div>
+            <div className="text-sm font-bold">Jason AI</div>
             <div className="text-[10px] uppercase tracking-[0.14em] text-cream/60">
-              {streaming ? "Thinking…" : "Online · Memory loaded"}
+              {streaming ? "Thinking…" : getStatusLine(pathname ?? "")}
             </div>
           </div>
         </div>
