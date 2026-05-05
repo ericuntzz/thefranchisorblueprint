@@ -119,8 +119,7 @@ export default async function PreExportReviewPage({ params }: Props) {
               ) : (
                 <span className="inline-flex items-center gap-1.5 text-amber-700">
                   <AlertCircle size={14} />
-                  {review.totalGaps} required field{review.totalGaps === 1 ? "" : "s"} still empty
-                  · downloading now will leave them as &quot;—&quot;.
+                  {`${review.totalGaps} required ${review.totalGaps === 1 ? "field" : "fields"} still empty · downloading now will leave them as "—".`}
                 </span>
               )}
             </div>

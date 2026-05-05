@@ -116,7 +116,7 @@ export const LIBRARY_ENTRIES: LibraryEntry[] = [
     tagline: "Section-by-section outline of a franchise agreement.",
     description:
       "What every section of a franchise agreement covers and why. Use as a checklist when reviewing the agreement your attorney drafts. Not a fill-in-the-blank template.",
-    ctaLabel: "View outline",
+    ctaLabel: "Outline coming soon",
   },
   {
     id: "template-ops-manual-toc",
