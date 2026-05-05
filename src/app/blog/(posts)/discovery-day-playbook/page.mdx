@@ -2,7 +2,7 @@ import { BlogPostHeader } from "@/components/BlogPostHeader";
 import { RelatedPosts } from "@/components/RelatedPosts";
 import { JsonLd } from "@/components/JsonLd";
 import { InlineCTA } from "@/components/InlineCTA";
-import { blogPostingSchema, faqPageSchema, breadcrumbSchema } from "@/lib/schema";
+import { blogPostingSchema, faqPageSchema, breadcrumbSchema, howToSchema } from "@/lib/schema";
 import { getPost } from "@/lib/blog";
 
 export const post = getPost("discovery-day-playbook");
@@ -26,6 +26,21 @@ export const metadata = {
   { name: "Blog", url: "/blog" },
   { name: post.title, url: `/blog/${post.slug}` },
 ])} />
+<JsonLd data={howToSchema({
+  name: "How to Run a Franchise Discovery Day (7-Block Agenda)",
+  description: "The structured 7-block Discovery Day agenda used by franchisors converting at 50-70% — versus tour-style Discovery Days that convert at 20-30%.",
+  url: `/blog/${post.slug}`,
+  totalTime: "PT8H",
+  steps: [
+    { name: "Block 1: Welcome and Brand Story (45 min, 9:00-9:45 AM)", text: "The founder tells the brand story — why the company exists, the founding moment, the inflection point that brought you to franchising. End by asking the candidate: 'Tell me what brought you here today.'" },
+    { name: "Block 2: Unit Economics Walk-Through (90 min, 9:45-11:15 AM)", text: "Walk the candidate through a typical unit P&L at year 1, year 2, year 3. Item 7 line by line. Item 19 cohort data (averages, medians, top quartile). Build the candidate's financial model live in front of them. This is the block that closes intelligent candidates." },
+    { name: "Block 3: Operations Walk-Through (90 min, 11:15 AM-12:45 PM)", text: "How a unit actually runs. Best done at a real operating location. Walk through a day in the life, the operations manual chapters, the technology stack, the training program, the field consulting cadence." },
+    { name: "Block 4: Lunch with the Team (75 min, 12:45-2:00 PM)", text: "Off-script lunch. The candidate eats with your operations head, training director, and (if possible) one of your existing franchisees over video call. Franchise sales close at lunch more often than first-time franchisors realize." },
+    { name: "Block 5: Territory and Site Selection (60 min, 2:00-3:00 PM)", text: "Get specific about the candidate's market. Pull up the maps. Walk through demographic and competitive analysis. Show three potential sites in their target area and walk through scoring each. Transitions the conversation from abstract to concrete." },
+    { name: "Block 6: Q&A and Concerns (45 min, 3:00-3:45 PM)", text: "Reserved time for the candidate to surface unspoken concerns. Ask directly: 'What concerns do you still have? What's keeping you from saying yes today?' Listen all the way. Address each specifically." },
+    { name: "Block 7: The Close (45 min, 3:45-4:30 PM)", text: "The structured close. Three concrete options: (1) sign today, take the deposit, hand them the welcome packet; (2) set a sign-or-decline date within 14 days; or (3) formal decline today. Never allow option 4 ('I'll let you know') — that's where most franchise sales die." },
+  ],
+})} />
 <JsonLd data={faqPageSchema([
   {
     q: "What is a franchise Discovery Day?",
@@ -51,7 +66,7 @@ export const metadata = {
 
 Discovery Day is the closing instrument of franchise sales.
 
-A candidate who's qualified, has reviewed your FDD, and has done their validation calls is sitting at maybe 60-70% commitment to your brand. Discovery Day is what gets them from 70% to "yes." Run it well and you sign the candidate that day. Run it as a tour and you lose them to the next franchisor with a sharper close.
+A candidate who's [qualified](/glossary/franchise-candidate-qualification), has reviewed your [FDD](/glossary/franchise-disclosure-document), and has done their [validation calls](/glossary/validation-call) is sitting at maybe 60-70% commitment to your brand. Discovery Day is what gets them from 70% to "yes." Run it well and you sign the candidate that day. Run it as a tour and you lose them to the next franchisor with a sharper close.
 
 Most first-time franchisors run Discovery Day as a tour. They show the candidate the office, introduce them to the team, walk through some slides, take them to lunch, and hope. Conversion rates from "Discovery Day attended" to "signed agreement" sit around 20-30% in those systems.
 

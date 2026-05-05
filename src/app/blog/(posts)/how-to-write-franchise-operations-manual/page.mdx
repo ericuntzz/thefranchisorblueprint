@@ -2,7 +2,7 @@ import { BlogPostHeader } from "@/components/BlogPostHeader";
 import { RelatedPosts } from "@/components/RelatedPosts";
 import { JsonLd } from "@/components/JsonLd";
 import { InlineCTA } from "@/components/InlineCTA";
-import { blogPostingSchema, faqPageSchema, breadcrumbSchema } from "@/lib/schema";
+import { blogPostingSchema, faqPageSchema, breadcrumbSchema, howToSchema } from "@/lib/schema";
 import { getPost } from "@/lib/blog";
 
 export const post = getPost("how-to-write-franchise-operations-manual");
@@ -26,6 +26,31 @@ export const metadata = {
   { name: "Blog", url: "/blog" },
   { name: post.title, url: `/blog/${post.slug}` },
 ])} />
+<JsonLd data={howToSchema({
+  name: "How to Write a Franchise Operations Manual (17-Chapter Framework)",
+  description: "The structured 17-chapter framework for writing a franchise operations manual that does triple duty as a legal document, training textbook, and brand-consistency anchor.",
+  url: `/blog/${post.slug}`,
+  totalTime: "P12W",
+  steps: [
+    { name: "Chapter 1: Welcome and Brand Story", text: "Document the company's founding story, mission, vision, values, and brand promise to customers. Anchor every later operational decision in why the brand exists." },
+    { name: "Chapter 2: Brand Identity Standards", text: "Codify visual and verbal identity — logo usage, color codes, typography, voice, signage, uniforms, vehicle wraps. Without this chapter, unit five looks nothing like unit one." },
+    { name: "Chapter 3: Franchise System Overview", text: "Define how the franchisor-franchisee relationship works — responsibilities, support cadence, escalation paths, annual conference. Prevents the 'what am I paying royalties for' conversation." },
+    { name: "Chapter 4: Pre-Opening Checklist", text: "Sequence everything a franchisee does between signing and opening — site selection, lease execution, build-out, hiring, training, soft opening, grand opening. Keeps new franchisees on schedule." },
+    { name: "Chapter 5: Daily Operations", text: "The hour-by-hour rhythm — opening procedures, mid-day operations, closing procedures, daily reporting. Day-in-the-life manual." },
+    { name: "Chapter 6: Customer Experience Standards", text: "Service scripts, quality checkpoints, complaint protocols, customer feedback collection, required communications. Determines whether your brand is recognizable across locations." },
+    { name: "Chapter 7: Product/Service Specifications", text: "The substance of what you sell — recipes, plating standards, service procedures, merchandising standards, pricing rules. Typically the longest chapter." },
+    { name: "Chapter 8: Vendor Management", text: "Approved vendor list, required products, ordering procedures, payment terms, complaint procedures. Intersects with FDD Item 8 disclosure requirements." },
+    { name: "Chapter 9: Inventory Management", text: "How franchisees order, receive, store, and rotate inventory — par levels, reorder triggers, waste tracking, theft prevention." },
+    { name: "Chapter 10: Equipment and Facility Maintenance", text: "Cleaning schedules, equipment maintenance protocols, repair procedures, vendor relationships. Keeps units at brand standard between field consultant visits." },
+    { name: "Chapter 11: Hiring and Staffing", text: "Job descriptions, interview structures, reference and background-check requirements, compensation guidelines, hire-day documentation." },
+    { name: "Chapter 12: Training and Certification", text: "New-hire training program, position-specific training, ongoing certification requirements. Directly supports FDD Item 11 disclosure." },
+    { name: "Chapter 13: Performance Management", text: "Performance review templates, coaching documentation, termination procedures, recognition and incentive guidelines." },
+    { name: "Chapter 14: Marketing and Local Advertising", text: "Required local marketing minimum spend, approved channels, brand-approved messaging, co-op programs, social media standards. Where most brand drift happens if not codified." },
+    { name: "Chapter 15: Technology and Reporting", text: "POS, scheduling, CRM, customer-facing apps. Required logins, reporting requirements, royalty payment procedures, data privacy and security." },
+    { name: "Chapter 16: Financial Management", text: "Required accounting structure (chart of accounts), royalty calculation, financial reporting to franchisor, audit cooperation. Feeds into future FDD Item 19." },
+    { name: "Chapter 17: Compliance and Legal", text: "Required licenses and permits, insurance minimums, employment law compliance, health and safety, incident reporting." },
+  ],
+})} />
 <JsonLd data={faqPageSchema([
   {
     q: "What is a franchise operations manual?",
@@ -328,9 +353,9 @@ Founders often delay writing the manual until everything else is "done." Then th
 
 Your operations manual is the foundation that supports:
 
-- **[Item 11 of the FDD](/blog/franchise-disclosure-document-explained):** required disclosure of training and ongoing support — pulled directly from the manual
+- **[Item 11 of the FDD](/glossary/fdd-item-11):** required disclosure of training and ongoing support — pulled directly from the manual
 - **The franchise agreement:** incorporates the manual by reference, making compliance a contractual obligation
-- **Field consulting:** the scoring rubric your team uses to evaluate units in the field
+- **[Field consulting](/glossary/field-consultant):** the scoring rubric your team uses to evaluate units in the field
 - **New unit openings:** the training curriculum
 - **Brand defense:** the basis for any compliance enforcement action against an out-of-standard franchisee
 

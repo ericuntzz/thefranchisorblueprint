@@ -2,7 +2,7 @@ import { BlogPostHeader } from "@/components/BlogPostHeader";
 import { RelatedPosts } from "@/components/RelatedPosts";
 import { JsonLd } from "@/components/JsonLd";
 import { InlineCTA } from "@/components/InlineCTA";
-import { blogPostingSchema, faqPageSchema, breadcrumbSchema } from "@/lib/schema";
+import { blogPostingSchema, faqPageSchema, breadcrumbSchema, howToSchema } from "@/lib/schema";
 import { getPost } from "@/lib/blog";
 
 export const post = getPost("how-to-recruit-first-10-franchisees");
@@ -26,6 +26,19 @@ export const metadata = {
   { name: "Blog", url: "/blog" },
   { name: post.title, url: `/blog/${post.slug}` },
 ])} />
+<JsonLd data={howToSchema({
+  name: "How to Recruit Your First 10 Franchisees (5-Stage Sales Funnel)",
+  description: "The structured 5-stage franchise sales funnel for emerging franchisors — from initial inquiry through signed franchise agreement and grand opening.",
+  url: `/blog/${post.slug}`,
+  totalTime: "P12M",
+  steps: [
+    { name: "Stage 1: Awareness to Inquiry", text: "Generate qualified franchise leads through content marketing, paid search on high-intent terms, franchise portals (Franchise Direct, Franchise Gator), LinkedIn outreach, your existing customer base, and PR/earned media. Typical web-to-inquiry conversion: 1-3%." },
+    { name: "Stage 2: Inquiry to Qualified Lead", text: "Run a 20-30 minute phone screen covering financial qualification (liquid net worth, total net worth, bankability), operational qualification (management/business experience), motivational qualification (why this brand, why now), and cultural qualification (system-following, disagreement handling). Typical conversion: 30-60%." },
+    { name: "Stage 3: Qualified Lead to Discovery Day", text: "Deliver the FDD (starting the 14-day clock), walk through Item 7 and Item 19, connect the candidate with 2-3 existing franchisees for validation calls, support attorney/accountant questions, and progress to preliminary territory selection. Typical conversion: 30-50%, over 2-6 weeks." },
+    { name: "Stage 4: Discovery Day to Signed Agreement", text: "Run a structured 7-block Discovery Day — brand story, unit economics walkthrough, operations walkthrough, team lunch, territory selection, Q&A, structured close with three concrete options (sign today, set sign-or-decline date within 14 days, formally decline). Typical conversion: 40-60%." },
+    { name: "Stage 5: Signed Agreement to Open and Operating", text: "Build a structured opening process to protect every signed franchisee through to grand opening. Pre-opening checklist, training delivery, site selection support, build-out coordination. Typical timeline: 4-9 months from signing to opening." },
+  ],
+})} />
 <JsonLd data={faqPageSchema([
   {
     q: "How long does it take to recruit your first franchisee?",
@@ -57,7 +70,7 @@ The first 10 franchisees are the hardest sales you will ever make.
 
 You have no track record. Your [Item 20 outlet table](/blog/franchise-disclosure-document-explained) is empty or near-empty. Your testimonials don't exist yet. Your [Item 19](/blog/fdd-item-19-financial-performance-representations) — if you even have one — is based on company-owned units rather than franchisee performance. Every sales conversation is essentially: *"trust us."*
 
-Despite all of that, the first 10 are the most important sales in your franchise system's life. They're the proof points that everything after them depends on. They're the testimonials, the case studies, the operating data, and the social proof for the next 50 sales.
+Despite all of that, the first 10 are the most important sales in your franchise system's life. (For the structured close that decides whether candidates sign, see the [Discovery Day glossary entry](/glossary/discovery-day) and the full [Discovery Day Playbook](/blog/discovery-day-playbook).) They're the proof points that everything after them depends on. They're the testimonials, the case studies, the operating data, and the social proof for the next 50 sales.
 
 This is the playbook I've used to help emerging franchisors close their first 10 — what works, what doesn't, and what almost everyone gets wrong.
 
@@ -195,7 +208,7 @@ If you're building a franchise system right now, prioritize getting your unit ec
 
 ## When to use franchise brokers
 
-Franchise brokers (sometimes called "franchise consultants" or "franchise development networks") work with thousands of pre-qualified candidates and match them to franchise brands. They charge 40-50% of the initial franchise fee on signed deals — typically $15,000-$25,000 per franchisee.
+[Franchise brokers](/glossary/franchise-broker) (sometimes called "franchise consultants" or "franchise development networks") work with thousands of pre-qualified candidates and match them to franchise brands. They charge 40-50% of the initial franchise fee on signed deals — typically $15,000-$25,000 per franchisee.
 
 Brokers make sense when:
 

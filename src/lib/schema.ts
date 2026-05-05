@@ -163,6 +163,44 @@ export function breadcrumbSchema(items: BreadcrumbItem[]) {
   };
 }
 
+type HowToStep = { name: string; text: string; url?: string };
+type HowToParams = {
+  name: string;
+  description: string;
+  url: string; // path
+  totalTime?: string; // ISO 8601 duration, e.g. "P12W" for 12 weeks
+  estimatedCost?: { value: number; currency?: string };
+  steps: HowToStep[];
+};
+export function howToSchema(p: HowToParams) {
+  const url = `${SITE_URL}${p.url}`;
+  return {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "@id": `${url}#howto`,
+    name: p.name,
+    description: p.description,
+    url,
+    ...(p.totalTime ? { totalTime: p.totalTime } : {}),
+    ...(p.estimatedCost
+      ? {
+          estimatedCost: {
+            "@type": "MonetaryAmount",
+            currency: p.estimatedCost.currency ?? "USD",
+            value: p.estimatedCost.value.toString(),
+          },
+        }
+      : {}),
+    step: p.steps.map((s, i) => ({
+      "@type": "HowToStep",
+      position: i + 1,
+      name: s.name,
+      text: s.text,
+      ...(s.url ? { url: s.url.startsWith("http") ? s.url : `${url}${s.url}` } : {}),
+    })),
+  };
+}
+
 type CollectionPageParams = {
   url: string; // path, no domain
   name: string;
