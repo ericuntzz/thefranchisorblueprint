@@ -42,6 +42,14 @@ export type StuckCustomerRescuePayload = {
   blockerHint: string | null;
   /** Site origin for absolute links — e.g. https://www.thefranchisorblueprint.com */
   siteUrl: string;
+  /**
+   * Optional Calendly URL for booking time with Jason. Surfaces only
+   * for Tier 2/3 customers with coaching credits remaining. When null,
+   * the "Book a 30-min unstick session" callout is hidden.
+   */
+  bookJasonUrl?: string | null;
+  /** Coaching credits remaining (renders alongside the Calendly CTA). */
+  coachingCreditsRemaining?: number | null;
 };
 
 export function stuckCustomerRescueSubject(
@@ -62,6 +70,8 @@ export function StuckCustomerRescueEmail({
   questionsRemaining,
   blockerHint,
   siteUrl,
+  bookJasonUrl,
+  coachingCreditsRemaining,
 }: StuckCustomerRescuePayload) {
   const continueUrl = `${siteUrl}/portal/chapter/${nextChapterSlug}`;
   const dashboardUrl = `${siteUrl}/portal`;
@@ -129,6 +139,25 @@ export function StuckCustomerRescueEmail({
             the section for you, or pull up an example from another founder
             who&apos;s been there.
           </Text>
+        </Section>
+      )}
+
+      {bookJasonUrl && (
+        <Section style={callOutStyle}>
+          <Heading
+            as="h2"
+            style={{ ...headingStyle, fontSize: "17px", margin: "0 0 8px" }}
+          >
+            Want me on a call instead?
+          </Heading>
+          <Text style={{ ...paragraphStyle, margin: "0 0 12px" }}>
+            {coachingCreditsRemaining != null && coachingCreditsRemaining > 0
+              ? `You have ${coachingCreditsRemaining} coaching session${coachingCreditsRemaining === 1 ? "" : "s"} remaining. Grab 30 minutes with me and we'll knock out whatever's stuck.`
+              : `Grab 30 minutes with me and we'll knock out whatever's stuck.`}
+          </Text>
+          <Button href={bookJasonUrl} style={buttonStyle}>
+            Book time with Jason →
+          </Button>
         </Section>
       )}
 

@@ -83,7 +83,7 @@ export async function GET(req: NextRequest) {
   const [{ data: profilesRaw }, { data: memoryRaw }] = await Promise.all([
     admin
       .from("profiles")
-      .select("id, full_name, email, created_at")
+      .select("id, full_name, email, created_at, tier, coaching_credits")
       .in("id", paidUserIds),
     admin
       .from("customer_memory")
@@ -93,7 +93,15 @@ export async function GET(req: NextRequest) {
       .in("user_id", paidUserIds),
   ]);
   const profiles = (profilesRaw ?? []) as Array<
-    Pick<Profile, "id" | "full_name" | "email" | "created_at">
+    Pick<
+      Profile,
+      | "id"
+      | "full_name"
+      | "email"
+      | "created_at"
+      | "tier"
+      | "coaching_credits"
+    >
   >;
   const profileById = new Map(profiles.map((p) => [p.id, p]));
 
@@ -152,10 +160,17 @@ export async function GET(req: NextRequest) {
     nextChapterTitle: string;
     questionsRemaining: number;
     blockerHint: string | null;
+    bookJasonUrl: string | null;
+    coachingCreditsRemaining: number | null;
   };
 
   const candidates: Candidate[] = [];
   const now = Date.now();
+  // Calendly URL — null when not configured. We only surface the
+  // book-Jason CTA when (a) the env is set AND (b) the customer has
+  // tier ≥ 2 OR a positive coaching_credits balance. Tier-1 customers
+  // without credits don't get the CTA — it'd only frustrate them.
+  const calendlyUrl = process.env.CALENDLY_COACHING_URL ?? null;
 
   for (const userId of paidUserIds) {
     if (inCooldown.has(userId)) continue;
@@ -220,6 +235,11 @@ export async function GET(req: NextRequest) {
         ? `The chapter that's had the most stuck questions is ${MEMORY_FILE_TITLES[heaviestSlug as keyof typeof MEMORY_FILE_TITLES]} (${counts.get(heaviestSlug) ?? 0} unanswered). If that's the wall, tell me.`
         : null;
 
+    // Book-Jason eligibility: env must be configured AND customer
+    // either has Tier 2/3 access OR coaching credits remaining.
+    const credits = profile.coaching_credits ?? 0;
+    const eligibleForCalendly =
+      !!calendlyUrl && (profile.tier >= 2 || credits > 0);
     candidates.push({
       userId,
       email: profile.email,
@@ -229,6 +249,8 @@ export async function GET(req: NextRequest) {
       nextChapterTitle: nextTitle,
       questionsRemaining: summary.totalRequired,
       blockerHint,
+      bookJasonUrl: eligibleForCalendly ? calendlyUrl : null,
+      coachingCreditsRemaining: eligibleForCalendly ? credits : null,
     });
     if (candidates.length >= BATCH_LIMIT) break;
   }
@@ -257,6 +279,8 @@ export async function GET(req: NextRequest) {
           questionsRemaining: c.questionsRemaining,
           blockerHint: c.blockerHint,
           siteUrl: SITE_URL,
+          bookJasonUrl: c.bookJasonUrl,
+          coachingCreditsRemaining: c.coachingCreditsRemaining,
         },
         {
           // De-dupe on the day — same key Resend will see if the worker

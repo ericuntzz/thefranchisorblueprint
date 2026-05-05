@@ -38,6 +38,9 @@ import {
   CHAPTER_SCHEMAS,
 } from "@/lib/memory/schemas";
 import { hasCalc } from "@/lib/calc";
+import { isWebSearchAvailable, tavilySearch } from "./research/tavily";
+import { isPlacesAvailable, nearbyPlaces } from "./research/places";
+import { isCensusAvailable, zipDemographics } from "./research/census";
 
 type FieldValue = string | number | boolean | string[] | null;
 
@@ -91,6 +94,91 @@ Available chapter slugs: ${MEMORY_FILES.join(", ")}.`,
     required: ["slug", "field_name", "value"],
   },
 };
+
+/**
+ * Web-search tool — calls Tavily for live retrieval. Env-gated; the
+ * tool is only added to the chat agent's toolset when TAVILY_API_KEY
+ * is present, so the model never sees it as available when it can't
+ * actually call.
+ */
+export const WEB_SEARCH_TOOL: Anthropic.Tool = {
+  name: "web_search",
+  description: `Search the web for up-to-date information the agent doesn't already have. Use sparingly — when you genuinely need current external data (competitor pricing, regulatory updates, market trends, news about a specific company). Don't use for general knowledge that's stable.
+
+Returns 3–5 results with title, URL, and excerpt.`,
+  input_schema: {
+    type: "object",
+    properties: {
+      query: {
+        type: "string",
+        description: "The search query, written naturally as you'd phrase it to a research assistant.",
+      },
+      depth: {
+        type: "string",
+        enum: ["basic", "advanced"],
+        description: "Depth of search. Basic is fast and cheap (default); advanced returns deeper context and is best for hard-to-find data.",
+      },
+    },
+    required: ["query"],
+  },
+};
+
+/**
+ * Trade-area demographics — Census ACS via ZIP. Returns population,
+ * median household income, and median age. Used by the territory
+ * + market-strategy chapters to anchor site selection in real data.
+ */
+export const ZIP_DEMOGRAPHICS_TOOL: Anthropic.Tool = {
+  name: "zip_demographics",
+  description: `Look up Census ACS demographics for a US ZIP code. Returns population, median household income, and median age for that ZIP code tabulation area. Use when discussing site selection or market analysis to anchor in real Census data instead of guessing.`,
+  input_schema: {
+    type: "object",
+    properties: {
+      zip: {
+        type: "string",
+        description: "5-digit US ZIP code, e.g. '85016'.",
+      },
+    },
+    required: ["zip"],
+  },
+};
+
+/**
+ * Competitor density / nearby-places lookup via Google Places. Used
+ * to answer "how many of competitor X are within Y miles of address Z?".
+ */
+export const NEARBY_PLACES_TOOL: Anthropic.Tool = {
+  name: "nearby_places",
+  description: `Search Google Places for businesses matching a keyword near an address. Returns up to 20 nearby places with name, address, rating, and total ratings. Use for competitor density analysis and trade-area scouting.`,
+  input_schema: {
+    type: "object",
+    properties: {
+      keyword: {
+        type: "string",
+        description: "What to search for, e.g. 'coffee shop', 'Chipotle', 'orthodontist'.",
+      },
+      address: {
+        type: "string",
+        description: "Center address for the search (street + city + state, or full address).",
+      },
+      radius_meters: {
+        type: "integer",
+        description: "Search radius in meters. Default 5000 (about 3 miles). Cap at 50000.",
+      },
+    },
+    required: ["keyword", "address"],
+  },
+};
+
+/** Build the active tool list dynamically based on which env-gated
+ *  integrations are configured. */
+export function buildAgentTools(): Anthropic.Tool[] {
+  const tools: Anthropic.Tool[] = [UPDATE_MEMORY_FIELD_TOOL];
+  if (isWebSearchAvailable()) tools.push(WEB_SEARCH_TOOL);
+  if (isCensusAvailable()) tools.push(ZIP_DEMOGRAPHICS_TOOL);
+  if (isPlacesAvailable()) tools.push(NEARBY_PLACES_TOOL);
+  return tools;
+}
 
 /** Result of a tool execution — surfaced to both the model (as
  *  tool_result) and the client (as a typed event). */
@@ -285,6 +373,153 @@ function coerceFieldValue(
       return undefined;
     }
   }
+}
+
+/**
+ * Execute the web_search tool via Tavily. Returns a structured
+ * tool_result the model can read on the next loop.
+ */
+export async function executeWebSearch(args: {
+  input: unknown;
+}): Promise<ToolResult> {
+  if (!args.input || typeof args.input !== "object") {
+    return { ok: false, summary: "web_search input was missing." };
+  }
+  const raw = args.input as Record<string, unknown>;
+  const query = typeof raw.query === "string" ? raw.query : "";
+  const depth =
+    raw.depth === "advanced" ? ("advanced" as const) : ("basic" as const);
+  if (!query) {
+    return { ok: false, summary: "web_search needs a `query` string." };
+  }
+  const result = await tavilySearch({ query, searchDepth: depth });
+  if (!result.ok) {
+    if (result.reason === "no_api_key") {
+      return {
+        ok: false,
+        summary:
+          "Web search isn't configured for this customer's tier — TAVILY_API_KEY missing. Skip the search and draft from Memory only.",
+      };
+    }
+    return {
+      ok: false,
+      summary: `Web search failed (${result.reason}): ${result.message ?? ""}`.trim(),
+    };
+  }
+  if (result.results.length === 0) {
+    return {
+      ok: true,
+      summary: `Web search for "${query}": no results.`,
+    };
+  }
+  // Render results as a compact bulleted summary the model can read
+  // in the next round of the tool-use loop.
+  const lines: string[] = [];
+  if (result.answer) lines.push(`Synthesized answer: ${result.answer}`);
+  for (const r of result.results.slice(0, 5)) {
+    lines.push(`- ${r.title} (${r.url})\n  ${r.content.slice(0, 300)}`);
+  }
+  return {
+    ok: true,
+    summary: `Web search for "${query}":\n${lines.join("\n")}`,
+  };
+}
+
+/** Execute the zip_demographics tool via the Census API. */
+export async function executeZipDemographics(args: {
+  input: unknown;
+}): Promise<ToolResult> {
+  if (!args.input || typeof args.input !== "object") {
+    return { ok: false, summary: "zip_demographics input missing." };
+  }
+  const raw = args.input as Record<string, unknown>;
+  const zip = typeof raw.zip === "string" ? raw.zip : "";
+  if (!/^\d{5}$/.test(zip)) {
+    return {
+      ok: false,
+      summary: `zip_demographics needs a 5-digit ZIP. Got: ${JSON.stringify(zip)}.`,
+    };
+  }
+  const result = await zipDemographics(zip);
+  if (!result.ok) {
+    if (result.reason === "no_api_key") {
+      return {
+        ok: false,
+        summary:
+          "Census demographics aren't configured (CENSUS_API_KEY missing). Note the gap and continue with Memory.",
+      };
+    }
+    return {
+      ok: false,
+      summary: `Census lookup failed (${result.reason}): ${result.message ?? ""}`.trim(),
+    };
+  }
+  const popLine =
+    result.population != null ? `${result.population.toLocaleString()} people` : "—";
+  const incomeLine =
+    result.medianHouseholdIncome != null
+      ? `$${result.medianHouseholdIncome.toLocaleString()}`
+      : "—";
+  const ageLine =
+    result.medianAge != null ? `${result.medianAge.toFixed(1)} years` : "—";
+  return {
+    ok: true,
+    summary: `ZIP ${zip} (ACS ${result.year}): population ${popLine} · median HH income ${incomeLine} · median age ${ageLine}.`,
+  };
+}
+
+/** Execute the nearby_places tool via Google Places. */
+export async function executeNearbyPlaces(args: {
+  input: unknown;
+}): Promise<ToolResult> {
+  if (!args.input || typeof args.input !== "object") {
+    return { ok: false, summary: "nearby_places input missing." };
+  }
+  const raw = args.input as Record<string, unknown>;
+  const keyword = typeof raw.keyword === "string" ? raw.keyword : "";
+  const address = typeof raw.address === "string" ? raw.address : "";
+  const radius = typeof raw.radius_meters === "number"
+    ? Math.min(Math.max(raw.radius_meters, 100), 50_000)
+    : 5000;
+  if (!keyword || !address) {
+    return {
+      ok: false,
+      summary: "nearby_places needs both `keyword` and `address`.",
+    };
+  }
+  const result = await nearbyPlaces({
+    keyword,
+    centerAddress: address,
+    radiusMeters: radius,
+  });
+  if (!result.ok) {
+    if (result.reason === "no_api_key") {
+      return {
+        ok: false,
+        summary:
+          "Google Places isn't configured (GOOGLE_MAPS_API_KEY missing). Skip the lookup and continue with Memory.",
+      };
+    }
+    return {
+      ok: false,
+      summary: `Places lookup failed (${result.reason}): ${result.message ?? ""}`.trim(),
+    };
+  }
+  if (result.places.length === 0) {
+    return {
+      ok: true,
+      summary: `No "${keyword}" places found within ${radius}m of ${address}.`,
+    };
+  }
+  const top = result.places.slice(0, 10);
+  const lines = top.map((p) => {
+    const rating = p.rating ? ` (${p.rating}★, ${p.userRatingsTotal ?? 0} reviews)` : "";
+    return `- ${p.name} — ${p.address}${rating}`;
+  });
+  return {
+    ok: true,
+    summary: `Found ${result.places.length} "${keyword}" within ${radius}m of ${address}:\n${lines.join("\n")}`,
+  };
 }
 
 /**

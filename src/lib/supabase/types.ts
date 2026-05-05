@@ -132,6 +132,27 @@ export type AssessmentResponse = {
  * server-side on write to keep row size bounded over months of use.
  */
 /**
+ * Tier 2/3 redline note left by Jason (or another admin reviewer)
+ * against a customer's chapter draft. The customer resolves redlines
+ * one by one; once every blocker-severity redline is resolved, the
+ * admin can stamp the chapter as Jason-approved.
+ */
+export type ChapterRedline = {
+  id: string;
+  user_id: string;
+  chapter_slug: string;
+  claim_id: string | null;
+  comment: string;
+  severity: "info" | "warning" | "blocker";
+  reviewer_user_id: string;
+  reviewer_name: string | null;
+  resolved_at: string | null;
+  resolved_by_user_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/**
  * Versioned snapshot of a customer_memory chapter at a point in
  * time. Captured BEFORE every meaningful write (agent redraft,
  * scrape, user edit) so the customer can roll back. Pruned to
@@ -236,6 +257,11 @@ export type CustomerMemory = {
   /** Per-chapter attachments (files + links) the customer added to
    *  enrich the agent's drafting context. See migration 0012 for shape. */
   attachments: ChapterAttachment[];
+  /** Stamped when Jason (or another admin reviewer) marks the chapter
+   *  approved. Surfaced on export cover pages + chapter cards.
+   *  Null = no human review yet. See migration 0022. */
+  jason_approved_at: string | null;
+  jason_approved_by_user_id: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -388,6 +414,8 @@ export type Database = {
           confidence?: CustomerMemory["confidence"];
           last_updated_by?: CustomerMemory["last_updated_by"];
           attachments?: CustomerMemory["attachments"];
+          jason_approved_at?: string | null;
+          jason_approved_by_user_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -566,6 +594,25 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Omit<MemorySnapshot, "id" | "user_id">>;
+        Relationships: [];
+      };
+      chapter_redlines: {
+        Row: ChapterRedline;
+        Insert: {
+          id?: string;
+          user_id: string;
+          chapter_slug: string;
+          claim_id?: string | null;
+          comment: string;
+          severity?: ChapterRedline["severity"];
+          reviewer_user_id: string;
+          reviewer_name?: string | null;
+          resolved_at?: string | null;
+          resolved_by_user_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<ChapterRedline, "id" | "user_id">>;
         Relationships: [];
       };
       scheduled_emails: {

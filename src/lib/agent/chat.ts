@@ -26,8 +26,11 @@ import {
 import { loadAgentSystemPrompt } from "./prompt";
 import { getMemorySnapshotForPrompt } from "@/lib/memory";
 import {
+  buildAgentTools,
+  executeNearbyPlaces,
   executeUpdateMemoryField,
-  UPDATE_MEMORY_FIELD_TOOL,
+  executeWebSearch,
+  executeZipDemographics,
   type ToolResult,
 } from "./tools";
 
@@ -201,7 +204,7 @@ export async function* streamChatEvents(args: {
         ],
         thinking: { type: "adaptive" },
         output_config: { effort: EFFORT_FOR_CHAT },
-        tools: [UPDATE_MEMORY_FIELD_TOOL],
+        tools: buildAgentTools(),
         messages,
       });
     } catch (err) {
@@ -265,16 +268,27 @@ export async function* streamChatEvents(args: {
       };
 
       let result: ToolResult;
-      if (block.name === "update_memory_field") {
-        result = await executeUpdateMemoryField({
-          userId: args.userId,
-          input: block.input,
-        });
-      } else {
-        result = {
-          ok: false,
-          summary: `Unknown tool: ${block.name}. Available tools: update_memory_field.`,
-        };
+      switch (block.name) {
+        case "update_memory_field":
+          result = await executeUpdateMemoryField({
+            userId: args.userId,
+            input: block.input,
+          });
+          break;
+        case "web_search":
+          result = await executeWebSearch({ input: block.input });
+          break;
+        case "zip_demographics":
+          result = await executeZipDemographics({ input: block.input });
+          break;
+        case "nearby_places":
+          result = await executeNearbyPlaces({ input: block.input });
+          break;
+        default:
+          result = {
+            ok: false,
+            summary: `Unknown tool: ${block.name}.`,
+          };
       }
 
       yield {
