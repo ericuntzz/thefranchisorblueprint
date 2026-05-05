@@ -38,6 +38,9 @@ import {
   spliceMissingLocksBack,
 } from "@/lib/memory/locks";
 import { extractFieldsFromContent } from "./extract-fields";
+import { performChapterResearch } from "./research/preflight";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import type { CustomerMemory } from "@/lib/supabase/types";
 
 type FieldValue = string | number | boolean | string[] | null;
 
@@ -103,11 +106,17 @@ export async function draftChapter(args: {
     memorySnapshot,
     existingChapter,
     attachments,
+    research,
   ] = await Promise.all([
     buildDraftContext(slug),
     getMemorySnapshotForPrompt(userId),
     readMemoryFile(userId, slug),
     readAttachments(userId, slug),
+    // Pre-draft research bundle for chapters that benefit from
+    // external data (market_strategy, competitor_landscape,
+    // territory_real_estate). Best-effort; returns empty when
+    // env-gated APIs aren't configured.
+    runResearchPreflight(userId, slug),
   ]);
 
   // If the chapter already has user-locked spans (the customer has
@@ -161,6 +170,14 @@ export async function draftChapter(args: {
         text: `<customer_memory>\nEverything I currently know about the customer's business, organized by chapter. Some chapters are empty — that's where there are gaps to fill.\n\n${memorySnapshot}\n</customer_memory>`,
         cache_control: CACHE_5M,
       },
+      ...(research.markdown
+        ? ([
+            {
+              type: "text" as const,
+              text: `<research>\nLive external data gathered for this chapter. Cite any claim derived from this block with \`source_type: "research"\` and put the tool used (Tavily / Google Places / Census) in \`source_ref\`. Don't restate research data verbatim — synthesize and credit.\n\n${research.markdown}\n</research>`,
+            },
+          ] as const)
+        : []),
       {
         type: "text",
         text: `Now draft the **${chapterTitle}** (\`${slug}\`) chapter.\n\nDrafting instruction:\n${instruction}${lockPreservationInstruction ? `\n\n${lockPreservationInstruction}` : ""}${(() => {
@@ -428,4 +445,47 @@ Here is the existing draft with the locked markers shown:
 
 ${previousContent}
 </existing_chapter_with_user_edits>`;
+}
+
+/**
+ * Pre-draft research bundle. Reads every chapter's structured fields
+ * once (the preflight queries depend on cross-chapter data — e.g.
+ * competitor_landscape uses business_overview.first_location_address
+ * to anchor the Places search). Returns the markdown block + the
+ * source list for provenance hints.
+ */
+async function runResearchPreflight(
+  userId: string,
+  slug: MemoryFileSlug,
+): Promise<{ markdown: string; sourcesUsed: string[] }> {
+  // Skip the round-trip for chapters without any preflight queries.
+  if (
+    slug !== "market_strategy" &&
+    slug !== "competitor_landscape" &&
+    slug !== "territory_real_estate"
+  ) {
+    return { markdown: "", sourcesUsed: [] };
+  }
+  try {
+    const admin = getSupabaseAdmin();
+    const { data } = await admin
+      .from("customer_memory")
+      .select("file_slug, fields")
+      .eq("user_id", userId);
+    const fieldsBySlug: Partial<Record<MemoryFileSlug, Record<string, unknown>>> = {};
+    for (const row of (data ?? []) as Pick<CustomerMemory, "file_slug" | "fields">[]) {
+      fieldsBySlug[row.file_slug as MemoryFileSlug] = (row.fields ?? {}) as Record<
+        string,
+        unknown
+      >;
+    }
+    const result = await performChapterResearch({ slug, fieldsBySlug });
+    return result;
+  } catch (err) {
+    console.warn(
+      "[draft] research preflight failed (non-fatal):",
+      err instanceof Error ? err.message : err,
+    );
+    return { markdown: "", sourcesUsed: [] };
+  }
 }
