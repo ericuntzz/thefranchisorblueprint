@@ -364,7 +364,7 @@ export function AssessmentFlow({ source }: { source?: string }) {
 // reserves the same vertical space regardless of which stage is active —
 // no "page jumps" when the user clicks an answer or the Continue button.
 const CARD_BASE =
-  "bg-white rounded-2xl border border-navy/10 shadow-[0_30px_60px_rgba(30,58,95,0.16),0_8px_18px_rgba(30,58,95,0.06)] min-h-[560px] md:min-h-[620px]";
+  "bg-white rounded-2xl border border-navy/10 shadow-[0_30px_60px_rgba(30,58,95,0.16),0_8px_18px_rgba(30,58,95,0.06)] md:min-h-[620px]";
 
 function LoadingCard() {
   return (
@@ -521,7 +521,7 @@ function InsightCard({
 }) {
   return (
     <div
-      className="bg-cream rounded-2xl border border-gold/30 shadow-[0_30px_60px_rgba(30,58,95,0.16),0_8px_18px_rgba(30,58,95,0.06)] min-h-[560px] md:min-h-[620px] p-7 md:p-10 flex flex-col"
+      className="bg-cream rounded-2xl border border-gold/30 shadow-[0_30px_60px_rgba(30,58,95,0.16),0_8px_18px_rgba(30,58,95,0.06)] md:min-h-[620px] p-7 md:p-10 flex flex-col"
     >
       <ProgressBar progress={progress} label="Quick beat from Jason" />
       <div className="flex gap-4">

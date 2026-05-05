@@ -31,15 +31,26 @@ export const runtime = "nodejs";
 const MAX_PERSISTED_ITEMS = 30;
 
 /** Shape of a transcript item — must mirror the client's
- *  TranscriptItem so we don't accept poisonous extra fields. */
+ *  TranscriptItem so we don't accept poisonous extra fields.
+ *  `isGreeting` is allowed on bubbles but the client strips
+ *  greetings before sending to us; this just means we won't
+ *  reject a save if a stray one slips through. Dividers are
+ *  pure UI markers and are also dropped client-side before save,
+ *  but we accept them here for forward-compat. */
 type TranscriptItem =
-  | { kind: "bubble"; role: "user" | "assistant"; text: string }
+  | {
+      kind: "bubble";
+      role: "user" | "assistant";
+      text: string;
+      isGreeting?: boolean;
+    }
   | {
       kind: "tool";
       id: string;
       status: "running" | "ok" | "error";
       summary: string;
-    };
+    }
+  | { kind: "divider"; label: string };
 
 function isTranscriptItem(value: unknown): value is TranscriptItem {
   if (!value || typeof value !== "object") return false;
@@ -56,6 +67,9 @@ function isTranscriptItem(value: unknown): value is TranscriptItem {
       (v.status === "running" || v.status === "ok" || v.status === "error") &&
       typeof v.summary === "string"
     );
+  }
+  if (v.kind === "divider") {
+    return typeof v.label === "string";
   }
   return false;
 }

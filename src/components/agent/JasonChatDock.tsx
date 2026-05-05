@@ -35,8 +35,10 @@ import {
   CheckCircle2,
   AlertTriangle,
   Loader2,
+  Maximize2,
   MessageCircle,
   Mic,
+  Minimize2,
   Paperclip,
   Send,
   Sparkles,
@@ -94,17 +96,31 @@ interface SpeechRecognitionLike {
 }
 type SpeechRecognitionCtor = new () => SpeechRecognitionLike;
 
-/** Items the transcript can hold — bubbles (user/assistant prose) and
- *  tool cards (the inline "✓ Updated X = Y" rows). The transcript is
- *  the union so the renderer can iterate one ordered list. */
+/** Items the transcript can hold — bubbles (user/assistant prose),
+ *  tool cards (the inline "✓ Updated X = Y" rows), and resume
+ *  dividers (a subtle "picking up from earlier →" rule shown when
+ *  we restore a persisted conversation under a fresh greeting).
+ *  The transcript is the union so the renderer can iterate one
+ *  ordered list. */
 type TranscriptItem =
-  | { kind: "bubble"; role: "user" | "assistant"; text: string }
+  | {
+      kind: "bubble";
+      role: "user" | "assistant";
+      text: string;
+      /** True for the dock's opening greeting line. Stripped on
+       *  save so a returning customer always gets a fresh,
+       *  context-aware greeting at the top of the next session
+       *  rather than a stale one frozen from where they last
+       *  opened the dock. */
+      isGreeting?: boolean;
+    }
   | {
       kind: "tool";
       id: string;
       status: "running" | "ok" | "error";
       summary: string;
-    };
+    }
+  | { kind: "divider"; label: string };
 
 /** Wire format from the server — mirrors `ChatEvent` in lib/agent/chat.ts. */
 type ChatEvent =
@@ -367,6 +383,12 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
   // resumed conversation. Initial false → we attempt the load on
   // mount → flips true regardless of whether anything was found.
   const [historyLoaded, setHistoryLoaded] = useState(false);
+  // Expanded drawer mode. Default false (compact pill in the
+  // bottom-right). When true, the dock grows to a roomy ~560×80vh
+  // drawer. Preference is sticky via localStorage so a customer
+  // who likes the bigger view doesn't have to re-expand on every
+  // page load.
+  const [expanded, setExpanded] = useState(false);
   // Save debouncer — schedules a chat-history POST a beat after
   // the transcript settles so we don't hammer the endpoint on
   // every streamed delta.
@@ -385,11 +407,18 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
   // a delta or tool card lands.
   const nearBottomRef = useRef(true);
 
+  // Persisted transcript fetched from the server, kept separate
+  // from the live `transcript` state. On first open, we splice
+  // these in AFTER a fresh greeting so the opener always reflects
+  // the customer's current page, not the stale context they last
+  // opened the dock under.
+  const persistedHistoryRef = useRef<TranscriptItem[]>([]);
+
   // Load any persisted transcript from the previous session. Fires
-  // once on mount; the dock only greets the customer if the load
-  // returned an empty transcript (i.e. genuinely first-ever open),
-  // otherwise we resume mid-conversation. Failure is non-fatal —
-  // we just fall through to the greeting path.
+  // once on mount. The transcript itself isn't applied yet — it
+  // gets spliced in by the greeting effect once the dock opens,
+  // under a fresh context-aware greeting. Failure is non-fatal —
+  // we just fall through to the empty-history path.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -404,8 +433,8 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
         }
         const j = (await res.json()) as { transcript?: TranscriptItem[] };
         if (cancelled) return;
-        if (Array.isArray(j.transcript) && j.transcript.length > 0) {
-          setTranscript(j.transcript);
+        if (Array.isArray(j.transcript)) {
+          persistedHistoryRef.current = j.transcript;
         }
         setHistoryLoaded(true);
       } catch {
@@ -417,25 +446,38 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
     };
   }, []);
 
-  // Greet on first open. The dock is layout-mounted now, so this only
-  // fires on the very first open of a session. Subsequent navigations
-  // keep the existing transcript intact — open/close is purely visual.
-  // The greeting is computed from the current pathname + firstName so
-  // Jason AI opens with intent ("you're on Unit Economics — want to
-  // draft it?") instead of a generic "ask me anything."
+  // Greet on first open. Always emits a fresh, context-aware
+  // greeting line tied to the CURRENT pathname — never the stale
+  // greeting from whatever page the customer was on the last time
+  // they opened the dock. If a persisted history exists, it's
+  // spliced in AFTER the greeting under a "Resumed from earlier"
+  // divider so the conversation continuity stays without freezing
+  // the opener.
   //
-  // Gated on `historyLoaded` so we don't briefly flash a greeting
-  // before the persisted transcript arrives — that'd be a janky
-  // "wait, where did my conversation go?" moment for returning
-  // customers.
+  // Gated on `historyLoaded` so the greeting doesn't flash before
+  // the persisted history arrives.
   useEffect(() => {
     if (!historyLoaded) return;
     if (open && transcript.length === 0) {
-      const greeting = getContextGreeting({
-        pathname: pathname ?? "",
-        firstName,
-      });
-      setTranscript([{ kind: "bubble", role: "assistant", text: greeting }]);
+      const greetingItem: TranscriptItem = {
+        kind: "bubble",
+        role: "assistant",
+        text: getContextGreeting({
+          pathname: pathname ?? "",
+          firstName,
+        }),
+        isGreeting: true,
+      };
+      const persisted = persistedHistoryRef.current;
+      if (persisted.length === 0) {
+        setTranscript([greetingItem]);
+      } else {
+        setTranscript([
+          greetingItem,
+          { kind: "divider", label: "Picking up where we left off" },
+          ...persisted,
+        ]);
+      }
     }
   }, [open, transcript.length, firstName, pathname, historyLoaded]);
 
@@ -443,16 +485,25 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
   // Debounce window covers the streaming case — we don't want to
   // POST on every character delta, only after the model finishes
   // and the buffer drains. 1.5s after the last change is plenty.
+  //
+  // Greetings and dividers are stripped before save so the next
+  // session starts with a fresh, current-page-aware opener and
+  // doesn't double up on resume markers.
   useEffect(() => {
     if (!historyLoaded) return; // don't overwrite server-side data
                                 // before we've even loaded it
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
+      const persistable = transcript.filter((item) => {
+        if (item.kind === "divider") return false;
+        if (item.kind === "bubble" && item.isGreeting) return false;
+        return true;
+      });
       void fetch("/api/agent/chat-history", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ transcript }),
+        body: JSON.stringify({ transcript: persistable }),
       }).catch((err) => {
         // Persistence is best-effort — log but don't disrupt UX.
         console.warn("[jason-ai] chat-history save failed:", err);
@@ -502,6 +553,27 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
       abortRef.current?.abort();
     };
   }, []);
+
+  // Restore the expanded-drawer preference from localStorage on
+  // mount. Wrapped in try/catch because some browsers (private mode,
+  // strict storage policies) throw on access.
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem("jason-ai-expanded");
+      if (saved === "1") setExpanded(true);
+    } catch {
+      /* ignore — default compact */
+    }
+  }, []);
+
+  // Persist the preference whenever it flips.
+  useEffect(() => {
+    try {
+      window.localStorage.setItem("jason-ai-expanded", expanded ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+  }, [expanded]);
 
   // Feature-detect Web Speech once on mount so we can hide the mic
   // button entirely on browsers without it. The two namespaces
@@ -652,7 +724,10 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
   /** Build the plain-text history we send to the server. Tool cards
    *  are server-side bookkeeping — the model already knows about
    *  past tool calls because they were re-injected as tool_result
-   *  blocks; we don't need to round-trip them through the client. */
+   *  blocks; we don't need to round-trip them through the client.
+   *  Dividers are pure UI furniture, also dropped. The dock's
+   *  greeting bubble is included so the model has the full
+   *  customer-facing context. */
   const historyForServer = useCallback((): ChatTurn[] => {
     return transcript
       .filter((i): i is Extract<TranscriptItem, { kind: "bubble" }> => i.kind === "bubble")
@@ -1121,9 +1196,11 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
 
   return (
     <div
-      className={`fixed bottom-6 right-6 z-50 flex w-[380px] max-w-[calc(100vw-2rem)] flex-col rounded-2xl border bg-cream shadow-[0_24px_48px_rgba(30,58,95,0.28)] transition-colors ${
-        dragActive ? "border-gold ring-4 ring-gold/30" : "border-navy/10"
-      }`}
+      className={`fixed bottom-6 right-6 z-50 flex flex-col rounded-2xl border bg-cream shadow-[0_24px_48px_rgba(30,58,95,0.28)] transition-[width,height,border-color,box-shadow] duration-200 ${
+        expanded
+          ? "w-[600px] max-w-[calc(100vw-3rem)]"
+          : "w-[380px] max-w-[calc(100vw-2rem)]"
+      } ${dragActive ? "border-gold ring-4 ring-gold/30" : "border-navy/10"}`}
       onDragEnter={onDockDragEnter}
       onDragOver={onDockDragOver}
       onDragLeave={onDockDragLeave}
@@ -1187,6 +1264,9 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
                 streaming={isInflight}
               />
             );
+          }
+          if (item.kind === "divider") {
+            return <ResumeDivider key={`divider-${idx}`} label={item.label} />;
           }
           return (
             <ToolCard
@@ -1485,6 +1565,25 @@ function MarkdownBubble({ text }: { text: string }) {
     >
       {text}
     </ReactMarkdown>
+  );
+}
+
+/**
+ * Subtle horizontal rule shown above persisted history when we
+ * resume a previous conversation under a fresh greeting. Reads
+ * "Picking up where we left off" — small, low-contrast, calm —
+ * so the customer instantly clocks "this is older context, the
+ * line above is the new opener."
+ */
+function ResumeDivider({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-2 py-1 select-none">
+      <div className="h-px flex-1 bg-navy/10" />
+      <span className="text-[10px] uppercase tracking-[0.16em] text-grey-4 font-bold">
+        {label}
+      </span>
+      <div className="h-px flex-1 bg-navy/10" />
+    </div>
   );
 }
 

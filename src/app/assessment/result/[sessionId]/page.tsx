@@ -19,7 +19,6 @@
  * UUIDs, this prevents accidental link-sharing from leaking a result.
  */
 
-import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
@@ -28,6 +27,7 @@ import {
   Award,
   Calendar,
   Download,
+  HelpCircle,
   ShieldCheck,
   TrendingDown,
   TrendingUp,
@@ -66,7 +66,13 @@ export default async function AssessmentResultPage({
   const cookieStore = await cookies();
   const cookieToken = cookieStore.get(RESUME_COOKIE)?.value;
   const presented = queryToken ?? cookieToken;
-  if (!presented) notFound();
+
+  // No token at all → most likely the customer cleared cookies or is on
+  // a different browser than where they took the quiz. Show a friendly
+  // recovery view instead of a bare 404.
+  if (!presented) {
+    return <UnrecognizedLinkView />;
+  }
 
   const supabase = getSupabaseAdmin();
   const { data: sessionData } = await supabase
@@ -76,7 +82,17 @@ export default async function AssessmentResultPage({
     .eq("resume_token", presented)
     .maybeSingle();
   const session = sessionData as AssessmentSession | null;
-  if (!session || !session.completed_at) notFound();
+
+  // Session not found (link expired / shared incorrectly / token rotated).
+  if (!session) {
+    return <UnrecognizedLinkView />;
+  }
+
+  // Session exists but the customer didn't finish — push them back into
+  // the resume flow rather than 404'ing.
+  if (!session.completed_at) {
+    return <NotFinishedView />;
+  }
 
   const { data: responsesData } = await supabase
     .from("assessment_responses")
@@ -272,6 +288,93 @@ export default async function AssessmentResultPage({
         </div>
       </section>
 
+      <SiteFooter />
+    </>
+  );
+}
+
+/**
+ * Shown when no resume token is presented OR the token doesn't match
+ * any stored session. Replaces the prior bare notFound() — most users
+ * who hit this state are on a different browser than where they took
+ * the quiz, or they cleared cookies. A 404 in that case feels punishing
+ * for what is really just a recoverable "we don't know who you are"
+ * state.
+ */
+function UnrecognizedLinkView() {
+  return (
+    <>
+      <SiteNav />
+      <section className="bg-cream py-20 md:py-28">
+        <div className="max-w-[560px] mx-auto px-6 md:px-8">
+          <div className="bg-white rounded-2xl border border-navy/10 shadow-[0_24px_60px_rgba(30,58,95,0.10)] p-8 md:p-12 text-center">
+            <div className="inline-flex w-14 h-14 rounded-full bg-cream items-center justify-center text-gold-warm mb-5">
+              <HelpCircle size={22} />
+            </div>
+            <h1 className="text-navy font-extrabold text-2xl md:text-3xl mb-3">
+              We can&apos;t find your assessment result
+            </h1>
+            <p className="text-grey-3 text-base leading-relaxed mb-7">
+              You&apos;re probably on a different browser than where you took
+              the assessment, or your link has expired. The result is still
+              saved — retake the assessment to get a fresh report, or email us
+              if you think this is a mistake.
+            </p>
+            <div className="flex flex-wrap gap-3 justify-center">
+              <Link
+                href="/assessment"
+                className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-7 py-3.5 rounded-full hover:bg-gold-dark transition-colors"
+              >
+                Take the assessment <ArrowRight size={14} />
+              </Link>
+              <a
+                href="mailto:team@thefranchisorblueprint.com?subject=Assessment%20result%20link%20issue"
+                className="inline-flex items-center gap-2 bg-transparent text-navy border-2 border-navy/15 font-bold text-sm uppercase tracking-[0.1em] px-7 py-3.5 rounded-full hover:border-navy hover:bg-navy hover:text-white transition-colors"
+              >
+                Email support
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+      <SiteFooter />
+    </>
+  );
+}
+
+/**
+ * Shown when the session token IS valid but the assessment isn't yet
+ * complete. Pushes the customer back into the resume flow instead of
+ * showing a bare 404. The /assessment page itself reads the same cookie
+ * and resumes from where they left off.
+ */
+function NotFinishedView() {
+  return (
+    <>
+      <SiteNav />
+      <section className="bg-cream py-20 md:py-28">
+        <div className="max-w-[560px] mx-auto px-6 md:px-8">
+          <div className="bg-white rounded-2xl border border-gold/30 shadow-[0_24px_60px_rgba(212,162,76,0.14)] p-8 md:p-12 text-center">
+            <div className="inline-flex w-14 h-14 rounded-full bg-gold/15 items-center justify-center text-gold-warm mb-5">
+              <Calendar size={22} />
+            </div>
+            <h1 className="text-navy font-extrabold text-2xl md:text-3xl mb-3">
+              Your assessment isn&apos;t finished yet
+            </h1>
+            <p className="text-grey-3 text-base leading-relaxed mb-7">
+              You started this one but didn&apos;t answer all 15 questions, so
+              there&apos;s no result to show yet. Pick up where you left off
+              and we&apos;ll score you when you&apos;re done.
+            </p>
+            <Link
+              href="/assessment"
+              className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-8 py-3.5 rounded-full hover:bg-gold-dark transition-colors"
+            >
+              Pick up where you left off <ArrowRight size={14} />
+            </Link>
+          </div>
+        </div>
+      </section>
       <SiteFooter />
     </>
   );

@@ -68,12 +68,23 @@ export default async function CapabilityDetailPage({ params }: PageProps) {
   const completion = (progressData ?? null) as CapabilityProgress | null;
   const completed = !!completion?.completed_at;
 
-  // Fire-and-forget view log (records started_at on first view + bumps
-  // last_viewed_at on every view). Used by the "stuck for 14+ days"
-  // nudge below. Doesn't block render — if it fails, we log and move on.
-  void supabase.rpc("log_capability_view", { uid: user.id, slug }).then(({ error }) => {
-    if (error) console.error(`[portal] log_capability_view failed: ${error.message}`);
+  // View log (records started_at on first view + bumps last_viewed_at
+  // on every view). Used by the "stuck for 14+ days" nudge below.
+  //
+  // Was previously a fire-and-forget `void supabase.rpc(...).then(...)`
+  // which is unreliable in Next.js server components: once the response
+  // streams out, the request lifecycle ends and pending promises may
+  // not complete. Awaiting it adds ~50-200ms to render but guarantees
+  // the analytics row exists before the page is served — which is the
+  // semantic this signal needs (the customer's "started_at" determines
+  // the stuck-banner that shows on this very render).
+  const { error: logErr } = await supabase.rpc("log_capability_view", {
+    uid: user.id,
+    slug,
   });
+  if (logErr) {
+    console.error(`[portal] log_capability_view failed: ${logErr.message}`);
+  }
 
   // For the stuck nudge: started >= 14 days ago AND not yet completed.
   const isStuck =
