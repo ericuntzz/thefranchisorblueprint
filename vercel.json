@@ -4,7 +4,10 @@
     {
       "path": "/api/cron/drip",
       "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/stuck-customer-rescue",
+      "schedule": "0 15 * * *"
     }
   ]
 }
-

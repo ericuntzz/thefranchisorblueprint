@@ -47,6 +47,12 @@ import {
   assessmentResultText,
   type AssessmentResultPayload,
 } from "./templates/assessment-result";
+import {
+  StuckCustomerRescueEmail,
+  stuckCustomerRescueSubject,
+  stuckCustomerRescueText,
+  type StuckCustomerRescuePayload,
+} from "./templates/stuck-customer-rescue";
 import { sendEmail, type EmailAttachment } from "./send";
 
 /**
@@ -68,6 +74,7 @@ type TemplateRegistry = {
   "internal-lead-notification": InternalLeadNotificationPayload;
   "newsletter-welcome": NewsletterWelcomePayload;
   "assessment-result": AssessmentResultPayload;
+  "stuck-customer-rescue": StuckCustomerRescuePayload;
 };
 
 export type TemplateName = keyof TemplateRegistry;
@@ -112,6 +119,11 @@ const REGISTRY = {
     Component: AssessmentResultEmail,
     subject: assessmentResultSubject,
     text: assessmentResultText,
+  },
+  "stuck-customer-rescue": {
+    Component: StuckCustomerRescueEmail,
+    subject: stuckCustomerRescueSubject,
+    text: stuckCustomerRescueText,
   },
 } as const;
 

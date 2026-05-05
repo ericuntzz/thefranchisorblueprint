@@ -276,6 +276,14 @@ export type CoachingSession = {
   completed_at: string | null;
 };
 
+export type CustomerRescueSend = {
+  id: string;
+  user_id: string;
+  chapter_slug: string;
+  days_idle: number;
+  sent_at: string;
+};
+
 // Supabase JS v2 type inference requires this exact shape — including the
 // __InternalSupabase marker and the `{ [_ in never]: never }` empty-record
 // idiom for Views/Functions/Enums/CompositeTypes. Deviations cause every
@@ -371,6 +379,15 @@ export type Database = {
           notes?: string | null;
         };
         Update: Partial<Omit<CoachingSession, "id">>;
+        Relationships: [];
+      };
+      customer_rescue_sends: {
+        Row: CustomerRescueSend;
+        Insert: Omit<CustomerRescueSend, "id" | "sent_at"> & {
+          id?: string;
+          sent_at?: string;
+        };
+        Update: Partial<Omit<CustomerRescueSend, "id">>;
         Relationships: [];
       };
       upgrade_offers: {
