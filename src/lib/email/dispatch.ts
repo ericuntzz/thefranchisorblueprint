@@ -59,6 +59,12 @@ import {
   teamOpsDigestText,
   type OpsDigestPayload,
 } from "./templates/team-ops-digest";
+import {
+  RefundWindowOutreachEmail,
+  refundWindowOutreachSubject,
+  refundWindowOutreachText,
+  type RefundWindowOutreachPayload,
+} from "./templates/refund-window-outreach";
 import { sendEmail, type EmailAttachment } from "./send";
 
 /**
@@ -82,6 +88,7 @@ type TemplateRegistry = {
   "assessment-result": AssessmentResultPayload;
   "stuck-customer-rescue": StuckCustomerRescuePayload;
   "team-ops-digest": OpsDigestPayload;
+  "refund-window-outreach": RefundWindowOutreachPayload;
 };
 
 export type TemplateName = keyof TemplateRegistry;
@@ -136,6 +143,11 @@ const REGISTRY = {
     Component: TeamOpsDigestEmail,
     subject: teamOpsDigestSubject,
     text: teamOpsDigestText,
+  },
+  "refund-window-outreach": {
+    Component: RefundWindowOutreachEmail,
+    subject: refundWindowOutreachSubject,
+    text: refundWindowOutreachText,
   },
 } as const;
 

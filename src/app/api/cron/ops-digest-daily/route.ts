@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
     collectAssessmentLeads(admin),
     collectRefundWatchlist(admin),
     collectEmailHealth(admin),
-    collectStripeReconciliation(),
+    collectStripeReconciliation(admin),
     collectPlatformHealth(),
   ]);
 

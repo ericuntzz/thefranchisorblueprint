@@ -52,6 +52,7 @@ export function ExportsSection({ readiness }: Props) {
       <div className="grid gap-3">
         {DELIVERABLE_DISPLAY_ORDER.map((id) => {
           const def = DELIVERABLES[id];
+          if (!def) return null;
           const review = readiness[id];
           return (
             <article

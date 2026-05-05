@@ -70,7 +70,7 @@ export async function GET(
   if (formatRaw !== "docx" && formatRaw !== "md") {
     return NextResponse.json({ error: "Unsupported format" }, { status: 400 });
   }
-  if (!def.formats.includes(formatRaw)) {
+  if (!(def.formats as readonly string[]).includes(formatRaw)) {
     return NextResponse.json(
       { error: `Format ${formatRaw} not available for this deliverable` },
       { status: 400 },
@@ -83,6 +83,12 @@ export async function GET(
   let extension: string;
   try {
     const ctx = await loadBuildContext(user.id);
+    if (def.kind !== "doc") {
+      return NextResponse.json(
+        { error: "Slide exports not supported via this endpoint yet" },
+        { status: 400 },
+      );
+    }
     const doc = def.build(ctx);
     if (formatRaw === "docx") {
       buffer = await renderDocx(doc);

@@ -12,6 +12,14 @@
     {
       "path": "/api/cron/ops-digest-daily",
       "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/cron/stripe-reconcile",
+      "schedule": "0 1,7,13,19 * * *"
+    },
+    {
+      "path": "/api/cron/refund-window-outreach",
+      "schedule": "0 16 * * *"
     }
   ]
 }

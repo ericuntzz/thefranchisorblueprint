@@ -165,7 +165,8 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
   const buildCtx = await loadBuildContext(user.id);
   const exportReadiness = DELIVERABLE_DISPLAY_ORDER.reduce(
     (acc, id) => {
-      acc[id] = reviewDeliverable(DELIVERABLES[id], buildCtx);
+      const def = DELIVERABLES[id];
+      if (def) acc[id] = reviewDeliverable(def, buildCtx);
       return acc;
     },
     {} as Record<DeliverableId, DeliverableReview>,

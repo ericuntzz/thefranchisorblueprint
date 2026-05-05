@@ -291,6 +291,25 @@ export type OpsDigestSend = {
   sent_at: string;
 };
 
+export type StripeReconciliationIssue = {
+  id: string;
+  stripe_ref: string;
+  issue_type: string;
+  details: Record<string, unknown>;
+  resolved: boolean;
+  resolved_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type RefundOutreachSend = {
+  id: string;
+  user_id: string;
+  days_remaining: number;
+  readiness_pct: number;
+  sent_at: string;
+};
+
 // Supabase JS v2 type inference requires this exact shape — including the
 // __InternalSupabase marker and the `{ [_ in never]: never }` empty-record
 // idiom for Views/Functions/Enums/CompositeTypes. Deviations cause every
@@ -404,6 +423,27 @@ export type Database = {
           sent_at?: string;
         };
         Update: Partial<Omit<OpsDigestSend, "id">>;
+        Relationships: [];
+      };
+      stripe_reconciliation_issues: {
+        Row: StripeReconciliationIssue;
+        Insert: Omit<StripeReconciliationIssue, "id" | "created_at" | "updated_at" | "resolved_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+          resolved?: boolean;
+          resolved_at?: string | null;
+        };
+        Update: Partial<Omit<StripeReconciliationIssue, "id">>;
+        Relationships: [];
+      };
+      refund_outreach_sends: {
+        Row: RefundOutreachSend;
+        Insert: Omit<RefundOutreachSend, "id" | "sent_at"> & {
+          id?: string;
+          sent_at?: string;
+        };
+        Update: Partial<Omit<RefundOutreachSend, "id">>;
         Relationships: [];
       };
       upgrade_offers: {

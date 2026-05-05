@@ -62,6 +62,7 @@ export default async function PreExportReviewPage({ params }: Props) {
 
   const ctx = await loadBuildContext(user.id);
   const review = reviewDeliverable(def, ctx);
+  if (def.kind !== "doc") redirect("/portal");
   const doc = def.build(ctx);
   const previewMd = renderMarkdown(doc);
 
