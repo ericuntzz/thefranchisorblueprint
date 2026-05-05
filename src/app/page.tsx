@@ -286,15 +286,15 @@ export default function Home() {
 
       {/* ===== 6. COACHING DIFFERENCE (dark navy + device mockups of real deliverables) ===== */}
       <section className="bg-blueprint text-white py-24 md:py-32 relative overflow-hidden">
-        {/* Soft gold radial glow */}
-        <div
-          className="absolute -left-32 top-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-20 blur-3xl pointer-events-none"
-          style={{ background: "radial-gradient(circle, #d4af37 0%, transparent 70%)" }}
-          aria-hidden
-        />
         <div className="max-w-[1300px] mx-auto px-8 grid md:grid-cols-[1.1fr_1fr] gap-16 md:gap-20 items-center relative">
           {/* Left: Device mockups */}
-          <div className="order-2 md:order-1">
+          <div className="order-2 md:order-1 relative">
+            {/* Soft gold radial glow — behind the device mockups */}
+            <div
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-20 blur-3xl pointer-events-none"
+              style={{ background: "radial-gradient(circle, #d4af37 0%, transparent 70%)" }}
+              aria-hidden
+            />
             <DeviceMockups />
           </div>
 

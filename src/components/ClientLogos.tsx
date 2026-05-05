@@ -9,18 +9,18 @@ const clients = [
 
 export function ClientLogos() {
   return (
-    <div className="flex flex-wrap justify-center gap-x-12 gap-y-6 items-center">
+    <div className="grid grid-cols-2 md:flex md:flex-wrap justify-center gap-x-12 gap-y-6 items-center">
       {clients.map((c) => (
         <div
           key={c.name}
-          className="flex items-center justify-center h-20 md:h-24 w-40 md:w-48 px-3"
+          className="flex items-center justify-center h-28 md:h-28 w-full md:w-48 px-3"
         >
           <Image
             src={c.src}
             alt={`${c.name} logo — a brand The Franchisor Blueprint has worked with`}
-            width={200}
-            height={100}
-            className="max-h-full w-auto object-contain"
+            width={600}
+            height={480}
+            className="max-h-full max-w-full object-contain"
           />
         </div>
       ))}
