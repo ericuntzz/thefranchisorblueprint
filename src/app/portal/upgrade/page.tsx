@@ -173,7 +173,7 @@ export default async function UpgradePage() {
                 <strong className="text-navy">10% promo lasts 48 hours.</strong> The extra discount is a one-time welcome to upgrade — applies if you act in the first 48h after your purchase. After that, the credit-forward base price is still valid forever (no expiration).
               </p>
               <p>
-                <strong className="text-navy">Risk-free upgrade.</strong> The 30-day money-back guarantee covers your upgrade fee, separately from your original purchase. If coaching isn&apos;t the missing piece for you, we refund.
+                <strong className="text-navy">Save 5% pay-in-full.</strong> Choose pay-in-full at checkout to take 5% off the upgrade price, or split your upgrade into installments to match your cash flow.
               </p>
             </div>
           </div>
@@ -254,7 +254,7 @@ function UpgradeCard({
             </button>
           </form>
           <p className="text-center text-xs text-grey-4 italic mt-3">
-            Secure checkout via Stripe · 30-day satisfaction guarantee
+            Secure checkout via Stripe · Save 5% when you pay in full
           </p>
         </div>
       </div>

@@ -1,17 +1,14 @@
 /**
  * Export pipeline shared types.
  *
- * Each deliverable builder returns a `DeliverableDoc` — a renderer-
- * agnostic tree of titled sections containing typed blocks (paragraphs,
- * bullet lists, key/value tables, etc.). The renderer (`render-docx.ts`,
- * `render-pdf.tsx`) walks that tree and emits the format-specific
- * output. This separation means the same deliverable can be rendered
- * to multiple formats without each builder re-implementing format
- * details, and Jason can preview the doc in markdown before any
- * format-specific quirks creep in.
+ * Each deliverable builder returns either a `DeliverableDoc` (DOCX/MD/PDF
+ * targets) or a `SlideDoc` (PPTX target). The corresponding renderer
+ * walks that tree and emits the format-specific output. This separation
+ * means the same deliverable can be rendered to multiple formats without
+ * each builder re-implementing format details.
  *
- * Design goal: builders never import `docx` or `react-pdf`. They only
- * ever return `DeliverableDoc`.
+ * Design goal: builders never import `docx` or `pptxgenjs`. They only
+ * ever return a `DeliverableDoc` or a `SlideDoc`.
  */
 
 import type { MemoryFileSlug } from "@/lib/memory/files";
@@ -30,6 +27,12 @@ export type DocBlock =
       kind: "kvtable";
       /** Rendered as a 2-column table — first column bold label, second value. */
       rows: Array<{ label: string; value: string }>;
+    }
+  | {
+      kind: "table";
+      /** Rendered as an N-column table with a header row. */
+      headers: string[];
+      rows: string[][];
     }
   | { kind: "callout"; text: string; tone?: "neutral" | "warning" | "info" }
   | { kind: "spacer" }
@@ -67,6 +70,80 @@ export type DeliverableDoc = {
   coverFields?: Array<{ label: string; value: string }>;
   disclaimer?: string;
   sections: DocSection[];
+};
+
+// ---------------------------------------------------------------------------
+// Slide deliverables (Discovery Day deck, etc.)
+// ---------------------------------------------------------------------------
+
+/**
+ * One slide in a deck. Layout drives the rendering — `content` is a
+ * normal title + body, `section` is a divider/section-break with no
+ * body, `title` is the cover slide. Speaker notes appear in the
+ * presenter view but not on the rendered slide.
+ */
+export type Slide =
+  | {
+      layout: "title";
+      title: string;
+      subtitle?: string;
+      footer?: string;
+    }
+  | {
+      layout: "section";
+      /** Section-break slide — large heading, optional one-liner. */
+      title: string;
+      caption?: string;
+    }
+  | {
+      layout: "content";
+      title: string;
+      body: SlideBody[];
+      /** Speaker notes — visible in presenter view only. */
+      notes?: string;
+    }
+  | {
+      layout: "two-column";
+      title: string;
+      left: SlideBody[];
+      right: SlideBody[];
+      leftLabel?: string;
+      rightLabel?: string;
+      notes?: string;
+    }
+  | {
+      layout: "stat";
+      /** Big-number slide — single headline figure with a caption. */
+      stat: string;
+      caption: string;
+      title?: string;
+      notes?: string;
+    };
+
+/**
+ * A block that goes inside a slide's body. Slides have less room than
+ * documents so we keep the block set tight: paragraphs, bullets, and
+ * key/value pairs cover ~95% of presentation content.
+ */
+export type SlideBody =
+  | { kind: "paragraph"; text: string; bold?: boolean }
+  | { kind: "bullets"; items: string[] }
+  | { kind: "kvlist"; rows: Array<{ label: string; value: string }> }
+  | { kind: "stat"; value: string; caption: string };
+
+/**
+ * Top-level slide deck. Companion to DeliverableDoc but for PPTX-target
+ * deliverables. The `slides` array IS the deck in render order; the
+ * first slide is conventionally a `title` layout.
+ */
+export type SlideDoc = {
+  title: string;
+  subtitle?: string;
+  /** Cover-page value pairs surfaced in the title slide footer. */
+  coverFields?: Array<{ label: string; value: string }>;
+  /** Disclaimer rendered as a footer note on the title slide. */
+  disclaimer?: string;
+  slides: Slide[];
 };
 
 // ---------------------------------------------------------------------------
@@ -112,28 +189,53 @@ export type ChapterContent = {
 // Deliverable registry types
 // ---------------------------------------------------------------------------
 
-export type DeliverableFormat = "docx" | "pdf" | "md";
+export type DeliverableFormat = "docx" | "pdf" | "md" | "pptx";
 
 /** Stable ID used in URLs, registry keys, and customer-facing links. */
 export type DeliverableId =
   | "fdd-draft"
   | "operations-manual"
   | "financial-model"
-  | "franchisee-scoring-matrix";
+  | "franchisee-scoring-matrix"
+  | "discovery-day-deck"
+  | "marketing-fund-manual"
+  | "employee-handbook"
+  | "reimbursement-policy"
+  | "site-selection-guide"
+  | "brand-standards"
+  | "qualify-matrix"
+  | "concept-and-story"
+  | "training-program"
+  | "franchise-agreement"
+  | "state-registration-matrix"
+  | "market-strategy-report"
+  | "competitor-landscape";
 
-export type DeliverableDef = {
+/**
+ * Discriminated-union deliverable definition. `kind: "doc"` builders
+ * return a DeliverableDoc and target DOCX/MD; `kind: "slides"` builders
+ * return a SlideDoc and target PPTX.
+ */
+export type DocDeliverableDef = {
+  kind: "doc";
   id: DeliverableId;
-  /** Customer-facing name, sentence case ("FDD Draft", not "FDD DRAFT"). */
   name: string;
-  /** One-sentence description for the export card. */
   description: string;
-  /** What chapters this deliverable pulls from. Used for the readiness
-   *  pre-flight check. */
   sourceChapters: MemoryFileSlug[];
-  /** Which formats are supported. */
-  formats: DeliverableFormat[];
-  /** Build function — pure: takes context, returns a renderable doc. */
+  formats: Array<"docx" | "md">;
   build: (ctx: BuildContext) => DeliverableDoc;
-  /** Filename stem for downloads (no extension). */
   filenameStem: string;
 };
+
+export type SlidesDeliverableDef = {
+  kind: "slides";
+  id: DeliverableId;
+  name: string;
+  description: string;
+  sourceChapters: MemoryFileSlug[];
+  formats: ["pptx"];
+  build: (ctx: BuildContext) => SlideDoc;
+  filenameStem: string;
+};
+
+export type DeliverableDef = DocDeliverableDef | SlidesDeliverableDef;

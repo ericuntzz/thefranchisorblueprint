@@ -26,6 +26,7 @@ import {
 import { loadBuildContext } from "@/lib/export/load";
 import { renderDocx } from "@/lib/export/render-docx";
 import { renderMarkdown } from "@/lib/export/render-md";
+import { renderPptx } from "@/lib/export/render-pptx";
 import type { Purchase } from "@/lib/supabase/types";
 
 export const runtime = "nodejs";
@@ -66,8 +67,10 @@ export async function GET(
   }
 
   const url = new URL(req.url);
-  const formatRaw = url.searchParams.get("format") ?? "docx";
-  if (formatRaw !== "docx" && formatRaw !== "md") {
+  // Default format: pptx for slide deliverables, docx for everything else.
+  const defaultFormat = def.kind === "slides" ? "pptx" : "docx";
+  const formatRaw = url.searchParams.get("format") ?? defaultFormat;
+  if (formatRaw !== "docx" && formatRaw !== "md" && formatRaw !== "pptx") {
     return NextResponse.json({ error: "Unsupported format" }, { status: 400 });
   }
   if (!(def.formats as readonly string[]).includes(formatRaw)) {
@@ -83,23 +86,25 @@ export async function GET(
   let extension: string;
   try {
     const ctx = await loadBuildContext(user.id);
-    if (def.kind !== "doc") {
-      return NextResponse.json(
-        { error: "Slide exports not supported via this endpoint yet" },
-        { status: 400 },
-      );
-    }
-    const doc = def.build(ctx);
-    if (formatRaw === "docx") {
-      buffer = await renderDocx(doc);
+    if (def.kind === "slides") {
+      const deck = def.build(ctx);
+      buffer = await renderPptx(deck);
       contentType =
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-      extension = "docx";
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+      extension = "pptx";
     } else {
-      const md = renderMarkdown(doc);
-      buffer = Buffer.from(md, "utf-8");
-      contentType = "text/markdown; charset=utf-8";
-      extension = "md";
+      const doc = def.build(ctx);
+      if (formatRaw === "docx") {
+        buffer = await renderDocx(doc);
+        contentType =
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        extension = "docx";
+      } else {
+        const md = renderMarkdown(doc);
+        buffer = Buffer.from(md, "utf-8");
+        contentType = "text/markdown; charset=utf-8";
+        extension = "md";
+      }
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

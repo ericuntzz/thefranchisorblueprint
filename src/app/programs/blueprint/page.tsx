@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Check, ShieldCheck, Download, Zap, Users } from "lucide-react";
+import { Check, Download, Zap, Users } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { PageHero } from "@/components/PageHero";
@@ -12,7 +12,7 @@ import { getSupabaseServer } from "@/lib/supabase/server";
 export const metadata: Metadata = {
   title: "The Blueprint — DIY Franchise Kit ($2,997) | The Franchisor Blueprint",
   description:
-    "The complete franchisor operating system for the self-starter — nine production-ready frameworks. $2,997 one-time. 30-day satisfaction guarantee. Lifetime access to system updates.",
+    "The complete franchisor operating system for the self-starter — nine production-ready frameworks. $2,997 one-time (save 5% pay-in-full or pay $1,100/mo × 3). Lifetime access to system updates.",
 };
 
 /**
@@ -72,7 +72,7 @@ export default async function BlueprintProductPage() {
           id: "the-blueprint",
           name: "The Blueprint — DIY Franchise Kit",
           description:
-            "The complete 9-framework franchisor operating system: 150-point readiness checklist, 12-month development roadmap, 17-chapter Operations Manual template, FDD Explainer (all 23 federal items), site selection scoring, franchisee scoring matrix, Discovery Day presentation deck, and more. Includes 60-min onboarding call, 30 days email support, lifetime access to system updates, and a 30-day satisfaction guarantee.",
+            "The complete 9-framework franchisor operating system: 150-point readiness checklist, 12-month development roadmap, 17-chapter Operations Manual template, FDD Explainer (all 23 federal items), site selection scoring, franchisee scoring matrix, Discovery Day presentation deck, and more. Includes 60-min onboarding call, 30 days email support, and lifetime access to system updates. Save 5% when you pay in full, or pay $1,100/month for 3 months.",
           price: 2997,
           url: "/programs/blueprint",
         })}
@@ -82,7 +82,7 @@ export default async function BlueprintProductPage() {
       <PageHero
         eyebrow="Tier 1 — DIY Kit"
         title="The Blueprint — $2,997"
-        subtitle="The complete franchisor operating system for the experienced entrepreneur who wants the frameworks but doesn't need the hand-holding. One-time payment, lifetime access."
+        subtitle="The complete franchisor operating system for the experienced entrepreneur who wants the frameworks but doesn't need the hand-holding. Pay in full and save 5%, or split into three monthly payments. Lifetime access."
       />
 
       {/* ===== Buy box + what's included ===== */}
@@ -124,7 +124,8 @@ export default async function BlueprintProductPage() {
                 <div className="text-5xl font-extrabold text-navy leading-none mb-1 tracking-tight">
                   $2,997
                 </div>
-                <div className="text-grey-4 text-sm mb-5">One-time payment · Instant access</div>
+                <div className="text-grey-4 text-sm mb-1">Save 5% when you pay in full · or $1,100/mo × 3</div>
+                <div className="text-gold-warm text-xs font-semibold tracking-[0.08em] uppercase mb-5">5% off pay-in-full</div>
 
                 <BlueprintUpsellBuyBox signedInEmail={signedInEmail} />
                 <p className="text-center text-xs text-grey-4 italic mt-3">
@@ -143,10 +144,6 @@ export default async function BlueprintProductPage() {
                   <div className="flex items-start gap-3 text-sm text-grey-3">
                     <Download className="flex-shrink-0 mt-0.5 text-gold" size={16} />
                     <span>Lifetime access to system updates</span>
-                  </div>
-                  <div className="flex items-start gap-3 text-sm text-grey-3">
-                    <ShieldCheck className="flex-shrink-0 mt-0.5 text-gold" size={16} />
-                    <span>30-day satisfaction guarantee</span>
                   </div>
                 </div>
               </div>
@@ -186,7 +183,7 @@ export default async function BlueprintProductPage() {
                 <li>• You want weekly accountability calls with Jason</li>
                 <li>• You want document review and feedback</li>
                 <li>• You&apos;ve never franchised before and want a guide</li>
-                <li>• You want a guaranteed 6-month launch timeline</li>
+                <li>• You want a structured 6-month launch timeline</li>
                 <li>
                   •{" "}
                   <Link href="/programs" className="text-gold-warm font-bold underline">
@@ -194,25 +191,6 @@ export default async function BlueprintProductPage() {
                   </Link>
                 </li>
               </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== Guarantee ===== */}
-      <section className="bg-white py-20 md:py-24">
-        <div className="max-w-[760px] mx-auto px-8">
-          <div className="bg-cream rounded-2xl border border-gold/30 p-8 md:p-10 flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
-            <div className="flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-br from-navy to-navy-light flex items-center justify-center text-gold">
-              <ShieldCheck size={32} strokeWidth={2} />
-            </div>
-            <div>
-              <h3 className="text-navy font-extrabold text-xl mb-2">
-                30-Day Satisfaction Guarantee
-              </h3>
-              <p className="text-grey-3 text-sm md:text-[15px] leading-relaxed">
-                Buy The Blueprint risk-free. If the system isn&apos;t what you expected, email us within 30 days for a full refund. No friction, no hassle, no awkward exit interview.
-              </p>
             </div>
           </div>
         </div>

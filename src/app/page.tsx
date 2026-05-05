@@ -12,7 +12,6 @@ import {
   Presentation,
   CheckCircle2,
   XCircle,
-  ShieldCheck,
 } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -439,7 +438,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== 10. PRICING CARDS + GUARANTEE (cool tinted bg) ===== */}
+      {/* ===== 10. PRICING CARDS (cool tinted bg) ===== */}
       <section
         className="text-center py-24 md:py-28 relative overflow-hidden"
         style={{ backgroundColor: "#e3e8f0" }}
@@ -475,7 +474,8 @@ export default function Home() {
               <div className="text-[11px] font-bold tracking-[0.14em] uppercase text-gold-warm mb-2">Tier 1 — DIY</div>
               <h3 className="text-3xl font-bold mb-4">The Blueprint</h3>
               <div className="text-5xl font-extrabold text-navy leading-none mb-1 tracking-tight">$2,997</div>
-              <div className="text-grey-4 text-sm mb-5">One-time payment</div>
+              <div className="text-grey-4 text-sm mb-1">Save 5% when you pay in full · or $1,100/mo × 3</div>
+              <div className="text-gold-warm text-xs font-semibold tracking-[0.08em] uppercase mb-5">5% off pay-in-full</div>
               <p className="text-grey-3 text-[15px] italic mb-6">For the self-starter who just needs the tools.</p>
               <ul className="list-none flex-1 mb-8 space-y-2">
                 {["The Complete Operating System (9 frameworks)", "60-Min White-Glove Onboarding Call", "30 Days Email Support"].map((f) => (
@@ -510,7 +510,8 @@ export default function Home() {
                 <h3 className="text-3xl font-bold text-white mb-0">Navigator</h3>
               </div>
               <div className="text-5xl font-extrabold text-navy leading-none mb-1 tracking-tight">$8,500</div>
-              <div className="text-grey-4 text-sm mb-5">or $3,500 down + $1,000/mo × 6</div>
+              <div className="text-grey-4 text-sm mb-1">Save 5% when you pay in full · or $3,200/mo × 3</div>
+              <div className="text-gold-warm text-xs font-semibold tracking-[0.08em] uppercase mb-5">5% off pay-in-full</div>
               <p className="text-grey-3 text-[15px] italic mb-6">The system + 6 months of expert coaching.</p>
               <ul className="list-none flex-1 mb-8 space-y-2">
                 {["Everything in The Blueprint", "24 Weekly Coaching Calls", "Document Review & Feedback", "Unlimited Email/Slack Support"].map((f) => (
@@ -541,7 +542,8 @@ export default function Home() {
               <div className="text-[11px] font-bold tracking-[0.14em] uppercase text-gold-warm mb-2">Tier 3 — Done-With-You</div>
               <h3 className="text-3xl font-bold mb-4">Builder</h3>
               <div className="text-5xl font-extrabold text-navy leading-none mb-1 tracking-tight">$29,500</div>
-              <div className="text-grey-4 text-sm mb-5">50% deposit + 50% at document handoff</div>
+              <div className="text-grey-4 text-sm mb-1">Save 5% when you pay in full · or $13,000 down + $3,000/mo × 6</div>
+              <div className="text-gold-warm text-xs font-semibold tracking-[0.08em] uppercase mb-5">5% off pay-in-full</div>
               <p className="text-grey-3 text-[15px] italic mb-6">We build it for you. Done-with-you service.</p>
               <ul className="list-none flex-1 mb-8 space-y-2">
                 {["Everything in Navigator", "Done-With-You Build", "12-Month Engagement", "Vendor & Attorney Coordination"].map((f) => (
@@ -567,22 +569,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Guarantee badge */}
-          <div className="mt-12 mx-auto max-w-[760px] bg-white/80 backdrop-blur-sm border border-navy/10 rounded-2xl px-6 py-5 flex flex-col md:flex-row items-center gap-5 text-left shadow-[0_8px_24px_rgba(30,58,95,0.10)]">
-            <div className="flex-shrink-0 w-14 h-14 rounded-full bg-gradient-to-br from-navy to-navy-light flex items-center justify-center text-gold">
-              <ShieldCheck size={28} strokeWidth={2} />
-            </div>
-            <div>
-              <div className="text-navy font-extrabold text-base mb-0.5">
-                30-Day Satisfaction Guarantee on The Blueprint
-              </div>
-              <div className="text-grey-3 text-sm leading-relaxed">
-                Buy Tier 1 risk-free. If the system isn&apos;t what you expected, email us within 30 days for a full refund — no friction, no hassle. <span className="text-grey-4">Coaching tiers begin with a kickoff call to confirm fit before any work starts.</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-8 text-base text-grey-3">
+          <div className="mt-12 text-base text-grey-3">
             Not sure which is right for you? →{" "}
             <Link href="/assessment" className="text-navy font-bold underline">
               Take the free Franchise Readiness Assessment

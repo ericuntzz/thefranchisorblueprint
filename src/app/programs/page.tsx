@@ -99,7 +99,7 @@ const tiers: Tier[] = [
     eyebrow: "Tier 1 — DIY",
     name: "The Blueprint",
     price: "$2,997",
-    priceSub: "One-time payment",
+    priceSub: "Save 5% pay-in-full · or $1,100/mo × 3",
     bestFor: "Experienced entrepreneurs who want the tools but don't need the hand-holding.",
     description:
       "You get the complete franchisor operating system with detailed implementation guides for every framework. We kick off with a 60-minute onboarding call to orient you to the materials. From there, you execute at your own pace.",
@@ -119,7 +119,7 @@ const tiers: Tier[] = [
     eyebrow: "Tier 2",
     name: "Navigator",
     price: "$8,500",
-    priceSub: "or $3,500 down + $1,000/mo × 6",
+    priceSub: "Save 5% pay-in-full · or $3,200/mo × 3",
     bestFor: "Business owners who want to move fast, avoid mistakes, and have an expert partner.",
     description:
       "A 6-month intensive program. You get the full system, plus we meet weekly to build it together. We review your work, refine your strategy, and ensure you're legally and operationally prepared.",
@@ -141,7 +141,7 @@ const tiers: Tier[] = [
     eyebrow: "Tier 3 — Done-With-You",
     name: "Builder",
     price: "$29,500",
-    priceSub: "50% deposit + 50% at document handoff",
+    priceSub: "Save 5% pay-in-full · or $13,000 down + $3,000/mo × 6",
     bestFor: "Established brands with budget who want a done-with-you service.",
     description:
       "We take the lead. We project-manage the entire build, handle vendor management, assist with your first franchisee recruitment, and provide a 12-month engagement.",
@@ -171,7 +171,7 @@ export default function ProgramsPage() {
           id: "the-blueprint",
           name: "The Blueprint — DIY Franchise Development Kit",
           description:
-            "Tier 1: $2,997 one-time. The complete 9-framework franchisor operating system. 60-min onboarding call. 30-day satisfaction guarantee. Lifetime access to system updates. Best for experienced operators who want the tools but not the coaching.",
+            "Tier 1: $2,997 one-time (save 5% pay-in-full or pay $1,100/mo × 3). The complete 9-framework franchisor operating system. 60-min onboarding call. Lifetime access to system updates. Best for experienced operators who want the tools but not the coaching.",
           price: 2997,
           url: "/programs/blueprint",
         })}

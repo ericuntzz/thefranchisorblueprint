@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { ShieldCheck, TrendingUp, CreditCard } from "lucide-react";
+import { TrendingUp, CreditCard } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { PageHero } from "@/components/PageHero";
@@ -127,7 +127,8 @@ export default function PricingPage() {
               </div>
               <h3 className="text-3xl font-bold mb-4">The Blueprint</h3>
               <div className="text-5xl font-extrabold text-navy leading-none mb-1 tracking-tight">$2,997</div>
-              <div className="text-grey-4 text-sm mb-5">One-time payment</div>
+              <div className="text-grey-4 text-sm mb-1">Save 5% when you pay in full · or $1,100/mo × 3</div>
+              <div className="text-gold-warm text-xs font-semibold tracking-[0.08em] uppercase mb-5">5% off pay-in-full</div>
               <p className="text-grey-3 text-[15px] italic mb-6">For the self-starter who just needs the tools.</p>
               <ul className="list-none flex-1 mb-8 space-y-2">
                 {[
@@ -195,7 +196,8 @@ export default function PricingPage() {
                 <h3 className="text-3xl font-bold text-white mb-0">Navigator</h3>
               </div>
               <div className="text-5xl font-extrabold text-navy leading-none mb-1 tracking-tight">$8,500</div>
-              <div className="text-grey-4 text-sm mb-5">or $3,500 down + $1,000/mo × 6</div>
+              <div className="text-grey-4 text-sm mb-1">Save 5% when you pay in full · or $3,200/mo × 3</div>
+              <div className="text-gold-warm text-xs font-semibold tracking-[0.08em] uppercase mb-5">5% off pay-in-full</div>
               <p className="text-grey-3 text-[15px] italic mb-6">
                 The system + 6 months of expert coaching.
               </p>
@@ -249,7 +251,8 @@ export default function PricingPage() {
               </div>
               <h3 className="text-3xl font-bold mb-4">Builder</h3>
               <div className="text-5xl font-extrabold text-navy leading-none mb-1 tracking-tight">$29,500</div>
-              <div className="text-grey-4 text-sm mb-5">50% deposit + 50% at handoff</div>
+              <div className="text-grey-4 text-sm mb-1">Save 5% when you pay in full · or $13,000 down + $3,000/mo × 6</div>
+              <div className="text-gold-warm text-xs font-semibold tracking-[0.08em] uppercase mb-5">5% off pay-in-full</div>
               <p className="text-grey-3 text-[15px] italic mb-6">We build it for you. Done-with-you service.</p>
               <ul className="list-none flex-1 mb-8 space-y-2">
                 {[
@@ -381,50 +384,37 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* ===== Payment / Guarantee ===== */}
+      {/* ===== Payment Options ===== */}
       <section className="bg-grey-1 py-24 md:py-28">
-        <div className="max-w-[1100px] mx-auto px-8">
+        <div className="max-w-[860px] mx-auto px-8">
           <div className="text-center mb-12">
             <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase mb-4 border-b-2 border-gold pb-1">
-              Flexible & Risk-Free
+              Flexible Payment
             </span>
-            <h2 className="text-3xl md:text-5xl font-bold">Payment Options & Guarantees</h2>
+            <h2 className="text-3xl md:text-5xl font-bold">Two Ways to Pay for Every Tier</h2>
+            <p className="mt-5 text-grey-3 text-base md:text-lg leading-relaxed">
+              Pay in full and save 5%, or break the investment into monthly installments. Same access either way.
+            </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-white border border-navy/10 rounded-2xl p-8 md:p-10 shadow-[0_8px_24px_rgba(30,58,95,0.08)]">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-navy to-navy-light flex items-center justify-center text-gold mb-5">
-                <CreditCard size={22} />
-              </div>
-              <h3 className="text-navy font-bold text-2xl mb-4">Flexible Payment</h3>
-              <ul className="space-y-3 text-grey-3">
-                <li>
-                  <strong className="text-navy">Tier 1:</strong> One-time payment of $2,997 via credit card or ACH.
-                </li>
-                <li>
-                  <strong className="text-navy">Tier 2:</strong> Pay $3,500 deposit to start, then $1,000/month for 6 months. Interest-free.
-                </li>
-                <li>
-                  <strong className="text-navy">Tier 3:</strong> 50% deposit to start, 50% at document handoff.
-                </li>
-              </ul>
-              <p className="mt-6 text-xs text-grey-4 italic">
-                Note: franchise development costs are often tax-deductible business expenses. Consult your CPA.
-              </p>
+          <div className="bg-white border border-navy/10 rounded-2xl p-8 md:p-10 shadow-[0_8px_24px_rgba(30,58,95,0.08)]">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-navy to-navy-light flex items-center justify-center text-gold mb-5">
+              <CreditCard size={22} />
             </div>
-
-            <div className="bg-white border border-navy/10 rounded-2xl p-8 md:p-10 shadow-[0_8px_24px_rgba(30,58,95,0.08)]">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-navy to-navy-light flex items-center justify-center text-gold mb-5">
-                <ShieldCheck size={22} />
-              </div>
-              <h3 className="text-navy font-bold text-2xl mb-4">30-Day Satisfaction Guarantee</h3>
-              <p className="text-grey-3 leading-relaxed mb-4">
-                Buy <strong className="text-navy">The Blueprint</strong> risk-free. If the system isn&apos;t what you expected, email us within 30 days for a full refund — no friction, no hassle.
-              </p>
-              <p className="text-grey-4 text-sm leading-relaxed">
-                Coaching tiers (Navigator and Builder) begin with a free kickoff call where we confirm fit and scope before any work starts.
-              </p>
-            </div>
+            <ul className="space-y-4 text-grey-3 leading-relaxed">
+              <li>
+                <strong className="text-navy">Tier 1 — The Blueprint ($2,997):</strong> Pay in full and save 5%, or pay $1,100/month for 3 months ($3,300 total). Credit card or ACH.
+              </li>
+              <li>
+                <strong className="text-navy">Tier 2 — Navigator ($8,500):</strong> Pay in full and save 5%, or pay $3,200/month for 3 months ($9,600 total).
+              </li>
+              <li>
+                <strong className="text-navy">Tier 3 — Builder ($29,500):</strong> Pay in full and save 5%, or $13,000 down plus $3,000/month for 6 months ($31,000 total).
+              </li>
+            </ul>
+            <p className="mt-6 text-xs text-grey-4 italic">
+              Note: franchise development costs are often tax-deductible business expenses. Consult your CPA.
+            </p>
           </div>
         </div>
       </section>

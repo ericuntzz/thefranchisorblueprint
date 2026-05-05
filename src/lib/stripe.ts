@@ -43,4 +43,15 @@ export const stripe = new Proxy({} as Stripe, {
 export const stripeEnv = {
   webhookSecret: () => requireEnv("STRIPE_WEBHOOK_SECRET"),
   blueprintPriceId: () => requireEnv("STRIPE_PRICE_BLUEPRINT"),
+  // 5% pay-in-full discount, applied to any tier at checkout when the
+  // customer chooses pay-in-full. Falls back to "PAYINFULL5" so dev
+  // environments without the env var still work.
+  payInFullCouponId: () => process.env.STRIPE_COUPON_PAY_IN_FULL ?? "PAYINFULL5",
+  // Installment-plan recurring monthly prices.
+  blueprintInstallmentPriceId: () => requireEnv("STRIPE_PRICE_BLUEPRINT_INSTALLMENT"),
+  navigatorPriceId: () => requireEnv("STRIPE_PRICE_NAVIGATOR"),
+  navigatorInstallmentPriceId: () => requireEnv("STRIPE_PRICE_NAVIGATOR_INSTALLMENT"),
+  builderPriceId: () => requireEnv("STRIPE_PRICE_BUILDER"),
+  builderInstallmentPriceId: () => requireEnv("STRIPE_PRICE_BUILDER_INSTALLMENT"),
+  builderDownPaymentPriceId: () => requireEnv("STRIPE_PRICE_BUILDER_DOWN"),
 };

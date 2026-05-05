@@ -310,6 +310,15 @@ export type RefundOutreachSend = {
   sent_at: string;
 };
 
+export type HealthCheckIncident = {
+  id: string;
+  check_name: string;
+  severity: "degraded" | "down";
+  latency_ms: number | null;
+  detail: string | null;
+  created_at: string;
+};
+
 // Supabase JS v2 type inference requires this exact shape — including the
 // __InternalSupabase marker and the `{ [_ in never]: never }` empty-record
 // idiom for Views/Functions/Enums/CompositeTypes. Deviations cause every
@@ -444,6 +453,15 @@ export type Database = {
           sent_at?: string;
         };
         Update: Partial<Omit<RefundOutreachSend, "id">>;
+        Relationships: [];
+      };
+      health_check_incidents: {
+        Row: HealthCheckIncident;
+        Insert: Omit<HealthCheckIncident, "id" | "created_at"> & {
+          id?: string;
+          created_at?: string;
+        };
+        Update: Partial<Omit<HealthCheckIncident, "id">>;
         Relationships: [];
       };
       upgrade_offers: {

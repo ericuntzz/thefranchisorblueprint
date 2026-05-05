@@ -292,6 +292,48 @@ function pushBlock(out: Paragraph[], block: DocBlock): void {
       out.push(new Paragraph({ children: [new TextRun({ text: "" })] }));
       return;
     }
+    case "table": {
+      // N-column table with a header row. Headers are bold + grey-bg;
+      // body rows alternate clean to keep the eye scanning.
+      const headerRow = new TableRow({
+        tableHeader: true,
+        children: block.headers.map(
+          (h) =>
+            new TableCell({
+              shading: { type: ShadingType.CLEAR, fill: GREY_BG, color: "auto" },
+              margins: { top: 80, bottom: 80, left: 120, right: 120 },
+              borders: borderAll(GREY_BORDER),
+              children: [
+                new Paragraph({
+                  children: [new TextRun({ text: h, bold: true, color: NAVY })],
+                }),
+              ],
+            }),
+        ),
+      });
+      const bodyRows = block.rows.map(
+        (cells) =>
+          new TableRow({
+            children: cells.map(
+              (cellText) =>
+                new TableCell({
+                  margins: { top: 80, bottom: 80, left: 120, right: 120 },
+                  borders: borderAll(GREY_BORDER),
+                  children: [
+                    new Paragraph({ children: [new TextRun({ text: cellText })] }),
+                  ],
+                }),
+            ),
+          }),
+      );
+      const table = new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        rows: [headerRow, ...bodyRows],
+      });
+      (out as unknown as Array<Paragraph | Table>).push(table);
+      out.push(new Paragraph({ children: [new TextRun({ text: "" })] }));
+      return;
+    }
     case "callout": {
       const color = block.tone === "warning" ? "B45309" : block.tone === "info" ? GOLD : "555555";
       out.push(

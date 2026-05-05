@@ -81,6 +81,20 @@ function pushBlock(lines: string[], block: DocBlock): void {
       lines.push("");
       return;
     }
+    case "table": {
+      lines.push(
+        `| ${block.headers.map((h) => `**${h}**`).join(" | ")} |`,
+        `| ${block.headers.map(() => "---").join(" | ")} |`,
+      );
+      for (const row of block.rows) {
+        const cells = row.map((c) =>
+          (c ?? "").replace(/\n/g, " ").replace(/\|/g, "\\|"),
+        );
+        lines.push(`| ${cells.join(" | ")} |`);
+      }
+      lines.push("");
+      return;
+    }
     case "callout": {
       const icon = block.tone === "warning" ? "⚠️" : block.tone === "info" ? "ℹ️" : "📝";
       lines.push(`> ${icon} _${block.text}_`, "");
