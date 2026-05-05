@@ -435,7 +435,7 @@ export default async function StatePage({ params }: { params: Params }) {
             <div className="text-gold font-bold text-xs tracking-[0.2em] uppercase mb-3">
               Ready to franchise in {state.name}?
             </div>
-            <h2 className="text-white text-2xl md:text-3xl font-bold mb-4">
+            <h2 className="text-white text-3xl md:text-4xl font-bold mb-4 leading-tight">
               Get an honest read on your {state.name} expansion plan
             </h2>
             <p className="text-white/80 mb-6 max-w-2xl mx-auto leading-relaxed">

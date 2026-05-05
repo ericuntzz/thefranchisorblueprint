@@ -71,10 +71,11 @@ html {
     -moz-osx-font-smoothing: grayscale;
   }
 
-  h1,
-  h2,
-  h3,
-  h4 {
+  /* :where() gives these rules zero specificity — they apply as the
+     default, but any Tailwind utility class (text-white, text-gold, etc.)
+     wins on cascade. Without :where(), tag selectors beat utilities and
+     headings on dark backgrounds render invisible. */
+  :where(h1, h2, h3, h4) {
     font-family: var(--font-inter), system-ui, sans-serif;
     color: var(--color-navy);
     line-height: 1.15;
