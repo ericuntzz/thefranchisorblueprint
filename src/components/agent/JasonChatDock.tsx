@@ -1234,14 +1234,25 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
             </div>
           </div>
         </div>
-        <button
-          type="button"
-          aria-label="Close chat"
-          onClick={() => setOpen(false)}
-          className="rounded-full p-1.5 text-cream/70 hover:bg-cream/10 transition-colors"
-        >
-          <X size={16} />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            aria-label={expanded ? "Collapse chat" : "Expand chat"}
+            title={expanded ? "Collapse" : "Expand"}
+            onClick={() => setExpanded((v) => !v)}
+            className="rounded-full p-1.5 text-cream/70 hover:bg-cream/10 transition-colors"
+          >
+            {expanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+          </button>
+          <button
+            type="button"
+            aria-label="Close chat"
+            onClick={() => setOpen(false)}
+            className="rounded-full p-1.5 text-cream/70 hover:bg-cream/10 transition-colors"
+          >
+            <X size={16} />
+          </button>
+        </div>
       </header>
 
       {/* Transcript */}
@@ -1249,7 +1260,11 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
         ref={scrollRef}
         onScroll={onTranscriptScroll}
         className="flex-1 overflow-y-auto px-4 py-3 space-y-3"
-        style={{ maxHeight: "min(60vh, 480px)" }}
+        style={{
+          maxHeight: expanded
+            ? "min(80vh, 720px)"
+            : "min(60vh, 480px)",
+        }}
       >
         {transcript.map((item, idx) => {
           if (item.kind === "bubble") {
