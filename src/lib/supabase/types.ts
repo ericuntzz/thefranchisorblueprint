@@ -284,6 +284,13 @@ export type CustomerRescueSend = {
   sent_at: string;
 };
 
+export type OpsDigestSend = {
+  id: string;
+  sent_to: string;
+  payload: Record<string, unknown>;
+  sent_at: string;
+};
+
 // Supabase JS v2 type inference requires this exact shape — including the
 // __InternalSupabase marker and the `{ [_ in never]: never }` empty-record
 // idiom for Views/Functions/Enums/CompositeTypes. Deviations cause every
@@ -388,6 +395,15 @@ export type Database = {
           sent_at?: string;
         };
         Update: Partial<Omit<CustomerRescueSend, "id">>;
+        Relationships: [];
+      };
+      ops_digest_sends: {
+        Row: OpsDigestSend;
+        Insert: Omit<OpsDigestSend, "id" | "sent_at"> & {
+          id?: string;
+          sent_at?: string;
+        };
+        Update: Partial<Omit<OpsDigestSend, "id">>;
         Relationships: [];
       };
       upgrade_offers: {
