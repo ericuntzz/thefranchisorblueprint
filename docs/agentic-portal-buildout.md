@@ -1,6 +1,84 @@
 # The Franchisor Blueprint — Agentic Portal Buildout
 
-> **Status: Phase 0 in progress.** This is the single source of truth for the multi-month rebuild that turns the customer portal from "view 9 PDF templates" into "an AI agent that ingests your business and produces an attorney-ready Franchisor Blueprint." If context is ever lost, read this file first.
+> **Status: Phase 0–2 done, Phase 3–5 in progress, Phase 6 partial.** Updated 2026-05-04. This is the single source of truth for the multi-month rebuild that turns the customer portal from "view 9 PDF templates" into "an AI agent that ingests your business and produces an attorney-ready Franchisor Blueprint." If context is ever lost, read this file first.
+
+---
+
+## Reality check — 2026-05-04
+
+The phase plan below was written against an earlier checkpoint and the
+status flags inside §6 are stale. Here's what's actually shipped vs.
+what's still open as of this update.
+
+### Shipped (verified in repo)
+
+- **Phase 0** — Migrations 0010–0016, agent helpers, memory CRUD, prompt
+  loader, types. ✅ All in.
+- **Phase 1** — Website scrape, first-chapter draft pipeline (Opus 4.7),
+  provenance through ChapterCard + ChapterFieldEditor, alive UI patterns,
+  Sonnet chat dock with Memory-aware context. The single Phase 1 gap
+  closed in this milestone is **voice intake** (MediaRecorder + Whisper),
+  scaffolded with env-gated transcription.
+- **Phase 2** — All 16 chapter schemas, drop-anything upload zone with
+  auto-classify, per-chapter focused workspace, Blueprint canvas, question
+  queue, deterministic calc library, Command Center, regulatory milestones,
+  stuck-customer rescue cron. **Versioned Memory snapshots / rollback
+  added in this milestone.**
+- **Phase 5** — DOCX rendering, per-deliverable build pipelines for FDD
+  draft / financial model / franchisee scoring / operations manual, the
+  `/portal/exports/[deliverable]` route. **PPTX rendering + bundle export
+  ZIP + remaining 10 deliverables added in this milestone.**
+
+### Added in the 2026-05-04 milestone (this commit series)
+
+- PPTX renderer (`pptxgenjs`) + Discovery Day deck pipeline
+- 10 missing deliverable build pipelines (Marketing Fund Manual,
+  Employee Handbook, Reimbursement Policy, Site Selection Guide,
+  Brand Standards, Discovery Day, Qualify Matrix, Concept & Story,
+  Training Program, Franchise Agreement)
+- Bundle export ZIP — checkbox-driven multi-select with readiness %
+  rendered on each deliverable's cover page
+- Attorney-readiness scoring per chapter
+- Versioned Memory snapshots (migration 0017) + rollback UI
+- Voice intake (MediaRecorder UI + storage; Whisper transcription
+  env-gated on `OPENAI_API_KEY`)
+- State-by-state FDD registration matrix (50 rows + classification)
+- Franchise Agreement template scaffold (every clause marked
+  `[NEEDS ATTORNEY REVIEW]`)
+- Compliance/Legal chapter wired with state strategy fields
+- Per-chapter "Jason approved" stamp
+- Jason redline admin UI (gated on `ADMIN_USER_IDS` env list)
+- Stuck-customer Calendly nudge integration
+- Tavily web search + Google Places + Census Bureau agent tools
+  (all env-gated; graceful no-op when keys absent)
+- `market_strategy` + `competitor_landscape` draft pipelines
+  (text-only fallback today; richer when research APIs wire up)
+
+### Still open (need Jason or external decisions)
+
+- **Real attorney-network partnership** — the bundle currently exports
+  with `[NEEDS ATTORNEY REVIEW]` markers throughout the legal chapters.
+  Production launch needs Jason to either (a) partner with a vetted
+  franchise attorney or (b) point customers at their own counsel.
+- **Tier 2/3 unique value beyond redlines** — the redline UI is built,
+  but the Tier 3 "done-with-you" workflow (live-call notes feeding back
+  into Memory, first-franchisee assist) is still product design.
+- **Real research API keys** — the integrations are wired but inactive
+  until `TAVILY_API_KEY`, `GOOGLE_MAPS_API_KEY`, `CENSUS_API_KEY`,
+  `OPENAI_API_KEY` are added to `.env.local`. See §8 below.
+- **Jason's per-chapter principles videos** — `docs/jason-principles/`
+  is empty. Drafting works without these but the "Jason's voice" layer
+  doesn't fire yet.
+- **High Point precedent excerpts** — `docs/high-point-chapters/` has
+  partial coverage. Each chapter without a precedent file falls back
+  to schema-only drafting (lower quality but functional).
+
+### Stale items in the rest of this doc
+
+- §6 phase status flags (✅/⚠️) reflect mid-2026-04 snapshot — read
+  the reality-check above as authoritative when they conflict.
+- §10 "Open decisions" — Q11 (POS integrations) is still open;
+  the rest have been tactically resolved by the 2026-05-04 build pass.
 
 ---
 
