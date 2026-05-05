@@ -231,7 +231,7 @@ export default function FranchiseByStatePage() {
                 <div className="text-gold font-bold text-xs tracking-[0.2em] uppercase mb-3">
                   Browse by category instead
                 </div>
-                <h2 className="text-2xl md:text-4xl font-bold mb-4 leading-tight">
+                <h2 className="text-white text-2xl md:text-4xl font-bold mb-4 leading-tight">
                   See franchise economics by industry
                 </h2>
                 <p className="text-white/80 mb-6 leading-relaxed">
@@ -251,7 +251,7 @@ export default function FranchiseByStatePage() {
                 <div className="text-gold font-bold text-xs tracking-[0.2em] uppercase mb-3">
                   Not sure where to start?
                 </div>
-                <h3 className="text-xl font-bold mb-3 leading-tight">
+                <h3 className="text-white text-xl font-bold mb-3 leading-tight">
                   Get a personalized readiness score
                 </h3>
                 <p className="text-white/75 mb-5 leading-relaxed text-sm">
