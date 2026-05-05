@@ -36,6 +36,7 @@ import {
   AlertTriangle,
   Loader2,
   MessageCircle,
+  Mic,
   Paperclip,
   Send,
   Sparkles,
@@ -54,6 +55,44 @@ type ChatTurn = {
   role: "user" | "assistant";
   content: string;
 };
+
+/**
+ * Minimal Web Speech API surface we care about. The full type defs
+ * for `SpeechRecognition` aren't yet in standard `lib.dom` — we
+ * only use a small slice (start/stop/abort + onresult/onend/onerror),
+ * so a focused declaration here keeps us out of `@types/dom-speech-recognition`
+ * dep territory while the API stays browser-only and behind feature
+ * detection.
+ */
+interface SpeechRecognitionResult {
+  readonly isFinal: boolean;
+  readonly length: number;
+  item(index: number): { transcript: string; confidence: number };
+  [index: number]: { transcript: string; confidence: number };
+}
+interface SpeechRecognitionResultList {
+  readonly length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+interface SpeechRecognitionEventLike {
+  readonly resultIndex: number;
+  readonly results: SpeechRecognitionResultList;
+}
+interface SpeechRecognitionLike {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onend: (() => void) | null;
+  onerror:
+    | ((event: { error: string; message?: string }) => void)
+    | null;
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+type SpeechRecognitionCtor = new () => SpeechRecognitionLike;
 
 /** Items the transcript can hold — bubbles (user/assistant prose) and
  *  tool cards (the inline "✓ Updated X = Y" rows). The transcript is
@@ -313,9 +352,23 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
   const [streaming, setStreaming] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [recording, setRecording] = useState(false);
+  // null while we haven't probed yet, false if unsupported, true
+  // if SpeechRecognition is available. Suppresses the mic button
+  // entirely on browsers without Web Speech (Firefox, older Safari,
+  // privacy-mode browsers) so we don't show a button that can't
+  // do anything.
+  const [voiceSupported, setVoiceSupported] = useState<boolean | null>(
+    null,
+  );
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  // Captures the draft text at the moment recording started. Final
+  // transcripts are appended to THIS baseline so re-recording mid-
+  // utterance doesn't pile transcripts on top of each other.
+  const recordingBaselineRef = useRef<string>("");
   // Tracks whether the customer is parked near the bottom of the
   // transcript. We only auto-scroll on new content when this is true,
   // so reading earlier messages doesn't get yanked back down whenever
@@ -377,6 +430,152 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
       abortRef.current?.abort();
     };
   }, []);
+
+  // Feature-detect Web Speech once on mount so we can hide the mic
+  // button entirely on browsers without it. The two namespaces
+  // cover Chrome/Edge/Brave (webkitSpeechRecognition) and the
+  // standard prefix-free name (Safari + recent Chromium). Firefox
+  // ships neither at the time of writing.
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      setVoiceSupported(false);
+      return;
+    }
+    const w = window as unknown as {
+      SpeechRecognition?: SpeechRecognitionCtor;
+      webkitSpeechRecognition?: SpeechRecognitionCtor;
+    };
+    const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
+    setVoiceSupported(!!Ctor);
+  }, []);
+
+  // Stop any in-flight recognition when the dock closes or unmounts
+  // — otherwise the mic stays hot and the customer sees an OS-level
+  // mic indicator with no way to stop it from inside the app.
+  useEffect(() => {
+    if (!open && recognitionRef.current) {
+      try {
+        recognitionRef.current.abort();
+      } catch {
+        /* ignore */
+      }
+      recognitionRef.current = null;
+      setRecording(false);
+    }
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.abort();
+        } catch {
+          /* ignore */
+        }
+        recognitionRef.current = null;
+      }
+    };
+  }, [open]);
+
+  /**
+   * Start / stop voice dictation. Final transcripts are appended
+   * to the draft text — interim (in-progress) transcripts are
+   * shown live too so the customer sees the recognition happening
+   * in real time, but only finals "stick" if they stop recording.
+   *
+   * Click-to-start, click-again-to-stop. We tried push-to-hold
+   * earlier but mobile doesn't have a clean equivalent and it's a
+   * worse fit for founders dictating long thoughts.
+   */
+  function toggleRecording() {
+    if (streaming || uploading) return;
+    if (recording) {
+      try {
+        recognitionRef.current?.stop();
+      } catch {
+        /* will fire onend */
+      }
+      return;
+    }
+    if (typeof window === "undefined") return;
+    const w = window as unknown as {
+      SpeechRecognition?: SpeechRecognitionCtor;
+      webkitSpeechRecognition?: SpeechRecognitionCtor;
+    };
+    const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
+    if (!Ctor) return;
+
+    const recognition = new Ctor();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang =
+      typeof navigator !== "undefined" ? navigator.language || "en-US" : "en-US";
+
+    recordingBaselineRef.current = draft;
+
+    recognition.onresult = (event) => {
+      // Walk every result from `resultIndex` onward and split it
+      // into "final" (committed by the recognizer) vs "interim"
+      // (still being figured out). Final pieces concat onto the
+      // baseline; interim text is shown after them so the user
+      // sees their words appear as they speak.
+      let finalText = "";
+      let interimText = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        const transcript = result[0]?.transcript ?? "";
+        if (result.isFinal) finalText += transcript;
+        else interimText += transcript;
+      }
+      const baseline = recordingBaselineRef.current;
+      const sep = baseline && !baseline.endsWith(" ") ? " " : "";
+      // Promote finals into the baseline so the next interim batch
+      // starts after them.
+      if (finalText) {
+        recordingBaselineRef.current = baseline + sep + finalText.trim();
+      }
+      const liveBaseline = recordingBaselineRef.current;
+      const liveSep =
+        liveBaseline && !liveBaseline.endsWith(" ") && interimText
+          ? " "
+          : "";
+      setDraft(liveBaseline + liveSep + interimText.trim());
+    };
+
+    recognition.onend = () => {
+      recognitionRef.current = null;
+      setRecording(false);
+    };
+
+    recognition.onerror = (event) => {
+      // Common errors: "not-allowed" (mic permission denied),
+      // "no-speech" (silence timeout), "aborted" (we called stop).
+      // For permission denied we surface a hint; otherwise stay
+      // quiet and let the user try again.
+      if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+        setTranscript((t) => [
+          ...t,
+          {
+            kind: "bubble",
+            role: "assistant",
+            text:
+              "I couldn't access your mic. Check the browser's site permissions and try again.",
+          },
+        ]);
+      } else if (
+        event.error !== "aborted" &&
+        event.error !== "no-speech"
+      ) {
+        console.warn("[jason-ai] speech recognition error:", event.error);
+      }
+    };
+
+    try {
+      recognition.start();
+      recognitionRef.current = recognition;
+      setRecording(true);
+    } catch (err) {
+      console.warn("[jason-ai] could not start speech recognition:", err);
+      recognitionRef.current = null;
+    }
+  }
 
   /** Build the plain-text history we send to the server. Tool cards
    *  are server-side bookkeeping — the model already knows about
@@ -1012,9 +1211,53 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
             onKeyDown={onKeyDown}
             disabled={streaming}
             rows={2}
-            placeholder="Ask anything, drop a doc, or paste a note…"
-            className="flex-1 resize-none rounded-lg border border-navy/15 bg-white px-3 py-2 text-[13px] text-navy placeholder-grey-4 focus:border-gold focus:ring-2 focus:ring-gold/20 outline-none transition disabled:opacity-50"
+            placeholder={
+              recording
+                ? "Listening — keep talking, I'm catching it…"
+                : "Ask anything, drop a doc, or paste a note…"
+            }
+            className={`flex-1 resize-none rounded-lg border bg-white px-3 py-2 text-[13px] text-navy placeholder-grey-4 focus:ring-2 focus:ring-gold/20 outline-none transition disabled:opacity-50 ${
+              recording
+                ? "border-red-400 focus:border-red-500"
+                : "border-navy/15 focus:border-gold"
+            }`}
           />
+          {/* Voice input button — only renders when the browser
+              supports Web Speech. Click toggles recognition on/off;
+              live transcripts feed straight into the draft so the
+              customer can edit before sending. */}
+          {voiceSupported && (
+            <button
+              type="button"
+              onClick={toggleRecording}
+              disabled={streaming || uploading}
+              aria-label={recording ? "Stop recording" : "Dictate a message"}
+              title={
+                recording
+                  ? "Stop recording"
+                  : "Dictate a message (click to start, click again to stop)"
+              }
+              className={`relative flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-colors ${
+                recording
+                  ? "bg-red-500 text-white hover:bg-red-600 jason-mic-pulse"
+                  : "text-navy/60 hover:text-navy hover:bg-navy/5 disabled:opacity-40 disabled:hover:bg-transparent"
+              }`}
+            >
+              <Mic size={16} />
+              <style jsx>{`
+                @keyframes jason-mic-pulse {
+                  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55); }
+                  50%      { box-shadow: 0 0 0 7px rgba(239, 68, 68, 0); }
+                }
+                .jason-mic-pulse {
+                  animation: jason-mic-pulse 1.4s ease-in-out infinite;
+                }
+                @media (prefers-reduced-motion: reduce) {
+                  .jason-mic-pulse { animation: none; }
+                }
+              `}</style>
+            </button>
+          )}
           <button
             type="button"
             onClick={() => void send()}
@@ -1030,7 +1273,8 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
           </button>
         </div>
         <div className="mt-1.5 px-1 text-[10px] text-grey-4">
-          enter to send · shift+enter for newline · drop a file · esc to close
+          enter to send · shift+enter for newline · drop a file
+          {voiceSupported ? " · 🎤 dictate" : ""} · esc to close
         </div>
       </div>
     </div>
