@@ -124,6 +124,23 @@ export type AssessmentResponse = {
   answered_at: string;
 };
 
+/**
+ * Persistent Jason AI chat-dock transcript. One row per user.
+ * The dock fetches this on first open so a returning customer
+ * sees their previous conversation continue rather than a fresh
+ * greeting every page reload. Capped to the last ~30 entries
+ * server-side on write to keep row size bounded over months of use.
+ */
+export type ChatHistory = {
+  user_id: string;
+  /** Array of TranscriptItem (defined client-side in JasonChatDock).
+   *  Stored as `unknown[]` here so we don't pull a client-only type
+   *  into the server boundary; the API route validates shape on the
+   *  way in and out. */
+  transcript: unknown[];
+  updated_at: string;
+};
+
 export type ScheduledEmail = {
   id: string;
   user_id: string | null;
@@ -402,6 +419,16 @@ export type Database = {
           answered_at?: string;
         };
         Update: Partial<Omit<AssessmentResponse, "session_id" | "question_id">>;
+        Relationships: [];
+      };
+      chat_history: {
+        Row: ChatHistory;
+        Insert: {
+          user_id: string;
+          transcript?: unknown[];
+          updated_at?: string;
+        };
+        Update: Partial<Omit<ChatHistory, "user_id">>;
         Relationships: [];
       };
       scheduled_emails: {

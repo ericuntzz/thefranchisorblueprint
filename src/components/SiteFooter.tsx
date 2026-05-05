@@ -9,7 +9,7 @@ export function SiteFooter() {
   return (
     <footer className="bg-cream text-navy/75 pt-16 pb-6 border-t-4 border-gold/60">
       <div className="max-w-[1200px] mx-auto px-8">
-        <div className="grid grid-cols-2 md:grid-cols-[1.6fr_1fr_1fr_1fr_1fr] gap-x-8 gap-y-10 md:gap-12 pb-10 border-b border-navy/10">
+        <div className="grid grid-cols-2 md:grid-cols-[1.4fr_1fr_1fr_1fr_1fr_1fr] gap-x-8 gap-y-10 md:gap-10 pb-10 border-b border-navy/10">
           <div className="col-span-2 md:col-span-1">
             <Image
               src="/logos/tfb-logo-color.png"
@@ -31,10 +31,17 @@ export function SiteFooter() {
               <li><Link href="/about" className="hover:text-gold-warm transition-colors">About</Link></li>
               <li><Link href="/programs" className="hover:text-gold-warm transition-colors">Programs</Link></li>
               <li><Link href="/pricing" className="hover:text-gold-warm transition-colors">Pricing</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-navy text-xs font-extrabold tracking-widest uppercase mb-5 font-sans">
+              Resources
+            </h4>
+            <ul className="space-y-2.5 list-none text-sm">
               <li><Link href="/blog" className="hover:text-gold-warm transition-colors">Blog</Link></li>
               <li><Link href="/franchise-by-state" className="hover:text-gold-warm transition-colors">Franchise by State</Link></li>
               <li><Link href="/franchise-by-industry" className="hover:text-gold-warm transition-colors">Franchise by Industry</Link></li>
-              <li><Link href="/glossary" className="hover:text-gold-warm transition-colors">Franchise Glossary</Link></li>
+              <li><Link href="/glossary" className="hover:text-gold-warm transition-colors">Glossary</Link></li>
               <li><Link href="/compare" className="hover:text-gold-warm transition-colors">Compare</Link></li>
             </ul>
           </div>

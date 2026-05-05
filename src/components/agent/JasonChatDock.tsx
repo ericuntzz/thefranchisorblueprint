@@ -361,6 +361,16 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
   const [voiceSupported, setVoiceSupported] = useState<boolean | null>(
     null,
   );
+  // Has the persisted transcript finished loading from the server?
+  // The greeting effect waits on this so we don't briefly show
+  // "ask me anything" and then yank it away with the customer's
+  // resumed conversation. Initial false → we attempt the load on
+  // mount → flips true regardless of whether anything was found.
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+  // Save debouncer — schedules a chat-history POST a beat after
+  // the transcript settles so we don't hammer the endpoint on
+  // every streamed delta.
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -375,13 +385,51 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
   // a delta or tool card lands.
   const nearBottomRef = useRef(true);
 
+  // Load any persisted transcript from the previous session. Fires
+  // once on mount; the dock only greets the customer if the load
+  // returned an empty transcript (i.e. genuinely first-ever open),
+  // otherwise we resume mid-conversation. Failure is non-fatal —
+  // we just fall through to the greeting path.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/agent/chat-history", {
+          method: "GET",
+          credentials: "include",
+        });
+        if (!res.ok) {
+          if (!cancelled) setHistoryLoaded(true);
+          return;
+        }
+        const j = (await res.json()) as { transcript?: TranscriptItem[] };
+        if (cancelled) return;
+        if (Array.isArray(j.transcript) && j.transcript.length > 0) {
+          setTranscript(j.transcript);
+        }
+        setHistoryLoaded(true);
+      } catch {
+        if (!cancelled) setHistoryLoaded(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Greet on first open. The dock is layout-mounted now, so this only
   // fires on the very first open of a session. Subsequent navigations
   // keep the existing transcript intact — open/close is purely visual.
   // The greeting is computed from the current pathname + firstName so
   // Jason AI opens with intent ("you're on Unit Economics — want to
   // draft it?") instead of a generic "ask me anything."
+  //
+  // Gated on `historyLoaded` so we don't briefly flash a greeting
+  // before the persisted transcript arrives — that'd be a janky
+  // "wait, where did my conversation go?" moment for returning
+  // customers.
   useEffect(() => {
+    if (!historyLoaded) return;
     if (open && transcript.length === 0) {
       const greeting = getContextGreeting({
         pathname: pathname ?? "",
@@ -389,7 +437,31 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
       });
       setTranscript([{ kind: "bubble", role: "assistant", text: greeting }]);
     }
-  }, [open, transcript.length, firstName, pathname]);
+  }, [open, transcript.length, firstName, pathname, historyLoaded]);
+
+  // Persist the transcript to Supabase a beat after it settles.
+  // Debounce window covers the streaming case — we don't want to
+  // POST on every character delta, only after the model finishes
+  // and the buffer drains. 1.5s after the last change is plenty.
+  useEffect(() => {
+    if (!historyLoaded) return; // don't overwrite server-side data
+                                // before we've even loaded it
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      void fetch("/api/agent/chat-history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ transcript }),
+      }).catch((err) => {
+        // Persistence is best-effort — log but don't disrupt UX.
+        console.warn("[jason-ai] chat-history save failed:", err);
+      });
+    }, 1500);
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, [transcript, historyLoaded]);
 
   // Auto-scroll only when the customer is already near the bottom.
   // If they've scrolled up to read earlier messages, leave them
