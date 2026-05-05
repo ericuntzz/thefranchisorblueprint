@@ -383,12 +383,12 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
   // resumed conversation. Initial false → we attempt the load on
   // mount → flips true regardless of whether anything was found.
   const [historyLoaded, setHistoryLoaded] = useState(false);
-  // Expanded drawer mode. Default false (compact pill in the
-  // bottom-right). When true, the dock grows to a roomy ~560×80vh
-  // drawer. Preference is sticky via localStorage so a customer
-  // who likes the bigger view doesn't have to re-expand on every
-  // page load.
-  const [expanded, setExpanded] = useState(false);
+  // Expanded drawer mode. Defaults to TRUE — the dock opens in the
+  // roomy "real conversation" frame because that's what the chat is
+  // actually for; the compact pill is opt-in for when the customer
+  // wants to peek-and-collapse. Preference is sticky via localStorage
+  // so a customer who collapses to compact stays collapsed.
+  const [expanded, setExpanded] = useState(true);
   // Save debouncer — schedules a chat-history POST a beat after
   // the transcript settles so we don't hammer the endpoint on
   // every streamed delta.
@@ -555,14 +555,16 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
   }, []);
 
   // Restore the expanded-drawer preference from localStorage on
-  // mount. Wrapped in try/catch because some browsers (private mode,
-  // strict storage policies) throw on access.
+  // mount. Default is `true` (expanded), so we only honor an explicit
+  // "0" meaning "the customer chose compact previously, keep them
+  // there." Wrapped in try/catch because some browsers (private
+  // mode, strict storage policies) throw on access.
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem("jason-ai-expanded");
-      if (saved === "1") setExpanded(true);
+      if (saved === "0") setExpanded(false);
     } catch {
-      /* ignore — default compact */
+      /* ignore — default expanded */
     }
   }, []);
 
@@ -1196,10 +1198,14 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
 
   return (
     <div
-      className={`fixed bottom-6 right-6 z-50 flex flex-col rounded-2xl border bg-cream shadow-[0_24px_48px_rgba(30,58,95,0.28)] transition-[width,height,border-color,box-shadow] duration-200 ${
+      className={`fixed right-6 z-50 flex flex-col rounded-2xl border bg-cream shadow-[0_24px_48px_rgba(30,58,95,0.28)] transition-[width,top,bottom,border-color,box-shadow] duration-200 ${
         expanded
-          ? "w-[600px] max-w-[calc(100vw-3rem)]"
-          : "w-[380px] max-w-[calc(100vw-2rem)]"
+          ? // Expanded: anchored top + bottom so the dock spans most
+            // of the right side vertically. The transcript flexes to
+            // fill all available height — way more visible context
+            // than the squat 480px the compact dock gets.
+            "top-24 bottom-6 w-[600px] max-w-[calc(100vw-3rem)]"
+          : "bottom-6 w-[380px] max-w-[calc(100vw-2rem)]"
       } ${dragActive ? "border-gold ring-4 ring-gold/30" : "border-navy/10"}`}
       onDragEnter={onDockDragEnter}
       onDragOver={onDockDragOver}
@@ -1255,15 +1261,16 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
         </div>
       </header>
 
-      {/* Transcript */}
+      {/* Transcript — when expanded the wrapper is height-anchored
+          (top-24 to bottom-6), so flex-1 lets this fill all the
+          available space. Compact stays capped to a polite size
+          so the dock doesn't overshadow the page underneath. */}
       <div
         ref={scrollRef}
         onScroll={onTranscriptScroll}
         className="flex-1 overflow-y-auto px-4 py-3 space-y-3"
         style={{
-          maxHeight: expanded
-            ? "min(80vh, 720px)"
-            : "min(60vh, 480px)",
+          maxHeight: expanded ? undefined : "min(60vh, 480px)",
         }}
       >
         {transcript.map((item, idx) => {
@@ -1439,10 +1446,11 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
             )}
           </button>
         </div>
-        <div className="mt-1.5 px-1 text-[10px] text-grey-4">
-          enter to send · shift+enter for newline · drop a file
-          {voiceSupported ? " · 🎤 dictate" : ""} · esc to close
-        </div>
+        {/* Footer hint deliberately removed — the affordances
+            (paperclip, mic, send) speak for themselves and the
+            keyboard shortcuts are discoverable on hover. The hint
+            line read as instructional clutter inside the chat
+            surface itself. */}
       </div>
     </div>
   );
