@@ -17,7 +17,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { LogOut, Menu, Sparkles, User, X } from "lucide-react";
+import { Library, LogOut, Menu, Sparkles, User, X } from "lucide-react";
 import type { Tier } from "@/lib/supabase/types";
 
 interface MobileMenuProps {
@@ -90,6 +90,16 @@ export function PortalNavMobileMenu({ label, tier }: MobileMenuProps) {
           >
             <User size={16} className="text-grey-4" />
             <span className="text-sm font-semibold">Account</span>
+          </Link>
+
+          <Link
+            href="/portal/library"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-3 px-4 py-3 text-navy hover:bg-cream transition-colors"
+          >
+            <Library size={16} className="text-grey-4" />
+            <span className="text-sm font-semibold">Library</span>
           </Link>
 
           {showUpgrade && (

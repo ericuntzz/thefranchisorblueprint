@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { LogOut, Sparkles } from "lucide-react";
+import { Library, LogOut, Sparkles } from "lucide-react";
 import type { Tier } from "@/lib/supabase/types";
 import { PortalNavMobileMenu } from "./PortalNavMobileMenu";
 
@@ -41,6 +41,13 @@ export function PortalNav({ displayName, email, tier }: PortalNavProps) {
             below — the prior md-only "Account" + sm-only "Upgrade"
             left mobile users with logo + sign-out only. */}
         <div className="hidden md:flex items-center gap-5">
+          <Link
+            href="/portal/library"
+            className="inline-flex items-center gap-1.5 text-grey-3 hover:text-navy text-sm font-medium transition-colors"
+          >
+            <Library size={14} />
+            Library
+          </Link>
           {showUpgrade && (
             <Link
               href="/portal/upgrade"

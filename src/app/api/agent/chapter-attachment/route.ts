@@ -30,10 +30,13 @@ import {
   appendAttachment,
   deleteAttachment,
   isValidMemoryFileSlug,
+  readMemoryFields,
+  writeMemoryFields,
 } from "@/lib/memory";
 import { fetchSiteArtifacts } from "@/lib/agent/scrape";
 import { extractDocText } from "@/lib/agent/extract-doc-text";
 import { classifyAttachmentToChapters } from "@/lib/agent/classify-attachment";
+import { extractFieldsFromContent } from "@/lib/agent/extract-fields";
 import type { ChapterAttachment, Purchase } from "@/lib/supabase/types";
 import type { MemoryFileSlug } from "@/lib/memory/files";
 
@@ -249,7 +252,71 @@ async function handlePOST(req: NextRequest): Promise<NextResponse> {
       }
     }
 
+    // ── Auto-extract structured fields ────────────────────────────────
+    // Best-effort: read the excerpt with Sonnet, extract any fields we
+    // can confidently derive, and write them with source='upload' to
+    // every chapter the attachment was associated with. We NEVER
+    // overwrite an existing value — only fill blanks. If the customer
+    // has already typed something, the upload's guess is silently
+    // skipped (their typed value wins). Failure here is non-fatal; the
+    // attachment is already saved.
+    const extractedByChapter: Partial<
+      Record<MemoryFileSlug, Record<string, string | number | boolean | string[]>>
+    > = {};
+    if (excerpt && excerpt.trim().length >= 80) {
+      const targetSlugs: MemoryFileSlug[] = [slug, ...alsoAttachedTo];
+      await Promise.all(
+        targetSlugs.map(async (targetSlug) => {
+          try {
+            const extracted = await extractFieldsFromContent({
+              slug: targetSlug,
+              content: excerpt!,
+            });
+            if (Object.keys(extracted).length === 0) return;
+            // Filter to fields that are currently empty — never clobber
+            // what the customer has already typed.
+            const current = await readMemoryFields(userId, targetSlug);
+            const currentFields = current?.fields ?? {};
+            const toWrite: Record<
+              string,
+              string | number | boolean | string[]
+            > = {};
+            for (const [name, value] of Object.entries(extracted)) {
+              const existing = currentFields[name];
+              const existingFilled =
+                existing != null &&
+                !(typeof existing === "string" && existing.trim() === "") &&
+                !(Array.isArray(existing) && existing.length === 0);
+              if (existingFilled) continue;
+              if (value == null) continue;
+              if (typeof value === "string" && !value.trim()) continue;
+              if (Array.isArray(value) && value.length === 0) continue;
+              toWrite[name] = value as string | number | boolean | string[];
+            }
+            if (Object.keys(toWrite).length === 0) return;
+            await writeMemoryFields({
+              userId,
+              slug: targetSlug,
+              changes: toWrite,
+              source: "upload",
+              note: `Auto-extracted from ${file.name}`,
+            });
+            extractedByChapter[targetSlug] = toWrite;
+          } catch (err) {
+            // Per-chapter extraction is independent; one failure
+            // shouldn't block the others.
+            console.warn(
+              `[chapter-attachment] auto-extract failed for ${targetSlug} (non-fatal):`,
+              err instanceof Error ? err.message : err,
+            );
+          }
+        }),
+      );
+    }
+
     revalidatePath("/portal/lab/blueprint");
+    revalidatePath("/portal");
+    revalidatePath(`/portal/chapter/${slug}`);
     if (alsoAttachedTo.length > 0) {
       for (const s of alsoAttachedTo)
         revalidatePath(`/portal/chapter/${s}`);
@@ -258,6 +325,7 @@ async function handlePOST(req: NextRequest): Promise<NextResponse> {
       ok: true,
       attachment,
       alsoAttachedTo,
+      extractedByChapter,
     });
   }
 

@@ -29,6 +29,24 @@ import {
 } from "@/lib/memory/queue";
 import { CommandCenter } from "@/components/portal/CommandCenter";
 import { DeliverableChecklist } from "@/components/portal/DeliverableChecklist";
+import { ExportsSection } from "@/components/portal/ExportsSection";
+import { ActivityFeed } from "@/components/portal/ActivityFeed";
+import { getRecentActivity } from "@/lib/activity/feed";
+import { RegulatoryMilestones } from "@/components/portal/RegulatoryMilestones";
+import {
+  computeMilestoneSummary,
+  indexMilestones,
+  readMilestones,
+} from "@/lib/milestones/state";
+import { WhatIfCoach } from "@/components/portal/WhatIfCoach";
+import { loadBuildContext } from "@/lib/export/load";
+import { reviewDeliverable } from "@/lib/export/deliverable-readiness";
+import {
+  DELIVERABLES,
+  DELIVERABLE_DISPLAY_ORDER,
+} from "@/lib/export/deliverables";
+import type { DeliverableReview } from "@/lib/export/deliverable-readiness";
+import type { DeliverableId } from "@/lib/export/types";
 import type { CustomerMemory as CM } from "@/lib/supabase/types";
 import {
   getActiveOffersForUser,
@@ -139,6 +157,32 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
   const midwayThere = readinessPct >= 50;
   const isAllComplete = readinessPct >= 95;
 
+  // ---- Per-deliverable readiness for the ExportsSection ----
+  // Reuses loadBuildContext (same pipeline the API endpoint uses) so
+  // the readiness number on the export card matches what the customer
+  // sees on the pre-export review screen — no inconsistency between
+  // the two surfaces.
+  const buildCtx = await loadBuildContext(user.id);
+  const exportReadiness = DELIVERABLE_DISPLAY_ORDER.reduce(
+    (acc, id) => {
+      acc[id] = reviewDeliverable(DELIVERABLES[id], buildCtx);
+      return acc;
+    },
+    {} as Record<DeliverableId, DeliverableReview>,
+  );
+
+  // Recent activity feed — read-only summary of what's happened to the
+  // customer's Memory. Hidden when empty (brand-new customer).
+  const recentActivity = await getRecentActivity(user.id, 6);
+
+  // Regulatory milestones — Stripe Atlas-style external-events checklist.
+  // Resilient to migration 0015 not having been applied; shows all-pending
+  // state in that case.
+  const milestoneRows = await readMilestones(user.id);
+  const milestoneIndex = indexMilestones(milestoneRows);
+  const milestoneStatesObj = Object.fromEntries(milestoneIndex);
+  const milestoneSummary = computeMilestoneSummary(milestoneIndex);
+
   // Active 48hr promo offer — surfaced via the inline UpgradeBanner component
   const offers = tier < 3 ? await getActiveOffersForUser(user.id) : [];
   const activePromo = offers
@@ -211,6 +255,10 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
             estimateMin={queueEstimateMin}
           />
           <DeliverableChecklist readiness={chapterReadiness} />
+          <ActivityFeed events={recentActivity} />
+          <ExportsSection readiness={exportReadiness} />
+          <RegulatoryMilestones states={milestoneStatesObj} summary={milestoneSummary} />
+          <WhatIfCoach />
         </div>
       </section>
 
@@ -409,7 +457,10 @@ function Day1OnboardingHero({ firstName }: { firstName: string | null }) {
             <p className="text-white/85 text-base md:text-lg leading-relaxed mb-6">
               Drop your URL and Jason will pre-fill what he can — concept, brand voice, daily operations basics. Then he walks you through the questions that build the rest of your Blueprint. Most people are 25% complete after their first session.
             </p>
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+              {/* Single primary CTA. The "skip" path stays available
+                  but as a text link so it doesn't compete visually
+                  with the recommended Pre-fill flow. */}
               <Link
                 href="/portal/lab/intake"
                 className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-8 py-4 rounded-full hover:bg-gold-dark transition-colors"
@@ -420,9 +471,9 @@ function Day1OnboardingHero({ firstName }: { firstName: string | null }) {
               </Link>
               <Link
                 href="/portal/lab/next"
-                className="inline-flex items-center gap-2 text-white/80 hover:text-white border-2 border-white/20 hover:border-white/40 font-bold text-sm uppercase tracking-[0.1em] px-6 py-3.5 rounded-full transition-colors"
+                className="text-white/70 hover:text-white text-xs font-bold uppercase tracking-[0.1em] underline underline-offset-4 decoration-white/30 hover:decoration-white transition-colors"
               >
-                Skip — start answering questions
+                or skip and answer questions instead
               </Link>
             </div>
           </div>
@@ -586,7 +637,10 @@ function MidwayUpgradeHero({
               {headline}
             </h2>
             <p className="text-grey-3 text-base leading-relaxed mb-4">{body}</p>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+              {/* Single primary CTA per visual section. The secondary
+                  path (coaching) is intentionally demoted to a text
+                  link so the customer's eye lands on Upgrade first. */}
               <Link
                 href="/portal/upgrade"
                 className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-7 py-3.5 rounded-full hover:bg-gold-dark transition-colors"
@@ -596,16 +650,16 @@ function MidwayUpgradeHero({
               {isTier1 ? (
                 <Link
                   href="/portal/coaching"
-                  className="inline-flex items-center gap-2 bg-transparent text-navy border-2 border-navy/15 font-bold text-sm uppercase tracking-[0.1em] px-6 py-3.5 rounded-full hover:border-navy hover:bg-navy hover:text-white transition-colors"
+                  className="text-navy hover:text-navy-light text-xs font-bold uppercase tracking-[0.1em] underline underline-offset-4 decoration-navy/30 hover:decoration-navy transition-colors"
                 >
-                  Add coaching <ArrowRight size={14} />
+                  or add coaching first
                 </Link>
               ) : (
                 <Link
                   href="/portal/coaching/schedule"
-                  className="inline-flex items-center gap-2 bg-transparent text-navy border-2 border-navy/15 font-bold text-sm uppercase tracking-[0.1em] px-6 py-3.5 rounded-full hover:border-navy hover:bg-navy hover:text-white transition-colors"
+                  className="text-navy hover:text-navy-light text-xs font-bold uppercase tracking-[0.1em] underline underline-offset-4 decoration-navy/30 hover:decoration-navy transition-colors"
                 >
-                  Schedule a coaching call <ArrowRight size={14} />
+                  or schedule your next coaching call
                 </Link>
               )}
             </div>
