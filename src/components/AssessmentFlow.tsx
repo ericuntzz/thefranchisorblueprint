@@ -30,29 +30,18 @@ import {
   type AssessmentQuestion,
 } from "@/lib/assessment/questions";
 
-const RESUME_COOKIE = "tfb_assessment_resume";
-const RESUME_MAX_AGE_DAYS = 7;
-
-// ─── Cookie helpers (no dependencies) ──────────────────────────────────────
-function setResumeCookie(token: string) {
-  const expires = new Date(Date.now() + RESUME_MAX_AGE_DAYS * 86400_000).toUTCString();
-  document.cookie =
-    `${RESUME_COOKIE}=${encodeURIComponent(token)}; ` +
-    `expires=${expires}; path=/; SameSite=Lax`;
-}
-function readResumeCookie(): string | null {
-  const match = document.cookie.match(
-    new RegExp(`(?:^|; )${RESUME_COOKIE}=([^;]*)`),
-  );
-  return match ? decodeURIComponent(match[1]) : null;
-}
-function clearResumeCookie() {
-  document.cookie = `${RESUME_COOKIE}=; max-age=0; path=/; SameSite=Lax`;
-}
+// The resume credential moved to an HttpOnly cookie set by the API
+// routes (see /api/assessment/start, /complete). The client never
+// touches the token directly — the cookie auto-attaches to fetch
+// requests, the server reads it, and an XSS in any non-HttpOnly
+// script can no longer steal the result-page credential.
+//
+// To know whether to auto-resume on mount without JS cookie access,
+// the parent server component reads the cookie and passes a
+// `hasResumeCookie` boolean prop in.
 
 interface SessionState {
   sessionId: string;
-  resumeToken: string;
   /** Indexed by question id, e.g. { q1: "A" }. */
   answers: Record<string, AnswerLetter>;
 }
@@ -88,9 +77,24 @@ const URGENCY_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "exploring", label: "Just exploring" },
 ];
 
-export function AssessmentFlow({ source }: { source?: string }) {
+export function AssessmentFlow({
+  source,
+  hasResumeCookie = false,
+}: {
+  source?: string;
+  /**
+   * Set by the parent server component if the HttpOnly resume cookie
+   * exists at request time. When true, AssessmentFlow auto-calls
+   * /api/assessment/start on mount to resume. When false, shows the
+   * intro card and waits for a click — avoids creating empty sessions
+   * for casual landings.
+   */
+  hasResumeCookie?: boolean;
+}) {
   const router = useRouter();
-  const [stage, setStage] = useState<Stage>({ kind: "loading" });
+  const [stage, setStage] = useState<Stage>(
+    hasResumeCookie ? { kind: "loading" } : { kind: "intro" },
+  );
   const [session, setSession] = useState<SessionState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lead, setLead] = useState<LeadCaptureForm>({
@@ -102,24 +106,22 @@ export function AssessmentFlow({ source }: { source?: string }) {
     urgency: "",
   });
 
-  // ─── Bootstrap: try to resume from cookie, otherwise show the intro ──────
+  // ─── Bootstrap: auto-resume only when the parent told us a cookie
+  // exists. The cookie itself is HttpOnly so we can't read it client-
+  // side; the parent server component checks and passes the flag. ──
   useEffect(() => {
-    const existing = readResumeCookie();
-    if (!existing) {
-      setStage({ kind: "intro" });
-      return;
-    }
-    void resumeOrStart(existing).catch(() => setStage({ kind: "intro" }));
+    if (!hasResumeCookie) return;
+    void resumeOrStart().catch(() => setStage({ kind: "intro" }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [hasResumeCookie]);
 
-  async function resumeOrStart(resumeToken: string | null) {
+  async function resumeOrStart() {
     setStage({ kind: "loading" });
+    // The HttpOnly cookie auto-attaches; server decides resume vs new.
     const res = await fetch("/api/assessment/start", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        resumeToken: resumeToken ?? undefined,
         source: source ?? null,
       }),
     });
@@ -130,13 +132,11 @@ export function AssessmentFlow({ source }: { source?: string }) {
     }
     const data: {
       sessionId: string;
-      resumeToken: string;
       answers: Array<{ questionId: string; answerValue: AnswerLetter }>;
     } = await res.json();
-    setResumeCookie(data.resumeToken);
     const answers: Record<string, AnswerLetter> = {};
     for (const a of data.answers ?? []) answers[a.questionId] = a.answerValue;
-    setSession({ sessionId: data.sessionId, resumeToken: data.resumeToken, answers });
+    setSession({ sessionId: data.sessionId, answers });
     // Resume to the first un-answered question (or 0 if fresh).
     const nextIndex = QUESTIONS.findIndex((q) => !(q.id in answers));
     if (nextIndex === -1) {
@@ -214,7 +214,9 @@ export function AssessmentFlow({ source }: { source?: string }) {
 
     // Recovery path: server says our session doesn't exist. Spin up a fresh
     // one and re-submit. The user never sees a failure — the click "just
-    // works" even if our local state has drifted from the server.
+    // works" even if our local state has drifted from the server. Token
+    // handling is server-side via the HttpOnly cookie, so we just need
+    // the new sessionId.
     if (!result.ok && result.status === 404) {
       try {
         const startRes = await fetch("/api/assessment/start", {
@@ -223,11 +225,9 @@ export function AssessmentFlow({ source }: { source?: string }) {
           body: JSON.stringify({ source: source ?? "answer_recovery" }),
         });
         if (startRes.ok) {
-          const fresh: { sessionId: string; resumeToken: string } = await startRes.json();
-          setResumeCookie(fresh.resumeToken);
+          const fresh: { sessionId: string } = await startRes.json();
           const refreshed: SessionState = {
             sessionId: fresh.sessionId,
-            resumeToken: fresh.resumeToken,
             answers: { [question.id]: letter },
           };
           setSession(refreshed);
@@ -299,7 +299,7 @@ export function AssessmentFlow({ source }: { source?: string }) {
       return;
     }
     const data: { resultUrl: string } = await res.json();
-    clearResumeCookie();
+    // The server clears the HttpOnly resume cookie on completion.
     router.push(data.resultUrl);
   }
 
@@ -325,7 +325,7 @@ export function AssessmentFlow({ source }: { source?: string }) {
       <div key={stageKey} className="tfb-stage-in">
         {stage.kind === "loading" && <LoadingCard />}
         {stage.kind === "intro" && (
-          <IntroCard onStart={() => void resumeOrStart(null)} />
+          <IntroCard onStart={() => void resumeOrStart()} />
         )}
         {stage.kind === "question" && session && QUESTIONS[stage.index] && (
           <QuestionCard

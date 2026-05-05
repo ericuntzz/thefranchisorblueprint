@@ -4,8 +4,8 @@
  * Site-wide "you started the assessment, come back and finish it" banner.
  *
  * Renders only when ALL of these are true:
- *   - The user has an active resume cookie pointing to an in-progress session
- *   - We've confirmed the session exists + isn't completed via /api/assessment/status
+ *   - /api/assessment/status reports inProgress (it reads the HttpOnly
+ *     resume cookie server-side; the client doesn't see the token)
  *   - The user hasn't dismissed the banner this browser session
  *   - The user isn't currently on /assessment (they're already there)
  *   - The user isn't on /portal (paying customer, different journey)
@@ -13,6 +13,14 @@
  * Mounted in src/app/layout.tsx so it follows the user across the site.
  * Cheap: a single fetch on mount, no polling. Style matches the rest of
  * the site — cream + navy + gold pill, gentle slide-up from the bottom.
+ *
+ * Note on the cookie: the previous version read a JS-readable cookie to
+ * decide whether to even hit /status. The cookie is now HttpOnly so the
+ * banner unconditionally calls /status — the server returns
+ * inProgress:false in <50ms when there's no cookie, and the banner just
+ * stays hidden. Cost is one cheap request per page load on non-portal
+ * marketing routes; benefit is the result-page credential is no longer
+ * exposed to client-side scripts.
  */
 
 import { useEffect, useState } from "react";
@@ -20,16 +28,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, Sparkles, X } from "lucide-react";
 
-const RESUME_COOKIE = "tfb_assessment_resume";
 const DISMISS_KEY = "tfb_assessment_banner_dismissed";
-
-function readResumeCookie(): string | null {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie.match(
-    new RegExp(`(?:^|; )${RESUME_COOKIE}=([^;]*)`),
-  );
-  return match ? decodeURIComponent(match[1]) : null;
-}
 
 interface Status {
   inProgress: boolean;
@@ -62,16 +61,16 @@ export function AssessmentResumeBanner() {
       setDismissed(true);
       return;
     }
-    const token = readResumeCookie();
-    if (!token) return;
 
     let cancelled = false;
     void (async () => {
       try {
-        const res = await fetch(
-          `/api/assessment/status?token=${encodeURIComponent(token)}`,
-          { cache: "no-store" },
-        );
+        // No token in URL — the HttpOnly cookie auto-attaches and the
+        // server reads it. Returns inProgress:false fast when no cookie
+        // is present, so this is cheap on cookieless visits too.
+        const res = await fetch("/api/assessment/status", {
+          cache: "no-store",
+        });
         if (!res.ok) return;
         const data = (await res.json()) as Status;
         if (cancelled) return;

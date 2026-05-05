@@ -17,15 +17,6 @@ export const runtime = "nodejs";
 
 interface AnswerRequest {
   sessionId?: string;
-  /**
-   * Token is accepted but no longer enforced as a security gate on this
-   * route. The sessionId itself is a v4 UUID (unguessable), and gating
-   * /answer on the token added a failure mode where any client/server
-   * state drift returned a 404 mid-quiz instead of just saving the
-   * answer. We still gate the result page + PDF download on the token —
-   * those expose personal info and warrant the extra check.
-   */
-  resumeToken?: string;
   questionId?: string;
   answerValue?: string;
 }

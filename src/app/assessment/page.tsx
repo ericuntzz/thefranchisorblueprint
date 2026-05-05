@@ -1,10 +1,17 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { ClipboardCheck, Clock, BarChart3, FileText } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { PageHero } from "@/components/PageHero";
 import { AssessmentFlow } from "@/components/AssessmentFlow";
+
+// Server-rendered so we can read the HttpOnly resume cookie at request
+// time and pass `hasResumeCookie` to the client flow. Without this, the
+// client component would have no way to know an in-progress session
+// exists (the cookie isn't JS-readable any more).
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   // Distinguishing word first so the tab label survives truncation in
@@ -23,7 +30,10 @@ const dimensions = [
   { Icon: Clock, title: "Founder readiness", body: "Capacity, mindset, and willingness to shift from operator to franchisor." },
 ];
 
-export default function AssessmentPage() {
+export default async function AssessmentPage() {
+  const cookieStore = await cookies();
+  const hasResumeCookie = !!cookieStore.get("tfb_assessment_resume")?.value;
+
   return (
     <>
       <SiteNav />
@@ -38,7 +48,10 @@ export default function AssessmentPage() {
           Cream section background so the white assessment card pops with a
           real drop-shadow instead of disappearing into the page bg. */}
       <section className="bg-cream py-16 md:py-24">
-        <AssessmentFlow source="assessment_page" />
+        <AssessmentFlow
+          source="assessment_page"
+          hasResumeCookie={hasResumeCookie}
+        />
       </section>
 
       {/* ===== What we measure ===== */}

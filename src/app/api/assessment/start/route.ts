@@ -2,13 +2,18 @@
  * POST /api/assessment/start
  *
  * Either creates a fresh assessment_sessions row, or — if a valid
- * resume_token is provided — returns the existing in-progress session so
- * the UI can pick up where the user left off.
+ * tfb_assessment_resume HttpOnly cookie is present — returns the
+ * existing in-progress session so the UI can pick up where the user
+ * left off.
  *
- * Returns a freshly-rotated resume_token on every call so the cookie
- * stays valid even after a resume. The token is unguessable (32 bytes
- * url-safe base64) and acts as the access credential for /answer,
- * /complete, and the result page.
+ * The resume token is set as an HttpOnly Secure SameSite=Lax cookie
+ * directly by this route. The client never sees the token in JS land,
+ * so an XSS in any non-HttpOnly script can't read it. (The cookie is
+ * still the auth credential for the result page + PDF route — same as
+ * before — those routes read it server-side too.)
+ *
+ * The token rotates on every successful start/resume to keep the
+ * cookie fresh.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -18,12 +23,24 @@ import type { AssessmentResponse, AssessmentSession } from "@/lib/supabase/types
 
 export const runtime = "nodejs";
 
+const RESUME_COOKIE = "tfb_assessment_resume";
+const RESUME_MAX_AGE_SECONDS = 7 * 24 * 60 * 60; // 7 days
+
 function newToken(): string {
   return randomBytes(24).toString("base64url");
 }
 
+function setResumeCookie(res: NextResponse, token: string) {
+  res.cookies.set(RESUME_COOKIE, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: RESUME_MAX_AGE_SECONDS,
+  });
+}
+
 interface StartRequest {
-  resumeToken?: string;
   source?: string;
 }
 
@@ -39,12 +56,17 @@ export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
   const userAgent = req.headers.get("user-agent") ?? null;
 
-  // Resume path: look up an existing in-progress session by token.
-  if (body.resumeToken) {
+  // Resume path: look up an existing in-progress session by the
+  // HttpOnly cookie token. The token used to be passed back via JSON
+  // body and stored client-side in JS — that left it readable to any
+  // XSS-capable script. The HttpOnly cookie path keeps the credential
+  // off the JS heap entirely.
+  const cookieToken = req.cookies.get(RESUME_COOKIE)?.value;
+  if (cookieToken) {
     const { data: session } = await supabase
       .from("assessment_sessions")
       .select("*")
-      .eq("resume_token", body.resumeToken)
+      .eq("resume_token", cookieToken)
       .maybeSingle();
     const existing = session as AssessmentSession | null;
     if (existing && !existing.completed_at) {
@@ -58,17 +80,18 @@ export async function POST(req: NextRequest) {
         .from("assessment_sessions")
         .update({ resume_token: rotated })
         .eq("id", existing.id);
-      return NextResponse.json({
+      const res = NextResponse.json({
         sessionId: existing.id,
-        resumeToken: rotated,
         answers: ((responses ?? []) as AssessmentResponse[]).map((r) => ({
           questionId: r.question_id,
           answerValue: r.answer_value,
           answerScore: r.answer_score,
         })),
       });
+      setResumeCookie(res, rotated);
+      return res;
     }
-    // Token didn't match an in-progress session — fall through to create new.
+    // Cookie didn't match an in-progress session — fall through to create new.
   }
 
   // Create fresh session.
@@ -88,9 +111,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "could not start assessment" }, { status: 500 });
   }
 
-  return NextResponse.json({
+  const res = NextResponse.json({
     sessionId: data.id,
-    resumeToken,
     answers: [],
   });
+  setResumeCookie(res, resumeToken);
+  return res;
 }

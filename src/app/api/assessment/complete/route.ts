@@ -40,15 +40,10 @@ const VALID_URGENCY = new Set([
   "exploring",
 ]);
 
+const RESUME_COOKIE = "tfb_assessment_resume";
+
 interface CompleteRequest {
   sessionId?: string;
-  /**
-   * Accepted but no longer enforced as a security gate. See /answer route
-   * for rationale — sessionId UUIDs are sufficient credentials here, and
-   * the token gate stays on the result page + PDF where personal info is
-   * exposed.
-   */
-  resumeToken?: string;
   email?: string;
   firstName?: string;
   businessName?: string;
@@ -290,10 +285,24 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  return NextResponse.json({
+  const res = NextResponse.json({
     ok: true,
     resultUrl: relativeResultUrl,
     band,
     totalScore: result.totalScore,
   });
+  // Clear the HttpOnly resume cookie now that the session is completed.
+  // (The result page is the canonical view for the finished assessment;
+  // the email link with ?token= still grants access if cookies are
+  // cleared.) Keeping a stale resume cookie around would let the
+  // AssessmentResumeBanner mistakenly think there's still work to do
+  // until the cookie expires.
+  res.cookies.set(RESUME_COOKIE, "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0,
+  });
+  return res;
 }
