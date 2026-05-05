@@ -66,8 +66,8 @@ export function SiteFooter() {
             </h4>
             <ul className="space-y-2.5 list-none text-sm">
               <li>
-                <a href="mailto:hello@thefranchisorblueprint.com" className="hover:text-gold-warm transition-colors break-words">
-                  hello@thefranchisorblueprint.com
+                <a href="mailto:info@thefranchisorblueprint.com" className="hover:text-gold-warm transition-colors break-words">
+                  info@thefranchisorblueprint.com
                 </a>
               </li>
               <li>
