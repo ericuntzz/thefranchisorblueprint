@@ -22,7 +22,7 @@ export default function TermsPage() {
       <h2>3. Refund Policy</h2>
       <ul>
         <li>
-          <strong>The Blueprint (Tier 1, $2,997):</strong> 30-day satisfaction guarantee. If you are not satisfied within 30 days of purchase, email us at hello@thefranchisorblueprint.com for a full refund.
+          <strong>The Blueprint (Tier 1, $2,997):</strong> 30-day satisfaction guarantee. If you are not satisfied within 30 days of purchase, email us at info@thefranchisorblueprint.com for a full refund.
         </li>
         <li>
           <strong>Navigator (Tier 2) and Builder (Tier 3):</strong> Refund policies are governed by the consulting engagement agreement signed at the start of your program. In general, deposits are refundable within 7 days of payment if no work has begun; thereafter, refunds are pro-rated based on work completed.
@@ -48,7 +48,7 @@ export default function TermsPage() {
       <p>We may update these Terms from time to time. Continued use of our site or services after changes constitutes acceptance of the updated Terms.</p>
 
       <h2>10. Contact</h2>
-      <p>Questions? Email us at <a href="mailto:hello@thefranchisorblueprint.com">hello@thefranchisorblueprint.com</a>.</p>
+      <p>Questions? Email us at <a href="mailto:info@thefranchisorblueprint.com">info@thefranchisorblueprint.com</a>.</p>
     </LegalPage>
   );
 }

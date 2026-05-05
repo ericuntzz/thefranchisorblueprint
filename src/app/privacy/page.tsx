@@ -43,7 +43,7 @@ export default function PrivacyPage() {
       <p>We use cookies and similar technologies to improve your experience and measure site performance. You can disable cookies in your browser settings, though some site features may not work as expected.</p>
 
       <h2>Your Rights</h2>
-      <p>Depending on your jurisdiction, you may have the right to access, correct, delete, or restrict the use of your personal data. To exercise these rights, contact us at <a href="mailto:hello@thefranchisorblueprint.com">hello@thefranchisorblueprint.com</a>.</p>
+      <p>Depending on your jurisdiction, you may have the right to access, correct, delete, or restrict the use of your personal data. To exercise these rights, contact us at <a href="mailto:info@thefranchisorblueprint.com">info@thefranchisorblueprint.com</a>.</p>
 
       <h2>Data Security</h2>
       <p>We implement reasonable technical and organizational measures to protect your information. However, no system is 100% secure, and we cannot guarantee absolute security.</p>
@@ -55,7 +55,7 @@ export default function PrivacyPage() {
       <p>We may update this Privacy Policy from time to time. The updated version will be posted here with a new effective date.</p>
 
       <h2>Contact</h2>
-      <p>Questions about this policy? Email us at <a href="mailto:hello@thefranchisorblueprint.com">hello@thefranchisorblueprint.com</a>.</p>
+      <p>Questions about this policy? Email us at <a href="mailto:info@thefranchisorblueprint.com">info@thefranchisorblueprint.com</a>.</p>
     </LegalPage>
   );
 }

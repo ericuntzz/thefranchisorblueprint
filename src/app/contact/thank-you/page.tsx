@@ -74,8 +74,8 @@ export default function ContactThankYouPage() {
 
           <p className="text-grey-4 text-sm italic">
             If you don&apos;t see our reply within one business day, check spam or email us directly at{" "}
-            <a href="mailto:hello@thefranchisorblueprint.com" className="text-navy underline font-semibold">
-              hello@thefranchisorblueprint.com
+            <a href="mailto:info@thefranchisorblueprint.com" className="text-navy underline font-semibold">
+              info@thefranchisorblueprint.com
             </a>
             .
           </p>

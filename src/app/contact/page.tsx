@@ -130,7 +130,7 @@ export default function ContactPage() {
           </div>
           <div className="grid sm:grid-cols-2 gap-6 max-w-[760px] mx-auto">
             <a
-              href="mailto:hello@thefranchisorblueprint.com"
+              href="mailto:info@thefranchisorblueprint.com"
               className="group bg-white rounded-2xl p-7 border border-navy/10 shadow-[0_8px_24px_rgba(30,58,95,0.08)] hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(30,58,95,0.14)] transition-all flex items-center gap-4"
             >
               <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-navy to-navy-light flex items-center justify-center text-gold">
@@ -141,7 +141,7 @@ export default function ContactPage() {
                   Email
                 </div>
                 <div className="text-navy font-semibold group-hover:text-gold transition-colors">
-                  hello@thefranchisorblueprint.com
+                  info@thefranchisorblueprint.com
                 </div>
               </div>
             </a>
