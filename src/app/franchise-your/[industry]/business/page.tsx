@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { ArrowRight, Check, MapPin, TrendingUp, FileText, DollarSign } from "lucide-react";
 
 import { JsonLd } from "@/components/JsonLd";
+import { SiteNav } from "@/components/SiteNav";
+import { SiteFooter } from "@/components/SiteFooter";
 import { InlineCTA } from "@/components/InlineCTA";
 import {
   allIndustries,
@@ -69,6 +71,8 @@ export default async function IndustryPage({ params }: { params: Params }) {
           category: `Franchise development consulting — ${industry.name}`,
         })}
       />
+
+      <SiteNav />
 
       <div className="bg-grey-1/50">
         {/* ─── Hero ─────────────────────────────────────────────────── */}
@@ -458,6 +462,8 @@ export default async function IndustryPage({ params }: { params: Params }) {
           </section>
         </div>
       </div>
+
+      <SiteFooter />
     </>
   );
 }

@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 
 import { JsonLd } from "@/components/JsonLd";
+import { SiteNav } from "@/components/SiteNav";
+import { SiteFooter } from "@/components/SiteFooter";
 import { allIndustries, type FranchiseIndustry } from "@/lib/franchise-industries";
 import {
   breadcrumbSchema,
@@ -131,6 +133,8 @@ export default function FranchiseByIndustryPage() {
         })}
       />
       <JsonLd data={faqPageSchema(FAQS)} />
+
+      <SiteNav />
 
       <div className="bg-grey-1/50">
         {/* ─── Hero ─────────────────────────────────────────────────── */}
@@ -354,6 +358,8 @@ export default function FranchiseByIndustryPage() {
           </div>
         </section>
       </div>
+
+      <SiteFooter />
     </>
   );
 }

@@ -3,6 +3,8 @@ import Link from "next/link";
 import { ArrowRight, BookOpen, Briefcase, DollarSign, Users, Cog, Building2 } from "lucide-react";
 
 import { JsonLd } from "@/components/JsonLd";
+import { SiteNav } from "@/components/SiteNav";
+import { SiteFooter } from "@/components/SiteFooter";
 import {
   allGlossaryTerms,
   CATEGORY_ORDER,
@@ -98,6 +100,8 @@ export default function FranchiseGlossaryPage() {
       />
       <JsonLd data={definedTermSet} />
       <JsonLd data={faqPageSchema(FAQS)} />
+
+      <SiteNav />
 
       <div className="bg-grey-1/50">
         {/* ─── Hero ─────────────────────────────────────────────────── */}
@@ -251,6 +255,8 @@ export default function FranchiseGlossaryPage() {
           </div>
         </section>
       </div>
+
+      <SiteFooter />
     </>
   );
 }

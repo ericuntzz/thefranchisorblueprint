@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { ArrowRight, Check, X, Scale, BookOpen } from "lucide-react";
 
 import { JsonLd } from "@/components/JsonLd";
+import { SiteNav } from "@/components/SiteNav";
+import { SiteFooter } from "@/components/SiteFooter";
 import { InlineCTA } from "@/components/InlineCTA";
 import {
   allComparisons,
@@ -75,6 +77,8 @@ export default async function ComparisonPage({ params }: { params: Params }) {
           wordCount: 2000,
         })}
       />
+
+      <SiteNav />
 
       <div className="bg-grey-1/50">
         {/* ─── Hero ─────────────────────────────────────────────────── */}
@@ -328,7 +332,41 @@ export default async function ComparisonPage({ params }: { params: Params }) {
             </section>
           )}
         </div>
+
+        {/* ─── Closing CTA ──────────────────────────────────────────── */}
+        <section className="bg-navy text-white">
+          <div className="max-w-[920px] mx-auto px-6 md:px-8 py-14 md:py-20 text-center">
+            <div className="text-gold font-bold text-xs tracking-[0.2em] uppercase mb-3">
+              Still deciding?
+            </div>
+            <h2 className="text-white text-3xl md:text-4xl font-bold mb-4 leading-tight">
+              Talk through {c.leftName} vs {c.rightName} for your business
+            </h2>
+            <p className="text-white/80 mb-7 max-w-2xl mx-auto leading-relaxed">
+              Thirty minutes with someone who's spent 30 years in franchise development.
+              We'll look at your specific situation and tell you which option actually
+              fits — without the sales pitch.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link
+                href={c.cta.href}
+                className="inline-flex items-center justify-center gap-2 bg-gold text-navy font-bold px-6 py-3 rounded-lg hover:bg-gold-warm transition-all"
+              >
+                {c.cta.ctaLabel}
+                <ArrowRight size={18} strokeWidth={2.5} />
+              </Link>
+              <Link
+                href="/assessment"
+                className="inline-flex items-center justify-center gap-2 border border-white/40 text-white font-bold px-6 py-3 rounded-lg hover:bg-white/10 transition-colors"
+              >
+                Take the readiness assessment
+              </Link>
+            </div>
+          </div>
+        </section>
       </div>
+
+      <SiteFooter />
     </>
   );
 }

@@ -3,6 +3,8 @@ import Link from "next/link";
 import { ArrowRight, MapPin, FileCheck, Bell, AlertTriangle, Scale, Shield } from "lucide-react";
 
 import { JsonLd } from "@/components/JsonLd";
+import { SiteNav } from "@/components/SiteNav";
+import { SiteFooter } from "@/components/SiteFooter";
 import {
   allStates,
   TIER_LABEL,
@@ -104,6 +106,8 @@ export default function FranchiseByStatePage() {
       />
       <JsonLd data={faqPageSchema(FAQS)} />
 
+      <SiteNav />
+
       <div className="bg-grey-1/50">
         {/* ─── Hero ─────────────────────────────────────────────────── */}
         <header className="max-w-[1100px] mx-auto px-6 md:px-8 pt-12 md:pt-20 pb-10">
@@ -150,7 +154,7 @@ export default function FranchiseByStatePage() {
                   </div>
                   <div className="flex-1">
                     <h2 className="text-navy text-2xl md:text-3xl font-bold leading-tight">
-                      {group.label}{" "}
+                      {group.states.length === 1 ? group.label : `${group.label}s`}{" "}
                       <span className="text-grey-4 font-normal text-lg ml-1">
                         ({group.states.length})
                       </span>
@@ -271,6 +275,8 @@ export default function FranchiseByStatePage() {
           </div>
         </section>
       </div>
+
+      <SiteFooter />
     </>
   );
 }

@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { ArrowRight, BookOpen, ExternalLink, Tag } from "lucide-react";
 
 import { JsonLd } from "@/components/JsonLd";
+import { SiteNav } from "@/components/SiteNav";
+import { SiteFooter } from "@/components/SiteFooter";
 import { InlineCTA } from "@/components/InlineCTA";
 import {
   allGlossaryTerms,
@@ -77,8 +79,8 @@ export default async function GlossaryTermPage({ params }: { params: Params }) {
           }
         : {
             eyebrow: "Talk through your specific situation",
-            title: `Get an honest read on ${t.term.replace(/\(.*\)/, "").trim().toLowerCase()} for your business`,
-            body: `Thirty minutes with a franchise SME who's built systems for 30 years. We'll look at your numbers and tell you what's realistic — without the pitch.`,
+            title: `Have questions about ${t.term.replace(/\(.*\)/, "").trim()}?`,
+            body: `Thirty minutes with a franchise SME who's built systems for 30 years. We'll look at your specific situation and tell you what's realistic — without the pitch.`,
             href: "/strategy-call",
             ctaLabel: "Book a 30-min strategy call",
           };
@@ -93,6 +95,8 @@ export default async function GlossaryTermPage({ params }: { params: Params }) {
         ])}
       />
       <JsonLd data={definedTerm} />
+
+      <SiteNav />
 
       <div className="bg-grey-1/50">
         {/* ─── Hero ─────────────────────────────────────────────────── */}
@@ -251,6 +255,8 @@ export default async function GlossaryTermPage({ params }: { params: Params }) {
           </div>
         </div>
       </div>
+
+      <SiteFooter />
     </>
   );
 }

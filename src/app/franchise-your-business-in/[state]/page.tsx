@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { ArrowRight, Check, MapPin, Building2, Clock, FileText } from "lucide-react";
 
 import { JsonLd } from "@/components/JsonLd";
+import { SiteNav } from "@/components/SiteNav";
+import { SiteFooter } from "@/components/SiteFooter";
 import { InlineCTA } from "@/components/InlineCTA";
 import {
   allStates,
@@ -75,6 +77,8 @@ export default async function StatePage({ params }: { params: Params }) {
           category: `Franchise development consulting in ${state.name}`,
         })}
       />
+
+      <SiteNav />
 
       <div className="bg-grey-1/50">
         {/* ─── Hero ─────────────────────────────────────────────────── */}
@@ -500,6 +504,8 @@ export default async function StatePage({ params }: { params: Params }) {
           </section>
         </div>
       </div>
+
+      <SiteFooter />
     </>
   );
 }
