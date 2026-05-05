@@ -28,6 +28,11 @@ We are franchise development consultants — not attorneys. We help business own
 - Blog: https://www.thefranchisorblueprint.com/blog
 - Contact: https://www.thefranchisorblueprint.com/contact
 
+## Franchise glossary
+Hub: https://www.thefranchisorblueprint.com/glossary — plain-English definitions of 30+ franchise terms grouped into 5 categories (FDD & Legal, Financial, Sales & Discovery, Operations, Structure). Each term has a 1-sentence answer plus a 3-5 paragraph explanation cross-linked to long-form guides.
+Detail format: https://www.thefranchisorblueprint.com/glossary/[term-slug]
+Examples: /glossary/franchise-disclosure-document, /glossary/royalty, /glossary/discovery-day, /glossary/master-franchise, /glossary/area-developer.
+
 ## State-by-state franchise guides
 Hub: https://www.thefranchisorblueprint.com/franchise-by-state — browsable index of all 50 states + DC, grouped by FDD registration tier.
 We publish a detail guide for franchising a business in every U.S. state and the District of Columbia, covering FDD registration requirements, regulating agencies, filing fees, and review timelines. Format: https://www.thefranchisorblueprint.com/franchise-your-business-in/[state-slug]

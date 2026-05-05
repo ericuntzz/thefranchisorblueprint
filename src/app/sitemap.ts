@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { allPosts } from "@/lib/blog";
 import { allStates } from "@/lib/franchise-states";
 import { allIndustries } from "@/lib/franchise-industries";
+import { allGlossaryTerms } from "@/lib/franchise-glossary";
 import { SITE_URL } from "@/lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -20,6 +21,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/blog`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
     { url: `${SITE_URL}/franchise-by-state`, lastModified: now, changeFrequency: "monthly", priority: 0.85 },
     { url: `${SITE_URL}/franchise-by-industry`, lastModified: now, changeFrequency: "monthly", priority: 0.85 },
+    { url: `${SITE_URL}/glossary`, lastModified: now, changeFrequency: "monthly", priority: 0.85 },
     { url: `${SITE_URL}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${SITE_URL}/terms`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${SITE_URL}/earnings-disclaimer`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
@@ -49,5 +51,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...blogRoutes, ...stateRoutes, ...industryRoutes];
+  // Glossary detail pages
+  const glossaryRoutes: MetadataRoute.Sitemap = allGlossaryTerms.map((t) => ({
+    url: `${SITE_URL}/glossary/${t.slug}`,
+    lastModified: now,
+    changeFrequency: "monthly",
+    priority: 0.55,
+  }));
+
+  return [...staticRoutes, ...blogRoutes, ...stateRoutes, ...industryRoutes, ...glossaryRoutes];
 }

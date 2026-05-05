@@ -34,6 +34,7 @@ export function SiteFooter() {
               <li><Link href="/blog" className="hover:text-gold-warm transition-colors">Blog</Link></li>
               <li><Link href="/franchise-by-state" className="hover:text-gold-warm transition-colors">Franchise by State</Link></li>
               <li><Link href="/franchise-by-industry" className="hover:text-gold-warm transition-colors">Franchise by Industry</Link></li>
+              <li><Link href="/glossary" className="hover:text-gold-warm transition-colors">Franchise Glossary</Link></li>
             </ul>
           </div>
           <div>
