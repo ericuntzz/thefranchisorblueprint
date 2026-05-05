@@ -174,23 +174,23 @@ export default async function FocusedChapterPage({ params }: Props) {
 
   return (
     <>
-      <main className="min-h-[calc(100vh-200px)] bg-cream">
+      <main className="min-h-[calc(100vh-200px)] bg-cream-soft">
         {/* Top nav — matches the queue's nav buttons for visual
             consistency. Both anchors as ghost-pill buttons with
             chevrons; the right-hand one offers the canvas as a
             secondary view. */}
-        <div className="border-b border-navy/5 bg-white">
+        <div className="border-b border-navy/10 bg-white">
           <div className="max-w-[1000px] mx-auto px-4 sm:px-6 md:px-8 py-3 flex items-center justify-between gap-3">
             <Link
               href="/portal"
-              className="inline-flex items-center gap-1.5 text-navy bg-cream hover:bg-navy hover:text-cream border-2 border-navy/20 hover:border-navy font-bold text-[11px] uppercase tracking-[0.12em] px-4 py-2 rounded-full transition-colors"
+              className="inline-flex items-center gap-1.5 text-navy bg-white hover:bg-navy hover:text-cream border-2 border-navy/30 hover:border-navy font-bold text-[11px] uppercase tracking-[0.1em] px-4 py-2 rounded-full transition-colors"
             >
               <ArrowLeft size={12} />
               Back to dashboard
             </Link>
             <Link
               href={`/portal/lab/blueprint#chapter-${slug}`}
-              className="inline-flex items-center gap-1.5 text-navy bg-cream hover:bg-navy hover:text-cream border-2 border-navy/20 hover:border-navy font-bold text-[11px] uppercase tracking-[0.12em] px-4 py-2 rounded-full transition-colors"
+              className="inline-flex items-center gap-1.5 text-navy bg-white hover:bg-navy hover:text-cream border-2 border-navy/30 hover:border-navy font-bold text-[11px] uppercase tracking-[0.1em] px-4 py-2 rounded-full transition-colors"
             >
               <BookOpen size={12} />
               View in Blueprint
