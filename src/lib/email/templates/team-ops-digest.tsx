@@ -229,15 +229,15 @@ export function TeamOpsDigestEmail(p: OpsDigestPayload) {
         </>
       )}
 
-      {/* ── Refund watchlist ── */}
+      {/* ── Early-customer watchlist ── */}
       {p.refundWatchlist.length > 0 && (
         <>
           <Hr style={sectionDivider} />
           <Heading as="h2" style={subheadingStyle}>
-            Refund-window watchlist
+            Early-customer watchlist
           </Heading>
           <Text style={{ ...paragraphStyle, fontSize: "13px", color: "#888B92" }}>
-            Customers within 10 days of the 30-day guarantee with &lt;50% readiness.
+            Customers in their first 30 days with &lt;50% readiness — outreach candidates.
           </Text>
           <table style={tableStyle}>
             <thead>

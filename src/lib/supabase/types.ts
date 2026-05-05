@@ -131,6 +131,31 @@ export type AssessmentResponse = {
  * greeting every page reload. Capped to the last ~30 entries
  * server-side on write to keep row size bounded over months of use.
  */
+/**
+ * Versioned snapshot of a customer_memory chapter at a point in
+ * time. Captured BEFORE every meaningful write (agent redraft,
+ * scrape, user edit) so the customer can roll back. Pruned to
+ * the most-recent N per (user, chapter) by the snapshots helper.
+ */
+export type MemorySnapshot = {
+  id: string;
+  user_id: string;
+  chapter_slug: string;
+  /** Snapshot payload — the chapter contents at capture time.
+   *  Validated as `SnapshotPayload` in lib/memory/snapshots.ts. */
+  payload: unknown;
+  reason: string | null;
+  source:
+    | "pre_draft"
+    | "pre_redraft"
+    | "pre_scrape"
+    | "pre_user_edit"
+    | "pre_extract"
+    | "pre_field_save"
+    | "manual";
+  created_at: string;
+};
+
 export type ChatHistory = {
   user_id: string;
   /** Array of TranscriptItem (defined client-side in JasonChatDock).
@@ -318,6 +343,8 @@ export type HealthCheckIncident = {
   detail: string | null;
   created_at: string;
 };
+
+// MemorySnapshot type defined above near ChatHistory.
 
 // Supabase JS v2 type inference requires this exact shape — including the
 // __InternalSupabase marker and the `{ [_ in never]: never }` empty-record
@@ -525,6 +552,20 @@ export type Database = {
           updated_at?: string;
         };
         Update: Partial<Omit<ChatHistory, "user_id">>;
+        Relationships: [];
+      };
+      memory_snapshots: {
+        Row: MemorySnapshot;
+        Insert: {
+          id?: string;
+          user_id: string;
+          chapter_slug: string;
+          payload: unknown;
+          reason?: string | null;
+          source: MemorySnapshot["source"];
+          created_at?: string;
+        };
+        Update: Partial<Omit<MemorySnapshot, "id" | "user_id">>;
         Relationships: [];
       };
       scheduled_emails: {

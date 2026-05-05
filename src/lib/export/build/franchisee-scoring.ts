@@ -11,7 +11,7 @@
  */
 
 import type { BuildContext, DeliverableDoc, DocBlock } from "../types";
-import { chapterFields, computedFields } from "../load";
+import { chapterFields, computedFields } from "../context-helpers";
 import { fmtBool, fmtCurrency, fmtInt, fmtList, fmtSelect, fmtText, isFilled } from "../format";
 
 export function buildFranchiseeScoringMatrix(ctx: BuildContext): DeliverableDoc {

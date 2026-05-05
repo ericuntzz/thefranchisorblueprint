@@ -8,7 +8,7 @@
  */
 
 import type { BuildContext, DeliverableDoc, DocBlock } from "../types";
-import { chapterFields } from "../load";
+import { chapterFields } from "../context-helpers";
 import {
   fmtCurrency,
   fmtInt,

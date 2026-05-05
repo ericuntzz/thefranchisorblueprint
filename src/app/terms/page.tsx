@@ -17,17 +17,12 @@ export default function TermsPage() {
       <p>TFB provides business consulting and educational services related to franchise development. We are not a law firm. We do not provide legal advice. Any legal documents prepared as part of our services (such as Operations Manual templates and FDD explainers) are educational and informational in nature and must be reviewed and finalized by a qualified franchise attorney before use.</p>
 
       <h2>2. Purchases & Payment</h2>
-      <p>All purchases are processed through our third-party payment processor. Pricing is displayed in U.S. dollars. By submitting payment, you authorize us to charge your selected payment method for the agreed amount.</p>
+      <p>All purchases are processed through our third-party payment processor. Pricing is displayed in U.S. dollars. By submitting payment, you authorize us to charge your selected payment method for the agreed amount. Each tier may be paid in full (5% discount applied at checkout) or in installments according to the published payment schedule for that tier.</p>
 
-      <h2>3. Refund Policy</h2>
-      <ul>
-        <li>
-          <strong>The Blueprint (Tier 1, $2,997):</strong> 30-day satisfaction guarantee. If you are not satisfied within 30 days of purchase, email us at info@thefranchisorblueprint.com for a full refund.
-        </li>
-        <li>
-          <strong>Navigator (Tier 2) and Builder (Tier 3):</strong> Refund policies are governed by the consulting engagement agreement signed at the start of your program. In general, deposits are refundable within 7 days of payment if no work has begun; thereafter, refunds are pro-rated based on work completed.
-        </li>
-      </ul>
+      <h2>3. Refunds and Cancellation</h2>
+      <p>All purchases are non-refundable once access to the program materials has been granted. For tiers paid via an installment plan, all installments are non-refundable once the first payment has been processed; remaining installments will continue to be charged on schedule for the duration of the plan.</p>
+      <p>Navigator and Builder engagements are additionally governed by the consulting engagement agreement signed at the start of your program, which controls in the event of any conflict with this section.</p>
+      <p>If you have a billing dispute or believe a charge was made in error, contact us at <a href="mailto:info@thefranchisorblueprint.com">info@thefranchisorblueprint.com</a> and we will investigate in good faith.</p>
 
       <h2>4. Intellectual Property</h2>
       <p>All content, documents, templates, and materials provided through our services are the intellectual property of TFB. You receive a non-exclusive, non-transferable license to use them in your own franchise development. You may not resell, redistribute, or republish our materials.</p>

@@ -11,7 +11,7 @@
  */
 
 import type { BuildContext, Slide, SlideDoc } from "../types";
-import { chapterFields } from "../load";
+import { chapterFields } from "../context-helpers";
 import {
   fmtCurrency,
   fmtCurrencyRange,

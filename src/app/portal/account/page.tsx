@@ -396,17 +396,17 @@ export default async function AccountPage({ searchParams }: PageProps) {
               </div>
               <div>
                 <div className="text-[10px] font-bold tracking-[0.16em] uppercase text-gold-warm mb-1">
-                  Refunds
+                  Billing & cancellation
                 </div>
                 <p className="text-grey-3 text-sm leading-relaxed">
-                  30-day satisfaction guarantee on every purchase. Email{" "}
+                  All purchases are non-refundable once access is granted. For installment plans, all installments are non-refundable once the first payment processes; remaining installments continue on schedule. Billing question? Email{" "}
                   <a
-                    href="mailto:team@thefranchisorblueprint.com?subject=Refund%20request"
+                    href="mailto:info@thefranchisorblueprint.com?subject=Billing%20question"
                     className="text-navy font-semibold underline"
                   >
-                    team@thefranchisorblueprint.com
-                  </a>{" "}
-                  with your order ID — full refund, no friction.
+                    info@thefranchisorblueprint.com
+                  </a>
+                  .
                 </p>
               </div>
             </div>

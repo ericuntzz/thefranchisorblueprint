@@ -13,7 +13,7 @@
  */
 
 import type { BuildContext, DeliverableDoc, DocBlock, DocSection } from "../types";
-import { chapterFields } from "../load";
+import { chapterFields } from "../context-helpers";
 import {
   fmtBool,
   fmtCurrency,

@@ -13,11 +13,14 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 /**
- * Refund-window proactive outreach cron.
+ * Early-customer proactive outreach cron.
  *
- * Daily at 10am MDT (16:00 UTC). Detects customers approaching the
- * 30-day satisfaction-guarantee window with low Memory engagement
- * and sends a Jason-voice "how's it going?" email.
+ * Daily at 10am MDT (16:00 UTC). Detects customers in their first
+ * 30 days with low Memory engagement and sends a Jason-voice
+ * "how's it going?" email. (The cron name and audit table still
+ * say "refund_outreach" for legacy reasons — the 30-day refund
+ * guarantee was retired 2026-05-05; the outreach itself is still
+ * useful for catching at-risk new customers before they churn.)
  *
  * Detection:
  *   - Purchase created 20–30 days ago (status = 'paid')

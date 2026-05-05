@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
     collectRefundWatchlist(admin),
     collectEmailHealth(admin),
     collectStripeReconciliation(admin),
-    collectPlatformHealth(),
+    collectPlatformHealth(admin),
   ]);
 
   const payload: OpsDigestPayload = {

@@ -9,7 +9,7 @@
  */
 
 import type { BuildContext, DeliverableDoc, DocBlock } from "../types";
-import { chapterFields, computedFields } from "../load";
+import { chapterFields, computedFields } from "../context-helpers";
 import { fmtCurrency, fmtCurrencyRange, fmtInt, fmtPct, fmtText, isFilled } from "../format";
 
 export function buildFinancialModel(ctx: BuildContext): DeliverableDoc {

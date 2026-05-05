@@ -10,6 +10,23 @@
   --color-gold-dark: #b8962e;
   --color-cream: #ece9df;
   --color-cream-light: #f3f1ea;
+  /* Portal-page background — slightly lifted from `cream` so white
+     cards have visible luminance contrast with the page bg. Used on
+     the portal's working surfaces (chapter editor, dashboard
+     wrapper, etc.) where customers spend hours and the soft
+     cream-on-white camouflage was reading as low-contrast. */
+  --color-cream-soft: #f4f1e8;
+  /* Visible card border on cream/white surfaces. Warm-toned so it
+     reads as native to the brand palette instead of generic grey.
+     Replaces shadow-only delineation that disappears on glossy
+     displays + at zoom. */
+  --color-card-border: #d8d2bf;
+  /* Gold readable AS TEXT (the gold/gold-warm tokens are designed
+     for fills + accents and fail WCAG contrast at small sizes —
+     2.18:1 on white). Use `text-gold-text` for any small label or
+     hint where a gold word lives on a white/cream surface.
+     #8b6914 = 4.6:1 on white (passes AA). */
+  --color-gold-text: #8b6914;
   --color-grey-1: #f8f9fa;
   --color-grey-2: #f2f2f2;
   --color-grey-3: #595959;
@@ -135,6 +152,18 @@ html {
 
 @utility bg-cream-light {
   background-color: #f3f1ea;
+}
+
+@utility bg-cream-soft {
+  background-color: #f4f1e8;
+}
+
+@utility border-card-border {
+  border-color: #d8d2bf;
+}
+
+@utility text-gold-text {
+  color: #8b6914;
 }
 
 @utility bg-gold-warm {

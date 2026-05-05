@@ -36,8 +36,7 @@ export function WinBackEmail({
       </Heading>
 
       <Text style={paragraphStyle}>
-        We refunded your {refundedProductName} purchase, no questions asked.
-        That&apos;s the deal we promised.
+        Your {refundedProductName} refund has been processed.
       </Text>
 
       <Text style={paragraphStyle}>
@@ -72,11 +71,6 @@ export function WinBackEmail({
         </Button>
       </Section>
 
-      <Text style={{ ...paragraphStyle, fontSize: "13px", color: "#888B92", textAlign: "center" }}>
-        Same 30-day money-back guarantee on Plus. If coaching isn&apos;t the
-        missing piece for you either, full refund — no questions, no friction.
-      </Text>
-
       <Text style={paragraphStyle}>Thanks for trying us out either way.</Text>
       <Text style={paragraphStyle}>— Jason &amp; the team</Text>
     </EmailLayout>
@@ -87,7 +81,7 @@ export function winBackText(p: WinBackPayload): string {
   return [
     `${p.firstName ?? "Hey"}, sorry to see you go.`,
     ``,
-    `We refunded your ${p.refundedProductName} purchase, no questions asked. That's the deal we promised.`,
+    `Your ${p.refundedProductName} refund has been processed.`,
     ``,
     `We do want to ask one favor: what didn't work? Was the DIY pace overwhelming? Were the docs missing something? Were you not actually ready to franchise yet? Just hit reply and tell us in one sentence — it's the only way we get better.`,
     ``,
@@ -98,8 +92,6 @@ export function winBackText(p: WinBackPayload): string {
     `As a thank-you for trying us out, we'll knock $1,000 off Blueprint Plus: $3,997 instead of $4,997. Use code ${p.promoCode} at checkout.`,
     ``,
     `Try Blueprint Plus — $3,997: ${p.blueprintPlusUrl}`,
-    ``,
-    `Same 30-day money-back guarantee on Plus. If coaching isn't the missing piece for you either, full refund — no questions, no friction.`,
     ``,
     `Thanks for trying us out either way.`,
     ``,

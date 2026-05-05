@@ -174,7 +174,9 @@ export async function GET(req: NextRequest) {
   }
 
   // ── Record incidents ──
-  const incidents = checks.filter((c) => c.status !== "ok");
+  const incidents = checks.filter(
+    (c): c is Check & { status: "degraded" | "down" } => c.status !== "ok",
+  );
 
   for (const inc of incidents) {
     await admin.from("health_check_incidents").insert({

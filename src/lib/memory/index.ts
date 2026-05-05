@@ -14,6 +14,7 @@
 
 import "server-only";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { captureSnapshot } from "./snapshots";
 import type {
   ChapterAttachment,
   CustomerMemory,
@@ -128,6 +129,25 @@ export async function upsertMemoryWithProvenance(args: {
   lastUpdatedBy: CustomerMemory["last_updated_by"];
   provenance: ProvenanceEntry[];
 }): Promise<void> {
+  // Snapshot the prior state before overwriting so the customer (or
+  // an agent acting on their behalf) can roll back. Best-effort —
+  // snapshot failures must not block the write.
+  await captureSnapshot({
+    userId: args.userId,
+    slug: args.slug,
+    source:
+      args.lastUpdatedBy === "agent"
+        ? "pre_redraft"
+        : args.lastUpdatedBy === "scraper"
+          ? "pre_scrape"
+          : "pre_user_edit",
+    reason:
+      args.lastUpdatedBy === "agent"
+        ? "Before redraft"
+        : args.lastUpdatedBy === "scraper"
+          ? "Before website scrape"
+          : "Before edit",
+  });
   const supabase = getSupabaseAdmin();
   const { error } = await supabase.rpc("upsert_memory_with_provenance", {
     p_user_id: args.userId,

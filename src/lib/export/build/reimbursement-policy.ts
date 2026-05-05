@@ -7,7 +7,7 @@
  */
 
 import type { BuildContext, DeliverableDoc } from "../types";
-import { chapterFields } from "../load";
+import { chapterFields } from "../context-helpers";
 import {
   fmtCurrency,
   fmtList,

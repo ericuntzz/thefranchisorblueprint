@@ -9,7 +9,7 @@
  */
 
 import type { BuildContext, DeliverableDoc, DocBlock } from "../types";
-import { chapterFields } from "../load";
+import { chapterFields } from "../context-helpers";
 import { fmtBool, fmtCurrency, fmtInt, fmtList, fmtText, isFilled } from "../format";
 
 export function buildQualifyMatrix(ctx: BuildContext): DeliverableDoc {

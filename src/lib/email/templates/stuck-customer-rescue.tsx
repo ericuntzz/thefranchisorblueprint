@@ -134,9 +134,8 @@ export function StuckCustomerRescueEmail({
 
       <Text style={paragraphStyle}>
         If now isn&apos;t the right time, that&apos;s fine — your work is
-        saved, and I&apos;ll be here when you&apos;re back. Or if you&apos;ve
-        decided franchising isn&apos;t the right move after all, let me know
-        and we&apos;ll talk about a refund. The 30-day guarantee is real.
+        saved, and I&apos;ll be here when you&apos;re back. The whole system
+        stays accessible whenever you&apos;re ready to pick it back up.
       </Text>
 
       <Text style={paragraphStyle}>
@@ -178,7 +177,7 @@ export function stuckCustomerRescueText(
       ? `Stuck on something specific? ${p.blockerHint} Just hit reply and tell me where you're stuck.`
       : "Stuck on something specific? Just hit reply and tell me where you're stuck.",
     "",
-    "If now isn't the right time, your work is saved. If you've decided franchising isn't right after all, the 30-day guarantee is real — let me know.",
+    "If now isn't the right time, your work is saved — the whole system stays accessible whenever you're ready to pick it back up.",
     "",
     "— Jason",
     "",

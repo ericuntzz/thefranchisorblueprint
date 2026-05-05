@@ -88,23 +88,7 @@ export async function loadBuildContext(userId: string): Promise<BuildContext> {
   };
 }
 
-/**
- * Convenience accessor — pull a chapter's fields without the caller
- * having to type-narrow on the optional. Returns an empty object when
- * the chapter has no row, so builders can call `.fields.foo` without
- * throwing.
- */
-export function chapterFields(
-  ctx: BuildContext,
-  slug: MemoryFileSlug,
-): Record<string, string | number | boolean | string[] | null> {
-  return ctx.memory[slug]?.fields ?? {};
-}
-
-/** Same as above but for the computed (calc lib) values. */
-export function computedFields(
-  ctx: BuildContext,
-  slug: MemoryFileSlug,
-): Record<string, number | null> {
-  return ctx.computed[slug] ?? {};
-}
+// Pure helpers re-exported for backward compatibility — canonical
+// implementations live in context-helpers.ts (no server-only guard,
+// safe for client-side import chains).
+export { chapterFields, computedFields } from "./context-helpers";

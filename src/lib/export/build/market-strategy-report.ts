@@ -9,7 +9,7 @@
  */
 
 import type { BuildContext, DeliverableDoc, DocBlock } from "../types";
-import { chapterFields } from "../load";
+import { chapterFields } from "../context-helpers";
 import { fmtInt, fmtList, fmtText, isFilled } from "../format";
 
 export function buildMarketStrategyReport(ctx: BuildContext): DeliverableDoc {

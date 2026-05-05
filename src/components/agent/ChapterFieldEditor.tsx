@@ -166,7 +166,7 @@ export function ChapterFieldEditor({
         if (visibleFields.length === 0) return null;
         return (
           <fieldset key={group.category} className="space-y-4">
-            <legend className="text-[11px] uppercase tracking-[0.16em] text-gold-warm font-bold">
+            <legend className="text-[11px] uppercase tracking-[0.12em] text-gold-text font-bold">
               {group.category}
             </legend>
             <div className="space-y-4">
@@ -343,10 +343,10 @@ function FieldInput({
           </button>
         )}
       {fieldDef.helpText && !isComputed && (
-        <p className="text-xs text-grey-4 leading-relaxed">{fieldDef.helpText}</p>
+        <p className="text-[13px] text-grey-3 leading-relaxed">{fieldDef.helpText}</p>
       )}
       {sourceLabel && !isComputed && (
-        <p className="text-[10px] uppercase tracking-[0.14em] text-grey-4 font-bold">
+        <p className="text-[11px] uppercase tracking-[0.1em] text-grey-3 font-bold">
           {sourceLabel}
         </p>
       )}
@@ -413,19 +413,19 @@ function FieldLabel({
       </span>
       {isComputed && (
         <span
-          className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5"
+          className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.06em] font-bold text-white bg-emerald-600 rounded-full px-2 py-0.5 shadow-sm"
           title="Calculated automatically from your other inputs"
         >
-          <Calculator size={10} />
+          <Calculator size={11} />
           Calculated
         </span>
       )}
       {showSuggested && (
         <span
-          className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-bold text-amber-800 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5"
+          className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.06em] font-bold text-navy bg-gold rounded-full px-2 py-0.5 shadow-sm"
           title={suggestedSourceLabel(fieldDef)}
         >
-          <Sparkles size={10} />
+          <Sparkles size={11} />
           Suggested
         </span>
       )}
@@ -457,9 +457,9 @@ function ComputedValueDisplay({
 }) {
   const formatted = value == null ? null : formatNumeric(fieldDef.type, value);
   return (
-    <div className="rounded-lg border-2 border-dashed border-emerald-300 bg-emerald-50/40 px-3 py-2.5 text-navy">
+    <div className="rounded-lg border border-emerald-400 bg-emerald-50 px-3.5 py-3 text-navy">
       <div className="font-bold text-base tabular-nums">
-        {formatted ?? <span className="text-grey-4">— (need more inputs)</span>}
+        {formatted ?? <span className="text-grey-3">— (need more inputs)</span>}
       </div>
       {fieldDef.computed?.formula && (
         <div className="mt-1 text-[11px] text-grey-3 italic">

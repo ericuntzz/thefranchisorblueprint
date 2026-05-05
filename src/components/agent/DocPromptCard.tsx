@@ -152,12 +152,12 @@ export function DocPromptCard({ slug, prompt, compact }: Props) {
   }
 
   return (
-    <div className="rounded-2xl border border-amber-300 bg-amber-50/70 p-5 relative">
+    <div className="rounded-2xl border-2 border-amber-400 bg-amber-50 p-5 relative shadow-sm">
       <button
         type="button"
         onClick={() => setDismissed(true)}
         aria-label="Dismiss prompt"
-        className="absolute top-3 right-3 p-1.5 text-amber-700/60 hover:text-amber-900 hover:bg-amber-100 rounded-full transition-colors"
+        className="absolute top-3 right-3 p-1.5 text-amber-800 hover:text-amber-950 hover:bg-amber-200 rounded-full transition-colors"
         title="Skip — I'll add docs later"
       >
         <X size={14} />
@@ -165,10 +165,10 @@ export function DocPromptCard({ slug, prompt, compact }: Props) {
       <div className="flex items-start gap-3 mb-3 pr-6">
         <Sparkles size={18} className="text-amber-700 mt-0.5 flex-shrink-0" />
         <div>
-          <div className="text-[10px] uppercase tracking-[0.18em] text-amber-700 font-bold mb-1">
+          <div className="text-[11px] uppercase tracking-[0.12em] text-amber-800 font-bold mb-1">
             Skip the typing
           </div>
-          <p className="text-amber-950 text-sm leading-relaxed">
+          <p className="text-amber-950 text-[15px] leading-relaxed">
             {prompt.prompt}
           </p>
         </div>
@@ -179,7 +179,7 @@ export function DocPromptCard({ slug, prompt, compact }: Props) {
         {prompt.examples.map((ex) => (
           <span
             key={ex}
-            className="inline-flex items-center text-[10px] uppercase tracking-wider font-bold text-amber-800 bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-full"
+            className="inline-flex items-center text-[11px] uppercase tracking-[0.06em] font-bold text-amber-900 bg-amber-200 border border-amber-300 px-2 py-0.5 rounded-full"
           >
             {ex}
           </span>

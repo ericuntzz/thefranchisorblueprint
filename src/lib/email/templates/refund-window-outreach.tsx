@@ -11,13 +11,15 @@ import {
 } from "./_layout";
 
 /**
- * Refund-window proactive outreach email.
+ * Early-customer outreach email.
  *
- * Sent by /api/cron/refund-window-outreach when a customer is
- * approaching the 30-day satisfaction-guarantee window with low
- * Memory engagement. Jason's voice: warm, no guilt, genuinely
- * offers help OR a refund. The goal is to save the customer before
- * they silently churn — or honor the guarantee gracefully.
+ * Sent by /api/cron/refund-window-outreach when a customer is in
+ * their first 30 days with low Memory engagement. Jason's voice:
+ * warm, no guilt, genuinely offers help. The goal is to save the
+ * customer before they silently churn.
+ *
+ * NOTE: previously included a 30-day refund-guarantee escape valve,
+ * removed when that policy was retired (2026-05-05).
  */
 export type RefundWindowOutreachPayload = {
   firstName: string | null;
@@ -35,7 +37,6 @@ export function refundWindowOutreachSubject(
 
 export function RefundWindowOutreachEmail({
   firstName,
-  daysRemaining,
   readinessPct,
   siteUrl,
 }: RefundWindowOutreachPayload) {
@@ -86,23 +87,6 @@ export function RefundWindowOutreachEmail({
         </Text>
       </Section>
 
-      <Section style={callOutStyle}>
-        <Heading
-          as="h2"
-          style={{ ...headingStyle, fontSize: "17px", margin: "0 0 12px" }}
-        >
-          If you&apos;ve changed your mind
-        </Heading>
-        <Text style={{ ...paragraphStyle, margin: "0 0 8px" }}>
-          The 30-day satisfaction guarantee is real — you have{" "}
-          <strong style={{ color: "#1E3A5F" }}>{daysRemaining} day{daysRemaining === 1 ? "" : "s"}</strong>{" "}
-          left. Reply to this email and say the word, and I&apos;ll
-          process a full refund. No questions, no awkwardness. Franchising
-          isn&apos;t for everyone, and I&apos;d rather you find that out
-          now than feel stuck.
-        </Text>
-      </Section>
-
       <Section style={buttonContainerStyle}>
         <Button href={portalUrl} style={buttonStyle}>
           Open your Blueprint
@@ -125,11 +109,10 @@ export function refundWindowOutreachText(
   return [
     `${name} — quick check-in on your Blueprint`,
     "",
-    `Your readiness is at ${p.readinessPct}%, and you have ${p.daysRemaining} day${p.daysRemaining === 1 ? "" : "s"} left on the 30-day satisfaction guarantee.`,
+    `Your readiness is at ${p.readinessPct}%. Looks like you might be stuck or busy — both fine.`,
     "",
     "If you're stuck, hit reply and tell me where — one sentence is enough.",
     "If you're just busy, no worries — your work is saved.",
-    "If you've changed your mind, reply and I'll process a full refund. No questions.",
     "",
     `Open your Blueprint: ${p.siteUrl}/portal`,
     "",

@@ -10,7 +10,7 @@
  */
 
 import type { BuildContext, DeliverableDoc, DocBlock } from "../types";
-import { chapterFields } from "../load";
+import { chapterFields } from "../context-helpers";
 import { fmtDate, fmtInt, fmtList, fmtText, isFilled } from "../format";
 
 export function buildConceptAndStory(ctx: BuildContext): DeliverableDoc {

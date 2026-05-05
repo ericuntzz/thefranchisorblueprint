@@ -229,7 +229,7 @@ export function FocusedChapterClient(props: Props) {
             </p>
           )}
           {schemaCompilesInto && (
-            <p className="text-[11px] uppercase tracking-[0.14em] text-grey-4 font-bold">
+            <p className="text-[11px] uppercase tracking-[0.12em] text-grey-3 font-bold">
               Compiles into: {schemaCompilesInto}
             </p>
           )}
@@ -252,7 +252,7 @@ export function FocusedChapterClient(props: Props) {
 
       {/* Field editor — primary surface. */}
       {schema ? (
-        <section className="rounded-2xl border border-navy/10 bg-white p-5 sm:p-6 md:p-8 shadow-[0_8px_24px_rgba(30,58,95,0.06)]">
+        <section className="rounded-2xl border border-card-border bg-white p-5 sm:p-6 md:p-8 shadow-[0_8px_24px_rgba(30,58,95,0.06)]">
           <ChapterFieldEditor
             schema={schema}
             initialFields={fields}
@@ -279,18 +279,18 @@ export function FocusedChapterClient(props: Props) {
 
       {/* Drafted-prose preview — collapsible read-only. */}
       {hasProse && (
-        <section className="rounded-2xl border border-navy/10 bg-white">
+        <section className="rounded-2xl border border-card-border bg-white">
           <button
             type="button"
             onClick={() => setShowProse((v) => !v)}
             aria-expanded={showProse}
-            className="w-full flex items-center justify-between gap-3 px-5 sm:px-6 py-4 text-left hover:bg-cream/40 transition-colors rounded-2xl"
+            className="w-full flex items-center justify-between gap-3 px-5 sm:px-6 py-4 text-left hover:bg-cream-soft transition-colors rounded-2xl"
           >
             <div className="flex items-center gap-2">
-              <span className="text-[11px] uppercase tracking-[0.16em] text-gold-warm font-bold">
+              <span className="text-[11px] uppercase tracking-[0.14em] text-gold-text font-bold">
                 Drafted content
               </span>
-              <span className="text-[10px] uppercase tracking-[0.14em] text-grey-4 font-bold">
+              <span className="text-[11px] uppercase tracking-[0.12em] text-grey-3 font-bold">
                 · Read-only preview
               </span>
             </div>
@@ -308,12 +308,12 @@ export function FocusedChapterClient(props: Props) {
                     {cleanedProse}
                   </ReactMarkdown>
                 </div>
-                <div className="mt-4 pt-3 border-t border-navy/5 text-xs text-grey-4">
+                <div className="mt-4 pt-3 border-t border-navy/5 text-[13px] text-grey-3 leading-relaxed">
                   To edit prose section-by-section, attach uploaded
                   references, or redraft with locked-span preservation,{" "}
                   <Link
                     href={`/portal/lab/blueprint#chapter-${slug}`}
-                    className="text-gold-warm hover:text-gold-dark font-semibold transition-colors"
+                    className="text-gold-text hover:text-navy font-semibold underline transition-colors"
                   >
                     open this chapter in the Blueprint canvas →
                   </Link>
@@ -364,8 +364,8 @@ export function FocusedChapterClient(props: Props) {
       {/* Action row — Approve + Redraft + Last-updated. Sits below
           everything as the "I'm done with this chapter, what now"
           surface. */}
-      <section className="rounded-2xl border border-navy/10 bg-white p-5 sm:p-6 flex flex-wrap items-center justify-between gap-3">
-        <div className="text-xs text-grey-4">
+      <section className="rounded-2xl border border-card-border bg-white p-5 sm:p-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="text-[13px] text-grey-3">
           {lastUpdatedBy && updatedAt
             ? `Updated by ${lastUpdatedBy === "scraper" ? "the scraper" : lastUpdatedBy} ${formatRelative(updatedAt)}`
             : "Never updated"}
@@ -379,7 +379,7 @@ export function FocusedChapterClient(props: Props) {
               setDraftModalOpen(true);
             }}
             disabled={drafting}
-            className="inline-flex items-center gap-2 bg-cream text-navy hover:bg-navy hover:text-cream border-2 border-navy/20 hover:border-navy font-bold text-[11px] uppercase tracking-[0.12em] px-4 py-2 rounded-full transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 bg-white text-navy hover:bg-navy hover:text-cream border-2 border-navy/30 hover:border-navy font-bold text-[11px] uppercase tracking-[0.1em] px-4 py-2 rounded-full transition-colors disabled:opacity-50"
           >
             <Sparkles size={12} />
             {drafting
@@ -430,14 +430,14 @@ export function FocusedChapterClient(props: Props) {
         {previousSlug && previousTitle ? (
           <Link
             href={`/portal/chapter/${previousSlug}`}
-            className="flex-1 min-w-[260px] flex items-center gap-3 rounded-2xl border border-navy/10 bg-white hover:bg-cream/40 hover:border-navy/30 px-5 py-4 transition-colors group"
+            className="flex-1 min-w-[260px] flex items-center gap-3 rounded-2xl border border-card-border bg-white hover:bg-cream-soft hover:border-navy/30 px-5 py-4 transition-colors group"
           >
             <ArrowLeft
               size={16}
               className="text-grey-3 group-hover:text-navy flex-shrink-0 transition-colors"
             />
             <div className="min-w-0 flex-1">
-              <div className="text-[10px] uppercase tracking-[0.14em] text-grey-4 font-bold">
+              <div className="text-[11px] uppercase tracking-[0.12em] text-grey-3 font-bold">
                 Previous
               </div>
               <div className="text-navy font-bold truncate">{previousTitle}</div>
@@ -449,10 +449,10 @@ export function FocusedChapterClient(props: Props) {
         {nextSlug && nextTitle ? (
           <Link
             href={`/portal/chapter/${nextSlug}`}
-            className="flex-1 min-w-[260px] flex items-center gap-3 rounded-2xl border border-navy/10 bg-white hover:bg-cream/40 hover:border-navy/30 px-5 py-4 transition-colors group text-right"
+            className="flex-1 min-w-[260px] flex items-center gap-3 rounded-2xl border border-card-border bg-white hover:bg-cream-soft hover:border-navy/30 px-5 py-4 transition-colors group text-right"
           >
             <div className="min-w-0 flex-1">
-              <div className="text-[10px] uppercase tracking-[0.14em] text-grey-4 font-bold">
+              <div className="text-[11px] uppercase tracking-[0.12em] text-grey-3 font-bold">
                 Next
               </div>
               <div className="text-navy font-bold truncate">{nextTitle}</div>

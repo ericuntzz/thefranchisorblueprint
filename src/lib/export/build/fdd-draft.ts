@@ -31,7 +31,7 @@
  */
 
 import type { BuildContext, DeliverableDoc, DocBlock, DocSection } from "../types";
-import { chapterFields, computedFields } from "../load";
+import { chapterFields, computedFields } from "../context-helpers";
 import {
   fmtBool,
   fmtCurrency,
