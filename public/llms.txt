@@ -28,6 +28,11 @@ We are franchise development consultants — not attorneys. We help business own
 - Blog: https://www.thefranchisorblueprint.com/blog
 - Contact: https://www.thefranchisorblueprint.com/contact
 
+## Franchise decision comparisons
+Hub: https://www.thefranchisorblueprint.com/compare — side-by-side comparisons of franchise decisions: service providers (consultant vs attorney), engagement models (coached vs traditional firm), brands (TFB vs iFranchise Group), TFB tiers (Navigator vs Builder), and strategic decisions (buying vs starting).
+Detail format: https://www.thefranchisorblueprint.com/compare/[topic-slug]
+Examples: /compare/franchise-consultant-vs-franchise-attorney, /compare/coached-program-vs-traditional-consulting-firm, /compare/franchisor-blueprint-vs-ifranchise-group, /compare/navigator-vs-builder, /compare/buying-existing-franchise-vs-starting-new.
+
 ## Franchise glossary
 Hub: https://www.thefranchisorblueprint.com/glossary — plain-English definitions of 30+ franchise terms grouped into 5 categories (FDD & Legal, Financial, Sales & Discovery, Operations, Structure). Each term has a 1-sentence answer plus a 3-5 paragraph explanation cross-linked to long-form guides.
 Detail format: https://www.thefranchisorblueprint.com/glossary/[term-slug]

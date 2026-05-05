@@ -3,6 +3,7 @@ import { allPosts } from "@/lib/blog";
 import { allStates } from "@/lib/franchise-states";
 import { allIndustries } from "@/lib/franchise-industries";
 import { allGlossaryTerms } from "@/lib/franchise-glossary";
+import { allComparisons } from "@/lib/franchise-comparisons";
 import { SITE_URL } from "@/lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -22,6 +23,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/franchise-by-state`, lastModified: now, changeFrequency: "monthly", priority: 0.85 },
     { url: `${SITE_URL}/franchise-by-industry`, lastModified: now, changeFrequency: "monthly", priority: 0.85 },
     { url: `${SITE_URL}/glossary`, lastModified: now, changeFrequency: "monthly", priority: 0.85 },
+    { url: `${SITE_URL}/compare`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${SITE_URL}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${SITE_URL}/terms`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${SITE_URL}/earnings-disclaimer`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
@@ -59,5 +61,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.55,
   }));
 
-  return [...staticRoutes, ...blogRoutes, ...stateRoutes, ...industryRoutes, ...glossaryRoutes];
+  // Comparison pages
+  const comparisonRoutes: MetadataRoute.Sitemap = allComparisons.map((c) => ({
+    url: `${SITE_URL}/compare/${c.slug}`,
+    lastModified: now,
+    changeFrequency: "monthly",
+    priority: 0.75, // Higher than blog/glossary because of commercial intent
+  }));
+
+  return [
+    ...staticRoutes,
+    ...blogRoutes,
+    ...stateRoutes,
+    ...industryRoutes,
+    ...glossaryRoutes,
+    ...comparisonRoutes,
+  ];
 }
