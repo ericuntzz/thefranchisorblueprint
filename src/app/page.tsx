@@ -127,7 +127,7 @@ export default function Home() {
           className="absolute inset-0 -z-10 bg-cover bg-no-repeat"
           style={{
             backgroundImage:
-              "linear-gradient(100deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.2) 55%, rgba(0,0,0,0) 100%), url('/images/hero-banner.png')",
+              "linear-gradient(100deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.2) 55%, rgba(0,0,0,0) 100%), url('/images/hero-banner.jpg')",
             backgroundPosition: "right center",
           }}
           aria-hidden
