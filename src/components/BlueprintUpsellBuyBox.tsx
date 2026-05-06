@@ -1,16 +1,28 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import {
   Check,
   Sparkles,
   ArrowLeft,
+  ArrowRight,
   Mail,
   AlertCircle,
   Loader2,
   CheckCircle2,
 } from "lucide-react";
 import { track } from "@/lib/analytics";
+
+/**
+ * When NEXT_PUBLIC_STRIPE_LIVE !== "true" we don't yet have live Stripe
+ * credentials, so we route Blueprint buyers to a sales-call funnel
+ * instead of test-mode checkout (which would be confusing for visitors
+ * and exploitable via Stripe test cards). Flip the env var to "true"
+ * once live keys are wired and the buy flow goes back to direct checkout
+ * automatically — no code change needed.
+ */
+const STRIPE_LIVE = process.env.NEXT_PUBLIC_STRIPE_LIVE === "true";
 
 type GateState =
   | { kind: "idle" }
@@ -189,6 +201,67 @@ export function BlueprintUpsellBuyBox({
   }
 
   // ─── Render branches ────────────────────────────────────────────────
+
+  // Sales-call mode (default until live Stripe keys are wired). Replaces
+  // the entire buy flow with a founding-member kickoff CTA so we never
+  // expose test-mode checkout — which would either confuse drive-by
+  // visitors with "TEST MODE" labels or get exploited via test card 4242.
+  if (!STRIPE_LIVE) {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-2xl border-2 border-gold/40 bg-gradient-to-br from-cream to-white p-5">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-9 h-9 rounded-full bg-gold/20 flex items-center justify-center">
+              <Sparkles size={16} className="text-gold-warm" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-navy font-extrabold text-base mb-1">
+                Founding-member onboarding
+              </div>
+              <p className="text-grey-3 text-sm leading-relaxed">
+                We&apos;re onboarding our first cohort of Blueprint customers
+                personally. Schedule a 15-minute call — we&apos;ll confirm fit,
+                walk you through the system, and lock in your founding-member
+                pricing on this package.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <Link
+          href="/strategy-call"
+          onClick={() => {
+            // Match the analytics signal we'd otherwise fire from the Stripe
+            // path so funnel reports stay continuous across the
+            // test-mode → live-mode transition.
+            track("begin_checkout", {
+              currency: "USD",
+              value: 2997,
+              items: [
+                {
+                  item_id: "the-blueprint",
+                  item_name: "The Blueprint",
+                  price: 2997,
+                  quantity: 1,
+                  item_category: "Tier 1",
+                },
+              ],
+              cta_location: "blueprint_buy_box_founding_member",
+            });
+          }}
+          className="flex items-center justify-center gap-2 w-full text-center bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-6 py-4 rounded-full hover:bg-gold-dark transition-colors"
+        >
+          Book your kickoff call
+          <ArrowRight size={15} />
+        </Link>
+
+        <p className="text-center text-xs text-grey-4 leading-relaxed pt-1">
+          Self-serve checkout opens shortly — book now to lock in
+          founding-member pricing before then.
+        </p>
+      </div>
+    );
+  }
 
   // Existing-customer flow takes over the entire panel — hide upsell toggle.
   if (
