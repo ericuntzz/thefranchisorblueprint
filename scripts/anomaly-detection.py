@@ -89,6 +89,19 @@ def extract_metrics(report_data):
         cf = sb["contact_form"]
         metrics["contact_real_submissions"] = _to_int(cf.get("real_submissions_in_window"))
 
+    # Calendly
+    cal = report_data.get("calendly", {}) or {}
+    if cal.get("totals"):
+        metrics["calendly_external_bookings"] = _to_int(cal["totals"].get("external_bookings"))
+        metrics["calendly_canceled"] = _to_int(cal["totals"].get("canceled_in_window"))
+
+    # Resend
+    rs = report_data.get("resend", {}) or {}
+    if rs.get("totals"):
+        metrics["resend_sent"] = _to_int(rs["totals"].get("sent"))
+        metrics["resend_bounced"] = _to_int(rs["totals"].get("bounced"))
+        metrics["resend_complained"] = _to_int(rs["totals"].get("complained"))
+
     return metrics
 
 

@@ -325,22 +325,52 @@ def main():
     stripe = run_subreport("stripe-report.py", "--days", "7")
     print("Pulling Supabase (last 7 days)...")
     supabase = run_subreport("supabase-report.py", "--days", "7")
+    print("Pulling Calendly (last 7 days)...")
+    calendly = run_subreport("calendly-report.py", "--days", "7")
+    print("Pulling Resend (last 7 days)...")
+    resend = run_subreport("resend-report.py", "--days", "7")
+    print("Pulling PageSpeed Insights (slow, may take 5+ min)...")
+    pagespeed = run_subreport("pagespeed-report.py")
 
     errors = []
     for name, data in [("GA4", ga4), ("GSC", gsc), ("Bing", bing),
-                       ("Stripe", stripe), ("Supabase", supabase)]:
+                       ("Stripe", stripe), ("Supabase", supabase),
+                       ("Calendly", calendly), ("Resend", resend),
+                       ("PageSpeed", pagespeed)]:
         if "error" in data: errors.append(f"{name}: {data['error'][:100]}")
 
     report = synthesize_week_report(ga4, gsc, bing)
-    # Append Stripe + funnel sections (reuse formatters from daily script)
+    # Append all extra data sections (reuse formatters from daily script)
     if "error" not in stripe:
         report += "\n\n" + _daily._format_stripe_section(stripe)
     if "error" not in supabase:
         report += "\n\n" + _daily._format_supabase_section(supabase)
+    if "error" not in calendly:
+        report += "\n\n" + _daily._format_calendly_section(calendly)
+    if "error" not in resend:
+        report += "\n\n" + _daily._format_resend_section(resend)
+    if "error" not in pagespeed:
+        # Inline a compact PageSpeed section
+        report += "\n\n## PageSpeed Insights\n"
+        if pagespeed.get("metadata", {}).get("note"):
+            report += f"\n_{pagespeed['metadata']['note']}_\n"
+        by_url = {}
+        for r in pagespeed.get("results", []):
+            by_url.setdefault(r["url"], {})[r["strategy"]] = r
+        report += "\n| URL | Mobile score | Desktop score | LCP (mobile p75 ms) |\n|---|---:|---:|---:|\n"
+        for url, strats in by_url.items():
+            m = strats.get("mobile", {})
+            d = strats.get("desktop", {})
+            path = url.replace("https://www.thefranchisorblueprint.com", "") or "/"
+            report += (f"| `{path}` | {m.get('performance_score', '-')} | "
+                       f"{d.get('performance_score', '-')} | "
+                       f"{m.get('crux_lcp_p75_ms', '-')} |\n")
     weekly_dir_path.write_text(report)
     raw_path = WEEKLY_DIR / f"{week_str}.json"
     raw_path.write_text(json.dumps(
-        {"ga4": ga4, "gsc": gsc, "bing": bing, "stripe": stripe, "supabase": supabase},
+        {"ga4": ga4, "gsc": gsc, "bing": bing, "stripe": stripe,
+         "supabase": supabase, "calendly": calendly, "resend": resend,
+         "pagespeed": pagespeed},
         indent=2, default=str
     ))
 

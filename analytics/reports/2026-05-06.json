@@ -1,7 +1,7 @@
 {
   "ga4": {
     "metadata": {
-      "generated_at": "2026-05-06T18:11:10.155498+00:00",
+      "generated_at": "2026-05-06T19:05:17.988635+00:00",
       "window_days": 1,
       "property_id": "535127773"
     },
@@ -253,7 +253,7 @@
   },
   "gsc": {
     "metadata": {
-      "generated_at": "2026-05-06T18:11:12.639632+00:00",
+      "generated_at": "2026-05-06T19:05:19.497715+00:00",
       "window_days": 7,
       "site_url": "sc-domain:thefranchisorblueprint.com"
     },
@@ -332,7 +332,7 @@
   },
   "bing": {
     "metadata": {
-      "generated_at": "2026-05-06T18:11:13.634885+00:00",
+      "generated_at": "2026-05-06T19:05:20.563328+00:00",
       "site_url": "https://www.thefranchisorblueprint.com"
     },
     "query_stats": [],
@@ -350,7 +350,7 @@
   },
   "stripe": {
     "metadata": {
-      "generated_at": "2026-05-06T18:11:16.129460+00:00",
+      "generated_at": "2026-05-06T19:05:23.049640+00:00",
       "window_days": 1
     },
     "totals": {
@@ -369,7 +369,7 @@
   },
   "supabase": {
     "metadata": {
-      "generated_at": "2026-05-06T18:11:17.188795+00:00",
+      "generated_at": "2026-05-06T19:05:24.013856+00:00",
       "window_days": 1
     },
     "assessment_funnel": {
@@ -391,6 +391,42 @@
       "real_submissions_in_window": 0,
       "spam_submissions_in_window": 0,
       "real_submissions_detail": []
+    }
+  },
+  "calendly": {
+    "metadata": {
+      "generated_at": "2026-05-06T19:05:25.003185+00:00",
+      "window_days": 1
+    },
+    "not_configured": true,
+    "setup_hint": "CALENDLY_API_KEY not set in .env.local. Generate one at https://calendly.com/integrations/api_webhooks \u2192 Create New Token \u2192 paste into .env.local and push to Vercel."
+  },
+  "resend": {
+    "metadata": {
+      "generated_at": "2026-05-06T19:05:25.047011+00:00",
+      "window_days": 1
+    },
+    "totals": {
+      "sent": 5,
+      "delivered": 5,
+      "opened": 0,
+      "clicked": 0,
+      "bounced": 0,
+      "complained": 0,
+      "delivery_rate_pct": 100.0,
+      "open_rate_pct": 0.0,
+      "click_rate_pct": 0.0,
+      "bounce_rate_pct": 0.0
+    },
+    "by_status": {
+      "delivered": 5
+    },
+    "by_template_bucket": {
+      "TFB traffic": 4,
+      "TFB weekly traffic": 1
+    },
+    "by_recipient_domain": {
+      "thefranchisorblueprint.com": 5
     }
   }
 }

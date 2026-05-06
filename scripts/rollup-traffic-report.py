@@ -350,21 +350,46 @@ def main():
     stripe = run_subreport("stripe-report.py", "--days", str(cfg["days"]))
     print(f"Pulling {cfg['days']}-day Supabase...")
     supabase = run_subreport("supabase-report.py", "--days", str(cfg["days"]))
+    print(f"Pulling {cfg['days']}-day Calendly...")
+    calendly = run_subreport("calendly-report.py", "--days", str(cfg["days"]))
+    print(f"Pulling {cfg['days']}-day Resend...")
+    resend = run_subreport("resend-report.py", "--days", str(cfg["days"]))
+    print("Pulling PageSpeed Insights (slow)...")
+    pagespeed = run_subreport("pagespeed-report.py")
 
     errors = []
     for name, data in [("GA4", ga4), ("GSC", gsc), ("Bing", bing),
-                       ("Stripe", stripe), ("Supabase", supabase)]:
+                       ("Stripe", stripe), ("Supabase", supabase),
+                       ("Calendly", calendly), ("Resend", resend),
+                       ("PageSpeed", pagespeed)]:
         if "error" in data: errors.append(f"{name}: {data['error'][:100]}")
 
     report = build_report_md(cfg["label"], cfg["days"], ga4, gsc, bing)
-    # Append Stripe + funnel sections (reuse daily script formatters)
+    # Append all extra data sections
     if "error" not in stripe:
         report += "\n\n" + _daily._format_stripe_section(stripe)
     if "error" not in supabase:
         report += "\n\n" + _daily._format_supabase_section(supabase)
+    if "error" not in calendly:
+        report += "\n\n" + _daily._format_calendly_section(calendly)
+    if "error" not in resend:
+        report += "\n\n" + _daily._format_resend_section(resend)
+    if "error" not in pagespeed and pagespeed.get("results"):
+        report += "\n\n## PageSpeed Insights\n"
+        by_url = {}
+        for r in pagespeed["results"]:
+            by_url.setdefault(r["url"], {})[r["strategy"]] = r
+        report += "\n| URL | Mobile | Desktop | LCP (p75 ms) |\n|---|---:|---:|---:|\n"
+        for url, strats in by_url.items():
+            m = strats.get("mobile", {}); d = strats.get("desktop", {})
+            path = url.replace("https://www.thefranchisorblueprint.com", "") or "/"
+            report += (f"| `{path}` | {m.get('performance_score', '-')} | "
+                       f"{d.get('performance_score', '-')} | {m.get('crux_lcp_p75_ms', '-')} |\n")
     (out_dir / f"{key}.md").write_text(report)
     (out_dir / f"{key}.json").write_text(json.dumps(
-        {"ga4": ga4, "gsc": gsc, "bing": bing, "stripe": stripe, "supabase": supabase},
+        {"ga4": ga4, "gsc": gsc, "bing": bing, "stripe": stripe,
+         "supabase": supabase, "calendly": calendly, "resend": resend,
+         "pagespeed": pagespeed},
         indent=2, default=str
     ))
 

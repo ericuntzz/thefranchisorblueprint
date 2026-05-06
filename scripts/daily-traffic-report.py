@@ -334,28 +334,43 @@ Specific guidance:
 Format as markdown with **bold** for key facts. Tight sentences. Start immediately with the synthesis — no "Here's a summary" preamble.
 """
 
-    import urllib.request, urllib.error
+    import urllib.request, urllib.error, time
     body = json.dumps({
         "model": "claude-sonnet-4-5-20250929",
         "max_tokens": 1024,
         "messages": [{"role": "user", "content": prompt}],
     }).encode()
-    req = urllib.request.Request(
-        "https://api.anthropic.com/v1/messages",
-        data=body,
-        headers={
-            "x-api-key": api_key,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json",
-        },
-        method="POST",
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=60) as r:
-            resp = json.loads(r.read())
-        return resp["content"][0]["text"]
-    except Exception as e:
-        return f"_(synthesis failed: {str(e)[:200]})_"
+
+    # Retry up to 3 times on transient errors (529 overloaded, 503 unavailable,
+    # 504 gateway timeout). Rate-limit (429) gets longer waits.
+    for attempt in range(3):
+        try:
+            req = urllib.request.Request(
+                "https://api.anthropic.com/v1/messages",
+                data=body,
+                headers={
+                    "x-api-key": api_key,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=120) as r:
+                resp = json.loads(r.read())
+            return resp["content"][0]["text"]
+        except urllib.error.HTTPError as e:
+            transient = e.code in (429, 502, 503, 504, 529)
+            if transient and attempt < 2:
+                wait = 30 * (2 ** attempt)  # 30s, 60s
+                print(f"  Anthropic returned {e.code} (transient), retrying in {wait}s...")
+                time.sleep(wait)
+                continue
+            return f"_(synthesis failed: HTTP {e.code} after {attempt+1} attempts)_"
+        except Exception as e:
+            if attempt < 2:
+                time.sleep(15)
+                continue
+            return f"_(synthesis failed: {str(e)[:200]})_"
 
 
 def send_email(subject, html_body):
@@ -611,6 +626,43 @@ def _format_stripe_section(stripe):
     return "\n".join(out)
 
 
+def _format_calendly_section(cal):
+    """Render Calendly section."""
+    out = ["## Calendly (strategy calls)"]
+    if cal.get("not_configured"):
+        out.append(f"⚠ {cal.get('setup_hint', 'CALENDLY_API_KEY not configured.')}")
+        return "\n".join(out)
+    t = cal.get("totals", {})
+    out.append(f"- **External bookings (yesterday):** {t.get('external_bookings', 0)}")
+    out.append(f"- Total events incl. internal: {t.get('events_in_window', 0)}")
+    out.append(f"- Canceled: {t.get('canceled_in_window', 0)}")
+    if cal.get("external_bookings"):
+        out.append("")
+        out.append("**Bookings**")
+        for b in cal["external_bookings"][:10]:
+            out.append(f"- {b['start_time'][:16]} — **{b.get('invitee_name','?')}** "
+                       f"({b.get('invitee_email','')}) · {b.get('event_type','?')} · {b.get('status','?')}")
+    return "\n".join(out)
+
+
+def _format_resend_section(rs):
+    """Render Resend section."""
+    out = ["## Resend (email engagement)"]
+    t = rs.get("totals", {})
+    out.append(f"- Sent: **{t.get('sent', 0)}** · Delivered: {t.get('delivered', 0)} "
+               f"({t.get('delivery_rate_pct', 0):.0f}%)")
+    out.append(f"- Opened: {t.get('opened', 0)} ({t.get('open_rate_pct', 0):.0f}%) · "
+               f"Clicked: {t.get('clicked', 0)} ({t.get('click_rate_pct', 0):.0f}%)")
+    out.append(f"- Bounced: {t.get('bounced', 0)} ({t.get('bounce_rate_pct', 0):.1f}%) · "
+               f"Spam complaints: {t.get('complained', 0)}")
+    if rs.get("by_template_bucket"):
+        out.append("")
+        out.append("**Top subject patterns**")
+        for k, v in list(rs["by_template_bucket"].items())[:5]:
+            out.append(f"- {k}: {v}")
+    return "\n".join(out)
+
+
 def _format_supabase_section(sb):
     """Render the Supabase / funnel section."""
     out = ["## Funnel (Supabase)"]
@@ -683,6 +735,14 @@ def run_one_day(today_str, send_email_for_this_run=True, missed_dates=None):
     supabase = run_subreport("supabase-report.py", "--days", "1")
     if "error" in supabase: errors.append(f"Supabase: {supabase['error'][:100]}")
 
+    print("Pulling Calendly (strategy call bookings)...")
+    calendly = run_subreport("calendly-report.py", "--days", "1")
+    if "error" in calendly: errors.append(f"Calendly: {calendly['error'][:100]}")
+
+    print("Pulling Resend (email engagement)...")
+    resend = run_subreport("resend-report.py", "--days", "1")
+    if "error" in resend: errors.append(f"Resend: {resend['error'][:100]}")
+
     prev_path = find_previous_report()
     prev_md = prev_path.read_text() if prev_path else None
     if prev_path:
@@ -696,12 +756,17 @@ def run_one_day(today_str, send_email_for_this_run=True, missed_dates=None):
         extras_md.append(_format_stripe_section(stripe))
     if "error" not in supabase:
         extras_md.append(_format_supabase_section(supabase))
+    if "error" not in calendly:
+        extras_md.append(_format_calendly_section(calendly))
+    if "error" not in resend:
+        extras_md.append(_format_resend_section(resend))
     if extras_md:
         report = report + "\n\n" + "\n\n".join(extras_md)
 
     # Run anomaly detection BEFORE writing today's file (so detection
     # uses prior days' history, not today's)
-    today_raw = {"ga4": ga4, "gsc": gsc, "bing": bing, "stripe": stripe, "supabase": supabase}
+    today_raw = {"ga4": ga4, "gsc": gsc, "bing": bing, "stripe": stripe,
+                 "supabase": supabase, "calendly": calendly, "resend": resend}
     anomalies = _anom.detect_anomalies(today_raw, today_str=today_str)
     anomaly_md = _anom.render_anomaly_section(anomalies)
 
