@@ -229,7 +229,7 @@ export function BlueprintUpsellBuyBox({
         </div>
 
         <Link
-          href="/strategy-call"
+          href="/strategy-call/blueprint"
           onClick={() => {
             // Match the analytics signal we'd otherwise fire from the Stripe
             // path so funnel reports stay continuous across the
