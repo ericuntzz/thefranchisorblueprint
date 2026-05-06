@@ -5,6 +5,8 @@ import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { PageHero } from "@/components/PageHero";
 import { CalendlyEmbed } from "@/components/CalendlyEmbed";
+import { JsonLd } from "@/components/JsonLd";
+import { breadcrumbSchema } from "@/lib/schema";
 
 const CALENDLY_URL = "https://calendly.com/team-thefranchisorblueprint/30-minute-discovery-call";
 
@@ -17,6 +19,12 @@ export const metadata: Metadata = {
 export default function StrategyCallPage() {
   return (
     <>
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "Home", url: "/" },
+          { name: "Strategy Call", url: "/strategy-call" },
+        ])}
+      />
       <SiteNav />
 
       <PageHero

@@ -39,10 +39,33 @@ export default async function AssessmentPage() {
       <SiteNav />
 
       <PageHero
-        eyebrow="Free Assessment"
-        title="Is Your Business Franchise-Ready?"
-        subtitle="A 15-question assessment across the four dimensions that actually predict franchise success. About 5–7 minutes. You'll get an honest score and a tailored next-step recommendation."
+        eyebrow="Free Franchise Readiness Assessment"
+        title="Find Out If Your Business Is Actually Ready to Franchise — In 5 Minutes"
+        subtitle="15 honest questions across the four dimensions that actually predict franchise success. You'll get a 0–100 score, your specific gaps, and a clear next step — built on the same readiness criteria a franchise attorney runs before they take the case."
       />
+
+      {/* ===== Trust strip: proof points above the assessment flow ===== */}
+      <section className="bg-white pt-10 md:pt-14 pb-2">
+        <div className="max-w-[1100px] mx-auto px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 text-center">
+            {[
+              { stat: "5 min", label: "Average completion time" },
+              { stat: "0–100", label: "Personalized readiness score" },
+              { stat: "30+ yrs", label: "Of franchise SME experience behind it" },
+              { stat: "$0", label: "No email gate. No sales follow-up." },
+            ].map(({ stat, label }) => (
+              <div key={stat} className="px-2">
+                <div className="text-2xl md:text-3xl font-extrabold text-navy mb-1">
+                  {stat}
+                </div>
+                <div className="text-xs md:text-sm text-grey-3 leading-tight">
+                  {label}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* ===== In-house assessment flow (replaces the prior JotForm embed) =====
           Cream section background so the white assessment card pops with a

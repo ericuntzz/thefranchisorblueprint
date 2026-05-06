@@ -4,6 +4,8 @@ import { Mail, ExternalLink, Calendar, ArrowRight, LifeBuoy } from "lucide-react
 import { SiteNav } from "@/components/SiteNav";
 import { SiteFooter } from "@/components/SiteFooter";
 import { PageHero } from "@/components/PageHero";
+import { JsonLd } from "@/components/JsonLd";
+import { breadcrumbSchema } from "@/lib/schema";
 
 export const metadata: Metadata = {
   title: "Contact & Support | The Franchisor Blueprint",
@@ -14,6 +16,12 @@ export const metadata: Metadata = {
 export default function ContactPage() {
   return (
     <>
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "Home", url: "/" },
+          { name: "Contact", url: "/contact" },
+        ])}
+      />
       <SiteNav />
 
       <PageHero

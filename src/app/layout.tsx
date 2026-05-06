@@ -21,7 +21,14 @@ export const metadata: Metadata = {
   description:
     "Stop overpaying for franchise development. Get the complete franchisor operating system plus 6 months of 1:1 coaching for a fraction of the cost. Take the free Franchise Readiness Assessment.",
   metadataBase: new URL(SITE_URL),
-  alternates: { canonical: "/" },
+  alternates: {
+    canonical: "/",
+    types: {
+      "application/rss+xml": [
+        { url: "/feed.xml", title: "The Franchisor Blueprint Blog" },
+      ],
+    },
+  },
   applicationName: "The Franchisor Blueprint",
   authors: [{ name: "Jason Stowe", url: "https://www.linkedin.com/in/jason-stowe-a8093539" }],
   creator: "The Franchisor Blueprint",

@@ -118,7 +118,8 @@ def extract_metrics(psi_response):
 
 def collect():
     env = load_env()
-    api_key = env.get("PAGESPEED_API_KEY")
+    # Accept either naming convention
+    api_key = env.get("PAGESPEED_API_KEY") or env.get("PAGE_SPEED_API_KEY")
     now = datetime.now(timezone.utc)
 
     results = []
