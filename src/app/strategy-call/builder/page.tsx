@@ -53,7 +53,7 @@ export default function BuilderFitCallPage() {
                   {
                     Icon: Calendar,
                     t: "Last 15 min: Scope & timeline",
-                    d: "If we&apos;re a fit, we map the 12-month engagement together. If we&apos;re not, we tell you why and recommend the right next step.",
+                    d: "If we're a fit, we map the 12-month engagement together. If we're not, we tell you why and recommend the right next step.",
                   },
                 ].map(({ Icon, t, d }) => (
                   <li key={t} className="flex gap-4">
@@ -62,10 +62,7 @@ export default function BuilderFitCallPage() {
                     </div>
                     <div>
                       <div className="text-navy font-bold text-base mb-0.5">{t}</div>
-                      <div
-                        className="text-grey-3 text-sm leading-relaxed"
-                        dangerouslySetInnerHTML={{ __html: d }}
-                      />
+                      <div className="text-grey-3 text-sm leading-relaxed">{d}</div>
                     </div>
                   </li>
                 ))}
