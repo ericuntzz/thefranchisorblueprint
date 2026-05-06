@@ -1,0 +1,490 @@
+{
+  "ga4": {
+    "metadata": {
+      "generated_at": "2026-05-06T17:33:44.546936+00:00",
+      "window_days": 7,
+      "property_id": "535127773"
+    },
+    "totals": [
+      {
+        "sessions": "100",
+        "activeUsers": "32",
+        "screenPageViews": "556",
+        "engagedSessions": "46",
+        "averageSessionDuration": "893.91217944999994"
+      }
+    ],
+    "by_channel": [
+      {
+        "sessionDefaultChannelGroup": "Direct",
+        "sessions": "69",
+        "activeUsers": "31",
+        "engagedSessions": "29",
+        "averageSessionDuration": "655.524655057971"
+      },
+      {
+        "sessionDefaultChannelGroup": "Organic Shopping",
+        "sessions": "20",
+        "activeUsers": "2",
+        "engagedSessions": "16",
+        "averageSessionDuration": "1458.7717211"
+      },
+      {
+        "sessionDefaultChannelGroup": "Unassigned",
+        "sessions": "16",
+        "activeUsers": "10",
+        "engagedSessions": "0",
+        "averageSessionDuration": "141.1456299375"
+      },
+      {
+        "sessionDefaultChannelGroup": "Organic Social",
+        "sessions": "7",
+        "activeUsers": "1",
+        "engagedSessions": "1",
+        "averageSessionDuration": "1816.8092245714286"
+      },
+      {
+        "sessionDefaultChannelGroup": "Referral",
+        "sessions": "2",
+        "activeUsers": "1",
+        "engagedSessions": "0",
+        "averageSessionDuration": "4.2938365"
+      }
+    ],
+    "by_source_medium": [
+      {
+        "sessionSource": "(direct)",
+        "sessionMedium": "(none)",
+        "sessions": "69",
+        "activeUsers": "31"
+      },
+      {
+        "sessionSource": "checkout.stripe.com",
+        "sessionMedium": "referral",
+        "sessions": "20",
+        "activeUsers": "2"
+      },
+      {
+        "sessionSource": "(not set)",
+        "sessionMedium": "(not set)",
+        "sessions": "16",
+        "activeUsers": "10"
+      },
+      {
+        "sessionSource": "trustpilot",
+        "sessionMedium": "company_profile",
+        "sessions": "7",
+        "activeUsers": "1"
+      },
+      {
+        "sessionSource": "thefranchisorblueprint.com",
+        "sessionMedium": "referral",
+        "sessions": "2",
+        "activeUsers": "1"
+      }
+    ],
+    "by_city": [
+      {
+        "city": "Summit Park",
+        "region": "Utah",
+        "country": "United States",
+        "sessions": "74",
+        "activeUsers": "14"
+      },
+      {
+        "city": "Kamas",
+        "region": "Utah",
+        "country": "United States",
+        "sessions": "9",
+        "activeUsers": "2"
+      },
+      {
+        "city": "Paris",
+        "region": "Ile-de-France",
+        "country": "France",
+        "sessions": "4",
+        "activeUsers": "4"
+      },
+      {
+        "city": "Council Bluffs",
+        "region": "Iowa",
+        "country": "United States",
+        "sessions": "3",
+        "activeUsers": "3"
+      },
+      {
+        "city": "San Leonardo",
+        "region": "Central Luzon",
+        "country": "Philippines",
+        "sessions": "2",
+        "activeUsers": "2"
+      },
+      {
+        "city": "(not set)",
+        "region": "(not set)",
+        "country": "China",
+        "sessions": "1",
+        "activeUsers": "1"
+      },
+      {
+        "city": "(not set)",
+        "region": "California",
+        "country": "United States",
+        "sessions": "1",
+        "activeUsers": "1"
+      },
+      {
+        "city": "Aspen",
+        "region": "Colorado",
+        "country": "United States",
+        "sessions": "1",
+        "activeUsers": "1"
+      },
+      {
+        "city": "Boardman",
+        "region": "Oregon",
+        "country": "United States",
+        "sessions": "1",
+        "activeUsers": "1"
+      },
+      {
+        "city": "Dallas",
+        "region": "Texas",
+        "country": "United States",
+        "sessions": "1",
+        "activeUsers": "1"
+      },
+      {
+        "city": "Dublin",
+        "region": "County Dublin",
+        "country": "Ireland",
+        "sessions": "1",
+        "activeUsers": "1"
+      },
+      {
+        "city": "Frankfurt am Main",
+        "region": "Hessen",
+        "country": "Germany",
+        "sessions": "1",
+        "activeUsers": "1"
+      },
+      {
+        "city": "Hideout",
+        "region": "Utah",
+        "country": "United States",
+        "sessions": "1",
+        "activeUsers": "1"
+      },
+      {
+        "city": "Reston",
+        "region": "Virginia",
+        "country": "United States",
+        "sessions": "1",
+        "activeUsers": "1"
+      },
+      {
+        "city": "Summerville",
+        "region": "South Carolina",
+        "country": "United States",
+        "sessions": "1",
+        "activeUsers": "1"
+      }
+    ],
+    "top_pages": [
+      {
+        "pagePath": "/",
+        "screenPageViews": "112",
+        "activeUsers": "31"
+      },
+      {
+        "pagePath": "/portal/lab/blueprint",
+        "screenPageViews": "94",
+        "activeUsers": "3"
+      },
+      {
+        "pagePath": "/portal",
+        "screenPageViews": "85",
+        "activeUsers": "4"
+      },
+      {
+        "pagePath": "/portal/lab/next",
+        "screenPageViews": "31",
+        "activeUsers": "2"
+      },
+      {
+        "pagePath": "/portal/login",
+        "screenPageViews": "27",
+        "activeUsers": "4"
+      },
+      {
+        "pagePath": "/assessment",
+        "screenPageViews": "25",
+        "activeUsers": "4"
+      },
+      {
+        "pagePath": "/pricing",
+        "screenPageViews": "17",
+        "activeUsers": "4"
+      },
+      {
+        "pagePath": "/programs",
+        "screenPageViews": "13",
+        "activeUsers": "4"
+      },
+      {
+        "pagePath": "/programs/blueprint",
+        "screenPageViews": "12",
+        "activeUsers": "5"
+      },
+      {
+        "pagePath": "/portal/audit",
+        "screenPageViews": "10",
+        "activeUsers": "2"
+      },
+      {
+        "pagePath": "/blog/franchise-disclosure-document-explained",
+        "screenPageViews": "8",
+        "activeUsers": "1"
+      },
+      {
+        "pagePath": "/franchise-by-state",
+        "screenPageViews": "8",
+        "activeUsers": "3"
+      },
+      {
+        "pagePath": "/portal/lab/intake",
+        "screenPageViews": "8",
+        "activeUsers": "3"
+      },
+      {
+        "pagePath": "/about",
+        "screenPageViews": "7",
+        "activeUsers": "4"
+      },
+      {
+        "pagePath": "/franchise-by-industry",
+        "screenPageViews": "7",
+        "activeUsers": "3"
+      },
+      {
+        "pagePath": "/franchise-your-business-in/california",
+        "screenPageViews": "6",
+        "activeUsers": "2"
+      },
+      {
+        "pagePath": "/portal/upgrade",
+        "screenPageViews": "6",
+        "activeUsers": "2"
+      },
+      {
+        "pagePath": "/strategy-call",
+        "screenPageViews": "6",
+        "activeUsers": "2"
+      },
+      {
+        "pagePath": "/blog",
+        "screenPageViews": "5",
+        "activeUsers": "2"
+      },
+      {
+        "pagePath": "/portal/chapter/business_overview",
+        "screenPageViews": "5",
+        "activeUsers": "2"
+      },
+      {
+        "pagePath": "/blog/fdd-item-7-initial-investment",
+        "screenPageViews": "4",
+        "activeUsers": "1"
+      },
+      {
+        "pagePath": "/portal/account",
+        "screenPageViews": "4",
+        "activeUsers": "2"
+      },
+      {
+        "pagePath": "/portal/library",
+        "screenPageViews": "4",
+        "activeUsers": "2"
+      },
+      {
+        "pagePath": "/compare",
+        "screenPageViews": "3",
+        "activeUsers": "2"
+      },
+      {
+        "pagePath": "/glossary",
+        "screenPageViews": "3",
+        "activeUsers": "2"
+      }
+    ],
+    "key_events": [
+      {
+        "eventName": "page_view",
+        "eventCount": "556",
+        "totalUsers": "32"
+      },
+      {
+        "eventName": "user_engagement",
+        "eventCount": "158",
+        "totalUsers": "18"
+      },
+      {
+        "eventName": "session_start",
+        "eventCount": "99",
+        "totalUsers": "32"
+      },
+      {
+        "eventName": "scroll",
+        "eventCount": "98",
+        "totalUsers": "8"
+      },
+      {
+        "eventName": "nav_click",
+        "eventCount": "48",
+        "totalUsers": "4"
+      },
+      {
+        "eventName": "view_item",
+        "eventCount": "37",
+        "totalUsers": "4"
+      },
+      {
+        "eventName": "first_visit",
+        "eventCount": "30",
+        "totalUsers": "30"
+      },
+      {
+        "eventName": "form_start",
+        "eventCount": "22",
+        "totalUsers": "3"
+      },
+      {
+        "eventName": "form_submit",
+        "eventCount": "15",
+        "totalUsers": "3"
+      },
+      {
+        "eventName": "select_item",
+        "eventCount": "6",
+        "totalUsers": "4"
+      },
+      {
+        "eventName": "purchase",
+        "eventCount": "4",
+        "totalUsers": "3"
+      },
+      {
+        "eventName": "begin_checkout",
+        "eventCount": "3",
+        "totalUsers": "2"
+      },
+      {
+        "eventName": "click",
+        "eventCount": "1",
+        "totalUsers": "1"
+      },
+      {
+        "eventName": "video_play",
+        "eventCount": "1",
+        "totalUsers": "1"
+      }
+    ]
+  },
+  "gsc": {
+    "metadata": {
+      "generated_at": "2026-05-06T17:33:48.626927+00:00",
+      "window_days": 7,
+      "site_url": "sc-domain:thefranchisorblueprint.com"
+    },
+    "by_date": [
+      {
+        "clicks": 0,
+        "impressions": 0,
+        "ctr": 0,
+        "position": 0,
+        "date": "2026-04-29"
+      },
+      {
+        "clicks": 0,
+        "impressions": 0,
+        "ctr": 0,
+        "position": 0,
+        "date": "2026-04-30"
+      },
+      {
+        "clicks": 0,
+        "impressions": 0,
+        "ctr": 0,
+        "position": 0,
+        "date": "2026-05-01"
+      },
+      {
+        "clicks": 0,
+        "impressions": 0,
+        "ctr": 0,
+        "position": 0,
+        "date": "2026-05-02"
+      },
+      {
+        "clicks": 0,
+        "impressions": 0,
+        "ctr": 0,
+        "position": 0,
+        "date": "2026-05-03"
+      },
+      {
+        "clicks": 0,
+        "impressions": 4,
+        "ctr": 0,
+        "position": 13,
+        "date": "2026-05-04"
+      }
+    ],
+    "top_queries": [],
+    "top_pages": [
+      {
+        "clicks": 0,
+        "impressions": 4,
+        "ctr": 0,
+        "position": 13,
+        "page": "https://www.thefranchisorblueprint.com/"
+      }
+    ],
+    "by_country": [
+      {
+        "clicks": 0,
+        "impressions": 4,
+        "ctr": 0,
+        "position": 13,
+        "country": "usa"
+      }
+    ],
+    "by_device": [
+      {
+        "clicks": 0,
+        "impressions": 4,
+        "ctr": 0,
+        "position": 13,
+        "device": "DESKTOP"
+      }
+    ]
+  },
+  "bing": {
+    "metadata": {
+      "generated_at": "2026-05-06T17:33:49.681289+00:00",
+      "site_url": "https://www.thefranchisorblueprint.com"
+    },
+    "query_stats": [],
+    "page_stats": [],
+    "query_traffic_stats": [],
+    "rank_stats": [
+      {
+        "__type": "RankAndTrafficStats:#Microsoft.Bing.Webmaster.Api",
+        "Clicks": 0,
+        "Date": "/Date(1777878000000-0700)/",
+        "Impressions": 0
+      }
+    ],
+    "crawl_stats": []
+  }
+}
