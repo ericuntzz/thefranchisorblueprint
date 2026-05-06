@@ -213,7 +213,14 @@ export function IntakeClient({ firstName, initialWebsiteUrl }: Props) {
           </p>
         </div>
 
-        <div className="mb-5 h-1 rounded-full bg-grey-1 overflow-hidden">
+        <div
+          role="progressbar"
+          aria-valuenow={Math.round(((stepIdx + 1) / TOTAL_STEPS) * 100)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="Intake progress"
+          className="mb-5 h-1 rounded-full bg-grey-1 overflow-hidden"
+        >
           <div
             className="h-full bg-gold transition-all duration-300"
             style={{
@@ -626,6 +633,7 @@ function UploadStepCard({
           type="file"
           className="sr-only"
           multiple
+          accept=".pdf,.doc,.docx,.txt,.md,.markdown,image/*"
           disabled={uploading}
           onChange={(e) => void uploadMany(e.target.files)}
         />

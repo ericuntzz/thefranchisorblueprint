@@ -32,6 +32,10 @@ export function CategoryBars({ categories }: { categories: CategoryResult[] }) {
               </div>
             </div>
             <div
+              role="progressbar"
+              aria-valuenow={Math.round(c.ratio * 100)}
+              aria-valuemin={0}
+              aria-valuemax={100}
               className="h-2.5 bg-navy/8 rounded-full overflow-hidden"
               style={{ backgroundColor: "rgba(30, 58, 95, 0.08)" }}
               aria-label={`${c.title}: ${c.score} of ${c.max}`}

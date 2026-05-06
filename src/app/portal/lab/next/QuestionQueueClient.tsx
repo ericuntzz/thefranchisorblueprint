@@ -254,7 +254,14 @@ export function QuestionQueueClient({
 
       {/* Slim progress bar — the phase intro carries phase context;
           this bar carries overall position. */}
-      <div className="h-1 rounded-full bg-grey-1 overflow-hidden">
+      <div
+        role="progressbar"
+        aria-valuenow={Math.round((index / Math.max(1, queue.length)) * 100)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Overall progress"
+        className="h-1 rounded-full bg-grey-1 overflow-hidden"
+      >
         <div
           className="h-full bg-gold transition-all duration-300"
           style={{
