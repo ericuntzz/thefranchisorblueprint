@@ -100,14 +100,28 @@ const server = http.createServer(async (req, res) => {
     );
 
     const envKey = `GMAIL_REFRESH_TOKEN_${ACCOUNT_LABEL.toUpperCase()}`;
+    const tokenValue = tokens.refresh_token ?? "";
+
+    // Auto-write to .env.local
+    const fs = await import("node:fs");
+    const path = await import("node:path");
+    const envPath = path.resolve(process.cwd(), ".env.local");
+
+    if (fs.existsSync(envPath)) {
+      let content = fs.readFileSync(envPath, "utf-8");
+      const pattern = new RegExp(`^${envKey}=.*$`, "m");
+      if (pattern.test(content)) {
+        content = content.replace(pattern, `${envKey}=${tokenValue}`);
+      } else {
+        content += `\n${envKey}=${tokenValue}\n`;
+      }
+      fs.writeFileSync(envPath, content, "utf-8");
+      console.log(`\n✅ Wrote ${envKey} to .env.local (${tokenValue.length} chars)`);
+    }
 
     console.log(`\n✅ Got tokens for "${ACCOUNT_LABEL}"!\n`);
-    console.log("Add these to .env.local and Vercel project settings:\n");
-    console.log(`GMAIL_CLIENT_ID=${CLIENT_ID}`);
-    console.log(`GMAIL_CLIENT_SECRET=${CLIENT_SECRET}`);
-    console.log(`GMAIL_ACCOUNTS=team,eric`);
-    console.log(`${envKey}=${tokens.refresh_token}`);
-    console.log(`\n📋 Copy ${envKey} above — it won't be shown again.`);
+    console.log(`${envKey}=${tokenValue}`);
+    console.log(`\n📋 Token saved to .env.local. Add it to Vercel project settings too.`);
 
     server.close();
     process.exit(0);
