@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -25,6 +26,12 @@ import { VideoPlayer } from "@/components/VideoPlayer";
 import { JsonLd } from "@/components/JsonLd";
 import { faqPageSchema, serviceSchema } from "@/lib/schema";
 import { AnalyticsLink } from "@/components/AnalyticsLink";
+
+export const metadata: Metadata = {
+  title: "Franchise Your Business | The Franchisor Blueprint",
+  description:
+    "Stop overpaying for franchise development. Get the complete franchisor operating system plus 6 months of 1:1 coaching for a fraction of the cost. Take the free Franchise Readiness Assessment.",
+};
 
 const docs = [
   { icon: ListChecks, title: "Audit Your Business", body: "150-point readiness audit covering every detail attorneys and franchisees will ask about." },
