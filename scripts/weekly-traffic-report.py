@@ -321,15 +321,28 @@ def main():
     gsc = run_subreport("gsc-report.py", "--days", "7")
     print("Pulling Bing...")
     bing = run_subreport("bing-report.py")
+    print("Pulling Stripe (last 7 days)...")
+    stripe = run_subreport("stripe-report.py", "--days", "7")
+    print("Pulling Supabase (last 7 days)...")
+    supabase = run_subreport("supabase-report.py", "--days", "7")
 
     errors = []
-    for name, data in [("GA4", ga4), ("GSC", gsc), ("Bing", bing)]:
+    for name, data in [("GA4", ga4), ("GSC", gsc), ("Bing", bing),
+                       ("Stripe", stripe), ("Supabase", supabase)]:
         if "error" in data: errors.append(f"{name}: {data['error'][:100]}")
 
     report = synthesize_week_report(ga4, gsc, bing)
+    # Append Stripe + funnel sections (reuse formatters from daily script)
+    if "error" not in stripe:
+        report += "\n\n" + _daily._format_stripe_section(stripe)
+    if "error" not in supabase:
+        report += "\n\n" + _daily._format_supabase_section(supabase)
     weekly_dir_path.write_text(report)
     raw_path = WEEKLY_DIR / f"{week_str}.json"
-    raw_path.write_text(json.dumps({"ga4": ga4, "gsc": gsc, "bing": bing}, indent=2, default=str))
+    raw_path.write_text(json.dumps(
+        {"ga4": ga4, "gsc": gsc, "bing": bing, "stripe": stripe, "supabase": supabase},
+        indent=2, default=str
+    ))
 
     # Pull last 4 weekly reports for trend context
     print("Synthesizing weekly via Claude...")

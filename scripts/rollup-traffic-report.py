@@ -346,14 +346,27 @@ def main():
     gsc = run_subreport("gsc-report.py", "--days", str(cfg["days"]))
     print("Pulling Bing...")
     bing = run_subreport("bing-report.py")
+    print(f"Pulling {cfg['days']}-day Stripe...")
+    stripe = run_subreport("stripe-report.py", "--days", str(cfg["days"]))
+    print(f"Pulling {cfg['days']}-day Supabase...")
+    supabase = run_subreport("supabase-report.py", "--days", str(cfg["days"]))
 
     errors = []
-    for name, data in [("GA4", ga4), ("GSC", gsc), ("Bing", bing)]:
+    for name, data in [("GA4", ga4), ("GSC", gsc), ("Bing", bing),
+                       ("Stripe", stripe), ("Supabase", supabase)]:
         if "error" in data: errors.append(f"{name}: {data['error'][:100]}")
 
     report = build_report_md(cfg["label"], cfg["days"], ga4, gsc, bing)
+    # Append Stripe + funnel sections (reuse daily script formatters)
+    if "error" not in stripe:
+        report += "\n\n" + _daily._format_stripe_section(stripe)
+    if "error" not in supabase:
+        report += "\n\n" + _daily._format_supabase_section(supabase)
     (out_dir / f"{key}.md").write_text(report)
-    (out_dir / f"{key}.json").write_text(json.dumps({"ga4": ga4, "gsc": gsc, "bing": bing}, indent=2, default=str))
+    (out_dir / f"{key}.json").write_text(json.dumps(
+        {"ga4": ga4, "gsc": gsc, "bing": bing, "stripe": stripe, "supabase": supabase},
+        indent=2, default=str
+    ))
 
     # Pull prior period reports for trend context
     prior = []

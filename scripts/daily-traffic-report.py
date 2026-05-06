@@ -305,9 +305,9 @@ def synthesize_with_claude(today_md, recent_reports):
         f"### {date}\n{md}" for date, md in recent_reports[:7]
     ) if recent_reports else "_(no previous reports — this is the first run)_"
 
-    prompt = f"""You are an analytics observer for The Franchisor Blueprint, a franchise consulting business at thefranchisorblueprint.com. Your job: each morning, write a brief "what's different since yesterday" synthesis of website traffic data, surfacing only meaningful changes. Eric reads these emails over coffee — he wants signal, not a data dump.
+    prompt = f"""You are an analytics observer for The Franchisor Blueprint, a franchise consulting business at thefranchisorblueprint.com. Each morning, write a brief "what's different" synthesis covering the FULL FUNNEL — site traffic, search visibility, real customer behavior, and conversions. Eric reads these emails over coffee — he wants signal across all stages of the funnel, not just traffic.
 
-# Today's report (just generated)
+# Today's report (just generated — includes anomaly check, GA4, GSC, Bing, Stripe, Supabase funnel data)
 {today_md}
 
 # Previous reports (newest first, for trend context)
@@ -315,17 +315,23 @@ def synthesize_with_claude(today_md, recent_reports):
 
 # Your task
 
-Write a 3-7 sentence synthesis of what's notably different from yesterday or recent days. Focus on:
-- **First-time appearances:** organic search clicks for the first time, new geographic clusters, new top queries, new pages getting traffic
-- **Big shifts:** sessions doubling/halving, sudden drops, channel mix changes
-- **Meaningful trends:** a query that first appeared 3 days ago and is now ranking higher; a page that was getting steady traffic and is now spiking; a country that was 0 last week and is now showing impressions
-- **Internal vs external:** Summit Park UT = Eric, Kamas/Francis UT = Jason. Discount their traffic. Real outside visitors are the signal.
+Write a 4-8 sentence synthesis. Walk down the funnel:
 
-If nothing meaningful happened — say so briefly. Don't manufacture insight.
+1. **Top of funnel (visibility/traffic):** GA4 sessions, real external users (excluding Summit Park = Eric, Kamas/Francis = Jason), GSC clicks/impressions, new geographic clusters, first-time queries.
 
-Use specific numbers. Format as markdown. Don't repeat the underlying report content; just synthesize. Keep it tight — Eric reads this on his phone over coffee.
+2. **Middle of funnel (engagement):** Assessment starts, completions, completion rate. Did real prospect engagement track with traffic? A spike in traffic with no assessment lift = wrong audience or messaging gap.
 
-Start the response immediately with the synthesis. No preamble like "Here's a summary."
+3. **Bottom of funnel (conversion):** Stripe external purchases, contact form real submissions (not spam). Anonymous Stripe abandoners are interesting — they considered buying but bailed.
+
+4. **Anomalies:** the report includes statistical anomaly detection (z-score vs 14-day baseline). If it flagged something, decide whether it's signal or noise — sometimes a single test can spike a metric.
+
+Specific guidance:
+- If nothing meaningful happened across the whole funnel: say so briefly in one sentence.
+- Connect the dots when possible: "Sessions flat WoW but assessment completions doubled — the traffic we're getting is more qualified" — that kind of insight.
+- Discount internal traffic (Summit Park / Kamas) explicitly.
+- Don't manufacture insight. If you can't explain why something happened, say "worth watching" rather than guessing.
+
+Format as markdown with **bold** for key facts. Tight sentences. Start immediately with the synthesis — no "Here's a summary" preamble.
 """
 
     import urllib.request, urllib.error
@@ -586,6 +592,61 @@ def git_commit_reports():
         print(f"Git commit/push failed: {e.stderr.decode()[:200] if e.stderr else e}")
 
 
+def _format_stripe_section(stripe):
+    """Render the Stripe section of the daily report (markdown)."""
+    out = ["## Stripe (yesterday)"]
+    t = stripe.get("totals", {})
+    out.append(f"- **External purchases:** {t.get('complete_paid_external', 0)}")
+    out.append(f"- **External revenue:** ${t.get('external_revenue_usd', 0):,.2f}")
+    out.append(f"- Internal/test purchases: {t.get('complete_paid_internal', 0)}")
+    out.append(f"- Anonymous abandoners (expired without email): {t.get('expired', 0)}")
+    out.append(f"- Refunds: {t.get('total_refunds', 0)} · Disputes: {t.get('total_disputes', 0)}")
+    if stripe.get("external_sessions"):
+        out.append("")
+        out.append("**External purchases**")
+        out.append("| Email | Amount | When |")
+        out.append("|---|---:|---|")
+        for s in stripe["external_sessions"][:10]:
+            out.append(f"| {s.get('email', '?')} | ${s.get('amount_usd', 0):,.2f} | {s.get('created', '')[:16]} |")
+    return "\n".join(out)
+
+
+def _format_supabase_section(sb):
+    """Render the Supabase / funnel section."""
+    out = ["## Funnel (Supabase)"]
+    f = sb.get("assessment_funnel", {})
+    out.append(f"- **Assessment starts (yesterday):** {f.get('starts_in_window', 0)}")
+    out.append(f"- **Assessment completions (yesterday):** {f.get('completions_in_window', 0)}")
+    cr = f.get("completion_rate_pct", 0)
+    out.append(f"- Completion rate (yesterday): {cr:.1f}%")
+    out.append(f"- 30-day rolling: {f.get('starts_last_30_days', 0)} starts · "
+               f"{f.get('completions_last_30_days', 0)} completions "
+               f"({f.get('completion_rate_30d_pct', 0):.1f}%)")
+
+    bands = f.get("score_band_distribution_30d", {})
+    if bands:
+        bands_str = ", ".join(f"{b}: {c}" for b, c in sorted(bands.items(), key=lambda x: -x[1]))
+        out.append(f"- 30d score-band mix: {bands_str}")
+
+    if f.get("completions_detail"):
+        out.append("")
+        out.append("**Recent completions**")
+        for c in f["completions_detail"][:8]:
+            out.append(f"- {(c.get('completed_at') or '')[:16]} — "
+                       f"{c.get('email') or '(no email)'} — "
+                       f"score {c.get('total_score', '?')} · band {c.get('band', '?')}")
+
+    cf = sb.get("contact_form", {})
+    out.append("")
+    out.append(f"**Contact form (yesterday):** {cf.get('real_submissions_in_window', 0)} real · "
+               f"{cf.get('spam_submissions_in_window', 0)} spam")
+    if cf.get("real_submissions_detail"):
+        for s in cf["real_submissions_detail"][:5]:
+            out.append(f"- {s.get('name', '')} ({s.get('email', '')}) — "
+                       f"{s.get('program_interest', '?')}")
+    return "\n".join(out)
+
+
 def run_one_day(today_str, send_email_for_this_run=True, missed_dates=None):
     """Run one full report cycle for today_str (YYYY-MM-DD).
 
@@ -594,6 +655,13 @@ def run_one_day(today_str, send_email_for_this_run=True, missed_dates=None):
     print(f"\n=== Running report for {today_str} ===")
     errors = []
     missed_dates = missed_dates or []
+
+    # Lazy import the anomaly module (in scripts/, file has hyphen so use importlib)
+    import importlib.util
+    _anom_spec = importlib.util.spec_from_file_location(
+        "anomaly_detection", str(ROOT / "scripts" / "anomaly-detection.py"))
+    _anom = importlib.util.module_from_spec(_anom_spec)
+    _anom_spec.loader.exec_module(_anom)
 
     print("Pulling GA4 (yesterday)...")
     ga4 = run_subreport("ga4-report.py", "--days", "1")
@@ -607,6 +675,14 @@ def run_one_day(today_str, send_email_for_this_run=True, missed_dates=None):
     bing = run_subreport("bing-report.py")
     if "error" in bing: errors.append(f"Bing: {bing['error'][:100]}")
 
+    print("Pulling Stripe (last 1 day)...")
+    stripe = run_subreport("stripe-report.py", "--days", "1")
+    if "error" in stripe: errors.append(f"Stripe: {stripe['error'][:100]}")
+
+    print("Pulling Supabase (assessment funnel + contact form)...")
+    supabase = run_subreport("supabase-report.py", "--days", "1")
+    if "error" in supabase: errors.append(f"Supabase: {supabase['error'][:100]}")
+
     prev_path = find_previous_report()
     prev_md = prev_path.read_text() if prev_path else None
     if prev_path:
@@ -614,12 +690,28 @@ def run_one_day(today_str, send_email_for_this_run=True, missed_dates=None):
 
     report = synthesize_report(ga4, gsc, bing, previous_report_md=prev_md)
 
+    # Append the new data sources to the markdown report
+    extras_md = []
+    if "error" not in stripe:
+        extras_md.append(_format_stripe_section(stripe))
+    if "error" not in supabase:
+        extras_md.append(_format_supabase_section(supabase))
+    if extras_md:
+        report = report + "\n\n" + "\n\n".join(extras_md)
+
+    # Run anomaly detection BEFORE writing today's file (so detection
+    # uses prior days' history, not today's)
+    today_raw = {"ga4": ga4, "gsc": gsc, "bing": bing, "stripe": stripe, "supabase": supabase}
+    anomalies = _anom.detect_anomalies(today_raw, today_str=today_str)
+    anomaly_md = _anom.render_anomaly_section(anomalies)
+
+    # Prepend anomaly section to the report (top of "what's new today")
+    report = f"## Anomaly check\n\n{anomaly_md}\n\n" + report
+
     out_path = REPORTS_DIR / f"{today_str}.md"
     out_path.write_text(report)
     raw_path = REPORTS_DIR / f"{today_str}.json"
-    raw_path.write_text(json.dumps(
-        {"ga4": ga4, "gsc": gsc, "bing": bing}, indent=2, default=str
-    ))
+    raw_path.write_text(json.dumps(today_raw, indent=2, default=str))
     print(f"Report written: {out_path.relative_to(ROOT)}")
 
     # === Synthesize "what's different" via Claude ===
