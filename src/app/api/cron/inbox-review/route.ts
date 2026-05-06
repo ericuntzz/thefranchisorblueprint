@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { getGmailClient } from "@/lib/gmail/client";
+import { getGmailAccounts } from "@/lib/gmail/client";
 import { fetchUnreadThreads, markThreadRead, applyLabel } from "@/lib/gmail/fetch";
 import { classifyThreads, type ClassifiedThread } from "@/lib/gmail/classify";
 import { sendTemplate } from "@/lib/email/dispatch";
@@ -12,8 +12,9 @@ export const maxDuration = 120; // Classification can take a moment
 /**
  * Inbox review agent cron.
  *
- * Every 30 minutes. Reads unread threads from the team@ Gmail
- * inbox, classifies them with Claude (Sonnet for speed), and:
+ * Daily at noon UTC (6am MDT). Reads unread threads from BOTH the
+ * team@ and eric@ Gmail inboxes, classifies them with Claude
+ * (Sonnet for speed), and:
  *
  *   urgent  → immediate alert email to Eric + label "TFB/Urgent"
  *   action  → label "TFB/Action" + draft reply stored in DB
@@ -21,12 +22,24 @@ export const maxDuration = 120; // Classification can take a moment
  *   spam    → label "TFB/Spam" + mark read
  *
  * Writes all classifications to `inbox_reviews` for audit trail.
- * Sends a digest email if any threads were reviewed.
+ * Sends a digest summary to eric@ if any NEW threads were found.
+ * Silent (no email) when inbox is empty or everything was already
+ * reviewed.
  *
- * Dedup: threads already reviewed in the last 2 hours are skipped.
+ * Multi-account support via GMAIL_ACCOUNTS env var:
+ *   GMAIL_ACCOUNTS=team,eric
+ *   GMAIL_REFRESH_TOKEN_TEAM=...
+ *   GMAIL_REFRESH_TOKEN_ERIC=...
  *
- * Skips gracefully if Gmail creds aren't configured (sandbox mode).
+ * All notifications go to eric@thefranchisorblueprint.com.
+ *
+ * Skips gracefully if Gmail creds aren't configured.
  */
+
+/** Where all inbox notifications are routed. */
+const ERIC_EMAIL =
+  process.env.INBOX_ALERT_EMAIL ?? "eric@thefranchisorblueprint.com";
+
 export async function GET(req: NextRequest) {
   const auth = req.headers.get("authorization");
   const expected = `Bearer ${process.env.CRON_SECRET}`;
@@ -34,29 +47,51 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // --- Gmail client ---
-  const gmail = getGmailClient();
-  if (!gmail) {
+  // --- Gmail accounts ---
+  const accounts = getGmailAccounts();
+  if (accounts.length === 0) {
     return NextResponse.json({
       ok: true,
       skipped: true,
-      reason: "Gmail not configured (missing GMAIL_CLIENT_ID/SECRET/REFRESH_TOKEN)",
+      reason: "Gmail not configured (missing credentials)",
     });
   }
 
   const admin = getSupabaseAdmin();
-  const DEDUP_HOURS = 2;
-  const ALERT_EMAIL =
-    process.env.INBOX_ALERT_EMAIL ??
-    process.env.INTERNAL_NOTIFICATION_EMAIL ??
-    "team@thefranchisorblueprint.com";
+  const DEDUP_HOURS = 24; // daily run — dedup window matches
 
   try {
-    // 1) Fetch unread threads from the last 24h.
-    const threads = await fetchUnreadThreads(gmail, 20, 24);
+    // 1) Fetch unread threads from ALL configured accounts.
+    type TaggedThread = Awaited<ReturnType<typeof fetchUnreadThreads>>[number] & {
+      account: string;
+    };
 
-    if (threads.length === 0) {
-      return NextResponse.json({ ok: true, threads: 0, message: "inbox empty" });
+    const allThreads: TaggedThread[] = [];
+
+    for (const acct of accounts) {
+      try {
+        const threads = await fetchUnreadThreads(acct.client, 20, 24);
+        for (const t of threads) {
+          allThreads.push({ ...t, account: acct.label });
+        }
+        console.log(
+          `[inbox-review] ${acct.label}@: ${threads.length} unread threads`,
+        );
+      } catch (err) {
+        console.error(
+          `[inbox-review] error fetching ${acct.label}@:`,
+          err instanceof Error ? err.message : String(err),
+        );
+      }
+    }
+
+    if (allThreads.length === 0) {
+      return NextResponse.json({
+        ok: true,
+        accounts: accounts.map((a) => a.label),
+        threads: 0,
+        message: "all inboxes empty",
+      });
     }
 
     // 2) Dedup — skip threads we already classified recently.
@@ -74,14 +109,18 @@ export async function GET(req: NextRequest) {
       ),
     );
 
-    const newThreads = threads.filter((t) => !recentThreadIds.has(t.threadId));
+    const newThreads = allThreads.filter(
+      (t) => !recentThreadIds.has(t.threadId),
+    );
 
     if (newThreads.length === 0) {
+      // Nothing new — stay silent, no digest email.
       return NextResponse.json({
         ok: true,
-        threads: threads.length,
+        accounts: accounts.map((a) => a.label),
+        threads: allThreads.length,
         newThreads: 0,
-        message: "all threads already reviewed recently",
+        message: "all threads already reviewed — no digest sent",
       });
     }
 
@@ -91,6 +130,7 @@ export async function GET(req: NextRequest) {
     // 4) Process each classified thread.
     const results: Array<{
       threadId: string;
+      account: string;
       category: string;
       labeled: boolean;
       alerted: boolean;
@@ -103,22 +143,34 @@ export async function GET(req: NextRequest) {
       spam: "TFB/Spam",
     };
 
+    // Build account→client lookup for labeling
+    const clientMap = new Map(accounts.map((a) => [a.label, a.client]));
+
     for (const item of classified) {
       let labeled = false;
       let alerted = false;
 
-      try {
-        // Apply Gmail label.
-        const labelName = LABEL_MAP[item.category] ?? "TFB/Reviewed";
-        await applyLabel(gmail, item.threadId, labelName);
-        labeled = true;
+      // Find which account this thread came from
+      const taggedThread = newThreads.find(
+        (t) => t.threadId === item.threadId,
+      );
+      const acctLabel = taggedThread?.account ?? "team";
+      const gmail = clientMap.get(acctLabel) ?? clientMap.values().next().value;
 
-        // Mark FYI and spam as read.
-        if (item.category === "fyi" || item.category === "spam") {
-          await markThreadRead(gmail, item.threadId);
+      try {
+        if (gmail) {
+          // Apply Gmail label.
+          const labelName = LABEL_MAP[item.category] ?? "TFB/Reviewed";
+          await applyLabel(gmail, item.threadId, labelName);
+          labeled = true;
+
+          // Mark FYI and spam as read.
+          if (item.category === "fyi" || item.category === "spam") {
+            await markThreadRead(gmail, item.threadId);
+          }
         }
 
-        // Send urgent alert immediately.
+        // Send urgent alert immediately to Eric.
         if (item.category === "urgent") {
           const now = new Date().toLocaleString("en-US", {
             timeZone: "America/Denver",
@@ -127,9 +179,9 @@ export async function GET(req: NextRequest) {
           });
           const alertResult = await sendTemplate(
             "inbox-urgent-alert",
-            ALERT_EMAIL,
+            ERIC_EMAIL,
             {
-              threadSubject: item.subject,
+              threadSubject: `[${acctLabel}@] ${item.subject}`,
               threadFrom: item.from,
               category: item.category,
               reason: item.reason,
@@ -147,7 +199,7 @@ export async function GET(req: NextRequest) {
         // Write audit row.
         await admin.from("inbox_reviews").insert({
           thread_id: item.threadId,
-          subject: item.subject,
+          subject: `[${acctLabel}@] ${item.subject}`,
           sender: item.from,
           category: item.category,
           reason: item.reason,
@@ -163,41 +215,41 @@ export async function GET(req: NextRequest) {
 
       results.push({
         threadId: item.threadId,
+        account: acctLabel,
         category: item.category,
         labeled,
         alerted,
       });
     }
 
-    // 5) Send digest summary if we classified anything.
-    if (classified.length > 0) {
-      const now = new Date().toLocaleString("en-US", {
-        timeZone: "America/Denver",
-        dateStyle: "short",
-        timeStyle: "short",
-      });
-      const byCategory = groupByCategory(classified);
+    // 5) Send digest summary to Eric (only if we classified new threads).
+    const now = new Date().toLocaleString("en-US", {
+      timeZone: "America/Denver",
+      dateStyle: "short",
+      timeStyle: "short",
+    });
+    const byCategory = groupByCategory(classified, newThreads);
 
-      await sendTemplate(
-        "inbox-review-digest",
-        ALERT_EMAIL,
-        {
-          reviewedAt: now,
-          totalThreads: classified.length,
-          urgent: byCategory.urgent,
-          action: byCategory.action,
-          fyi: byCategory.fyi,
-          spam: byCategory.spam,
-        },
-        {
-          idempotencyKey: `inbox-digest:${new Date().toISOString().slice(0, 13)}`,
-        },
-      );
-    }
+    await sendTemplate(
+      "inbox-review-digest",
+      ERIC_EMAIL,
+      {
+        reviewedAt: now,
+        totalThreads: classified.length,
+        urgent: byCategory.urgent,
+        action: byCategory.action,
+        fyi: byCategory.fyi,
+        spam: byCategory.spam,
+      },
+      {
+        idempotencyKey: `inbox-digest:${new Date().toISOString().slice(0, 10)}`,
+      },
+    );
 
     return NextResponse.json({
       ok: true,
-      threads: threads.length,
+      accounts: accounts.map((a) => a.label),
+      threads: allThreads.length,
       newThreads: newThreads.length,
       classified: classified.length,
       urgent: classified.filter((c) => c.category === "urgent").length,
@@ -222,7 +274,10 @@ export async function GET(req: NextRequest) {
 }
 
 /** Group classified threads by category for the digest template. */
-function groupByCategory(classified: ClassifiedThread[]) {
+function groupByCategory(
+  classified: ClassifiedThread[],
+  taggedThreads: Array<{ threadId: string; account: string }>,
+) {
   type ThreadSummary = {
     subject: string;
     from: string;
@@ -232,16 +287,19 @@ function groupByCategory(classified: ClassifiedThread[]) {
     draftReply: string | null;
   };
 
-  const groups: Record<"urgent" | "action" | "fyi" | "spam", ThreadSummary[]> = {
-    urgent: [],
-    action: [],
-    fyi: [],
-    spam: [],
-  };
+  const groups: Record<"urgent" | "action" | "fyi" | "spam", ThreadSummary[]> =
+    {
+      urgent: [],
+      action: [],
+      fyi: [],
+      spam: [],
+    };
 
   for (const item of classified) {
+    const acctLabel =
+      taggedThreads.find((t) => t.threadId === item.threadId)?.account ?? "team";
     groups[item.category].push({
-      subject: item.subject,
+      subject: `[${acctLabel}@] ${item.subject}`,
       from: item.from,
       category: item.category,
       reason: item.reason,

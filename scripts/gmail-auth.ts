@@ -2,8 +2,8 @@
 /**
  * Gmail OAuth2 setup script.
  *
- * Run once to generate a refresh token for the team@ Gmail account.
- * The refresh token goes into .env.local and Vercel env vars.
+ * Run once PER ACCOUNT to generate a refresh token. The inbox review
+ * agent supports multiple Gmail accounts (e.g. team@ and eric@).
  *
  * Prerequisites:
  *   1. Go to https://console.cloud.google.com/apis/credentials
@@ -12,12 +12,20 @@
  *   4. Copy the Client ID and Client Secret
  *   5. Enable the Gmail API: https://console.cloud.google.com/apis/library/gmail.googleapis.com
  *
- * Usage:
- *   GMAIL_CLIENT_ID=xxx GMAIL_CLIENT_SECRET=yyy npx tsx scripts/gmail-auth.ts
+ * Usage (run once per account):
+ *   GMAIL_CLIENT_ID=xxx GMAIL_CLIENT_SECRET=yyy npx tsx scripts/gmail-auth.ts team
+ *   GMAIL_CLIENT_ID=xxx GMAIL_CLIENT_SECRET=yyy npx tsx scripts/gmail-auth.ts eric
  *
- * This opens a browser window. Sign in with the team@ Google account
- * and authorize. The script prints the refresh token to copy into
- * .env.local / Vercel.
+ * Each run opens a browser. Sign in with the correct Google account
+ * (team@thefranchisorblueprint.com or eric@thefranchisorblueprint.com)
+ * and authorize. The script prints the env vars to copy.
+ *
+ * After both accounts are authorized, your .env.local should have:
+ *   GMAIL_CLIENT_ID=...
+ *   GMAIL_CLIENT_SECRET=...
+ *   GMAIL_ACCOUNTS=team,eric
+ *   GMAIL_REFRESH_TOKEN_TEAM=...
+ *   GMAIL_REFRESH_TOKEN_ERIC=...
  */
 
 import http from "node:http";
@@ -29,13 +37,25 @@ const CLIENT_SECRET = process.env.GMAIL_CLIENT_SECRET;
 const PORT = 3456;
 const REDIRECT_URI = `http://localhost:${PORT}/callback`;
 
+// Account label from CLI arg (default: "team")
+const ACCOUNT_LABEL = (process.argv[2] ?? "team").toLowerCase().trim();
+
 if (!CLIENT_ID || !CLIENT_SECRET) {
   console.error("❌ Set GMAIL_CLIENT_ID and GMAIL_CLIENT_SECRET env vars first.");
   console.error(
-    "   GMAIL_CLIENT_ID=xxx GMAIL_CLIENT_SECRET=yyy npx tsx scripts/gmail-auth.ts",
+    `   GMAIL_CLIENT_ID=xxx GMAIL_CLIENT_SECRET=yyy npx tsx scripts/gmail-auth.ts ${ACCOUNT_LABEL}`,
   );
   process.exit(1);
 }
+
+console.log(`\n📧 Setting up Gmail OAuth for the "${ACCOUNT_LABEL}" account.\n`);
+console.log(
+  ACCOUNT_LABEL === "team"
+    ? "   Sign in with: team@thefranchisorblueprint.com"
+    : ACCOUNT_LABEL === "eric"
+      ? "   Sign in with: eric@thefranchisorblueprint.com"
+      : `   Sign in with the "${ACCOUNT_LABEL}" Google account`,
+);
 
 const oauth2 = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
 
@@ -51,7 +71,7 @@ const authUrl = oauth2.generateAuthUrl({
   prompt: "consent", // force refresh token generation
 });
 
-console.log("\n🔗 Open this URL in your browser and sign in with the team@ account:\n");
+console.log("\n🔗 Open this URL in your browser:\n");
 console.log(authUrl);
 console.log("\n⏳ Waiting for callback on localhost:" + PORT + "...\n");
 
@@ -76,15 +96,18 @@ const server = http.createServer(async (req, res) => {
 
     res.writeHead(200, { "Content-Type": "text/html" });
     res.end(
-      "<h1>✅ Authorization successful!</h1><p>You can close this tab. Check the terminal for your tokens.</p>",
+      `<h1>✅ Authorization successful for "${ACCOUNT_LABEL}"!</h1><p>You can close this tab. Check the terminal for your tokens.</p>`,
     );
 
-    console.log("✅ Got tokens!\n");
+    const envKey = `GMAIL_REFRESH_TOKEN_${ACCOUNT_LABEL.toUpperCase()}`;
+
+    console.log(`\n✅ Got tokens for "${ACCOUNT_LABEL}"!\n`);
     console.log("Add these to .env.local and Vercel project settings:\n");
     console.log(`GMAIL_CLIENT_ID=${CLIENT_ID}`);
     console.log(`GMAIL_CLIENT_SECRET=${CLIENT_SECRET}`);
-    console.log(`GMAIL_REFRESH_TOKEN=${tokens.refresh_token}`);
-    console.log("\n📋 Copy the GMAIL_REFRESH_TOKEN above — it won't be shown again.");
+    console.log(`GMAIL_ACCOUNTS=team,eric`);
+    console.log(`${envKey}=${tokens.refresh_token}`);
+    console.log(`\n📋 Copy ${envKey} above — it won't be shown again.`);
 
     server.close();
     process.exit(0);
