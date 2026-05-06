@@ -5,10 +5,18 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       // Default: allow all standard crawlers everywhere except API/private routes.
+      // /portal/* is the customer portal (auth-gated); we also set
+      // robots: noindex on its layout, but disallowing here prevents the
+      // crawl in the first place — defense in depth.
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/api/", "/_next/", "/strategy-call/builder/preview"],
+        disallow: [
+          "/api/",
+          "/_next/",
+          "/portal/",
+          "/strategy-call/builder/preview",
+        ],
       },
       // Explicitly welcome the major LLM search crawlers — these are the
       // bots that index your content for AI search results.

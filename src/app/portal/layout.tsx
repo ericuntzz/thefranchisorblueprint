@@ -1,8 +1,27 @@
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { PortalNav } from "@/components/PortalNav";
 import { JasonChatDock } from "@/components/agent/JasonChatDock";
 import type { Profile, Purchase, Tier } from "@/lib/supabase/types";
+
+/**
+ * The customer portal is gated content meant only for paying customers.
+ * Even though most routes 401 unauthenticated callers, the shell pages
+ * can leak to crawlers. Cascade `noindex,nofollow` to every /portal/*
+ * route so it never appears in search results.
+ */
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+    },
+  },
+};
 
 export default async function PortalLayout({ children }: { children: ReactNode }) {
   const supabase = await getSupabaseServer();

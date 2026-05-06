@@ -20,9 +20,7 @@ import { Faq } from "@/components/Faq";
 import { ClientLogos } from "@/components/ClientLogos";
 import { DeviceMockups } from "@/components/DeviceMockups";
 import { ComparisonTable } from "@/components/ComparisonTable";
-import { Testimonials } from "@/components/Testimonials";
 import { HowItWorks } from "@/components/HowItWorks";
-import { VideoPlayer } from "@/components/VideoPlayer";
 import { JsonLd } from "@/components/JsonLd";
 import { faqPageSchema, serviceSchema } from "@/lib/schema";
 import { AnalyticsLink } from "@/components/AnalyticsLink";
@@ -185,10 +183,8 @@ export default function Home() {
             You&apos;ve got a profitable concept and customers who love your brand. You know franchising is the next move — but you&apos;re stuck between paying <strong>$80,000 to a big firm</strong> who hands you a binder and disappears, or trying to <strong>DIY a process you&apos;ve never done before</strong>.
           </p>
 
-          {/* Hero video player (placeholder for Jason's intro video) */}
-          <div className="mb-12">
-            <VideoPlayer />
-          </div>
+          {/* Intro video — hidden until Jason's real explainer is recorded.
+              The placeholder/stock-photo poster was confusing real visitors. */}
 
           <div className="text-navy text-xs font-bold tracking-[0.2em] uppercase mb-7 opacity-70 mt-4">
             Trusted by Founders Who Build Brands That Last
@@ -430,20 +426,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== 9. TESTIMONIALS (light grey, social proof before pricing) ===== */}
-      <section className="bg-grey-1 py-24 md:py-28 relative overflow-hidden">
-        <div className="max-w-[1300px] mx-auto px-8 relative">
-          <div className="text-center mb-14">
-            <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase mb-4 border-b-2 border-gold pb-1">
-              Founders Who&apos;ve Done This
-            </span>
-            <h2 className="text-3xl md:text-5xl font-bold max-w-[860px] mx-auto">
-              Real Results from Real Founders
-            </h2>
-          </div>
-          <Testimonials />
-        </div>
-      </section>
+      {/* ===== 9. TESTIMONIALS — HIDDEN until real customer testimonials are
+           collected. Bracketed placeholders ([Sarah M.] / [Marcus T.] / etc.)
+           were FTC-flag territory if Google indexed them as real endorsements.
+           Keep the <Testimonials /> component code in the repo so it's ready
+           to drop back in once we have real quotes. ===== */}
 
       {/* ===== 10. PRICING CARDS (cool tinted bg) ===== */}
       <section

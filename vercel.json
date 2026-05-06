@@ -15,19 +15,15 @@
     },
     {
       "path": "/api/cron/stripe-reconcile",
-      "schedule": "0 1,7,13,19 * * *"
+      "schedule": "0 17 * * *"
     },
     {
       "path": "/api/cron/refund-window-outreach",
       "schedule": "0 16 * * *"
     },
     {
-      "path": "/api/cron/health-check",
-      "schedule": "*/5 * * * *"
-    },
-    {
       "path": "/api/cron/inbox-review",
-      "schedule": "5,35 * * * *"
+      "schedule": "0 18 * * *"
     }
   ]
 }
