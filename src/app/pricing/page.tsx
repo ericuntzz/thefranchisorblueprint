@@ -116,7 +116,7 @@ export default function PricingPage() {
                 item_id: "the-blueprint",
                 item_name: "The Blueprint",
                 price: 2997,
-                page_location: "pricing_page",
+                placement: "pricing_page",
               }}
               className="h-full"
             >
@@ -183,7 +183,7 @@ export default function PricingPage() {
                 item_id: "navigator",
                 item_name: "Navigator",
                 price: 8500,
-                page_location: "pricing_page",
+                placement: "pricing_page",
               }}
               className="h-full"
             >
@@ -240,7 +240,7 @@ export default function PricingPage() {
                 item_id: "builder",
                 item_name: "Builder",
                 price: 29500,
-                page_location: "pricing_page",
+                placement: "pricing_page",
               }}
               className="h-full"
             >
