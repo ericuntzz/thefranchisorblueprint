@@ -115,6 +115,15 @@ export default function RootLayout({
       <head>
         <JsonLd data={organizationSchema} />
         <JsonLd data={websiteSchema} />
+        {/* Preconnect to Calendly hosts so the TCP+TLS handshake happens
+            during HTML parse, not after the embed script's useEffect fires
+            on /strategy-call/* pages. ~100-300ms saved on first Calendly
+            paint. Cheap on pages that don't use Calendly — the browser
+            drops idle preconnect sockets after a short window. */}
+        <link rel="preconnect" href="https://assets.calendly.com" crossOrigin="" />
+        <link rel="preconnect" href="https://calendly.com" crossOrigin="" />
+        <link rel="dns-prefetch" href="https://assets.calendly.com" />
+        <link rel="dns-prefetch" href="https://calendly.com" />
       </head>
       <body className="min-h-full flex flex-col bg-white text-[#222]">
         {children}
