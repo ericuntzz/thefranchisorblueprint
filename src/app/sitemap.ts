@@ -10,7 +10,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
 
   const staticRoutes: MetadataRoute.Sitemap = [
-    { url: `${SITE_URL}/`, lastModified: now, changeFrequency: "weekly", priority: 1.0 },
+    // No trailing slash on root — must match the canonical Next.js renders
+    // (which strips the trailing slash from metadataBase). GSC was reporting
+    // the homepage as "Duplicate, Google chose different canonical than user"
+    // because the sitemap declared "/" while the canonical link omitted it.
+    { url: SITE_URL, lastModified: now, changeFrequency: "weekly", priority: 1.0 },
     { url: `${SITE_URL}/programs`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${SITE_URL}/programs/blueprint`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${SITE_URL}/pricing`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
