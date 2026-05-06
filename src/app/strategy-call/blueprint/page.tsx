@@ -13,14 +13,9 @@ import { CalendlyEmbed } from "@/components/CalendlyEmbed";
  * NEXT_PUBLIC_STRIPE_LIVE !== "true". Once direct Stripe checkout is
  * wired, this page can stay live as a low-friction alternative path
  * for founders who want a quick call before purchasing.
- *
- * NOTE: Eric needs to create the matching Calendly event (15-minute
- * duration, slug "15-minute-blueprint-call") for this URL to work. If
- * the slug differs in the actual Calendly account, update CALENDLY_URL
- * below to match.
  */
 const CALENDLY_URL =
-  "https://calendly.com/team-thefranchisorblueprint/15-minute-blueprint-call";
+  "https://calendly.com/team-thefranchisorblueprint/15-minute-discovery-call";
 
 export const metadata: Metadata = {
   title: "Book Your 15-Minute Founding-Member Call | The Franchisor Blueprint",
