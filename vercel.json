@@ -23,7 +23,7 @@
     },
     {
       "path": "/api/cron/inbox-review",
-      "schedule": "0 18 * * *"
+      "schedule": "0 15,18,23 * * 1-5"
     }
   ]
 }
