@@ -45,3 +45,7 @@ supabase/.branches/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local script logs (launchd output, etc.)
+logs/
+scripts/__pycache__/
