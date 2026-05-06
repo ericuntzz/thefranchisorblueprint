@@ -1,7 +1,7 @@
 {
   "ga4": {
     "metadata": {
-      "generated_at": "2026-05-06T17:22:01.348693+00:00",
+      "generated_at": "2026-05-06T17:21:21.562613+00:00",
       "window_days": 1,
       "property_id": "535127773"
     },
@@ -253,7 +253,7 @@
   },
   "gsc": {
     "metadata": {
-      "generated_at": "2026-05-06T17:22:02.901473+00:00",
+      "generated_at": "2026-05-06T17:21:23.149866+00:00",
       "window_days": 7,
       "site_url": "sc-domain:thefranchisorblueprint.com"
     },
@@ -332,7 +332,7 @@
   },
   "bing": {
     "metadata": {
-      "generated_at": "2026-05-06T17:22:03.877166+00:00",
+      "generated_at": "2026-05-06T17:21:24.165981+00:00",
       "site_url": "https://www.thefranchisorblueprint.com"
     },
     "query_stats": [],
