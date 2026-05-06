@@ -143,7 +143,8 @@ export type GA4Event =
         item_id: "the-blueprint" | "navigator" | "builder";
         item_name: string;
         price: number;
-        page_location?: string;
+        /** Use "placement" — GA4 reserves "page_location" for the full URL. */
+        placement?: string;
       };
     }
   // Engagement: any tracked content section scrolled into view
@@ -151,7 +152,8 @@ export type GA4Event =
       name: "view_section";
       params: {
         section_id: string;
-        page_location?: string;
+        /** Use "placement" — GA4 reserves "page_location" for the full URL. */
+        placement?: string;
       };
     };
 
