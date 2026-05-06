@@ -73,7 +73,7 @@ const faqs = [
   },
   {
     q: "What happens right after I buy?",
-    a: "For The Blueprint: you'll receive instant access to the complete operating system, a tier-specific intake form, and a Calendly link to book your 30-minute white-glove onboarding call within the next 1–2 business days. For Navigator and Builder: every purchase begins with a kickoff call where we map your specific 6 or 12-month engagement before any work starts.",
+    a: "For The Blueprint: you'll receive instant access to the complete operating system, a tier-specific intake form, and a Calendly link to book your 60-minute white-glove onboarding call within the next 1–2 business days. For Navigator and Builder: every purchase begins with a kickoff call where we map your specific 6 or 12-month engagement before any work starts.",
   },
 ];
 
