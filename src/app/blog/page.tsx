@@ -10,7 +10,7 @@ import { allPosts } from "@/lib/blog";
 import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Blog | The Franchisor Blueprint | Franchise Development Insights",
+  title: "Blog | The Franchisor Blueprint",
   description:
     "Frameworks, walkthroughs, and case studies for founders serious about franchising. Written by Jason Stowe — 30+ years in franchise development.",
   alternates: { canonical: "/blog" },

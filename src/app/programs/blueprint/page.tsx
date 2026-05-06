@@ -10,7 +10,7 @@ import { BlueprintUpsellBuyBox } from "@/components/BlueprintUpsellBuyBox";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "The Blueprint — DIY Franchise Kit ($2,997) | The Franchisor Blueprint",
+  title: "The Blueprint DIY Kit ($2,997) | The Franchisor Blueprint",
   description:
     "The complete franchisor operating system for the self-starter — nine production-ready frameworks. $2,997 one-time (save 5% pay-in-full or pay $1,100/mo × 3). Lifetime access to system updates.",
 };

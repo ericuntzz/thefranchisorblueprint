@@ -10,7 +10,7 @@ const CALENDLY_URL =
   "https://calendly.com/team-thefranchisorblueprint/45-minute-builder-fit-call";
 
 export const metadata: Metadata = {
-  title: "Book Your Builder Fit Call (45 Min) | The Franchisor Blueprint",
+  title: "Book Your Builder Fit Call | The Franchisor Blueprint",
   description:
     "A 45-minute fit call for founders considering our Builder ($29,500) tier. Deeper screening on capital, brand maturity, and timeline. With Jason directly.",
 };

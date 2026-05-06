@@ -10,7 +10,7 @@ import { breadcrumbSchema, collectionPageSchema } from "@/lib/schema";
 import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Franchise Decision Comparisons: Side-by-Side Guides | The Franchisor Blueprint",
+  title: "Franchise Decision Comparisons | The Franchisor Blueprint",
   description:
     "Side-by-side comparisons of the franchise decisions that actually matter — consultant vs attorney, coached program vs traditional firm, buying a franchise vs starting your own. Honest verdicts from 30 years in the industry.",
   alternates: { canonical: "/compare" },

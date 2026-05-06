@@ -22,7 +22,7 @@ import { breadcrumbSchema, serviceSchema } from "@/lib/schema";
 import { AnalyticsLink } from "@/components/AnalyticsLink";
 
 export const metadata: Metadata = {
-  title: "Programs | The Franchisor Blueprint | DIY, Coached & Done-With-You",
+  title: "Programs | The Franchisor Blueprint",
   description:
     "Three ways to franchise your business: The Blueprint ($2,997 DIY), Navigator ($8,500 with 6-month coaching), or Builder ($29,500 done-with-you). All built on the same complete franchisor operating system — nine interlocking frameworks, $33,500+ in value.",
 };

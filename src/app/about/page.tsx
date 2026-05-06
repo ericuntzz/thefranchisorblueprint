@@ -9,7 +9,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbSchema, personJasonStoweSchema } from "@/lib/schema";
 
 export const metadata: Metadata = {
-  title: "About | The Franchisor Blueprint | Franchise Development Experts",
+  title: "About | The Franchisor Blueprint",
   description:
     "Built by operators, not just consultants. We bridge the gap between DIY risk and big-firm expense — the partners we wish we'd had when we started franchising.",
 };
