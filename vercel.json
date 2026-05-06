@@ -24,6 +24,10 @@
     {
       "path": "/api/cron/health-check",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/inbox-review",
+      "schedule": "5,35 * * * *"
     }
   ]
 }

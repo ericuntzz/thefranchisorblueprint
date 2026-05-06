@@ -370,6 +370,20 @@ export type HealthCheckIncident = {
   created_at: string;
 };
 
+export type InboxReview = {
+  id: string;
+  thread_id: string;
+  message_id: string | null;
+  subject: string;
+  sender: string;
+  category: "urgent" | "action" | "fyi" | "spam";
+  reason: string;
+  summary: string;
+  draft_reply: string | null;
+  reviewed_at: string;
+  created_at: string;
+};
+
 // MemorySnapshot type defined above near ChatHistory.
 
 // Supabase JS v2 type inference requires this exact shape — including the
@@ -613,6 +627,17 @@ export type Database = {
           updated_at?: string;
         };
         Update: Partial<Omit<ChapterRedline, "id" | "user_id">>;
+        Relationships: [];
+      };
+      inbox_reviews: {
+        Row: InboxReview;
+        Insert: Omit<InboxReview, "id" | "created_at" | "reviewed_at" | "message_id"> & {
+          id?: string;
+          created_at?: string;
+          reviewed_at?: string;
+          message_id?: string | null;
+        };
+        Update: Partial<Omit<InboxReview, "id">>;
         Relationships: [];
       };
       scheduled_emails: {

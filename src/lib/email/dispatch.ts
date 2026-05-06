@@ -65,6 +65,18 @@ import {
   refundWindowOutreachText,
   type RefundWindowOutreachPayload,
 } from "./templates/refund-window-outreach";
+import {
+  InboxUrgentAlertEmail,
+  inboxUrgentAlertSubject,
+  inboxUrgentAlertText,
+  type InboxUrgentAlertPayload,
+} from "./templates/inbox-urgent-alert";
+import {
+  InboxReviewDigestEmail,
+  inboxReviewDigestSubject,
+  inboxReviewDigestText,
+  type InboxReviewDigestPayload,
+} from "./templates/inbox-review-digest";
 import { sendEmail, type EmailAttachment } from "./send";
 
 /**
@@ -89,6 +101,8 @@ type TemplateRegistry = {
   "stuck-customer-rescue": StuckCustomerRescuePayload;
   "team-ops-digest": OpsDigestPayload;
   "refund-window-outreach": RefundWindowOutreachPayload;
+  "inbox-urgent-alert": InboxUrgentAlertPayload;
+  "inbox-review-digest": InboxReviewDigestPayload;
 };
 
 export type TemplateName = keyof TemplateRegistry;
@@ -148,6 +162,16 @@ const REGISTRY = {
     Component: RefundWindowOutreachEmail,
     subject: refundWindowOutreachSubject,
     text: refundWindowOutreachText,
+  },
+  "inbox-urgent-alert": {
+    Component: InboxUrgentAlertEmail,
+    subject: inboxUrgentAlertSubject,
+    text: inboxUrgentAlertText,
+  },
+  "inbox-review-digest": {
+    Component: InboxReviewDigestEmail,
+    subject: inboxReviewDigestSubject,
+    text: inboxReviewDigestText,
   },
 } as const;
 
