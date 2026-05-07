@@ -15,6 +15,12 @@ export const metadata: Metadata = {
   title: "Book Your Builder Fit Call | The Franchisor Blueprint",
   description:
     "A 45-minute fit call for founders considering our Builder ($29,500) tier. Deeper screening on capital, brand maturity, and timeline. With Jason directly.",
+  openGraph: {
+    title: "Book Your Builder Fit Call | The Franchisor Blueprint",
+    description:
+      "A 45-minute fit call for founders considering Builder ($29,500). Deeper screening on capital, brand maturity, and timeline — with Jason directly.",
+    url: "/strategy-call/builder",
+  },
 };
 
 export default function BuilderFitCallPage() {

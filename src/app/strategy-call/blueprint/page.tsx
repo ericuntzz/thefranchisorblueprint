@@ -18,9 +18,15 @@ const CALENDLY_URL =
   "https://calendly.com/team-thefranchisorblueprint/15-minute-discovery-call";
 
 export const metadata: Metadata = {
-  title: "Book Your 15-Minute Founding-Member Call | The Franchisor Blueprint",
+  title: "15-Minute Founding-Member Call | The Franchisor Blueprint",
   description:
     "We're onboarding our first cohort of Blueprint customers personally. Schedule a 15-minute call — we'll confirm fit, walk you through the system, and lock in founding-member pricing.",
+  openGraph: {
+    title: "15-Minute Founding-Member Call | The Franchisor Blueprint",
+    description:
+      "We're onboarding our first cohort of Blueprint customers personally. Schedule a 15-minute call to confirm fit and lock in founding-member pricing.",
+    url: "/strategy-call/blueprint",
+  },
 };
 
 export default function BlueprintStrategyCallPage() {

@@ -11,6 +11,12 @@ export const metadata: Metadata = {
   title: "Contact & Support | The Franchisor Blueprint",
   description:
     "Question about an existing purchase, refund, technical issue, or partnership inquiry? Send us a message and we'll respond within one business day.",
+  openGraph: {
+    title: "Contact & Support | The Franchisor Blueprint",
+    description:
+      "Question about an existing purchase, refund, or technical issue? Send us a message and we'll respond within one business day.",
+    url: "/contact",
+  },
 };
 
 export default function ContactPage() {

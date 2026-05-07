@@ -12,6 +12,12 @@ export const metadata: Metadata = {
   title: "About | The Franchisor Blueprint",
   description:
     "Built by operators, not just consultants. We bridge the gap between DIY risk and big-firm expense — the partners we wish we'd had when we started franchising.",
+  openGraph: {
+    title: "About | The Franchisor Blueprint",
+    description:
+      "Built by operators, not just consultants. Jason Stowe brings 30+ years in franchise development — the partner we wish we'd had when we started.",
+    url: "/about",
+  },
 };
 
 const values = [

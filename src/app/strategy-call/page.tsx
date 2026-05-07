@@ -14,6 +14,12 @@ export const metadata: Metadata = {
   title: "Book a Strategy Call | The Franchisor Blueprint",
   description:
     "Book a free 30-minute strategy call with Jason. We'll evaluate your business, recommend a path forward, and answer every question — no pressure, no sales tactics.",
+  openGraph: {
+    title: "Book a Strategy Call | The Franchisor Blueprint",
+    description:
+      "Book a free 30-minute strategy call with Jason. We'll evaluate your business and recommend a path forward — no pressure, no sales tactics.",
+    url: "/strategy-call",
+  },
 };
 
 export default function StrategyCallPage() {

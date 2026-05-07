@@ -14,6 +14,13 @@ export const metadata: Metadata = {
   description:
     "Frameworks, walkthroughs, and case studies for founders serious about franchising. Written by Jason Stowe — 30+ years in franchise development.",
   alternates: { canonical: "/blog" },
+  openGraph: {
+    title: "Blog | The Franchisor Blueprint",
+    description:
+      "Frameworks, walkthroughs, and case studies for founders serious about franchising. Written by Jason Stowe — 30+ years in franchise development.",
+    url: "/blog",
+    type: "website",
+  },
 };
 
 export default function BlogPage() {

@@ -3,7 +3,7 @@ import { LegalPage } from "@/components/LegalPage";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | The Franchisor Blueprint",
-  description: "How we collect, use, and protect your information.",
+  description: "How The Franchisor Blueprint collects, uses, and protects your personal information — and the choices you have about your data.",
 };
 
 export default function PrivacyPage() {

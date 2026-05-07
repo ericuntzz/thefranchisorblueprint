@@ -41,6 +41,12 @@ export const metadata: Metadata = {
   title: "Pricing | The Franchisor Blueprint | From $2,997",
   description:
     "Transparent pricing. No hidden fees. The Blueprint ($2,997 DIY), Navigator ($8,500 with 6-month coaching), Builder ($29,500 done-with-you). See the full value stack and ROI.",
+  openGraph: {
+    title: "Pricing | The Franchisor Blueprint | From $2,997",
+    description:
+      "Transparent pricing. No hidden fees. The Blueprint ($2,997 DIY), Navigator ($8,500 coached), Builder ($29,500 done-with-you). See the full value stack.",
+    url: "/pricing",
+  },
 };
 
 const valueStack = [

@@ -25,6 +25,12 @@ export const metadata: Metadata = {
   title: "Programs | The Franchisor Blueprint",
   description:
     "Three ways to franchise your business: The Blueprint ($2,997 DIY), Navigator ($8,500 with 6-month coaching), or Builder ($29,500 done-with-you). All built on the same complete franchisor operating system — nine interlocking frameworks, $33,500+ in value.",
+  openGraph: {
+    title: "Programs | The Franchisor Blueprint",
+    description:
+      "Three ways to franchise your business — from $2,997 DIY to $29,500 done-with-you. All built on the same complete franchisor operating system.",
+    url: "/programs",
+  },
 };
 
 const docs = [
