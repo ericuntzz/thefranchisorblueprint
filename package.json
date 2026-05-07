@@ -9,7 +9,9 @@
     "start": "next start",
     "smoke-test:seed": "tsx scripts/smoke-test/seed.ts",
     "smoke-test:phase1": "tsx scripts/smoke-test/run-phase1.ts",
-    "smoke-test:report": "tsx scripts/smoke-test/reporter.ts"
+    "smoke-test:phase2": "tsx scripts/smoke-test/phase2-structural.ts",
+    "smoke-test:report": "tsx scripts/smoke-test/reporter.ts",
+    "smoke-test:daily": "bash scripts/smoke-test/run-daily.sh"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.91.1",

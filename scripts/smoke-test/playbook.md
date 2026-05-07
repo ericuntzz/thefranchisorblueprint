@@ -76,7 +76,7 @@ The 5 flows:
 | Flow | URL | What to verify |
 |---|---|---|
 | `portal-landing` | `/portal` | "Smoke" first name, 17 deliverables, "0% complete" progress, navy/gold/cream brand consistency |
-| `chapter-with-redlines` | `/portal/chapter/business_overview` | Toolbar (Back/Talk to Jason/Version history/View in Blueprint), redline badge says "1 blocker · 1 note" |
+| `chapter-with-redlines` | `/portal/chapter/business_overview` | Chapter title "Concept & Story", form fields (Concept summary / Founder / Audience), back link to /portal. Toolbar was simplified in commit 0d7e10b — only status pills + back arrow remain in SSR; redline badge + Jason dock are client-rendered. |
 | `redline-drawer` | (click the redline badge) | Drawer slides in, shows 3 cards (1 blocker, 1 warning, 1 info-resolved), severity pills correct color, "Mark resolved" button per open card |
 | `export-pre-review` | `/portal/exports/concept-and-story` | "Download .docx now" button, readiness % rendered, [NEEDS ATTORNEY REVIEW] markers visible if applicable |
 | `lab-blueprint-canvas` | `/portal/lab/blueprint` | The 213KB Blueprint canvas renders without overflow / clipping at 1280×800 |
