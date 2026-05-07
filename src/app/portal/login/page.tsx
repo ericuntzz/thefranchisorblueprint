@@ -12,11 +12,16 @@ export const metadata: Metadata = {
 };
 
 interface PageProps {
-  searchParams: Promise<{ next?: string; sent?: string; error?: string }>;
+  searchParams: Promise<{
+    next?: string;
+    sent?: string;
+    error?: string;
+    email?: string;
+  }>;
 }
 
 export default async function PortalLoginPage({ searchParams }: PageProps) {
-  const { next, sent, error } = await searchParams;
+  const { next, sent, error, email: prefillEmail } = await searchParams;
   const sentEmail = typeof sent === "string" && sent !== "1" ? sent : null;
   const showSent = !!sent;
 

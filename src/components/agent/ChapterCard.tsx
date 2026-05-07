@@ -255,13 +255,13 @@ export function ChapterCard({
   }
 
   return (
-    <article id={`chapter-${slug}`} className="rounded-2xl border border-navy/10 bg-white p-5 sm:p-6 md:p-8 scroll-mt-20">
+    <article id={`chapter-${slug}`} className="rounded-2xl border border-card-border bg-white p-5 sm:p-6 md:p-8 scroll-mt-20">
       <header className="mb-4 flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="text-xs uppercase tracking-[0.14em] text-gold-text font-bold mb-1">
             <span className="font-mono">{slug}</span>
             {schema && filledFieldCount.total > 0 && !editing && (
-              <span className="ml-2 text-grey-4 normal-case tracking-normal">
+              <span className="ml-2 text-grey-3 normal-case tracking-normal">
                 — {filledFieldCount.filled} of {filledFieldCount.total} filled
               </span>
             )}
@@ -336,7 +336,7 @@ export function ChapterCard({
               )}
             </div>
             {drafting && (
-              <p className="mt-3 text-xs text-grey-4 italic">
+              <p className="mt-3 text-xs text-grey-3 italic">
                 Jason is reading your full Memory and writing a chapter from
                 scratch. This usually takes 60–90 seconds — the page will
                 refresh when he&apos;s done.
@@ -447,7 +447,7 @@ export function ChapterCard({
               minimum, but for grouped controls of this density the
               perceived target is a bit larger thanks to the row's
               line-height and visual whitespace). */}
-          <footer className="mt-5 pt-4 border-t border-navy/5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs text-grey-4">
+          <footer className="mt-5 pt-4 border-t border-navy/5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs text-grey-3">
             <span className="inline-flex items-center gap-1.5">
               <Clock size={11} />
               {lastUpdatedBy && updatedAt
@@ -516,7 +516,7 @@ export function ChapterCard({
             </div>
           </footer>
           {showProvenance && (
-            <div className="mt-4 rounded-xl bg-grey-1 border border-navy/10 px-4 py-3 text-xs text-grey-3 space-y-2">
+            <div className="mt-4 rounded-xl bg-grey-1 border border-card-border px-4 py-3 text-xs text-grey-3 space-y-2">
               {provenance.map((p) => (
                 <div key={p.id} className="flex gap-2">
                   <span className="font-mono text-gold-warm flex-shrink-0">
@@ -528,7 +528,7 @@ export function ChapterCard({
                         {prettySource(p.source_type)}
                       </span>
                       {p.source_ref && (
-                        <span className="ml-2 text-grey-4">{p.source_ref}</span>
+                        <span className="ml-2 text-grey-3">{p.source_ref}</span>
                       )}
                     </div>
                     {p.source_excerpt && (
@@ -876,7 +876,7 @@ function ConfidencePill({
     verified: "bg-emerald-50 text-emerald-700 border-emerald-200",
     inferred: "bg-amber-50 text-amber-800 border-amber-200",
     draft: "bg-navy/5 text-navy border-navy/15",
-    empty: "bg-grey-1 text-grey-4 border-grey-3/30",
+    empty: "bg-grey-1 text-grey-3 border-grey-3/30",
   };
   const labels: Record<Props["confidence"], string> = {
     verified: "Verified",
@@ -886,7 +886,7 @@ function ConfidencePill({
   };
   return (
     <span
-      className={`inline-block text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded-full border ${styles[confidence]}`}
+      className={`inline-block text-xs uppercase tracking-wider font-bold px-2 py-1 rounded-full border ${styles[confidence]}`}
     >
       {labels[confidence]}
     </span>
@@ -1168,7 +1168,7 @@ function SectionBlock({
               type="button"
               onClick={onSave}
               disabled={saving || draftBody === stripBodyForEditing(body)}
-              className="inline-flex items-center gap-1.5 bg-gold text-navy font-bold text-[10px] uppercase tracking-[0.1em] px-4 py-2 rounded-full hover:bg-gold-dark disabled:opacity-50 transition-colors"
+              className="inline-flex items-center gap-1.5 bg-gold text-navy font-bold text-xs uppercase tracking-[0.1em] px-4 py-2 rounded-full hover:bg-gold-dark disabled:opacity-50 transition-colors"
             >
               {saving ? (
                 <>
@@ -1203,7 +1203,7 @@ function SectionBlock({
         <button
           type="button"
           onClick={onStartEdit}
-          className="absolute top-2 right-2 inline-flex items-center gap-1.5 bg-navy text-cream font-bold text-[10px] uppercase tracking-[0.1em] px-3 py-1.5 rounded-full hover:bg-gold hover:text-navy shadow-sm transition-opacity opacity-100 md:opacity-0 md:group-hover/sec:opacity-100 focus-visible:opacity-100"
+          className="absolute top-2 right-2 inline-flex items-center gap-1.5 bg-navy text-cream font-bold text-xs uppercase tracking-[0.1em] px-3 py-1.5 rounded-full hover:bg-gold hover:text-navy shadow-sm transition-opacity opacity-100 md:opacity-0 md:group-hover/sec:opacity-100 focus-visible:opacity-100"
           title="Edit this section"
         >
           <Pencil size={10} /> Edit
@@ -1240,7 +1240,7 @@ function SectionBlock({
             {headingText}
           </span>
           {needsInputCount > 0 && !isOpen && (
-            <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full flex-shrink-0">
+            <span className="inline-flex items-center gap-1 text-xs uppercase tracking-wider font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full flex-shrink-0">
               <AlertCircle size={9} />
               <span className="hidden sm:inline">
                 {needsInputCount} needs input
@@ -1253,7 +1253,7 @@ function SectionBlock({
           <button
             type="button"
             onClick={onStartEdit}
-            className="inline-flex items-center gap-1.5 bg-navy text-cream font-bold text-[10px] uppercase tracking-[0.1em] px-3 py-1.5 rounded-full hover:bg-gold hover:text-navy shadow-sm transition-opacity opacity-100 md:opacity-0 md:group-hover/sec:opacity-100 focus-visible:opacity-100 flex-shrink-0"
+            className="inline-flex items-center gap-1.5 bg-navy text-cream font-bold text-xs uppercase tracking-[0.1em] px-3 py-1.5 rounded-full hover:bg-gold hover:text-navy shadow-sm transition-opacity opacity-100 md:opacity-0 md:group-hover/sec:opacity-100 focus-visible:opacity-100 flex-shrink-0"
             title="Edit this section"
           >
             <Pencil size={10} /> Edit

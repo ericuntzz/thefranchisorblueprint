@@ -15,6 +15,10 @@ export async function POST(req: NextRequest) {
 
   if (!email || !email.includes("@")) {
     loginUrl.searchParams.set("error", "invalid_email");
+    // Echo the rejected email back so the form can re-populate.
+    // Lets the customer see exactly what got rejected (most often a
+    // typo) and edit it inline rather than retyping from scratch.
+    if (email) loginUrl.searchParams.set("email", email);
     return NextResponse.redirect(loginUrl, 303);
   }
 
@@ -30,6 +34,7 @@ export async function POST(req: NextRequest) {
 
   if (!profile) {
     loginUrl.searchParams.set("error", "no_account");
+    loginUrl.searchParams.set("email", email);
     return NextResponse.redirect(loginUrl, 303);
   }
 

@@ -211,7 +211,7 @@ export function QuestionQueueClient({
         <div className="rounded-2xl bg-navy text-cream px-5 py-4 flex items-start gap-3">
           <Globe size={18} className="text-gold mt-0.5 flex-shrink-0" />
           <div className="flex-1 min-w-0">
-            <div className="text-[10px] uppercase tracking-[0.18em] text-gold font-bold mb-0.5">
+            <div className="text-xs uppercase tracking-[0.14em] text-gold font-bold mb-0.5">
               Skip a chunk of the typing
             </div>
             <p className="text-cream/90 text-sm leading-relaxed">
@@ -378,7 +378,7 @@ function PhaseTransitionCard({
 
   return (
     <div className="rounded-2xl border-2 border-emerald-300 bg-gradient-to-br from-emerald-50 to-cream/40 p-5 sm:p-6">
-      <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-emerald-700 font-bold mb-2">
+      <div className="flex items-center gap-2 text-xs uppercase tracking-[0.14em] text-emerald-700 font-bold mb-2">
         <CheckCircle2 size={12} />
         {previousPhase.title} phase complete
       </div>
@@ -436,7 +436,7 @@ function PhaseIntroBlock({
   return (
     <div className="rounded-xl bg-navy text-cream px-5 py-4">
       <div className="flex items-baseline justify-between gap-3 mb-1">
-        <div className="text-[10px] uppercase tracking-[0.18em] text-gold font-bold">
+        <div className="text-xs uppercase tracking-[0.14em] text-gold font-bold">
           {id} phase
         </div>
         {progress && (

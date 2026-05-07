@@ -595,7 +595,7 @@ function UploadStepCard({
         {step.examples.map((ex) => (
           <span
             key={ex}
-            className="inline-flex items-center text-[10px] uppercase tracking-wider font-bold text-grey-3 bg-grey-1 border border-card-border px-2 py-0.5 rounded-full"
+            className="inline-flex items-center text-xs uppercase tracking-wider font-bold text-grey-3 bg-grey-1 border border-card-border px-2 py-0.5 rounded-full"
           >
             {ex}
           </span>
@@ -658,7 +658,7 @@ function UploadStepCard({
                   <span className="text-navy font-semibold truncate">
                     {u.label}
                   </span>
-                  <span className="text-emerald-700 ml-auto text-[10px] uppercase tracking-wider font-bold">
+                  <span className="text-emerald-700 ml-auto text-xs uppercase tracking-wider font-bold">
                     Uploaded
                   </span>
                 </div>

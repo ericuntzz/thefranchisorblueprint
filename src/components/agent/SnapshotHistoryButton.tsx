@@ -131,7 +131,7 @@ export function SnapshotHistoryButton({ slug, onRolledBack }: Props) {
                       <div className="text-sm text-navy font-semibold leading-tight">
                         {s.reason ?? humanizeSource(s.source)}
                       </div>
-                      <div className="text-[10px] uppercase tracking-wider text-grey-4">
+                      <div className="text-xs uppercase tracking-wider text-grey-3">
                         {formatTime(s.createdAt)}
                       </div>
                     </div>
@@ -139,7 +139,7 @@ export function SnapshotHistoryButton({ slug, onRolledBack }: Props) {
                       type="button"
                       onClick={() => void rollback(s.id)}
                       disabled={busy !== null}
-                      className="flex-shrink-0 inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-bold text-navy hover:bg-navy/5 px-2 py-1 rounded-md transition-colors disabled:opacity-50"
+                      className="flex-shrink-0 inline-flex items-center gap-1 text-xs uppercase tracking-wider font-bold text-navy hover:bg-navy/5 px-2 py-1 rounded-md transition-colors disabled:opacity-50"
                     >
                       {busy === s.id ? (
                         <Loader2 size={10} className="animate-spin" />

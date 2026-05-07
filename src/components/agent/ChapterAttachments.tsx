@@ -66,7 +66,7 @@ export function ChapterAttachments({ slug, attachments }: Props) {
           <Paperclip size={10} />
           References
           {attachments.length > 0 && (
-            <span className="text-grey-4">({attachments.length})</span>
+            <span className="text-grey-3">({attachments.length})</span>
           )}
         </div>
         {!composerOpen && (
@@ -99,7 +99,7 @@ export function ChapterAttachments({ slug, attachments }: Props) {
           fallback once the prompt is dismissed or for chapters
           where it's already been seen. */}
       {attachments.length === 0 && !composerOpen && (
-        <p className="text-xs text-grey-4 italic mb-2">
+        <p className="text-xs text-grey-3 italic mb-2">
           Drop docs here so Jason can pull from them. Most chapters
           benefit from at least one reference.
         </p>
@@ -159,7 +159,7 @@ function AttachmentRow({
           )}
         </div>
         {(attachment.kind === "link" || sizeLabel) && (
-          <div className="text-grey-4 text-[11px] truncate">
+          <div className="text-grey-3 text-xs truncate">
             {attachment.kind === "link" ? attachment.ref : sizeLabel}
           </div>
         )}
@@ -169,7 +169,7 @@ function AttachmentRow({
         onClick={onDelete}
         disabled={busy}
         title="Remove"
-        className="text-grey-4 hover:text-red-700 transition-colors flex-shrink-0 mt-0.5 disabled:opacity-50"
+        className="text-grey-3 hover:text-red-700 transition-colors flex-shrink-0 mt-0.5 disabled:opacity-50"
       >
         <Trash2 size={11} />
       </button>
@@ -242,7 +242,7 @@ function AttachmentComposer({
   return (
     <div className="rounded-lg border border-navy/15 bg-cream/50 p-3">
       <div className="flex items-center justify-between mb-3">
-        <div className="inline-flex rounded-full bg-white border border-navy/10 p-0.5 text-[10px] uppercase tracking-wider font-bold">
+        <div className="inline-flex rounded-full bg-white border border-card-border p-0.5 text-xs uppercase tracking-wider font-bold">
           <button
             type="button"
             onClick={() => setMode("file")}
@@ -272,7 +272,7 @@ function AttachmentComposer({
           type="button"
           onClick={onClose}
           disabled={busy}
-          className="text-grey-4 hover:text-navy transition-colors disabled:opacity-50"
+          className="text-grey-3 hover:text-navy transition-colors disabled:opacity-50"
           title="Close"
         >
           <X size={14} />
@@ -296,7 +296,7 @@ function AttachmentComposer({
               <span className="text-navy font-semibold">
                 Drop a file or click to choose
               </span>
-              <span className="text-grey-4 text-[11px]">
+              <span className="text-grey-3 text-[11px]">
                 Up to 10 MB. Text/markdown files are ingested directly; PDFs &amp; images attach as references.
               </span>
             </>
@@ -335,7 +335,7 @@ function AttachmentComposer({
             <button
               type="submit"
               disabled={busy || !url.trim()}
-              className="inline-flex items-center gap-1.5 bg-navy text-cream font-bold text-[10px] uppercase tracking-wider px-4 py-2 rounded-full hover:bg-navy-dark disabled:opacity-50 transition-colors"
+              className="inline-flex items-center gap-1.5 bg-navy text-cream font-bold text-xs uppercase tracking-wider px-4 py-2 rounded-full hover:bg-navy-dark disabled:opacity-50 transition-colors"
             >
               {busy ? (
                 <>

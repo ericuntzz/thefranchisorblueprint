@@ -500,7 +500,7 @@ export function DraftWithJasonModal({
                       Drop a file or click to choose
                     </span>
                   </span>
-                  <span className="text-grey-4 text-xs sm:text-[13px] sm:before:content-['—_'] sm:before:mr-0.5">
+                  <span className="text-grey-3 text-xs sm:text-[13px] sm:before:content-['—_'] sm:before:mr-0.5">
                     auto-attached + pre-selected below
                   </span>
                 </>
@@ -530,7 +530,7 @@ export function DraftWithJasonModal({
                 <label className="text-xs uppercase tracking-[0.14em] text-gold-text font-bold">
                   References on this chapter
                 </label>
-                <span className="text-[10px] text-grey-4">
+                <span className="text-[10px] text-grey-3">
                   Pre-selected — Jason loads these by default
                 </span>
               </div>
@@ -555,7 +555,7 @@ export function DraftWithJasonModal({
                 <label className="text-xs uppercase tracking-[0.14em] text-gold-text font-bold">
                   References on other chapters
                 </label>
-                <span className="text-[10px] text-grey-4">
+                <span className="text-[10px] text-grey-3">
                   Tick any that should inform this draft
                 </span>
               </div>
@@ -576,7 +576,7 @@ export function DraftWithJasonModal({
           )}
 
           {thisChapterAll.length === 0 && otherChapters.length === 0 && (
-            <p className="text-xs text-grey-4 italic">
+            <p className="text-xs text-grey-3 italic">
               No references uploaded yet. You can drop one in above, or just
               hit &ldquo;Start drafting&rdquo; — Jason will work from your
               Memory.
@@ -730,7 +730,7 @@ function DraftingProgressView({ startedAt }: { startedAt: number }) {
                 ) : status === "active" ? (
                   <Loader2 size={16} className="animate-spin text-gold-warm" />
                 ) : (
-                  <Square size={16} className="text-grey-4" />
+                  <Square size={16} className="text-grey-3" />
                 )}
               </span>
               <span
@@ -739,7 +739,7 @@ function DraftingProgressView({ startedAt }: { startedAt: number }) {
                     ? "text-navy"
                     : status === "done"
                       ? "text-navy/70"
-                      : "text-grey-4"
+                      : "text-grey-3"
                 }`}
               >
                 {p.label}
@@ -749,7 +749,7 @@ function DraftingProgressView({ startedAt }: { startedAt: number }) {
         })}
       </ul>
 
-      <div className="flex items-center gap-3 text-xs text-grey-4">
+      <div className="flex items-center gap-3 text-xs text-grey-3">
         <span className="tabular-nums font-semibold text-navy/60">{elapsedLabel}</span>
         <span aria-hidden>·</span>
         <span className="italic">
@@ -796,11 +796,11 @@ function AttachmentCheckRow({
           <div className="text-navy font-semibold truncate inline-flex items-center gap-1">
             {attachment.label}
             {attachment.kind === "link" && (
-              <ExternalLink size={9} className="text-grey-4 flex-shrink-0" />
+              <ExternalLink size={9} className="text-grey-3 flex-shrink-0" />
             )}
           </div>
           {fromLabel && (
-            <div className="text-grey-4 text-[10px] uppercase tracking-wider truncate">
+            <div className="text-grey-3 text-xs uppercase tracking-wider truncate">
               from {fromLabel}
             </div>
           )}

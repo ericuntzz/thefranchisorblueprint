@@ -174,7 +174,7 @@ export default async function PreExportReviewPage({ params }: Props) {
           {/* Gap list — only when there are gaps. */}
           {review.totalGaps > 0 && (
             <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
-              <div className="flex items-center gap-2 mb-3 text-[10px] uppercase tracking-[0.18em] text-amber-700 font-bold">
+              <div className="flex items-center gap-2 mb-3 text-xs uppercase tracking-[0.14em] text-amber-700 font-bold">
                 <AlertCircle size={12} /> Required gaps to fill
               </div>
               <ul className="space-y-2">

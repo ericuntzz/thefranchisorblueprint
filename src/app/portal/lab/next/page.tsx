@@ -122,7 +122,7 @@ export default async function GuidedNextPage() {
 function AllCaughtUpPanel({ firstName }: { firstName: string | null }) {
   return (
     <div className="rounded-2xl border border-emerald-300 bg-emerald-50 p-8 text-center">
-      <div className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-emerald-700 font-bold mb-3">
+      <div className="inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.14em] text-emerald-700 font-bold mb-3">
         Nothing to answer right now
       </div>
       <h1 className="text-navy font-extrabold text-2xl md:text-3xl mb-3">
