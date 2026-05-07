@@ -238,24 +238,23 @@ export function ChapterCard({
   const isEmpty = !contentMd.trim() && Object.keys(fields).length === 0;
   const filledFieldCount = countFilledFields(fields, schema);
 
-  // Edit mode: replace the chapter body with the field editor. The
-  // header + confidence pill stay so the customer keeps spatial
-  // context. Save commits via server action; cancel discards.
+  // Autosave commits each edit via the server action — no reload.
+  // The editor stays open until the customer clicks "Done" (or
+  // navigates away). The parent page will reflect persisted state
+  // on its next render; for the assembled-view chapter card the
+  // cached prose stays as-is until the user navigates back to it,
+  // which matches their mental model (the prose is the read-only
+  // view, the field editor is the live one).
   async function handleSaveFields(changes: Record<string, FieldValue>) {
     if (!isValidMemoryFileSlug(slug)) {
       throw new Error(`Unknown chapter: ${slug}`);
     }
     await saveFields({ slug, changes });
-    setEditing(false);
-    // Server action revalidates /portal/lab/blueprint, so a soft
-    // navigation will show the new state. Force a window reload to
-    // be safe — same pattern as Draft / Redraft.
-    if (typeof window !== "undefined") window.location.reload();
   }
 
   return (
     <article id={`chapter-${slug}`} className="rounded-2xl border border-card-border bg-white p-5 sm:p-6 md:p-8 scroll-mt-20">
-      <header className="mb-4">
+      <header className="mb-4 flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           {schema && filledFieldCount.total > 0 && !editing && (
             <div className="text-xs uppercase tracking-[0.14em] text-grey-3 font-bold mb-1">
@@ -271,6 +270,16 @@ export function ChapterCard({
             </p>
           )}
         </div>
+        {editing && (
+          <button
+            type="button"
+            onClick={() => setEditing(false)}
+            className="flex-shrink-0 inline-flex items-center gap-1.5 bg-navy text-cream font-bold text-xs uppercase tracking-[0.1em] px-4 py-2 rounded-full hover:bg-navy-dark transition-colors"
+            title="Close the editor — your changes are saved automatically"
+          >
+            Done
+          </button>
+        )}
       </header>
 
       {editing && schema ? (
@@ -280,7 +289,6 @@ export function ChapterCard({
           fieldStatus={fieldStatus}
           otherChaptersFields={otherChaptersFields}
           onSave={handleSaveFields}
-          onCancel={() => setEditing(false)}
         />
       ) : isEmpty ? (
         insufficientCtx ? (

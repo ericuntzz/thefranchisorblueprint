@@ -137,8 +137,11 @@ export function FocusedChapterClient(props: Props) {
   const [approving, setApproving] = useState(false);
 
   async function handleSaveFields(changes: Record<string, FieldValue>) {
+    // Autosave path — no reload. The page navigates away when the
+    // user is done, and at that point the next route shows fresh
+    // server-rendered state. Reloading mid-edit would just disrupt
+    // their flow.
     await saveFields({ slug, changes });
-    if (typeof window !== "undefined") window.location.reload();
   }
 
   async function performDraft(args: {
@@ -252,9 +255,6 @@ export function FocusedChapterClient(props: Props) {
             fieldStatus={fieldStatus}
             otherChaptersFields={otherChaptersFields}
             onSave={handleSaveFields}
-            onCancel={() => {
-              if (typeof window !== "undefined") window.location.assign("/portal");
-            }}
           />
         </section>
       ) : (

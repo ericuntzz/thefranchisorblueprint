@@ -18,10 +18,10 @@
  * page state.
  */
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  ArrowRight,
   Calculator,
+  Check,
   CheckCircle2,
   Info,
   Loader2,
@@ -78,8 +78,9 @@ type Props = {
    */
   otherChaptersFields: MemoryFieldsMap;
   onSave: (fields: Record<string, FieldValue>) => Promise<void>;
-  onCancel: () => void;
 };
+
+type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 export function ChapterFieldEditor({
   schema,
@@ -87,11 +88,16 @@ export function ChapterFieldEditor({
   fieldStatus,
   otherChaptersFields,
   onSave,
-  onCancel,
 }: Props) {
   const [values, setValues] = useState<Record<string, FieldValue>>(initialFields);
-  const [saving, setSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [error, setError] = useState<string | null>(null);
+  // Snapshot of what's been persisted to the server. Diffed against
+  // `values` to compute the autosave payload, and updated after every
+  // successful save so we don't re-send unchanged fields.
+  const lastSavedRef = useRef<Record<string, FieldValue>>(initialFields);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savedToastRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Eric: "concerned a user won't see the [advanced] button and won't
   // complete the section." Drop the toggle — render every field
   // up-front so nothing is hidden behind a press.
@@ -128,37 +134,78 @@ export function ChapterFieldEditor({
     setValues((prev) => ({ ...prev, [name]: value }));
   };
 
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    setSaving(true);
-    try {
-      // Only send fields that actually differ from initialFields, plus
-      // never send computed fields (server ignores them anyway, but
-      // sending them is wasted bandwidth and confuses the audit log).
-      const changes: Record<string, FieldValue> = {};
-      for (const f of schema.fields) {
-        if (hasCalc(schema.slug, f.name)) continue; // skip computed
-        const before = initialFields[f.name];
-        const after = values[f.name];
-        if (!shallowEqual(before, after)) {
-          changes[f.name] = after ?? null;
-        }
+  // Autosave: any change to `values` schedules a debounced save 1.5s
+  // after the last edit. Computed fields are skipped (server ignores
+  // them) and we diff against the last-saved snapshot, not initial
+  // fields, so subsequent edits in the same session don't re-send the
+  // same data.
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    const changes: Record<string, FieldValue> = {};
+    for (const f of schema.fields) {
+      if (hasCalc(schema.slug, f.name)) continue;
+      const before = lastSavedRef.current[f.name];
+      const after = values[f.name];
+      if (!shallowEqual(before, after)) {
+        changes[f.name] = after ?? null;
       }
-      if (Object.keys(changes).length === 0) {
-        // Nothing changed — close without a server hit.
-        onCancel();
-        return;
-      }
-      await onSave(changes);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Save failed");
-      setSaving(false);
     }
-  }
+    if (Object.keys(changes).length === 0) return;
+    debounceRef.current = setTimeout(async () => {
+      setSaveStatus("saving");
+      setError(null);
+      try {
+        await onSave(changes);
+        lastSavedRef.current = { ...lastSavedRef.current, ...changes };
+        setSaveStatus("saved");
+        // Keep "Saved" visible for ~3s, then fade back to idle.
+        if (savedToastRef.current) clearTimeout(savedToastRef.current);
+        savedToastRef.current = setTimeout(() => setSaveStatus("idle"), 3000);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Save failed");
+        setSaveStatus("error");
+      }
+    }, 1500);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [values, schema.fields, schema.slug, onSave]);
+
+  // Cleanup the saved-toast timer on unmount.
+  useEffect(() => {
+    return () => {
+      if (savedToastRef.current) clearTimeout(savedToastRef.current);
+    };
+  }, []);
 
   return (
-    <form onSubmit={handleSave} className="space-y-7">
+    <div className="space-y-7">
+      {/* Autosave status — pinned to the right edge of the form,
+          inline at the top so it's always visible while the user is
+          typing and doesn't compete with the Jason chat dock at the
+          bottom-right corner. Empty (no row at all) when idle. */}
+      {saveStatus !== "idle" && (
+        <div className="-mt-2 flex justify-end" aria-live="polite" aria-atomic="true">
+          {saveStatus === "saving" && (
+            <span className="inline-flex items-center gap-1.5 text-grey-3 text-xs font-semibold">
+              <Loader2 size={12} className="animate-spin" />
+              Saving…
+            </span>
+          )}
+          {saveStatus === "saved" && (
+            <span className="inline-flex items-center gap-1.5 text-emerald-700 text-xs font-semibold">
+              <Check size={12} />
+              Saved
+            </span>
+          )}
+          {saveStatus === "error" && (
+            <span className="inline-flex items-center gap-1.5 text-red-700 text-xs font-semibold" title={error ?? undefined}>
+              <X size={12} />
+              Couldn&apos;t save — your last edit isn&apos;t persisted
+            </span>
+          )}
+        </div>
+      )}
       {grouped.map((group) => {
         const visibleFields = group.fields.filter(
           (f) => showAdvanced || !f.advanced,
@@ -217,41 +264,7 @@ export function ChapterFieldEditor({
         );
       })}
 
-      {error && (
-        <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-800">
-          {error}
-        </div>
-      )}
-
-      {/* Save bar — sticky at the bottom of the form. The negative
-          margins must mirror the chapter card's padding (p-5 sm:p-6
-          md:p-8) so the bar bleeds edge-to-edge of the card. */}
-      <div className="sticky bottom-0 -mx-5 sm:-mx-6 md:-mx-8 -mb-5 sm:-mb-6 md:-mb-8 px-5 sm:px-6 md:px-8 py-4 bg-white border-t border-navy/10 flex items-center justify-end gap-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={saving}
-          className="text-grey-3 hover:text-navy font-semibold text-sm px-4 py-2 transition-colors disabled:opacity-50"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={saving}
-          className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-xs uppercase tracking-[0.1em] px-6 py-3 rounded-full hover:bg-gold-dark disabled:opacity-50 transition-colors"
-        >
-          {saving ? (
-            <>
-              <Loader2 size={13} className="animate-spin" /> Saving…
-            </>
-          ) : (
-            <>
-              Save changes <ArrowRight size={12} />
-            </>
-          )}
-        </button>
-      </div>
-    </form>
+    </div>
   );
 }
 
