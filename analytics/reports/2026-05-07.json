@@ -1,0 +1,362 @@
+{
+  "ga4": {
+    "metadata": {
+      "generated_at": "2026-05-07T14:00:03.491541+00:00",
+      "window_days": 1,
+      "property_id": "535127773"
+    },
+    "totals": [
+      {
+        "sessions": "10",
+        "activeUsers": "8",
+        "screenPageViews": "15",
+        "engagedSessions": "0",
+        "averageSessionDuration": "326.2525025"
+      }
+    ],
+    "by_channel": [
+      {
+        "sessionDefaultChannelGroup": "Direct",
+        "sessions": "6",
+        "activeUsers": "5",
+        "engagedSessions": "0",
+        "averageSessionDuration": "501.2694935"
+      },
+      {
+        "sessionDefaultChannelGroup": "Unassigned",
+        "sessions": "5",
+        "activeUsers": "5",
+        "engagedSessions": "0",
+        "averageSessionDuration": "50.9816128"
+      },
+      {
+        "sessionDefaultChannelGroup": "Organic Social",
+        "sessions": "1",
+        "activeUsers": "0",
+        "engagedSessions": "0",
+        "averageSessionDuration": "0"
+      }
+    ],
+    "by_source_medium": [
+      {
+        "sessionSource": "(direct)",
+        "sessionMedium": "(none)",
+        "sessions": "6",
+        "activeUsers": "5"
+      },
+      {
+        "sessionSource": "(not set)",
+        "sessionMedium": "(not set)",
+        "sessions": "5",
+        "activeUsers": "5"
+      },
+      {
+        "sessionSource": "trustpilot",
+        "sessionMedium": "company_profile",
+        "sessions": "1",
+        "activeUsers": "0"
+      }
+    ],
+    "by_city": [
+      {
+        "city": "Logan",
+        "region": "Utah",
+        "country": "United States",
+        "sessions": "2",
+        "activeUsers": "2"
+      },
+      {
+        "city": "San Leonardo",
+        "region": "Central Luzon",
+        "country": "Philippines",
+        "sessions": "2",
+        "activeUsers": "2"
+      },
+      {
+        "city": "Summit Park",
+        "region": "Utah",
+        "country": "United States",
+        "sessions": "2",
+        "activeUsers": "0"
+      },
+      {
+        "city": "Council Bluffs",
+        "region": "Iowa",
+        "country": "United States",
+        "sessions": "1",
+        "activeUsers": "1"
+      },
+      {
+        "city": "Kamas",
+        "region": "Utah",
+        "country": "United States",
+        "sessions": "1",
+        "activeUsers": "1"
+      },
+      {
+        "city": "Salt Lake City",
+        "region": "Utah",
+        "country": "United States",
+        "sessions": "1",
+        "activeUsers": "1"
+      },
+      {
+        "city": "Seattle",
+        "region": "Washington",
+        "country": "United States",
+        "sessions": "1",
+        "activeUsers": "1"
+      }
+    ],
+    "top_pages": [
+      {
+        "pagePath": "/",
+        "screenPageViews": "8",
+        "activeUsers": "7"
+      },
+      {
+        "pagePath": "/about",
+        "screenPageViews": "3",
+        "activeUsers": "2"
+      },
+      {
+        "pagePath": "/pricing",
+        "screenPageViews": "3",
+        "activeUsers": "2"
+      },
+      {
+        "pagePath": "/programs",
+        "screenPageViews": "1",
+        "activeUsers": "1"
+      },
+      {
+        "pagePath": "/pricing_page",
+        "screenPageViews": "0",
+        "activeUsers": "1"
+      }
+    ],
+    "key_events": [
+      {
+        "eventName": "page_view",
+        "eventCount": "15",
+        "totalUsers": "8"
+      },
+      {
+        "eventName": "nav_click",
+        "eventCount": "9",
+        "totalUsers": "2"
+      },
+      {
+        "eventName": "session_start",
+        "eventCount": "7",
+        "totalUsers": "7"
+      },
+      {
+        "eventName": "view_item",
+        "eventCount": "6",
+        "totalUsers": "1"
+      },
+      {
+        "eventName": "first_visit",
+        "eventCount": "5",
+        "totalUsers": "5"
+      },
+      {
+        "eventName": "scroll",
+        "eventCount": "3",
+        "totalUsers": "3"
+      },
+      {
+        "eventName": "user_engagement",
+        "eventCount": "3",
+        "totalUsers": "3"
+      }
+    ]
+  },
+  "gsc": {
+    "metadata": {
+      "generated_at": "2026-05-07T14:00:06.092014+00:00",
+      "window_days": 7,
+      "site_url": "sc-domain:thefranchisorblueprint.com"
+    },
+    "by_date": [
+      {
+        "clicks": 0,
+        "impressions": 0,
+        "ctr": 0,
+        "position": 0,
+        "date": "2026-04-30"
+      },
+      {
+        "clicks": 0,
+        "impressions": 0,
+        "ctr": 0,
+        "position": 0,
+        "date": "2026-05-01"
+      },
+      {
+        "clicks": 0,
+        "impressions": 0,
+        "ctr": 0,
+        "position": 0,
+        "date": "2026-05-02"
+      },
+      {
+        "clicks": 0,
+        "impressions": 0,
+        "ctr": 0,
+        "position": 0,
+        "date": "2026-05-03"
+      },
+      {
+        "clicks": 0,
+        "impressions": 4,
+        "ctr": 0,
+        "position": 13,
+        "date": "2026-05-04"
+      }
+    ],
+    "top_queries": [],
+    "top_pages": [
+      {
+        "clicks": 0,
+        "impressions": 4,
+        "ctr": 0,
+        "position": 13,
+        "page": "https://www.thefranchisorblueprint.com/"
+      }
+    ],
+    "by_country": [
+      {
+        "clicks": 0,
+        "impressions": 4,
+        "ctr": 0,
+        "position": 13,
+        "country": "usa"
+      }
+    ],
+    "by_device": [
+      {
+        "clicks": 0,
+        "impressions": 4,
+        "ctr": 0,
+        "position": 13,
+        "device": "DESKTOP"
+      }
+    ]
+  },
+  "bing": {
+    "metadata": {
+      "generated_at": "2026-05-07T14:00:07.290662+00:00",
+      "site_url": "https://www.thefranchisorblueprint.com"
+    },
+    "query_stats": [],
+    "page_stats": [],
+    "query_traffic_stats": [],
+    "rank_stats": [
+      {
+        "__type": "RankAndTrafficStats:#Microsoft.Bing.Webmaster.Api",
+        "Clicks": 0,
+        "Date": "/Date(1777878000000-0700)/",
+        "Impressions": 0
+      },
+      {
+        "__type": "RankAndTrafficStats:#Microsoft.Bing.Webmaster.Api",
+        "Clicks": 0,
+        "Date": "/Date(1777964400000-0700)/",
+        "Impressions": 0
+      }
+    ],
+    "crawl_stats": []
+  },
+  "stripe": {
+    "metadata": {
+      "generated_at": "2026-05-07T14:00:10.374151+00:00",
+      "window_days": 1
+    },
+    "totals": {
+      "checkout_sessions": 0,
+      "complete_paid_external": 0,
+      "complete_paid_internal": 0,
+      "expired": 0,
+      "open_or_other": 0,
+      "external_revenue_usd": 0.0,
+      "total_charges": 0,
+      "total_refunds": 0,
+      "total_disputes": 0
+    },
+    "external_sessions": [],
+    "anonymous_expired_sessions": []
+  },
+  "supabase": {
+    "metadata": {
+      "generated_at": "2026-05-07T14:00:11.489071+00:00",
+      "window_days": 1
+    },
+    "assessment_funnel": {
+      "starts_in_window": 0,
+      "completions_in_window": 0,
+      "completion_rate_pct": 0,
+      "starts_last_30_days": 11,
+      "completions_last_30_days": 3,
+      "completion_rate_30d_pct": 27.27272727272727,
+      "score_band_distribution_30d": {
+        "building_foundation": 1,
+        "nearly_there": 2
+      },
+      "source_attribution_in_window": {},
+      "completions_detail": []
+    },
+    "contact_form": {
+      "submissions_in_window": 0,
+      "real_submissions_in_window": 0,
+      "spam_submissions_in_window": 0,
+      "real_submissions_detail": []
+    }
+  },
+  "calendly": {
+    "metadata": {
+      "generated_at": "2026-05-07T14:00:12.539155+00:00",
+      "window_days": 1,
+      "user": "TFB Team"
+    },
+    "totals": {
+      "events_in_window": 0,
+      "canceled_in_window": 0,
+      "external_bookings": 0
+    },
+    "external_bookings": [],
+    "canceled_count": 0
+  },
+  "resend": {
+    "metadata": {
+      "generated_at": "2026-05-07T14:00:14.457157+00:00",
+      "window_days": 1
+    },
+    "totals": {
+      "sent": 8,
+      "delivered": 8,
+      "opened": 0,
+      "clicked": 0,
+      "bounced": 0,
+      "complained": 0,
+      "delivery_rate_pct": 100.0,
+      "open_rate_pct": 0.0,
+      "click_rate_pct": 0.0,
+      "bounce_rate_pct": 0.0
+    },
+    "by_status": {
+      "delivered": 8
+    },
+    "by_template_bucket": {
+      "TFB traffic": 4,
+      "TFB Ops": 1,
+      "\ud83d\udea8 2 urgent \u00b7 Inbox Review": 1,
+      "\ud83d\udea8 Urgent inbox": 1,
+      "TFB weekly traffic": 1
+    },
+    "by_recipient_domain": {
+      "thefranchisorblueprint.com": 8
+    }
+  }
+}
