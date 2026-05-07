@@ -273,7 +273,7 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
 
       {/* ===== Active promo banner (subtle, only when 48hr promo is live) ===== */}
       {activePromo && tier < 3 && (
-        <PromoBanner offer={activePromo} tier={tier} />
+        <PromoBanner offer={activePromo} />
       )}
 
       {/* ===== Halfway → upgrade hero card (fires at 50% readiness) ===== */}
@@ -565,7 +565,7 @@ function JustPurchasedBanner({
   );
 }
 
-function PromoBanner({ offer, tier }: { offer: UpgradeOffer; tier: Tier }) {
+function PromoBanner({ offer }: { offer: UpgradeOffer }) {
   const targetName = offer.target_tier === 2 ? "Navigator" : "Builder";
   return (
     <section className="bg-gradient-to-r from-navy via-navy-light to-navy text-white border-b border-gold/30">
@@ -589,8 +589,6 @@ function PromoBanner({ offer, tier }: { offer: UpgradeOffer; tier: Tier }) {
           See upgrade <ArrowRight size={13} />
         </Link>
       </div>
-      {/* Tier passthrough silence — used for type narrowing only */}
-      {tier === tier && null}
     </section>
   );
 }
