@@ -134,9 +134,9 @@ export default async function BlueprintLabPage() {
                 : "Your Franchisor Blueprint"}
             </h1>
             <p className="text-grey-3 text-base md:text-lg max-w-[640px] leading-relaxed mb-6">
-              All {MEMORY_FILES.length} chapters, compiled into one document —
-              the closest preview of what your attorney will see when
-              you&apos;re ready to file.
+              All {MEMORY_FILES.length}{" "}chapters, compiled into one
+              document — the closest preview of what your attorney will see
+              when you&apos;re ready to file.
             </p>
             <Link
               href="/portal"
