@@ -23,6 +23,8 @@ import { computeResult, toCategoryScoresJson } from "@/lib/assessment/scoring";
 import { sendTemplate } from "@/lib/email/dispatch";
 import { renderResultPdf } from "@/lib/assessment/pdf-report";
 import { SITE_URL } from "@/lib/site";
+import { normalizeEmail } from "@/lib/utils/normalize-email";
+import { buildAssessmentLeadContext } from "@/lib/leads/build-assessment-lead-context";
 
 export const runtime = "nodejs";
 
@@ -95,7 +97,7 @@ export async function POST(req: NextRequest) {
   if (!sessionId) {
     return NextResponse.json({ error: "missing session id" }, { status: 400 });
   }
-  const email = (body.email ?? "").trim().toLowerCase();
+  const email = normalizeEmail(body.email);
   const firstName = (body.firstName ?? "").trim();
   const businessName = (body.businessName ?? "").trim() || null;
   const websiteUrl = normalizeWebsiteUrl(body.websiteUrl);
@@ -259,11 +261,22 @@ export async function POST(req: NextRequest) {
     }
   })();
 
-  // ─── Internal lead notification (Jason's inbox) ───────────────────────
+  // ─── Internal lead notification (Jason + team inbox) ──────────────────
   // Reuses the existing "internal-lead-notification" template the contact
   // form + newsletter use, so all inbound leads aggregate in one place.
+  // For assessment-source leads we attach the rich `assessment` context
+  // (lead temperature, recommended action, pre-built mailto + LinkedIn
+  // links) so Jason can react in 30 seconds while the lead is hot.
   const internalEmail = process.env.INTERNAL_NOTIFICATION_EMAIL;
   if (internalEmail) {
+    const assessmentContext = buildAssessmentLeadContext({
+      result,
+      email,
+      firstName,
+      businessName,
+      websiteUrl,
+    });
+
     void sendTemplate(
       "internal-lead-notification",
       internalEmail,
@@ -275,7 +288,8 @@ export async function POST(req: NextRequest) {
         annualRevenue: annualRevenue || null,
         urgency: urgency || null,
         assessmentScore: `${result.totalScore} / ${result.maxScore} — ${result.bandTitle}`,
-        message: `Recommendation: ${result.recommendation.primary.label}. Strongest: ${result.strongest.title}. Biggest gap: ${result.weakest.title}.`,
+        message: `Recommendation: ${result.recommendation.primary.label}.`,
+        assessment: assessmentContext,
         supabaseRowUrl: absoluteResultUrl,
         submittedAt: new Date().toISOString(),
       },

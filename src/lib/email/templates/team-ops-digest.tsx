@@ -149,6 +149,16 @@ export function TeamOpsDigestEmail(p: OpsDigestPayload) {
                 <Text style={metricValue}>{p.assessmentLeads.length}</Text>
               </td>
               <td style={{ padding: "4px 0" }}>
+                <Text style={metricLabel}>Missed warm leads</Text>
+                <Text style={metricValue}>
+                  {p.missedWarmLeads.length > 0
+                    ? `${p.missedWarmLeads.length} ⚠`
+                    : "0 ✓"}
+                </Text>
+              </td>
+            </tr>
+            <tr>
+              <td style={{ padding: "4px 0" }}>
                 <Text style={metricLabel}>Emails (24h)</Text>
                 <Text style={metricValue}>
                   {p.emailHealth.failed24h > 0
@@ -156,6 +166,7 @@ export function TeamOpsDigestEmail(p: OpsDigestPayload) {
                     : `${p.emailHealth.sent24h} sent ✓`}
                 </Text>
               </td>
+              <td style={{ padding: "4px 0" }}></td>
             </tr>
           </tbody>
         </table>
@@ -262,6 +273,74 @@ export function TeamOpsDigestEmail(p: OpsDigestPayload) {
                   </td>
                   <td style={tdStyle}>{w.readinessPct}%</td>
                   <td style={tdStyle}>{w.tierName}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+
+      {/* ── Missed warm leads — Jason's personal follow-up watchlist ── */}
+      {p.missedWarmLeads.length > 0 && (
+        <>
+          <Hr style={sectionDivider} />
+          <Heading as="h2" style={subheadingStyle}>
+            Missed warm leads — chase these
+          </Heading>
+          <Text style={{ ...paragraphStyle, fontSize: "13px", color: "#888B92" }}>
+            Hot-band leads (franchise_ready / nearly_there) from the last 7
+            days who haven&apos;t booked a strategy call OR purchased.
+            Reach out personally.
+          </Text>
+          <table style={tableStyle}>
+            <thead>
+              <tr>
+                <th style={thStyle}>Who</th>
+                <th style={thStyle}>Band</th>
+                <th style={thStyle}>Score</th>
+                <th style={thStyle}>Urgency</th>
+                <th style={thStyle}>Days ago</th>
+              </tr>
+            </thead>
+            <tbody>
+              {p.missedWarmLeads.map((l, i) => (
+                <tr key={i}>
+                  <td style={tdStyle}>
+                    {l.firstName ?? "—"}{" "}
+                    <span style={{ color: "#888B92" }}>({l.email})</span>
+                    {l.businessName && (
+                      <span style={{ color: "#888B92", fontSize: "12px" }}>
+                        {" "}
+                        · {l.businessName}
+                      </span>
+                    )}
+                    {l.websiteUrl && (
+                      <>
+                        {" "}
+                        ·{" "}
+                        <a
+                          href={l.websiteUrl}
+                          style={{ color: "#1E3A5F", fontSize: "12px" }}
+                        >
+                          site
+                        </a>
+                      </>
+                    )}
+                  </td>
+                  <td style={tdStyle}>
+                    <span
+                      style={
+                        l.band === "franchise_ready" ? badgeGreen : badgeAmber
+                      }
+                    >
+                      {l.band.replace(/_/g, " ")}
+                    </span>
+                  </td>
+                  <td style={tdStyle}>{l.score}</td>
+                  <td style={tdStyle}>
+                    {l.urgency ? l.urgency.replace(/_/g, " ") : "—"}
+                  </td>
+                  <td style={tdStyle}>{l.daysSinceCompletion}d</td>
                 </tr>
               ))}
             </tbody>
@@ -425,6 +504,7 @@ export function teamOpsDigestText(p: OpsDigestPayload): string {
     `Rescue emails sent: ${p.rescueResults.length}`,
     `Refund watchlist: ${p.refundWatchlist.length}`,
     `Assessment leads: ${p.assessmentLeads.length}`,
+    `Missed warm leads: ${p.missedWarmLeads.length}`,
     `Emails: ${p.emailHealth.sent24h} sent, ${p.emailHealth.failed24h} failed`,
     "",
   ];
@@ -454,6 +534,16 @@ export function teamOpsDigestText(p: OpsDigestPayload): string {
     for (const w of p.refundWatchlist) {
       lines.push(
         `  ${w.firstName ?? "—"} (${w.email}) — ${w.daysRemaining}d left, ${w.readinessPct}% ready`,
+      );
+    }
+    lines.push("");
+  }
+
+  if (p.missedWarmLeads.length > 0) {
+    lines.push("MISSED WARM LEADS — chase these:");
+    for (const l of p.missedWarmLeads) {
+      lines.push(
+        `  ${l.firstName ?? "—"} (${l.email}) — ${l.band.replace(/_/g, " ")} ${l.score} — ${l.daysSinceCompletion}d ago${l.urgency ? ` — ${l.urgency.replace(/_/g, " ")}` : ""}`,
       );
     }
     lines.push("");

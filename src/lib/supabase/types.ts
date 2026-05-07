@@ -315,10 +315,19 @@ export type CustomerMemoryProvenance = {
 
 export type CoachingSession = {
   id: string;
-  user_id: string;
+  /** Nullable since migration 20260507000000 — non-customer bookings (warm
+   *  assessment leads who haven't purchased) are now stored too, with
+   *  invitee_email/name as the only identifying info. */
+  user_id: string | null;
   calendly_event_uri: string | null;
   calendly_invitee_uri: string | null;
   calendly_event_type_uri: string | null;
+  /** Lowercased invitee email — populated for ALL bookings (both customer
+   *  and non-customer) post-migration so the lead-status helper can
+   *  match assessment leads → bookings purely by email. */
+  invitee_email: string | null;
+  /** Display name from the Calendly invitee record. */
+  invitee_name: string | null;
   scheduled_at: string;
   status: "scheduled" | "completed" | "canceled" | "no_show";
   notes: string | null;
@@ -473,7 +482,14 @@ export type Database = {
         Row: CoachingSession;
         Insert: Omit<
           CoachingSession,
-          "id" | "created_at" | "canceled_at" | "completed_at" | "status" | "notes"
+          | "id"
+          | "created_at"
+          | "canceled_at"
+          | "completed_at"
+          | "status"
+          | "notes"
+          | "invitee_email"
+          | "invitee_name"
         > & {
           id?: string;
           created_at?: string;
@@ -481,6 +497,8 @@ export type Database = {
           completed_at?: string | null;
           status?: CoachingSession["status"];
           notes?: string | null;
+          invitee_email?: string | null;
+          invitee_name?: string | null;
         };
         Update: Partial<Omit<CoachingSession, "id">>;
         Relationships: [];

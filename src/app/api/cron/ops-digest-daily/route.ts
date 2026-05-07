@@ -6,6 +6,7 @@ import type { OpsDigestPayload } from "@/lib/ops/types";
 import { collect as collectRescueResults } from "@/lib/ops/rescue-results";
 import { collect as collectNewCustomers } from "@/lib/ops/new-customers";
 import { collect as collectAssessmentLeads } from "@/lib/ops/assessment-leads";
+import { collect as collectMissedWarmLeads } from "@/lib/ops/missed-warm-leads";
 import { collect as collectRefundWatchlist } from "@/lib/ops/refund-watchlist";
 import { collect as collectEmailHealth } from "@/lib/ops/email-health";
 import { collect as collectStripeReconciliation } from "@/lib/ops/stripe-reconciliation";
@@ -35,6 +36,7 @@ export async function GET(req: NextRequest) {
     rescueResults,
     newCustomers,
     assessmentLeads,
+    missedWarmLeads,
     refundWatchlist,
     emailHealth,
     stripeReconciliation,
@@ -43,6 +45,7 @@ export async function GET(req: NextRequest) {
     collectRescueResults(admin),
     collectNewCustomers(admin),
     collectAssessmentLeads(admin),
+    collectMissedWarmLeads(admin),
     collectRefundWatchlist(admin),
     collectEmailHealth(admin),
     collectStripeReconciliation(admin),
@@ -54,6 +57,7 @@ export async function GET(req: NextRequest) {
     rescueResults,
     newCustomers,
     assessmentLeads,
+    missedWarmLeads,
     refundWatchlist,
     emailHealth,
     stripeReconciliation,
@@ -87,6 +91,7 @@ export async function GET(req: NextRequest) {
       rescueResults: rescueResults.length,
       newCustomers: newCustomers.length,
       assessmentLeads: assessmentLeads.length,
+      missedWarmLeads: missedWarmLeads.length,
       refundWatchlist: refundWatchlist.length,
       emailsSent24h: emailHealth.sent24h,
       emailsFailed24h: emailHealth.failed24h,

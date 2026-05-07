@@ -25,6 +25,25 @@ export type AssessmentLead = {
   daysSinceCompletion: number;
 };
 
+/**
+ * Warm assessment lead (franchise_ready or nearly_there band) who completed
+ * the assessment 1-7 days ago and has NOT booked a strategy call NOR
+ * purchased anything. Surfaced in the daily ops digest as a watchlist for
+ * Jason's personal follow-up.
+ */
+export type MissedWarmLead = {
+  assessmentSessionId: string;
+  email: string;
+  firstName: string | null;
+  businessName: string | null;
+  websiteUrl: string | null;
+  band: "franchise_ready" | "nearly_there";
+  score: number;
+  urgency: string | null;
+  completedAt: string;
+  daysSinceCompletion: number;
+};
+
 export type RefundWatchItem = {
   firstName: string | null;
   email: string;
@@ -64,6 +83,7 @@ export type OpsDigestPayload = {
   rescueResults: RescueResult[];
   newCustomers: NewCustomer[];
   assessmentLeads: AssessmentLead[];
+  missedWarmLeads: MissedWarmLead[];
   refundWatchlist: RefundWatchItem[];
   emailHealth: EmailHealthSummary;
   stripeReconciliation: StripeReconciliationSummary;

@@ -69,11 +69,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.redirect(loginUrl, 303);
   }
 
+  // emailRedirectTo is the path the customer lands on AFTER /auth/confirm
+  // verifies their token_hash and writes the session cookie. Pointing this
+  // at /auth/callback (the legacy PKCE route) was the long-standing bug:
+  // the magic-link template uses {{ .TokenHash }} → /auth/confirm, so the
+  // customer hit /auth/callback?next=... with no `?code=` query param and
+  // bounced back to /portal/login?error=invalid_link. Pass `next` directly.
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
       shouldCreateUser: false,
-      emailRedirectTo: `${req.nextUrl.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      emailRedirectTo: `${req.nextUrl.origin}${next}`,
     },
   });
 

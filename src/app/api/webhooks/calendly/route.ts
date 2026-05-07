@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { normalizeEmail } from "@/lib/utils/normalize-email";
 
 export const runtime = "nodejs";
 
@@ -90,7 +91,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const inviteeEmail = body.payload?.email?.toLowerCase();
+  const inviteeEmail = normalizeEmail(body.payload?.email);
+  const inviteeName = body.payload?.name?.trim() ?? null;
   const inviteeUri = body.payload?.uri;
   const eventUri = body.payload?.scheduled_event?.uri ?? null;
   const eventTypeUri = body.payload?.scheduled_event?.event_type ?? null;
@@ -124,7 +126,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, skipped: "non-coaching event" });
   }
 
-  // ─── Look up the customer by invitee email ────────────────────────────
+  // ─── Look up the customer by invitee email (optional) ─────────────────
+  // Profile may be null — non-customer warm leads (assessment completers
+  // who haven't purchased) book strategy calls too, and we want to track
+  // those bookings so the daily ops digest can correctly mark them as
+  // "booked" and exclude them from the missed-warm-leads watchlist.
   const supabase = getSupabaseAdmin();
   const { data: profile } = await supabase
     .from("profiles")
@@ -132,29 +138,24 @@ export async function POST(req: NextRequest) {
     .eq("email", inviteeEmail)
     .maybeSingle();
 
-  if (!profile) {
-    console.warn(
-      `[calendly] ${body.event}: no profile for ${inviteeEmail} — booking made by non-customer? logging session without debit`,
-    );
-    // We could still log the session for analytics, but skip the credit
-    // debit. For safety, just return — the customer must be in our system
-    // for us to track their coaching session.
-    return NextResponse.json({ ok: true, skipped: "no matching customer" });
-  }
-
   if (body.event === "invitee.created") {
-    // Try to debit a credit. If they have none (booking made via
-    // someone giving them a free pass, or via Tier-2/3 included calls),
-    // we still log the session — just at zero credits.
-    const { data: didDebit } = await supabase.rpc("debit_coaching_credit", {
-      uid: profile.id,
-    });
+    // Try to debit a credit ONLY if there's a profile (non-customers have
+    // no credits to debit — their booking is a free strategy call).
+    let didDebit: boolean | null = null;
+    if (profile) {
+      const { data } = await supabase.rpc("debit_coaching_credit", {
+        uid: profile.id,
+      });
+      didDebit = data;
+    }
 
     const { error: insertErr } = await supabase.from("coaching_sessions").insert({
-      user_id: profile.id,
+      user_id: profile?.id ?? null,
       calendly_event_uri: eventUri,
       calendly_invitee_uri: inviteeUri,
       calendly_event_type_uri: eventTypeUri,
+      invitee_email: inviteeEmail,
+      invitee_name: inviteeName,
       scheduled_at: scheduledAt ?? new Date().toISOString(),
       status: "scheduled",
     });
@@ -165,8 +166,7 @@ export async function POST(req: NextRequest) {
       console.error(
         `[calendly] coaching_sessions insert failed: ${insertErr.message}`,
       );
-      if (didDebit) {
-        // Restore the credit because we couldn't actually log the session.
+      if (didDebit && profile) {
         await supabase.rpc("add_coaching_credits", { uid: profile.id, delta: 1 });
       }
     } else if (insertErr?.code === "23505") {
@@ -174,12 +174,13 @@ export async function POST(req: NextRequest) {
       console.log(
         `[calendly] duplicate invitee.created for ${inviteeUri} — restoring credit`,
       );
-      if (didDebit) {
+      if (didDebit && profile) {
         await supabase.rpc("add_coaching_credits", { uid: profile.id, delta: 1 });
       }
     } else {
+      const who = profile ? `user ${profile.id}` : `non-customer lead ${inviteeEmail}`;
       console.log(
-        `[calendly] booked session for user ${profile.id} (debit=${didDebit ? "yes" : "no-balance"})`,
+        `[calendly] booked session for ${who} (debit=${didDebit === null ? "n/a" : didDebit ? "yes" : "no-balance"})`,
       );
     }
     return NextResponse.json({ ok: true });
@@ -189,7 +190,7 @@ export async function POST(req: NextRequest) {
     // Find the existing session and mark canceled. Restore the credit.
     const { data: existing } = await supabase
       .from("coaching_sessions")
-      .select("id, status")
+      .select("id, status, user_id")
       .eq("calendly_invitee_uri", inviteeUri)
       .maybeSingle();
 
@@ -211,14 +212,18 @@ export async function POST(req: NextRequest) {
       })
       .eq("id", existing.id);
 
-    // Restore the credit (only if it was a 'scheduled' session — completed
-    // sessions can't be "canceled" in any meaningful sense, and the credit
-    // is already spent).
-    if (existing.status === "scheduled") {
-      await supabase.rpc("add_coaching_credits", { uid: profile.id, delta: 1 });
+    // Restore the credit (only if it was a 'scheduled' session AND the
+    // session belonged to a customer — non-customer bookings never debited
+    // a credit so there's nothing to restore).
+    if (existing.status === "scheduled" && existing.user_id) {
+      await supabase.rpc("add_coaching_credits", {
+        uid: existing.user_id,
+        delta: 1,
+      });
     }
 
-    console.log(`[calendly] canceled session ${existing.id} for user ${profile.id}`);
+    const who = existing.user_id ? `user ${existing.user_id}` : `lead ${inviteeEmail}`;
+    console.log(`[calendly] canceled session ${existing.id} for ${who}`);
     return NextResponse.json({ ok: true });
   }
 
