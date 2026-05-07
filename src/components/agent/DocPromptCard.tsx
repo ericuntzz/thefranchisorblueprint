@@ -134,6 +134,7 @@ export function DocPromptCard({ slug, prompt, compact }: Props) {
               <input
                 type="file"
                 className="sr-only"
+                accept=".pdf,.docx,.doc,.txt,.md,.markdown,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/*,image/*"
                 disabled={uploading}
                 onChange={(e) => {
                   const f = e.target.files?.[0];
@@ -216,6 +217,7 @@ export function DocPromptCard({ slug, prompt, compact }: Props) {
         <input
           type="file"
           className="sr-only"
+          accept=".pdf,.docx,.doc,.txt,.md,.markdown,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/*,image/*"
           disabled={uploading}
           onChange={(e) => {
             const f = e.target.files?.[0];

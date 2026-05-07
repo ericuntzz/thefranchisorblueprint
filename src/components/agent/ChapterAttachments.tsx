@@ -304,6 +304,7 @@ function AttachmentComposer({
           <input
             type="file"
             className="sr-only"
+            accept=".pdf,.docx,.doc,.txt,.md,.markdown,.csv,.json,.xml,.yaml,.yml,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/*,image/*"
             disabled={busy}
             onChange={(e) => {
               const f = e.target.files?.[0];

@@ -633,7 +633,7 @@ function UploadStepCard({
           type="file"
           className="sr-only"
           multiple
-          accept=".pdf,.doc,.docx,.txt,.md,.markdown,image/*"
+          accept=".pdf,.docx,.doc,.txt,.md,.markdown,.csv,.json,.xml,.yaml,.yml,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/*,image/*"
           disabled={uploading}
           onChange={(e) => void uploadMany(e.target.files)}
         />
