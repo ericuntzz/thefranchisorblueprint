@@ -85,9 +85,11 @@ export default async function PortalLoginPage({ searchParams }: PageProps) {
                         ? "That sign-in link has expired or already been used. Please request a new one below."
                         : error === "invalid_email"
                           ? "Please enter a valid email address."
-                          : error === "send_failed"
-                            ? "We couldn't send the sign-in email just now. Please try again in a moment."
-                            : "Something went wrong. Please try again."}
+                          : error === "rate_limited"
+                            ? "Too many sign-in requests in a short window. Wait about 30 minutes and try again — the magic link emails are throttled to prevent abuse."
+                            : error === "send_failed"
+                              ? "We couldn't send the sign-in email just now. Please try again in a moment."
+                              : "Something went wrong. Please try again."}
                     </div>
                   ) : null}
 

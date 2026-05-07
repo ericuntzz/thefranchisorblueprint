@@ -79,7 +79,17 @@ export async function POST(req: NextRequest) {
 
   if (error) {
     console.error(`[portal] signInWithOtp failed for ${email}: ${error.message}`);
-    loginUrl.searchParams.set("error", "send_failed");
+    // Surface rate-limit specifically — customers hitting Send
+    // repeatedly because the magic link didn't arrive yet would
+    // otherwise get a generic "couldn't send" message and try
+    // harder, making the rate limit worse.
+    const lower = (error.message ?? "").toLowerCase();
+    if (lower.includes("rate limit") || (error as { status?: number }).status === 429) {
+      loginUrl.searchParams.set("error", "rate_limited");
+    } else {
+      loginUrl.searchParams.set("error", "send_failed");
+    }
+    loginUrl.searchParams.set("email", email);
     return NextResponse.redirect(loginUrl, 303);
   }
 
