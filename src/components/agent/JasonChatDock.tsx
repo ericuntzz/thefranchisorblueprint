@@ -472,6 +472,14 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
   // as the customer navigates without unmounting the dock.
   const pageContext = pageContextProp ?? pathname ?? "";
   const [open, setOpen] = useState(false);
+  // Broadcast open/close so the portal sidebar can auto-collapse
+  // when the chat dock opens (and reclaim space when it closes).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.dispatchEvent(
+      new CustomEvent("tfb-jason-dock-state", { detail: { open } }),
+    );
+  }, [open]);
   const [transcript, setTranscript] = useState<TranscriptItem[]>([]);
   const [draft, setDraft] = useState("");
   const [streaming, setStreaming] = useState(false);

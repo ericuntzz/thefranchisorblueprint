@@ -1,9 +1,26 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { getSupabaseServer } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PortalNav } from "@/components/PortalNav";
+import { PortalSidebar } from "@/components/PortalSidebar";
 import { JasonChatDock } from "@/components/agent/JasonChatDock";
-import type { Profile, Purchase, Tier } from "@/lib/supabase/types";
+import {
+  computeChapterReadiness,
+  indexMemoryRows,
+  overallReadinessPct,
+} from "@/lib/memory/readiness";
+import {
+  computeMilestoneSummary,
+  indexMilestones,
+  readMilestones,
+} from "@/lib/milestones/state";
+import type {
+  CustomerMemory as CM,
+  Profile,
+  Purchase,
+  Tier,
+} from "@/lib/supabase/types";
 
 /**
  * The customer portal is gated content meant only for paying customers.
@@ -34,9 +51,20 @@ export default async function PortalLayout({ children }: { children: ReactNode }
     return <>{children}</>;
   }
 
-  const [{ data: profileData }, { data: purchasesData }] = await Promise.all([
+  const admin = getSupabaseAdmin();
+  const [
+    { data: profileData },
+    { data: purchasesData },
+    { data: memoryRowsRaw },
+    milestoneRows,
+  ] = await Promise.all([
     supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
     supabase.from("purchases").select("tier,status").eq("user_id", user.id).eq("status", "paid"),
+    admin
+      .from("customer_memory")
+      .select("file_slug, content_md, fields, confidence, attachments")
+      .eq("user_id", user.id),
+    readMilestones(user.id),
   ]);
 
   const profile = profileData as Pick<Profile, "full_name"> | null;
@@ -45,18 +73,55 @@ export default async function PortalLayout({ children }: { children: ReactNode }
     ? Math.max(...purchases.map((p) => p.tier))
     : 1) as Tier;
 
+  // Blueprint progress = overall readiness across the 16 chapters.
+  // Drives the ring next to "Continue Building".
+  const memoryIndexed = indexMemoryRows(
+    (memoryRowsRaw ?? []) as Array<
+      Pick<CM, "file_slug" | "content_md" | "fields" | "confidence" | "attachments">
+    >,
+  );
+  const chapterReadiness = computeChapterReadiness(memoryIndexed);
+  const blueprintPct = overallReadinessPct(chapterReadiness);
+
+  // Launch checklist progress = % of regulatory milestones complete.
+  // These are external-facing (regulators, attorneys, audit firms),
+  // distinct from the chapter-fill progress above. Drives the ring
+  // next to "Launch Checklist".
+  const milestoneSummary = computeMilestoneSummary(indexMilestones(milestoneRows));
+  const checklistPct = milestoneSummary.percentComplete;
+
   // First name from full_name, used for Jason's greeting.
   const firstName =
     profile?.full_name?.trim().split(/\s+/)[0] ?? null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-grey-1/40">
-      <PortalNav
+    <div className="min-h-screen bg-grey-1/40">
+      {/* Desktop: persistent left sidebar (md+). Mobile: keep the top
+          nav with hamburger. The sidebar component is hidden below md. */}
+      <PortalSidebar
         displayName={profile?.full_name ?? null}
         email={user.email ?? null}
         tier={tier}
+        blueprintPct={blueprintPct}
+        checklistPct={checklistPct}
       />
-      <main className="flex-1">{children}</main>
+      {/* Top nav stays for mobile; on desktop it'd be redundant with
+          the sidebar, so hide it at md+. */}
+      <div className="md:hidden">
+        <PortalNav
+          displayName={profile?.full_name ?? null}
+          email={user.email ?? null}
+          tier={tier}
+        />
+      </div>
+      {/* Main content offset by the sidebar width on desktop. The
+          sidebar exposes its current width via the --portal-sidebar-w
+          CSS variable (240px expanded, 64px collapsed); we read it
+          here so the margin transitions in lockstep with the
+          collapse animation. */}
+      <main className="ml-0 md:[margin-left:var(--portal-sidebar-w,240px)] transition-[margin-left] duration-200">
+        {children}
+      </main>
       {/* Mounted once at the layout level so chat state (transcript,
           open/closed, draft, in-flight stream) survives client-side
           navigation between portal pages. The dock derives its
