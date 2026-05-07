@@ -93,7 +93,7 @@ export default async function GuidedNextPage() {
 
   return (
     <>
-      <main className="min-h-[calc(100vh-200px)] bg-cream">
+      <main className="min-h-[calc(100vh-200px)] bg-cream-soft">
         {/* Top nav lives INSIDE the queue client (above the progress
             bar) so the buttons sit in the question flow rather than
             a separate header band. Per Eric's feedback. */}

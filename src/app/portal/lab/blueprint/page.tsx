@@ -119,7 +119,7 @@ export default async function BlueprintLabPage() {
 
   return (
     <>
-      <main className="min-h-[calc(100vh-200px)] bg-cream">
+      <main className="min-h-[calc(100vh-200px)] bg-cream-soft">
         {/* Hero — sets the mental model: this is the assembled
             document, not a form. Per-chapter editing happens from
             the dashboard. */}

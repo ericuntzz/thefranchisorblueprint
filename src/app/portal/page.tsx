@@ -247,7 +247,7 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
           the welcome hero above). The /portal/lab/blueprint canvas
           remains available as expert mode via the Command Center's
           secondary "View full Blueprint" link. */}
-      <section className="bg-cream py-6 md:py-10 border-b border-navy/5">
+      <section className="bg-cream-soft py-6 md:py-10 border-b border-navy/5">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 space-y-6">
           <CommandCenter
             firstName={firstName}
@@ -622,7 +622,7 @@ function MidwayUpgradeHero({
     : `You've got ${coachingCredits} coaching ${coachingCredits === 1 ? "call" : "calls"} included. Most Navigator customers spend them on the back half of the Blueprint — book your first session.`;
 
   return (
-    <section className="py-10 md:py-14 bg-cream border-b border-gold/30">
+    <section className="py-10 md:py-14 bg-cream-soft border-b border-gold/30">
       <div className="max-w-[1200px] mx-auto px-6 md:px-8">
         <div className="bg-white rounded-2xl border-2 border-gold/30 shadow-[0_8px_28px_rgba(212,162,76,0.12)] p-7 md:p-9 flex flex-wrap items-start gap-5">
           <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-navy to-navy-light flex items-center justify-center text-gold">

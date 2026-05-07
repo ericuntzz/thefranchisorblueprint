@@ -202,9 +202,9 @@ export function BlueprintUpsellBuyBox({
 
   // ─── Render branches ────────────────────────────────────────────────
 
-  // Sales-call mode (default until live Stripe keys are wired). Replaces
-  // the entire buy flow with a founding-member kickoff CTA so we never
-  // expose test-mode checkout — which would either confuse drive-by
+  // Sales-call mode (default until live Stripe keys are wired). Routes
+  // visitors to a quick onboarding call with the team rather than
+  // through test-mode checkout — which would either confuse drive-by
   // visitors with "TEST MODE" labels or get exploited via test card 4242.
   if (!STRIPE_LIVE) {
     return (
@@ -216,13 +216,13 @@ export function BlueprintUpsellBuyBox({
             </div>
             <div className="min-w-0">
               <div className="text-navy font-extrabold text-base mb-1">
-                Founding-member onboarding
+                Get started with a quick call
               </div>
               <p className="text-grey-3 text-sm leading-relaxed">
-                We&apos;re onboarding our first cohort of Blueprint customers
-                personally. Schedule a 15-minute call — we&apos;ll confirm fit,
-                walk you through the system, and lock in your founding-member
-                pricing on this package.
+                Every Blueprint engagement starts with a 15-minute
+                onboarding call. We confirm The Blueprint is the right
+                tier for your business, walk you through the system, and
+                send you a custom invoice to get started.
               </p>
             </div>
           </div>
@@ -246,18 +246,18 @@ export function BlueprintUpsellBuyBox({
                   item_category: "Tier 1",
                 },
               ],
-              cta_location: "blueprint_buy_box_founding_member",
+              cta_location: "blueprint_buy_box_sales_call",
             });
           }}
           className="flex items-center justify-center gap-2 w-full text-center bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-6 py-4 rounded-full hover:bg-gold-dark transition-colors"
         >
-          Book your kickoff call
+          Book your onboarding call
           <ArrowRight size={15} />
         </Link>
 
         <p className="text-center text-xs text-grey-4 leading-relaxed pt-1">
-          Self-serve checkout opens shortly — book now to lock in
-          founding-member pricing before then.
+          Self-serve checkout coming soon. Until then, every customer
+          starts with a quick call.
         </p>
       </div>
     );

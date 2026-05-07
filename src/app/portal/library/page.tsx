@@ -58,7 +58,7 @@ export default async function LibraryPage() {
   const locked = entriesLockedAboveTier(tier);
 
   return (
-    <main className="bg-cream min-h-screen pb-24">
+    <main className="bg-cream-soft min-h-screen pb-24">
       <div className="bg-white border-b border-navy/5">
         <div className="max-w-[1100px] mx-auto px-6 md:px-8 py-6">
           <Link

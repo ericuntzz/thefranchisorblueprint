@@ -57,7 +57,7 @@ export default async function IntakeLabPage() {
       {/* No SiteNav — this is a focused single-task page; SiteNav would
           dilute attention from the one CTA. We re-enable footer for the
           legal & contact links. */}
-      <main className="min-h-[calc(100vh-200px)] bg-cream">
+      <main className="min-h-[calc(100vh-200px)] bg-cream-soft">
         <IntakeClient firstName={firstName} initialWebsiteUrl={initialUrl} />
       </main>
       <SiteFooter />
