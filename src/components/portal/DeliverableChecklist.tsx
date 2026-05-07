@@ -33,16 +33,22 @@ type Props = {
 };
 
 const STATE_LABEL = {
-  green: "Verified",
-  amber: "Inferred",
-  red: "Needs input",
+  green: "Complete",
+  // Both amber and red collapse to "In progress" — the customer
+  // doesn't need a third color shouting at them. The underlying
+  // state is preserved on each row's color tint, but the legend
+  // only surfaces three categories.
+  amber: "In progress",
+  red: "In progress",
   gray: "Not started",
 } as const;
 
 const STATE_DOT = {
   green: "bg-emerald-500",
   amber: "bg-amber-400",
-  red: "bg-red-500",
+  // Red folds into amber visually — same dot, same row tint, same
+  // "in progress" label. Underlying state preserved for analytics.
+  red: "bg-amber-400",
   gray: "bg-grey-3/40",
 } as const;
 
@@ -51,7 +57,7 @@ const STATE_ROW = {
     "bg-emerald-50 border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400",
   amber:
     "bg-amber-50 border-amber-300 hover:bg-amber-100 hover:border-amber-400",
-  red: "bg-red-50 border-red-300 hover:bg-red-100 hover:border-red-400",
+  red: "bg-amber-50 border-amber-300 hover:bg-amber-100 hover:border-amber-400",
   gray: "bg-white border-card-border hover:bg-cream-soft hover:border-navy/25",
 } as const;
 
@@ -74,9 +80,12 @@ export function DeliverableChecklist({ readiness }: Props) {
 }
 
 function Legend() {
+  // Three categories total — green/amber/gray. Red folds into amber
+  // visually so the customer reads one "in progress" bucket instead
+  // of two competing yellows-and-reds.
   return (
     <div className="hidden md:flex items-center gap-3 text-xs uppercase tracking-[0.1em] font-bold text-grey-3">
-      {(["green", "amber", "red", "gray"] as const).map((s) => (
+      {(["green", "amber", "gray"] as const).map((s) => (
         <span key={s} className="inline-flex items-center gap-1">
           <span className={`w-1.5 h-1.5 rounded-full ${STATE_DOT[s]}`} />
           {STATE_LABEL[s]}

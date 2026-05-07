@@ -258,8 +258,10 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
           <DeliverableChecklist readiness={chapterReadiness} />
           <ActivityFeed events={recentActivity} />
           <ExportsSection readiness={exportReadiness} />
-          <RegulatoryMilestones states={milestoneStatesObj} summary={milestoneSummary} />
-          <WhatIfCoach />
+          {/* RegulatoryMilestones moved to /portal/checklist — that's the
+              "what has to happen before launch" surface, distinct from
+              the per-chapter readiness grid above. */}
+          {/* WhatIfCoach moved to /portal/coaching, above the booking CTAs. */}
         </div>
       </section>
 
@@ -304,42 +306,10 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
       {tier >= 2 && <CoachingPanel tier={tier} />}
       {tier >= 3 && <ProjectPanel />}
 
-      {/* ===== Onboarding + support ===== */}
-      <section className="pt-12 md:pt-16 pb-16 md:pb-24">
-        <div className="max-w-[1200px] mx-auto px-6 md:px-8">
-          <div className="grid md:grid-cols-2 gap-5">
-            <div className="bg-white rounded-2xl border border-card-border p-6 md:p-7 flex gap-4">
-              <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-navy to-navy-light flex items-center justify-center text-gold">
-                <Calendar size={18} />
-              </div>
-              <div>
-                <h3 className="text-navy font-bold text-base mb-1">Onboarding call</h3>
-                <p className="text-grey-3 text-sm leading-relaxed">
-                  Our team will reach out within one business day to schedule your 60-minute white-glove kickoff call with Jason.
-                </p>
-              </div>
-            </div>
-            <div className="bg-white rounded-2xl border border-card-border p-6 md:p-7 flex gap-4">
-              <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-navy to-navy-light flex items-center justify-center text-gold">
-                <FileText size={18} />
-              </div>
-              <div>
-                <h3 className="text-navy font-bold text-base mb-1">Need a hand?</h3>
-                <p className="text-grey-3 text-sm leading-relaxed">
-                  Email{" "}
-                  <a
-                    href="mailto:team@thefranchisorblueprint.com"
-                    className="text-navy font-semibold underline"
-                  >
-                    team@thefranchisorblueprint.com
-                  </a>{" "}
-                  any time during your 30-day support window.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Onboarding call + Need a hand cards removed — Need a hand
+          is now the bottom entry of the sidebar with copy-to-clipboard,
+          and the onboarding-call promise is delivered at purchase
+          time, not as an in-app card. */}
 
       {/* Floating PortalResumeBanner removed: the Command Center
           high on the page already surfaces "what's next" with live

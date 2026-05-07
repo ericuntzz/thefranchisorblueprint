@@ -77,23 +77,10 @@ export function CommandCenter({
         />
       )}
 
-      {/* Secondary actions — readable on navy. */}
-      <div className="mt-5 pt-5 border-t border-cream/10 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
-        <Link
-          href="/portal/lab/blueprint"
-          className="inline-flex items-center gap-1.5 text-cream/70 hover:text-gold font-semibold transition-colors py-1.5"
-        >
-          <ListChecks size={12} />
-          View full Blueprint
-        </Link>
-        <Link
-          href="/portal/lab/intake"
-          className="inline-flex items-center gap-1.5 text-cream/70 hover:text-gold font-semibold transition-colors py-1.5"
-        >
-          <Globe size={12} />
-          Pre-fill from your website
-        </Link>
-      </div>
+      {/* Secondary "View full Blueprint" / "Pre-fill from your website"
+          links removed — both destinations are reachable from the
+          left sidebar, and stripping them lets the next-question
+          panel be the unambiguous primary action. */}
     </section>
   );
 }

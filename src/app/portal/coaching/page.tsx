@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { ArrowLeft, ArrowRight, MessageSquare, Layers, Check } from "lucide-react";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { PRODUCTS } from "@/lib/products";
+import { WhatIfCoach } from "@/components/portal/WhatIfCoach";
 import type { Profile, Purchase } from "@/lib/supabase/types";
 
 export const metadata: Metadata = {
@@ -37,13 +38,6 @@ export default async function CoachingPage() {
     <>
       <section className="bg-white border-b border-navy/5">
         <div className="max-w-[1200px] mx-auto px-6 md:px-8 py-10 md:py-14">
-          <Link
-            href="/portal"
-            className="inline-flex items-center gap-1.5 text-grey-3 hover:text-navy text-sm font-semibold mb-6 transition-colors"
-          >
-            <ArrowLeft size={14} />
-            Back to portal
-          </Link>
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div>
               <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase mb-3 border-b-2 border-gold pb-1">
@@ -63,6 +57,15 @@ export default async function CoachingPage() {
               <div className="text-navy font-bold text-2xl tabular-nums">{credits}</div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Jason's Playbook — moved here from the dashboard. Browseable
+          franchise edge cases, sits above the booking CTAs because
+          it informs whether a customer needs to book a call. */}
+      <section className="py-10 md:py-14">
+        <div className="max-w-[1200px] mx-auto px-6 md:px-8">
+          <WhatIfCoach />
         </div>
       </section>
 
