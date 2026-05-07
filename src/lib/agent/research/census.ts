@@ -53,7 +53,9 @@ export async function zipDemographics(zip: string): Promise<DemographicsResult> 
     `&key=${apiKey}`;
   let res: Response;
   try {
-    res = await fetch(url);
+    // `redirect: "manual"` so Census's 302-to-invalid-key HTML page
+    // doesn't follow into nonsense — we want to fail clean here.
+    res = await fetch(url, { redirect: "manual" });
   } catch (err) {
     return {
       ok: false,
@@ -61,11 +63,31 @@ export async function zipDemographics(zip: string): Promise<DemographicsResult> 
       message: err instanceof Error ? err.message : String(err),
     };
   }
+  // Census redirects to invalid_key.html (302) when the key is bad —
+  // detect the dedicated header it sends rather than the generic
+  // status code.
+  if (res.headers.get("x-datawebapi-keyerror") === "1") {
+    return {
+      ok: false,
+      reason: "api_error",
+      message:
+        "Census key invalid. Activate via the email Census sent on signup, or re-request a key.",
+    };
+  }
   if (!res.ok) {
     return { ok: false, reason: "api_error", message: `HTTP ${res.status}` };
   }
-  // Census returns a 2-D array; first row is headers, second is values.
-  const json = (await res.json()) as Array<Array<string>>;
+  // Defensive: if Census returns HTML for any other reason, surface
+  // a typed error rather than crashing on JSON.parse.
+  const text = await res.text();
+  if (!text.trim().startsWith("[")) {
+    return {
+      ok: false,
+      reason: "api_error",
+      message: `Unexpected response (not JSON): ${text.slice(0, 120)}`,
+    };
+  }
+  const json = JSON.parse(text) as Array<Array<string>>;
   if (!Array.isArray(json) || json.length < 2) {
     return { ok: false, reason: "no_results" };
   }
