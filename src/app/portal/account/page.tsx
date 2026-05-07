@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   CreditCard,
   ExternalLink,
+  LogOut,
   Mail,
   RefreshCw,
   ShieldCheck,
@@ -127,13 +128,6 @@ export default async function AccountPage({ searchParams }: PageProps) {
       {/* ===== Hero ===== */}
       <section className="bg-white border-b border-navy/5">
         <div className="max-w-[1100px] mx-auto px-6 md:px-8 py-10 md:py-14">
-          <Link
-            href="/portal"
-            className="inline-flex items-center gap-1.5 text-grey-3 hover:text-navy text-sm font-semibold mb-6 transition-colors w-fit"
-          >
-            <ArrowLeft size={14} />
-            Back to portal
-          </Link>
           <div>
             <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase mb-3 border-b-2 border-gold pb-1">
               Account
@@ -416,6 +410,26 @@ export default async function AccountPage({ searchParams }: PageProps) {
                 Your account is protected by single-use magic-link authentication —
                 no passwords to remember or compromise.
               </span>
+            </div>
+          </Card>
+
+          {/* Sign out — relocated here from the sidebar so the rail
+              stays focused on navigation rather than session controls. */}
+          <Card title="Sign out" icon={LogOut}>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <p className="text-grey-3 text-sm max-w-[480px]">
+                Ends your session here. You can sign back in any time
+                with a fresh magic link to your email.
+              </p>
+              <form action="/api/portal/logout" method="POST">
+                <button
+                  type="submit"
+                  className="inline-flex items-center gap-2 bg-white text-navy border-2 border-navy/30 hover:border-navy hover:bg-navy hover:text-cream font-bold text-xs uppercase tracking-[0.1em] px-5 py-3 rounded-full transition-colors"
+                >
+                  <LogOut size={14} />
+                  Sign out
+                </button>
+              </form>
             </div>
           </Card>
         </div>

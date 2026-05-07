@@ -60,13 +60,6 @@ export default async function SchedulePage() {
     <>
       <section className="bg-white border-b border-navy/5">
         <div className="max-w-[1100px] mx-auto px-6 md:px-8 py-10 md:py-14">
-          <Link
-            href="/portal"
-            className="inline-flex items-center gap-1.5 text-grey-3 hover:text-navy text-sm font-semibold mb-6 transition-colors w-fit"
-          >
-            <ArrowLeft size={14} />
-            Back to portal
-          </Link>
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div>
               <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase mb-3 border-b-2 border-gold pb-1">
@@ -170,12 +163,6 @@ function SetupPendingView({ firstName, credits }: { firstName: string | null; cr
             </a>{" "}
             and we&apos;ll book your first session manually.
           </p>
-          <Link
-            href="/portal"
-            className="inline-flex items-center gap-2 bg-transparent text-navy border-2 border-navy font-bold text-sm uppercase tracking-[0.1em] px-7 py-3.5 rounded-full hover:bg-navy hover:text-white transition-colors"
-          >
-            Back to portal
-          </Link>
         </div>
       </div>
     </section>

@@ -4,36 +4,23 @@
  * Chapter toolbar — renders next to the page-level back arrow at the
  * top of /portal/chapter/[slug].
  *
- * Three layers of UI:
+ * MOCK (Pass E preview): the only thing this component now surfaces is
+ * status pills (open redlines, Jason approved). Talk to Jason was
+ * removed — voice intake is already available inside the Jason chat
+ * dock at the bottom-right. Version history was removed — it lived in
+ * an overflow menu that essentially nobody used. View in Blueprint
+ * was removed — the new left sidebar's "Blueprint" entry is the
+ * primary way to reach the assembled view.
  *
- *   1. Status pills (redlines, approved-by-Jason). Inline, always
- *      visible when relevant — these are notifications the customer
- *      should see immediately without a click.
- *
- *   2. Voice intake button — kept inline because its UI changes with
- *      recording state (live REC indicator + stop button). Hiding
- *      that behind a menu would be confusing.
- *
- *   3. Action overflow menu — three-dot button opening a small
- *      popover with the secondary nav: Version history, View in
- *      Blueprint. Hides cleanly until the customer goes looking
- *      for them, replacing the row of standalone pills that used
- *      to crowd the top of the page.
+ * Result: top of the chapter page goes from 4 ghost-pill buttons +
+ * an overflow menu down to a back arrow + the chapter title. Status
+ * pills appear inline if and only if there's something to surface.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import {
-  BookOpen,
-  History,
-  MessageSquare,
-  MoreHorizontal,
-  Stamp,
-} from "lucide-react";
+import { MessageSquare, Stamp } from "lucide-react";
 import { CustomerRedlinesPanel } from "@/components/agent/CustomerRedlinesPanel";
-import { VoiceIntakeButton } from "@/components/agent/VoiceIntakeButton";
-import { SnapshotHistoryButton } from "@/components/agent/SnapshotHistoryButton";
 import type { MemoryFileSlug } from "@/lib/memory/files";
 
 type Props = {
@@ -49,9 +36,6 @@ export function ChapterToolbar({ slug }: Props) {
     total: number;
   } | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [historyOpen, setHistoryOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement | null>(null);
 
   const refreshRedlines = useCallback(async () => {
     try {
@@ -87,28 +71,17 @@ export function ChapterToolbar({ slug }: Props) {
     };
   }, [refreshRedlines]);
 
-  // Close the overflow menu on outside click + Escape.
-  useEffect(() => {
-    if (!menuOpen) return;
-    function onClick(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setMenuOpen(false);
-    }
-    document.addEventListener("mousedown", onClick);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onClick);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [menuOpen]);
+  // If nothing is worth surfacing, render nothing — let the back arrow
+  // and title own the row.
+  const hasAnythingToShow =
+    redlineSummary !== null &&
+    (redlineSummary.approved ||
+      redlineSummary.open > 0 ||
+      redlineSummary.total > 0);
+  if (!hasAnythingToShow) return null;
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      {/* Status pills — always visible when present. */}
       {redlineSummary?.approved && (
         <button
           type="button"
@@ -151,62 +124,6 @@ export function ChapterToolbar({ slug }: Props) {
             Review notes
           </button>
         )}
-
-      {/* Voice intake — stays inline; its UI shifts with recording
-          state and needs to be visible while live. */}
-      <VoiceIntakeButton slug={slug} onSuccess={() => router.refresh()} />
-
-      {/* Overflow menu — passive secondary nav. */}
-      <div ref={menuRef} className="relative">
-        <button
-          type="button"
-          onClick={() => setMenuOpen((v) => !v)}
-          aria-haspopup="menu"
-          aria-expanded={menuOpen}
-          aria-label="More actions"
-          className="inline-flex items-center justify-center w-9 h-9 rounded-full text-navy bg-white hover:bg-cream-soft border-2 border-navy/30 hover:border-navy transition-colors"
-        >
-          <MoreHorizontal size={16} />
-        </button>
-        {menuOpen && (
-          <div
-            role="menu"
-            className="absolute right-0 top-full mt-2 w-[220px] rounded-xl border border-card-border bg-white shadow-[0_16px_36px_rgba(30,58,95,0.18)] overflow-hidden z-20"
-          >
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                setMenuOpen(false);
-                setHistoryOpen(true);
-              }}
-              className="w-full flex items-center gap-2.5 px-4 py-3 text-left text-sm text-navy font-semibold hover:bg-cream-soft transition-colors"
-            >
-              <History size={14} className="text-gold-warm" />
-              Version history
-            </button>
-            <Link
-              role="menuitem"
-              href={`/portal/lab/blueprint#chapter-${slug}`}
-              onClick={() => setMenuOpen(false)}
-              className="w-full flex items-center gap-2.5 px-4 py-3 text-left text-sm text-navy font-semibold hover:bg-cream-soft border-t border-card-border transition-colors"
-            >
-              <BookOpen size={14} className="text-gold-warm" />
-              View in Blueprint
-            </Link>
-          </div>
-        )}
-      </div>
-
-      {/* Snapshot history modal is opened from the overflow menu —
-          render the component invisibly with a controlled `open` prop. */}
-      <SnapshotHistoryButton
-        slug={slug}
-        onRolledBack={() => router.refresh()}
-        externalOpen={historyOpen}
-        onExternalOpenChange={setHistoryOpen}
-        hideTrigger
-      />
 
       <CustomerRedlinesPanel
         slug={slug}

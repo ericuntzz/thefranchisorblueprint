@@ -17,6 +17,7 @@ import Link from "next/link";
 import {
   AlertCircle,
   ArrowRight,
+  Check,
   ChevronRight,
   Clock,
   Globe,
@@ -261,8 +262,22 @@ export function ChapterCard({
               {filledFieldCount.filled} of {filledFieldCount.total} filled
             </div>
           )}
-          <h2 className="text-navy font-extrabold text-xl md:text-2xl leading-tight break-words">
-            {title}
+          <h2 className="text-navy font-extrabold text-xl md:text-2xl leading-tight break-words flex items-center gap-2">
+            <span>{title}</span>
+            {/* Derived completion checkmark — every required field is
+                filled. Replaces the manual "Approve as verified" ritual
+                with a state the system can compute on its own. */}
+            {schema &&
+              filledFieldCount.total > 0 &&
+              filledFieldCount.filled === filledFieldCount.total && (
+                <span
+                  className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-600 text-white flex-shrink-0"
+                  title="All required fields filled"
+                  aria-label="All required fields filled"
+                >
+                  <Check size={14} strokeWidth={3} />
+                </span>
+              )}
           </h2>
           {schema && editing && (
             <p className="text-grey-3 text-sm mt-2 max-w-[640px]">
@@ -485,33 +500,12 @@ export function ChapterCard({
               >
                 {drafting ? "Redrafting…" : "Redraft with Jason"}
               </button>
-              {/* Approve / re-open. Visible only on populated chapters
-                  (the empty state has its own CTAs). When already
-                  verified, the button flips to "Re-open for edits"
-                  which sets confidence back to "draft" so the
-                  customer can iterate. */}
-              {confidence === "verified" ? (
-                <button
-                  type="button"
-                  onClick={() => void flipConfidence("draft")}
-                  disabled={approving}
-                  className="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-900 font-semibold disabled:opacity-50 py-1.5"
-                  title="Re-open for edits"
-                >
-                  <ShieldCheck size={11} />
-                  {approving ? "…" : "Verified · re-open"}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => void flipConfidence("verified")}
-                  disabled={approving}
-                  className="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-900 font-semibold disabled:opacity-50 py-1.5"
-                >
-                  <ShieldCheck size={11} />
-                  {approving ? "Approving…" : "Approve as verified"}
-                </button>
-              )}
+              {/* MOCK: "Approve as verified" / "Verified · re-open" buttons
+                  removed. Asking the user to verify their own draft is a
+                  category mismatch — completion is now derived from the
+                  field-fill state and surfaced as a checkmark next to the
+                  chapter title. Jason's separate "approved" stamp still
+                  appears as a status pill in the chapter toolbar. */}
             </div>
           </footer>
           {showProvenance && (

@@ -26,9 +26,9 @@ import Link from "next/link";
 import {
   ArrowLeft,
   ArrowRight,
+  Check,
   ChevronDown,
   ChevronUp,
-  ShieldCheck,
   Sparkles,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -202,6 +202,28 @@ export function FocusedChapterClient(props: Props) {
     }
   }
 
+  // Derived completion: every required field is filled. Surfaced as
+  // a small green checkmark next to the chapter title — replaces the
+  // manual "Approve as verified" button.
+  const completion = (() => {
+    if (!schema) return { filled: 0, total: 0 };
+    let filled = 0;
+    let total = 0;
+    for (const fd of schema.fields) {
+      if (fd.advanced) continue;
+      // Skip computed fields — server doesn't track them as user input.
+      total += 1;
+      const v = fields[fd.name];
+      if (v == null) continue;
+      if (typeof v === "string" && v.trim() === "") continue;
+      if (Array.isArray(v) && v.length === 0) continue;
+      filled += 1;
+    }
+    return { filled, total };
+  })();
+  const isComplete =
+    completion.total > 0 && completion.filled === completion.total;
+
   // Strip prose for the read-only preview — the prose ITSELF is best
   // edited in the Blueprint canvas where section-level editing +
   // locked-span machinery live. Here it's a "this is what we have so
@@ -219,8 +241,17 @@ export function FocusedChapterClient(props: Props) {
       {/* Hero */}
       <header>
         <div className="min-w-0">
-          <h1 className="text-navy font-extrabold text-2xl md:text-4xl leading-tight mb-2 break-words">
-            {title}
+          <h1 className="text-navy font-extrabold text-2xl md:text-4xl leading-tight mb-2 break-words flex items-center gap-3 flex-wrap">
+            <span>{title}</span>
+            {isComplete && (
+              <span
+                className="inline-flex items-center justify-center w-7 h-7 md:w-8 md:h-8 rounded-full bg-emerald-600 text-white flex-shrink-0"
+                title="All required fields filled"
+                aria-label="All required fields filled"
+              >
+                <Check size={16} strokeWidth={3} />
+              </span>
+            )}
           </h1>
           {schemaDescription && (
             <p className="text-grey-3 text-[17px] leading-relaxed max-w-[640px] mb-3">
@@ -381,27 +412,9 @@ export function FocusedChapterClient(props: Props) {
                 ? "Redraft with Jason"
                 : "Draft with Jason"}
           </button>
-          {confidence === "verified" ? (
-            <button
-              type="button"
-              onClick={() => void flipConfidence("draft")}
-              disabled={approving}
-              className="inline-flex items-center gap-2 bg-emerald-600 text-cream hover:bg-emerald-700 font-bold text-[11px] uppercase tracking-[0.12em] px-4 py-2 rounded-full transition-colors disabled:opacity-50"
-            >
-              <ShieldCheck size={12} />
-              {approving ? "…" : "Verified · re-open"}
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => void flipConfidence("verified")}
-              disabled={approving}
-              className="inline-flex items-center gap-2 bg-emerald-600 text-cream hover:bg-emerald-700 font-bold text-[11px] uppercase tracking-[0.12em] px-4 py-2 rounded-full transition-colors disabled:opacity-50"
-            >
-              <ShieldCheck size={12} />
-              {approving ? "Approving…" : "Approve as verified"}
-            </button>
-          )}
+          {/* MOCK: "Approve as verified" / "Verified · re-open" buttons
+              removed. Completion is now derived from filled-field count
+              and rendered as a checkmark next to the chapter title. */}
         </div>
       </section>
 

@@ -235,37 +235,28 @@ export function QuestionQueueClient({
           nav strip from the page so the buttons live in the
           question flow rather than a header band that competes for
           attention with the question itself. */}
-      <div className="flex items-center justify-between gap-3">
-        <Link
-          href="/portal"
-          className="inline-flex items-center gap-1.5 text-navy bg-cream hover:bg-navy hover:text-cream border-2 border-navy/20 hover:border-navy font-bold text-[11px] uppercase tracking-[0.12em] px-4 py-2 rounded-full transition-colors"
-        >
-          <ArrowLeft size={12} />
-          Back to portal
-        </Link>
-        <Link
-          href="/portal/lab/blueprint"
-          className="inline-flex items-center gap-1.5 text-navy bg-cream hover:bg-navy hover:text-cream border-2 border-navy/20 hover:border-navy font-bold text-[11px] uppercase tracking-[0.12em] px-4 py-2 rounded-full transition-colors"
-        >
-          View full Blueprint
-          <ArrowRight size={12} />
-        </Link>
-      </div>
+      {/* Top "Back to portal" + "View full Blueprint" buttons removed —
+          the left sidebar handles both destinations. */}
 
       {/* Slim progress bar — the phase intro carries phase context;
-          this bar carries overall position. */}
+          this bar carries overall position. Pre-seeded with a small
+          gold sliver (min 4%) so the customer reads it as a progress
+          bar, not a horizontal divider, even on the first question. */}
       <div
         role="progressbar"
         aria-valuenow={Math.round((index / Math.max(1, queue.length)) * 100)}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-label="Overall progress"
-        className="h-1 rounded-full bg-grey-1 overflow-hidden"
+        className="h-1.5 rounded-full bg-grey-1 overflow-hidden"
       >
         <div
           className="h-full bg-gold transition-all duration-300"
           style={{
-            width: `${Math.round((index / Math.max(1, queue.length)) * 100)}%`,
+            width: `${Math.max(
+              4,
+              Math.round((index / Math.max(1, queue.length)) * 100),
+            )}%`,
           }}
         />
       </div>

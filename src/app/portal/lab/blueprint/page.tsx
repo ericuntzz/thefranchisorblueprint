@@ -138,13 +138,6 @@ export default async function BlueprintLabPage() {
               document — the closest preview of what your attorney will see
               when you&apos;re ready to file.
             </p>
-            <Link
-              href="/portal"
-              className="inline-flex items-center gap-2 bg-navy text-cream font-bold text-xs uppercase tracking-[0.1em] px-5 py-3 rounded-full hover:bg-navy-dark transition-colors"
-            >
-              <ArrowLeft size={13} />
-              Back to your dashboard
-            </Link>
           </div>
         </section>
 
@@ -244,13 +237,6 @@ export default async function BlueprintLabPage() {
                   >
                     Continue building
                     <ArrowRight size={13} />
-                  </Link>
-                  <Link
-                    href="/portal"
-                    className="inline-flex items-center gap-2 text-grey-3 hover:text-navy font-semibold text-xs uppercase tracking-[0.1em] px-3 py-2 transition-colors"
-                  >
-                    <ArrowLeft size={13} />
-                    Back to dashboard
                   </Link>
                 </div>
               </div>

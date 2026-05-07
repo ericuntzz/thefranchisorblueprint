@@ -143,12 +143,6 @@ function AllCaughtUpPanel({ firstName }: { firstName: string | null }) {
         >
           Open the Blueprint <ArrowRight size={12} />
         </Link>
-        <Link
-          href="/portal"
-          className="inline-flex items-center gap-2 bg-transparent text-navy border-2 border-navy font-bold text-xs uppercase tracking-[0.1em] px-5 py-3 rounded-full hover:bg-navy hover:text-cream transition-colors"
-        >
-          Back to portal
-        </Link>
       </div>
     </div>
   );

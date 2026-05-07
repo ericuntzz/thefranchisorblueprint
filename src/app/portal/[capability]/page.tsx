@@ -108,13 +108,6 @@ export default async function CapabilityDetailPage({ params }: PageProps) {
       {/* ===== Mastery hero ===== */}
       <section className="bg-white border-b border-navy/5">
         <div className="max-w-[1200px] mx-auto px-6 md:px-8 py-10 md:py-14">
-          <Link
-            href="/portal"
-            className="inline-flex items-center gap-1.5 text-grey-3 hover:text-navy text-sm font-semibold mb-6 transition-colors"
-          >
-            <ArrowLeft size={14} />
-            Back to portal
-          </Link>
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2">
