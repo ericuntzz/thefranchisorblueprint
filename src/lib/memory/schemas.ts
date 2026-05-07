@@ -621,7 +621,7 @@ const UNIT_ECONOMICS: ChapterSchema = {
       suggestedFrom: {
         kind: "derived",
         deps: ["average_unit_volume_dollars", "ramp_curve_year_1_pct"],
-        formula: "average_unit_volume_dollars × (ramp_curve_year_1_pct / 100)",
+        formula: "Mature AUV × Year-1 ramp %",
       },
     },
     {
@@ -633,7 +633,7 @@ const UNIT_ECONOMICS: ChapterSchema = {
       suggestedFrom: {
         kind: "derived",
         deps: ["average_unit_volume_dollars", "ramp_curve_year_2_pct"],
-        formula: "average_unit_volume_dollars × (ramp_curve_year_2_pct / 100)",
+        formula: "Mature AUV × Year-2 ramp %",
       },
     },
     {
@@ -675,7 +675,7 @@ const UNIT_ECONOMICS: ChapterSchema = {
           "ebitda_margin_pct",
         ],
         formula:
-          "((investment_low + investment_high) / 2) ÷ (AUV × EBITDA% ÷ 100) × 12",
+          "Average initial investment ÷ annual EBITDA × 12",
       },
     },
 
@@ -1193,7 +1193,7 @@ const FRANCHISEE_PROFILE: ChapterSchema = {
       suggestedFrom: {
         kind: "derived",
         deps: ["unit_economics.initial_investment_high_dollars"],
-        formula: "0.30 × unit_economics.initial_investment_high_dollars",
+        formula: "30% of the high end of your initial investment",
       },
     },
     {
@@ -1208,7 +1208,7 @@ const FRANCHISEE_PROFILE: ChapterSchema = {
       suggestedFrom: {
         kind: "derived",
         deps: ["minimum_liquid_capital_dollars"],
-        formula: "3.5 × minimum_liquid_capital_dollars",
+        formula: "3.5× the required liquid capital",
       },
     },
     {

@@ -293,9 +293,15 @@ function FieldInput({
     computedValue != null &&
     (value == null || value === "" || value === 0);
 
+  // SUGGESTED pill is only meaningful when the field is empty — i.e.
+  // when we're offering a default. Once the field has a value (whether
+  // from accepting the suggestion or typing one), the pill is noise:
+  // the value just is what it is.
+  const isFieldEmpty = value == null || value === "" || value === 0;
+
   return (
     <div className="space-y-1">
-      <FieldLabel fieldDef={fieldDef} isComputed={isComputed} />
+      <FieldLabel fieldDef={fieldDef} isComputed={isComputed} isFieldEmpty={isFieldEmpty} />
       {isComputed ? (
         <ComputedValueDisplay
           fieldDef={fieldDef}
@@ -342,9 +348,6 @@ function FieldInput({
             </span>
           </button>
         )}
-      {fieldDef.helpText && !isComputed && (
-        <p className="text-sm text-grey-3 leading-relaxed">{fieldDef.helpText}</p>
-      )}
       {sourceLabel && !isComputed && (
         <p className="text-xs uppercase tracking-[0.1em] text-grey-3 font-bold">
           {sourceLabel}
@@ -396,11 +399,14 @@ function sourceLabelFor(
 function FieldLabel({
   fieldDef,
   isComputed,
+  isFieldEmpty = false,
 }: {
   fieldDef: FieldDef;
   isComputed: boolean;
+  isFieldEmpty?: boolean;
 }) {
-  const showSuggested = fieldDef.suggestedFrom && !isComputed;
+  const showSuggested = fieldDef.suggestedFrom && !isComputed && isFieldEmpty;
+  const tooltip = !isComputed ? fieldDef.helpText : undefined;
   return (
     <label className="flex items-center gap-2 text-sm font-semibold text-navy">
       <span>
@@ -411,6 +417,15 @@ function FieldLabel({
           </span>
         )}
       </span>
+      {tooltip && (
+        <span
+          className="inline-flex items-center text-grey-3 hover:text-navy cursor-help transition-colors"
+          title={tooltip}
+          aria-label={tooltip}
+        >
+          <Info size={13} />
+        </span>
+      )}
       {isComputed && (
         <span
           className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.06em] font-bold text-white bg-emerald-600 rounded-full px-2 py-0.5 shadow-sm"
