@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "postbuild": "node scripts/indexnow-ping-sitemap.mjs",
-    "start": "next start"
+    "start": "next start",
+    "smoke-test:seed": "tsx scripts/smoke-test/seed.ts",
+    "smoke-test:phase1": "tsx scripts/smoke-test/run-phase1.ts",
+    "smoke-test:report": "tsx scripts/smoke-test/reporter.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.91.1",
@@ -45,7 +48,9 @@
     "@types/pdf-parse": "^1.1.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^17.4.2",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

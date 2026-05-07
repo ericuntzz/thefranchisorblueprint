@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "lastUpdated": "2026-05-07",
+  "note": "Last-known-good API + SSR shapes. Updated by the routine when a check 'pass'es with new evidence that contradicts the prior baseline. Each entry is the EXPECTED shape; deviations become findings.",
+  "expectedShapes": {
+    "redlines-get": {
+      "topLevelKeys": ["redlines", "openCount", "blockerCount", "approved"],
+      "redlineKeys": ["id", "user_id", "chapter_slug", "claim_id", "comment", "severity", "reviewer_user_id", "reviewer_name", "resolved_at", "resolved_by_user_id", "created_at", "updated_at"],
+      "approvedType": "boolean",
+      "blockerCountType": "number",
+      "openCountType": "number"
+    },
+    "snapshots-get": {
+      "topLevelKeys": ["snapshots"],
+      "snapshotsType": "array"
+    },
+    "draft-readiness": {
+      "topLevelKeys": ["slug", "score", "filledRequired", "totalRequired", "filledAll", "totalAll", "blockers"],
+      "scoreType": "number",
+      "blockersType": "array"
+    },
+    "chat-history": {
+      "topLevelKeys": ["transcript", "savedThreads"]
+    },
+    "nudge": {
+      "topLevelKeys": ["nudge"]
+    },
+    "single-docx": {
+      "contentTypeContains": "openxmlformats-officedocument.wordprocessingml",
+      "minBytes": 1000
+    },
+    "bundle-zip": {
+      "magicBytes": [80, 75],
+      "minBytes": 5000,
+      "expectedFiles": ["_README.md", "Concept-And-Story.docx", "Operations-Manual.docx", "FDD-Draft.docx"]
+    },
+    "admin-gate": {
+      "expectedStatus": 403
+    }
+  },
+  "expectedSsrTitles": {
+    "/portal": "Your Blueprint Portal | The Franchisor Blueprint",
+    "/portal/chapter/business_overview": "Concept & Story | The Franchisor Blueprint",
+    "/portal/chapter/training_program": "Training & Certification | The Franchisor Blueprint",
+    "/portal/chapter/compliance_legal": "FDD Posture & State Strategy | The Franchisor Blueprint",
+    "/portal/lab/intake": "Day 1 · Pre-fill your Blueprint | The Franchisor Blueprint",
+    "/portal/lab/blueprint": "Your Franchisor Blueprint | The Franchisor Blueprint",
+    "/portal/lab/next": "What's Next | The Franchisor Blueprint",
+    "/portal/library": "Library | The Franchisor Blueprint",
+    "/portal/upgrade": "Upgrade Your Tier | The Franchisor Blueprint Portal",
+    "/portal/account": "Your Account | The Franchisor Blueprint Portal",
+    "/portal/coaching": "Add Coaching | The Franchisor Blueprint Portal",
+    "/portal/exports/concept-and-story": "Pre-export review | The Franchisor Blueprint",
+    "/portal/exports/operations-manual": "Pre-export review | The Franchisor Blueprint"
+  }
+}
