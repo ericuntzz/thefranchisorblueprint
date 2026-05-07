@@ -51,3 +51,47 @@ Each hit: check if the variable is actually used for rendering elsewhere in the 
 ```
 
 If `node_modules` is absent (environment without `npm install`), note the build as "untestable — no node_modules" and skip the build check rather than calling `npx next build` which will spuriously fail on `@next/mdx`.
+
+---
+
+## Additions from 2026-05-07
+
+### 6. Upstream may beat this routine to accessibility fixes
+
+The 2026-05-06 run recommended fixing CategoryBars.tsx and IntakeClient.tsx progress bar ARIA triads. The upstream commit `6a7961b` shipped those fixes before this run. When resolving conflicts between upstream and this routine on ARIA attributes, the upstream's percentage-scale pattern is TFB standard:
+
+```tsx
+aria-valuenow={Math.round(c.ratio * 100)}
+aria-valuemin={0}
+aria-valuemax={100}
+```
+
+This is preferred over the raw-score variant (`aria-valuenow={c.score}`, `aria-valuemax={c.max}`) because percentage scale (0–100) is the most broadly compatible screen-reader interpretation of progressbar. Both are spec-valid, but favour the upstream's choice when they conflict.
+
+---
+
+### 7. Stale product-framing phrases in portal Day-1 path
+
+**Grep:** `grep -rn "Start with the Audit\|Audit Your Business\|9 capabilities\|9-capability\|capability_progress" src/app/portal src/app/assessment`
+
+The 9-capability system and its entry point ("Audit Your Business") were retired May 2026. Any Day-1 copy still directing customers to "the Audit" is stale and contradicts the intake flow (`/portal/lab/intake`). Portal Day-1 welcome should reference the intake/question-queue flow, not the old audit.
+
+**Boundary:** Do NOT change copy on marketing pages or any text that uses "audit" as a generic business term — only the product-specific "Start with the Audit" / "Audit Your Business" framing is stale.
+
+**Fixed (2026-05-07):** `src/app/portal/page.tsx:221` — welcome sub-headline for `isFirstRun` path.
+
+---
+
+### 8. DraftWithJasonModal / DocPromptCard / ChapterAttachments file inputs now have `accept`
+
+Prior run (2026-05-06) noted these three components as needing `accept` but deferred due to scope. Fixed in this run (2026-05-07). On future runs, verify the `accept` strings remain present and haven't been removed in refactors.
+
+**Quick check:** `grep -A3 'type="file"' src/components/agent/DraftWithJasonModal.tsx src/components/agent/DocPromptCard.tsx src/components/agent/ChapterAttachments.tsx | grep "accept="` — should return 4 matches (DraftWithJasonModal ×1, DocPromptCard ×2, ChapterAttachments ×1).
+
+---
+
+### 9. PromoBanner `{tier === tier && null}` resolved as removable
+
+Prior run flagged as ambiguous. Confirmed this run: `tier` was passed to `PromoBanner` but genuinely unused inside the component (target tier derived from `offer.target_tier`, not the caller's `tier`). Safe to remove. Removed in `784545a`.
+
+**Pattern to watch:** Any JSX expression matching `{[a-z]+ === [a-z]+ && null}` is a dead suppression. Confirm unused → remove prop + call-site attribute in one file edit.
