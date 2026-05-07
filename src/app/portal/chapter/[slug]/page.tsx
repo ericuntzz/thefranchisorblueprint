@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, BookOpen } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
@@ -176,29 +176,22 @@ export default async function FocusedChapterPage({ params }: Props) {
   return (
     <>
       <main className="min-h-[calc(100vh-200px)] bg-cream-soft">
-        {/* Top nav — matches the queue's nav buttons for visual
-            consistency. Both anchors as ghost-pill buttons with
-            chevrons; the right-hand one offers the canvas as a
-            secondary view. */}
+        {/* Top nav — back arrow icon + status pills + voice + overflow.
+            The "View in Blueprint" link and "Version history" pill that
+            used to crowd this row now live inside the overflow menu in
+            ChapterToolbar, leaving room for the page title to do the
+            heavy lifting. */}
         <div className="border-b border-navy/10 bg-white">
-          <div className="max-w-[1000px] mx-auto px-4 sm:px-6 md:px-8 py-3 flex items-center justify-between gap-3 flex-wrap">
-            <div className="flex items-center gap-2 flex-wrap">
-              <Link
-                href="/portal"
-                className="inline-flex items-center gap-1.5 text-navy bg-white hover:bg-navy hover:text-cream border-2 border-navy/30 hover:border-navy font-bold text-[11px] uppercase tracking-[0.1em] px-4 py-2 rounded-full transition-colors"
-              >
-                <ArrowLeft size={12} />
-                Back to dashboard
-              </Link>
-              <ChapterToolbar slug={slug} />
-            </div>
+          <div className="max-w-[1000px] mx-auto px-4 sm:px-6 md:px-8 py-3 flex items-center gap-2 flex-wrap">
             <Link
-              href={`/portal/lab/blueprint#chapter-${slug}`}
-              className="inline-flex items-center gap-1.5 text-navy bg-white hover:bg-navy hover:text-cream border-2 border-navy/30 hover:border-navy font-bold text-[11px] uppercase tracking-[0.1em] px-4 py-2 rounded-full transition-colors"
+              href="/portal"
+              aria-label="Back to dashboard"
+              title="Back to dashboard"
+              className="inline-flex items-center justify-center w-9 h-9 rounded-full text-navy bg-white hover:bg-cream-soft border-2 border-navy/30 hover:border-navy transition-colors"
             >
-              <BookOpen size={12} />
-              View in Blueprint
+              <ArrowLeft size={16} />
             </Link>
+            <ChapterToolbar slug={slug} />
           </div>
         </div>
 

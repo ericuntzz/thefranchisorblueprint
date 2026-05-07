@@ -21,10 +21,34 @@ type Props = {
   slug: string;
   /** Called after a successful rollback so the parent can refresh. */
   onRolledBack?: () => void;
+  /** When provided, the open/close state is controlled by the parent
+   *  (e.g. an overflow-menu item triggers the panel). The component
+   *  still owns the panel UI itself. */
+  externalOpen?: boolean;
+  onExternalOpenChange?: (open: boolean) => void;
+  /** Hide the standalone "Version history" trigger pill. Useful when
+   *  the parent already provides a trigger (overflow menu item) and
+   *  this component just renders the panel. */
+  hideTrigger?: boolean;
 };
 
-export function SnapshotHistoryButton({ slug, onRolledBack }: Props) {
-  const [open, setOpen] = useState(false);
+export function SnapshotHistoryButton({
+  slug,
+  onRolledBack,
+  externalOpen,
+  onExternalOpenChange,
+  hideTrigger,
+}: Props) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = externalOpen ?? internalOpen;
+  const setOpen = (next: boolean | ((prev: boolean) => boolean)) => {
+    const value = typeof next === "function" ? next(open) : next;
+    if (onExternalOpenChange) {
+      onExternalOpenChange(value);
+    } else {
+      setInternalOpen(value);
+    }
+  };
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState<string | null>(null); // snapshot id being rolled back to
@@ -89,14 +113,16 @@ export function SnapshotHistoryButton({ slug, onRolledBack }: Props) {
 
   return (
     <div className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1.5 bg-cream text-navy hover:bg-navy hover:text-cream border-2 border-navy/30 hover:border-navy font-bold text-[11px] uppercase tracking-[0.1em] px-4 py-2 rounded-full transition-colors"
-      >
-        <Clock size={12} />
-        Version history
-      </button>
+      {!hideTrigger && (
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="inline-flex items-center gap-1.5 bg-cream text-navy hover:bg-navy hover:text-cream border-2 border-navy/30 hover:border-navy font-bold text-[11px] uppercase tracking-[0.1em] px-4 py-2 rounded-full transition-colors"
+        >
+          <Clock size={12} />
+          Version history
+        </button>
+      )}
       {open && (
         <>
           {/* Click-outside backdrop. */}
