@@ -391,7 +391,7 @@ export function DraftWithJasonModal({
         <div className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-navy/5">
           <div className="flex items-start justify-between gap-3 mb-1">
             <div className="min-w-0">
-              <div className="text-[10px] uppercase tracking-[0.18em] text-gold-warm font-bold mb-0.5">
+              <div className="text-xs uppercase tracking-[0.14em] text-gold-text font-bold mb-0.5">
                 {isRedraft ? "Redraft" : "Draft"} with Jason
               </div>
               <h2 className="text-navy font-extrabold text-xl leading-tight">
@@ -444,7 +444,7 @@ export function DraftWithJasonModal({
             <>
           {/* Free-form instruction */}
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.16em] text-gold-warm font-bold mb-2">
+            <label className="block text-xs uppercase tracking-[0.14em] text-gold-text font-bold mb-2">
               Notes for Jason
             </label>
             <textarea
@@ -459,7 +459,7 @@ export function DraftWithJasonModal({
 
           {/* Upload */}
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.16em] text-gold-warm font-bold mb-2">
+            <label className="block text-xs uppercase tracking-[0.14em] text-gold-text font-bold mb-2">
               Add a new reference
             </label>
             <label
@@ -527,7 +527,7 @@ export function DraftWithJasonModal({
           {thisChapterAll.length > 0 && (
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-[11px] uppercase tracking-[0.16em] text-gold-warm font-bold">
+                <label className="text-xs uppercase tracking-[0.14em] text-gold-text font-bold">
                   References on this chapter
                 </label>
                 <span className="text-[10px] text-grey-4">
@@ -552,7 +552,7 @@ export function DraftWithJasonModal({
           {otherChapters.length > 0 && (
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-[11px] uppercase tracking-[0.16em] text-gold-warm font-bold">
+                <label className="text-xs uppercase tracking-[0.14em] text-gold-text font-bold">
                   References on other chapters
                 </label>
                 <span className="text-[10px] text-grey-4">

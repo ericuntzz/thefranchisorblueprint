@@ -232,7 +232,7 @@ export function IntakeClient({ firstName, initialWebsiteUrl }: Props) {
         {/* Step counter + back affordance — sits inline above the
             card so the customer always knows where they are. */}
         <div className="mb-3 flex items-center justify-between gap-3">
-          <span className="text-[10px] uppercase tracking-[0.16em] text-grey-3 font-bold">
+          <span className="text-xs uppercase tracking-[0.14em] text-grey-3 font-bold">
             Step {stepIdx + 1} of {TOTAL_STEPS}
           </span>
           {stepIdx > 0 && (
@@ -342,7 +342,7 @@ function UrlStepCard({
 
   return (
     <SlideCard direction={direction}>
-      <div className="text-[10px] uppercase tracking-[0.16em] text-gold-warm font-bold mb-2 flex items-center gap-1.5">
+      <div className="text-xs uppercase tracking-[0.14em] text-gold-warm font-bold mb-2 flex items-center gap-1.5">
         <Globe size={11} />
         Your website
       </div>
@@ -580,7 +580,7 @@ function UploadStepCard({
 
   return (
     <SlideCard direction={direction}>
-      <div className="text-[10px] uppercase tracking-[0.16em] text-gold-warm font-bold mb-2 flex items-center gap-1.5">
+      <div className="text-xs uppercase tracking-[0.14em] text-gold-warm font-bold mb-2 flex items-center gap-1.5">
         <Upload size={11} />
         {step.category}
       </div>
@@ -720,7 +720,7 @@ function UploadStepCard({
 function DoneStepCard({ direction }: { direction: "forward" | "back" }) {
   return (
     <SlideCard direction={direction}>
-      <div className="text-[10px] uppercase tracking-[0.16em] text-emerald-700 font-bold mb-2 flex items-center gap-1.5">
+      <div className="text-xs uppercase tracking-[0.14em] text-emerald-700 font-bold mb-2 flex items-center gap-1.5">
         <CheckCircle2 size={11} />
         That&apos;s the intake
       </div>

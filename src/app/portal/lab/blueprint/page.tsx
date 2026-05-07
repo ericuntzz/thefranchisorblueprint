@@ -227,7 +227,7 @@ export default async function BlueprintLabPage() {
                   that's missing. Secondary "back to dashboard" stays
                   as a quieter exit option. */}
               <div className="rounded-2xl border border-card-border bg-white px-6 sm:px-8 py-8 text-center">
-                <div className="text-[10px] uppercase tracking-[0.18em] text-gold-warm font-bold mb-2">
+                <div className="text-xs uppercase tracking-[0.14em] text-gold-text font-bold mb-2">
                   End of Blueprint
                 </div>
                 <h2 className="text-navy font-extrabold text-lg md:text-xl mb-2">

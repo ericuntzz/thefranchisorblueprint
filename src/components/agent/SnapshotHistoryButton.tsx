@@ -106,7 +106,7 @@ export function SnapshotHistoryButton({ slug, onRolledBack }: Props) {
             aria-hidden="true"
           />
           <div className="absolute z-40 right-0 mt-2 w-[360px] rounded-xl border border-navy/15 bg-white shadow-[0_16px_36px_rgba(30,58,95,0.18)] overflow-hidden">
-            <div className="px-3 py-2 border-b border-navy/10 text-[10px] uppercase tracking-[0.16em] font-bold text-grey-3">
+            <div className="px-3 py-2 border-b border-navy/10 text-xs uppercase tracking-[0.14em] font-bold text-grey-3">
               Recent versions
             </div>
             {loading && (

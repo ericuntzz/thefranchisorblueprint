@@ -217,7 +217,7 @@ export function FocusedChapterClient(props: Props) {
       {/* Hero */}
       <header className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0 flex-1">
-          <div className="text-[10px] uppercase tracking-[0.18em] text-gold-warm font-bold mb-1.5">
+          <div className="text-xs uppercase tracking-[0.14em] text-gold-text font-bold mb-1.5">
             <span className="font-mono">{slug}</span>
           </div>
           <h1 className="text-navy font-extrabold text-2xl md:text-4xl leading-tight mb-2 break-words">

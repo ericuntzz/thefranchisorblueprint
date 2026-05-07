@@ -71,7 +71,7 @@ export default async function LibraryPage() {
       </div>
 
       <div className="max-w-[1100px] mx-auto px-6 md:px-8 py-10">
-        <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-gold-warm font-bold">
+        <div className="mb-2 text-xs uppercase tracking-[0.14em] text-gold-text font-bold">
           Library
         </div>
         <h1 className="text-navy font-extrabold text-3xl md:text-4xl mb-3 leading-tight">
@@ -192,7 +192,7 @@ function EntryCard({ entry, tier }: { entry: LibraryEntry; tier: Tier }) {
         )}
         {/* Tier marker for clarity */}
         {(entry.minTier ?? 1) > 1 && tier >= (entry.minTier ?? 1) && (
-          <span className="ml-3 text-[10px] uppercase tracking-[0.12em] text-emerald-700 font-bold">
+          <span className="ml-3 text-xs uppercase tracking-[0.1em] text-emerald-700 font-bold">
             · {entry.minTier === 3 ? "Builder" : "Navigator"} unlock
           </span>
         )}
@@ -230,7 +230,7 @@ function LockedSection({ entries, tier }: { entries: LibraryEntry[]; tier: Tier 
             >
               <div className="flex items-center gap-2 mb-1">
                 <Lock size={12} className="text-grey-3" />
-                <span className="text-[10px] uppercase tracking-[0.12em] text-grey-3 font-bold">
+                <span className="text-xs uppercase tracking-[0.1em] text-grey-3 font-bold">
                   {entry.minTier === 3 ? "Builder" : "Navigator"} only · {cat}
                 </span>
               </div>

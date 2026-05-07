@@ -28,10 +28,10 @@ export function WhatIfCoach() {
   return (
     <section className="bg-white rounded-2xl border border-card-border p-5 sm:p-6 md:p-8">
       <div className="flex items-baseline justify-between gap-3 mb-1">
-        <span className="text-[10px] uppercase tracking-[0.18em] text-gold-warm font-bold">
+        <span className="text-xs uppercase tracking-[0.14em] text-gold-text font-bold">
           Jason&apos;s playbook
         </span>
-        <span className="text-[10px] uppercase tracking-[0.14em] text-grey-3 font-bold tabular-nums">
+        <span className="text-xs uppercase tracking-[0.12em] text-grey-3 font-bold tabular-nums">
           {TOTAL_SCENARIOS} scenarios
         </span>
       </div>

@@ -106,7 +106,7 @@ export function BlueprintTOC({ items }: BlueprintTOCProps) {
       aria-label="Chapters"
     >
       <div className="mb-4 pb-4 border-b border-navy/10">
-        <div className="text-[10px] uppercase tracking-[0.18em] text-gold-warm font-bold mb-1">
+        <div className="text-xs uppercase tracking-[0.14em] text-gold-text font-bold mb-1">
           Your Blueprint
         </div>
         <div className="text-grey-3 text-xs">{items.length} chapters</div>

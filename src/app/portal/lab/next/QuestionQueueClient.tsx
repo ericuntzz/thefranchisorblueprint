@@ -546,7 +546,7 @@ function QuestionCard({
           }
         }
       `}</style>
-      <div className="text-[10px] uppercase tracking-[0.16em] text-gold-warm font-bold mb-2">
+      <div className="text-xs uppercase tracking-[0.14em] text-gold-warm font-bold mb-2">
         {item.chapterTitle}
       </div>
       <h2 className="text-navy font-extrabold text-xl md:text-2xl leading-tight mb-2">

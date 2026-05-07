@@ -258,7 +258,7 @@ export function ChapterCard({
     <article id={`chapter-${slug}`} className="rounded-2xl border border-navy/10 bg-white p-5 sm:p-6 md:p-8 scroll-mt-20">
       <header className="mb-4 flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <div className="text-[10px] uppercase tracking-[0.18em] text-gold-warm font-bold mb-1">
+          <div className="text-xs uppercase tracking-[0.14em] text-gold-text font-bold mb-1">
             <span className="font-mono">{slug}</span>
             {schema && filledFieldCount.total > 0 && !editing && (
               <span className="ml-2 text-grey-4 normal-case tracking-normal">
@@ -849,7 +849,7 @@ function NeedsInputCallout({
 }) {
   return (
     <div className="my-4 rounded-lg border-l-4 border-amber-400 bg-amber-50/70 pl-4 pr-3 py-3">
-      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.14em] font-bold text-amber-800 mb-1">
+      <div className="flex items-center gap-1.5 text-xs uppercase tracking-[0.12em] font-bold text-amber-800 mb-1">
         <AlertCircle size={11} />
         Needs input
       </div>

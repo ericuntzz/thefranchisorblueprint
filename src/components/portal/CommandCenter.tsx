@@ -45,10 +45,10 @@ export function CommandCenter({
   return (
     <section className="rounded-2xl bg-navy text-cream p-5 sm:p-6 md:p-8 shadow-[0_12px_32px_rgba(30,58,95,0.18)]">
       <div className="flex items-baseline justify-between gap-3 mb-2">
-        <span className="text-[10px] uppercase tracking-[0.18em] text-gold font-bold">
+        <span className="text-xs uppercase tracking-[0.16em] text-gold font-bold">
           Franchise Readiness
         </span>
-        <span className="text-[10px] uppercase tracking-[0.14em] text-cream/70 font-bold">
+        <span className="text-xs uppercase tracking-[0.12em] text-cream/80 font-bold">
           {readinessPct}% complete
         </span>
       </div>
@@ -112,10 +112,10 @@ function NextStepPanel({
   const phase = phaseForSlug(next.slug);
   return (
     <div className="rounded-xl bg-cream/10 border border-cream/15 p-4 sm:p-5">
-      <div className="flex items-baseline gap-2 mb-2 text-[10px] uppercase tracking-[0.16em] font-bold">
+      <div className="flex items-baseline gap-2 mb-2 text-xs uppercase tracking-[0.14em] font-bold">
         <span className="text-gold">Next up</span>
         {phase && (
-          <span className="text-cream/60">· {phase.title} phase</span>
+          <span className="text-cream/70">· {phase.title} phase</span>
         )}
       </div>
       <div className="text-cream font-bold text-lg md:text-xl leading-tight mb-1.5">
@@ -147,7 +147,7 @@ function NextStepPanel({
 function CaughtUpPanel() {
   return (
     <div className="rounded-xl bg-emerald-500/15 border border-emerald-400/30 p-4 sm:p-5">
-      <div className="text-[10px] uppercase tracking-[0.16em] font-bold text-emerald-300 mb-1.5">
+      <div className="text-xs uppercase tracking-[0.14em] font-bold text-emerald-300 mb-1.5">
         You&apos;re caught up
       </div>
       <p className="text-cream/85 text-sm leading-relaxed mb-4 max-w-[600px]">

@@ -62,7 +62,7 @@ export function ChapterAttachments({ slug, attachments }: Props) {
   return (
     <div className="mt-4 pt-3 border-t border-navy/5">
       <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.14em] font-bold text-grey-3">
+        <div className="flex items-center gap-1.5 text-xs uppercase tracking-[0.12em] font-bold text-grey-3">
           <Paperclip size={10} />
           References
           {attachments.length > 0 && (

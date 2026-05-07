@@ -82,7 +82,7 @@ export default async function PreExportReviewPage({ params }: Props) {
       <div className="max-w-[1100px] mx-auto px-6 md:px-8 py-10 grid lg:grid-cols-[1fr_360px] gap-8">
         {/* Left column — header + preview */}
         <div className="min-w-0">
-          <div className="mb-2 text-[10px] uppercase tracking-[0.18em] text-gold-warm font-bold">
+          <div className="mb-2 text-xs uppercase tracking-[0.14em] text-gold-text font-bold">
             Pre-export review
           </div>
           <h1 className="text-navy font-extrabold text-3xl md:text-4xl mb-3 leading-tight">
@@ -129,7 +129,7 @@ export default async function PreExportReviewPage({ params }: Props) {
           {/* Markdown preview */}
           <div className="bg-white rounded-2xl border border-card-border p-5 md:p-7">
             <div className="flex items-baseline justify-between gap-3 mb-3">
-              <span className="text-[10px] uppercase tracking-[0.18em] text-gold-warm font-bold">
+              <span className="text-xs uppercase tracking-[0.14em] text-gold-text font-bold">
                 Live preview
               </span>
               <span className="text-[10px] text-grey-3">
@@ -145,7 +145,7 @@ export default async function PreExportReviewPage({ params }: Props) {
         {/* Right column — chapter checklist + downloads */}
         <aside className="space-y-6">
           <div className="bg-white rounded-2xl border border-card-border p-5 sticky top-6">
-            <div className="text-[10px] uppercase tracking-[0.18em] text-gold-warm font-bold mb-2">
+            <div className="text-xs uppercase tracking-[0.14em] text-gold-text font-bold mb-2">
               Source chapters
             </div>
             <div className="space-y-2 mb-5">

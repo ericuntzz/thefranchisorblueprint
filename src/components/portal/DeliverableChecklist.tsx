@@ -48,18 +48,18 @@ const STATE_DOT = {
 
 const STATE_ROW = {
   green:
-    "bg-emerald-50/50 border-emerald-200/70 hover:bg-emerald-50 hover:border-emerald-300",
+    "bg-emerald-50 border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400",
   amber:
-    "bg-amber-50/40 border-amber-200/70 hover:bg-amber-50 hover:border-amber-300",
-  red: "bg-red-50/40 border-red-200/70 hover:bg-red-50 hover:border-red-300",
-  gray: "bg-white border-navy/10 hover:bg-cream/40 hover:border-navy/25",
+    "bg-amber-50 border-amber-300 hover:bg-amber-100 hover:border-amber-400",
+  red: "bg-red-50 border-red-300 hover:bg-red-100 hover:border-red-400",
+  gray: "bg-white border-card-border hover:bg-cream-soft hover:border-navy/25",
 } as const;
 
 export function DeliverableChecklist({ readiness }: Props) {
   return (
     <section>
       <div className="flex items-baseline justify-between gap-3 mb-3">
-        <span className="text-[10px] uppercase tracking-[0.18em] text-gold-warm font-bold">
+        <span className="text-xs uppercase tracking-[0.14em] text-gold-text font-bold">
           Deliverable checklist
         </span>
         <Legend />
@@ -75,7 +75,7 @@ export function DeliverableChecklist({ readiness }: Props) {
 
 function Legend() {
   return (
-    <div className="hidden md:flex items-center gap-3 text-[10px] uppercase tracking-[0.12em] font-bold text-grey-3">
+    <div className="hidden md:flex items-center gap-3 text-xs uppercase tracking-[0.1em] font-bold text-grey-3">
       {(["green", "amber", "red", "gray"] as const).map((s) => (
         <span key={s} className="inline-flex items-center gap-1">
           <span className={`w-1.5 h-1.5 rounded-full ${STATE_DOT[s]}`} />
@@ -106,7 +106,7 @@ function PhaseGroup({
         <h3 className="text-navy font-extrabold text-base">
           {phase.title}
         </h3>
-        <span className="text-[10px] text-grey-3 font-bold uppercase tracking-wider tabular-nums">
+        <span className="text-xs text-grey-3 font-bold uppercase tracking-wider tabular-nums">
           {greenCount}/{totalCount}
         </span>
       </div>
@@ -128,7 +128,7 @@ function PhaseGroup({
                   <span className="font-semibold text-grey-3 flex-1 truncate">
                     {MEMORY_FILE_TITLES[slug]}
                   </span>
-                  <span className="text-[10px] uppercase tracking-wider text-grey-3">
+                  <span className="text-xs uppercase tracking-wider text-grey-3">
                     Coming soon
                   </span>
                 </div>
@@ -148,7 +148,7 @@ function PhaseGroup({
                   {MEMORY_FILE_TITLES[slug]}
                 </span>
                 {r.totalRequired > 0 && r.state !== "green" && (
-                  <span className="text-[10px] text-grey-3 tabular-nums">
+                  <span className="text-xs text-grey-3 tabular-nums">
                     {r.filledRequired}/{r.totalRequired}
                   </span>
                 )}
