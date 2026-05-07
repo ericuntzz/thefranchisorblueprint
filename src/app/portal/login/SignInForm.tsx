@@ -5,6 +5,10 @@ import { ArrowRight, Loader2, Lock, ShieldCheck } from "lucide-react";
 
 interface SignInFormProps {
   next?: string;
+  /** Pre-fill the email input — used after an `?error=invalid_email`
+   *  redirect so the customer doesn't have to retype the email they
+   *  just got rejected on. */
+  initialEmail?: string;
 }
 
 /**
@@ -21,7 +25,7 @@ interface SignInFormProps {
  * "your data is moving securely" beat (banking-app pattern). The overlay
  * also blocks double-submits.
  */
-export function SignInForm({ next }: SignInFormProps) {
+export function SignInForm({ next, initialEmail }: SignInFormProps) {
   const [submitting, setSubmitting] = useState(false);
 
   // If user navigates back to a stale form (e.g., bfcache), clear the loading state.
@@ -55,6 +59,7 @@ export function SignInForm({ next }: SignInFormProps) {
             type="email"
             required
             autoComplete="email"
+            defaultValue={initialEmail ?? ""}
             placeholder="you@yourbusiness.com"
             disabled={submitting}
             className="w-full border border-navy/15 rounded-xl px-4 py-3 text-base text-navy placeholder:text-grey-4 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20 transition-all disabled:bg-grey-1/40 disabled:text-grey-3"

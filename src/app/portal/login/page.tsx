@@ -91,7 +91,7 @@ export default async function PortalLoginPage({ searchParams }: PageProps) {
                     </div>
                   ) : null}
 
-                  <SignInForm next={next} />
+                  <SignInForm next={next} initialEmail={prefillEmail} />
                 </>
               )}
             </div>
