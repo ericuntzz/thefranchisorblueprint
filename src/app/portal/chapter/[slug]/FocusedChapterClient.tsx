@@ -224,12 +224,12 @@ export function FocusedChapterClient(props: Props) {
             {title}
           </h1>
           {schemaDescription && (
-            <p className="text-grey-3 text-base leading-relaxed max-w-[640px] mb-2">
+            <p className="text-grey-3 text-[17px] leading-relaxed max-w-[640px] mb-3">
               {schemaDescription}
             </p>
           )}
           {schemaCompilesInto && (
-            <p className="text-[11px] uppercase tracking-[0.12em] text-grey-3 font-bold">
+            <p className="text-xs uppercase tracking-[0.12em] text-grey-3 font-bold">
               Compiles into: {schemaCompilesInto}
             </p>
           )}
@@ -287,10 +287,10 @@ export function FocusedChapterClient(props: Props) {
             className="w-full flex items-center justify-between gap-3 px-5 sm:px-6 py-4 text-left hover:bg-cream-soft transition-colors rounded-2xl"
           >
             <div className="flex items-center gap-2">
-              <span className="text-[11px] uppercase tracking-[0.14em] text-gold-text font-bold">
+              <span className="text-xs uppercase tracking-[0.14em] text-gold-text font-bold">
                 Drafted content
               </span>
-              <span className="text-[11px] uppercase tracking-[0.12em] text-grey-3 font-bold">
+              <span className="text-xs uppercase tracking-[0.12em] text-grey-3 font-bold">
                 · Read-only preview
               </span>
             </div>
@@ -308,7 +308,7 @@ export function FocusedChapterClient(props: Props) {
                     {cleanedProse}
                   </ReactMarkdown>
                 </div>
-                <div className="mt-4 pt-3 border-t border-navy/5 text-[13px] text-grey-3 leading-relaxed">
+                <div className="mt-4 pt-3 border-t border-navy/5 text-sm text-grey-3 leading-relaxed">
                   To edit prose section-by-section, attach uploaded
                   references, or redraft with locked-span preservation,{" "}
                   <Link
@@ -365,7 +365,7 @@ export function FocusedChapterClient(props: Props) {
           everything as the "I'm done with this chapter, what now"
           surface. */}
       <section className="rounded-2xl border border-card-border bg-white p-5 sm:p-6 flex flex-wrap items-center justify-between gap-3">
-        <div className="text-[13px] text-grey-3">
+        <div className="text-sm text-grey-3">
           {lastUpdatedBy && updatedAt
             ? `Updated by ${lastUpdatedBy === "scraper" ? "the scraper" : lastUpdatedBy} ${formatRelative(updatedAt)}`
             : "Never updated"}
@@ -437,7 +437,7 @@ export function FocusedChapterClient(props: Props) {
               className="text-grey-3 group-hover:text-navy flex-shrink-0 transition-colors"
             />
             <div className="min-w-0 flex-1">
-              <div className="text-[11px] uppercase tracking-[0.12em] text-grey-3 font-bold">
+              <div className="text-xs uppercase tracking-[0.12em] text-grey-3 font-bold">
                 Previous
               </div>
               <div className="text-navy font-bold truncate">{previousTitle}</div>
@@ -452,7 +452,7 @@ export function FocusedChapterClient(props: Props) {
             className="flex-1 min-w-[260px] flex items-center gap-3 rounded-2xl border border-card-border bg-white hover:bg-cream-soft hover:border-navy/30 px-5 py-4 transition-colors group text-right"
           >
             <div className="min-w-0 flex-1">
-              <div className="text-[11px] uppercase tracking-[0.12em] text-grey-3 font-bold">
+              <div className="text-xs uppercase tracking-[0.12em] text-grey-3 font-bold">
                 Next
               </div>
               <div className="text-navy font-bold truncate">{nextTitle}</div>

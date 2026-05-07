@@ -166,7 +166,7 @@ export function ChapterFieldEditor({
         if (visibleFields.length === 0) return null;
         return (
           <fieldset key={group.category} className="space-y-4">
-            <legend className="text-[11px] uppercase tracking-[0.12em] text-gold-text font-bold">
+            <legend className="text-xs uppercase tracking-[0.12em] text-gold-text font-bold">
               {group.category}
             </legend>
             <div className="space-y-4">
@@ -343,10 +343,10 @@ function FieldInput({
           </button>
         )}
       {fieldDef.helpText && !isComputed && (
-        <p className="text-[13px] text-grey-3 leading-relaxed">{fieldDef.helpText}</p>
+        <p className="text-sm text-grey-3 leading-relaxed">{fieldDef.helpText}</p>
       )}
       {sourceLabel && !isComputed && (
-        <p className="text-[11px] uppercase tracking-[0.1em] text-grey-3 font-bold">
+        <p className="text-xs uppercase tracking-[0.1em] text-grey-3 font-bold">
           {sourceLabel}
         </p>
       )}
@@ -457,13 +457,13 @@ function ComputedValueDisplay({
 }) {
   const formatted = value == null ? null : formatNumeric(fieldDef.type, value);
   return (
-    <div className="rounded-lg border border-emerald-400 bg-emerald-50 px-3.5 py-3 text-navy">
-      <div className="font-bold text-base tabular-nums">
+    <div className="rounded-lg border border-emerald-400 bg-emerald-50 px-4 py-3.5 text-navy">
+      <div className="font-bold text-lg tabular-nums">
         {formatted ?? <span className="text-grey-3">— (need more inputs)</span>}
       </div>
       {fieldDef.computed?.formula && (
-        <div className="mt-1 text-[11px] text-grey-3 italic">
-          <Info size={10} className="inline mr-1 -mt-0.5" />
+        <div className="mt-1.5 text-xs text-grey-3 italic">
+          <Info size={11} className="inline mr-1 -mt-0.5" />
           {fieldDef.computed.formula}
         </div>
       )}
