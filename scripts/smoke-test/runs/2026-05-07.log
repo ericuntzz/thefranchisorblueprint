@@ -1,0 +1,57 @@
+[smoke-test] === 2026-05-07T21:28:02Z ===
+[smoke-test] === seed ===
+
+> tfb-site@0.1.0 smoke-test:seed
+> tsx scripts/smoke-test/seed.ts
+
+◇ injected env (53) from .env.local // tip: ⌁ auth for agents [www.vestauth.com]
+Seeding eric.j.unterberger+smoketest@gmail.com (f6c99e67-2bf0-4159-a486-b0e9fbeb8cd2)...
+✓ test auth user exists
+✓ profile upserted
+✓ paid purchase exists
+✓ 3 redlines already seeded
+
+Seed complete. Test account ready for smoke test.
+[smoke-test] === phase 1 ===
+[smoke-test] phase1 exit=0
+[smoke-test] === phase 2 ===
+[smoke-test] phase2 exit=0
+<anonymous_script>:1
+◇ injected env (53) from .env.local // tip: ⌘ override existing { override: true }
+^
+
+SyntaxError: Unexpected token '◇', "◇ injected"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at [eval]:3:21
+    at runScriptInThisContext (node:internal/vm:209:10)
+    at node:internal/process/execution:446:12
+    at [eval]-wrapper:6:24
+    at runScriptInContext (node:internal/process/execution:444:60)
+    at evalFunction (node:internal/process/execution:279:30)
+    at evalTypeScript (node:internal/process/execution:291:3)
+    at node:internal/main/eval_string:74:3
+
+Node.js v22.22.1
+[smoke-test] compose failed
+[smoke-test] === 2026-05-07T21:29:43Z ===
+[smoke-test] === seed ===
+
+> tfb-site@0.1.0 smoke-test:seed
+> tsx scripts/smoke-test/seed.ts
+
+◇ injected env (53) from .env.local // tip: ◈ secrets for agents [www.dotenvx.com]
+Seeding eric.j.unterberger+smoketest@gmail.com (f6c99e67-2bf0-4159-a486-b0e9fbeb8cd2)...
+✓ test auth user exists
+✓ profile upserted
+✓ paid purchase exists
+✓ 3 redlines already seeded
+
+Seed complete. Test account ready for smoke test.
+[smoke-test] === phase 1 ===
+[smoke-test] phase1 exit=0
+[smoke-test] === phase 2 ===
+[smoke-test] phase2 exit=0
+[smoke-test] === reporter ===
+◇ injected env (53) from .env.local // tip: ⌘ override existing { override: true }
+Email sent: 34311f09-7f76-46bc-a866-aa546309a45f. Report: /Users/fin/Documents/The Franchisor Blueprint Website/scripts/smoke-test/runs/2026-05-07.md
+[smoke-test] === commit ===
