@@ -41,10 +41,11 @@ export function SignInForm({ next, initialEmail }: SignInFormProps) {
         action="/api/portal/request-link"
         method="POST"
         className="space-y-5"
-        onSubmit={(e) => {
-          // basic client-side guard against invalid emails
-          const email = (e.currentTarget.elements.namedItem("email") as HTMLInputElement | null)?.value || "";
-          if (!email.includes("@")) return; // let HTML required validation fire
+        onSubmit={() => {
+          // Server is the single source of truth on email validity —
+          // it now normalizes pasted formats (Outlook, smart quotes,
+          // mailto: prefix) before checking. Don't gate the submit
+          // here; just flip the loading overlay.
           setSubmitting(true);
         }}
       >
@@ -56,9 +57,15 @@ export function SignInForm({ next, initialEmail }: SignInFormProps) {
           <input
             id="email"
             name="email"
-            type="email"
+            // text + inputmode=email is more forgiving than type=email,
+            // which silently rejects valid pastes that include
+            // surrounding whitespace or "Display <addr>" formats.
+            // Server-side normalizeEmail() handles the cleanup.
+            type="text"
+            inputMode="email"
             required
             autoComplete="email"
+            spellCheck={false}
             defaultValue={initialEmail ?? ""}
             placeholder="you@yourbusiness.com"
             disabled={submitting}
