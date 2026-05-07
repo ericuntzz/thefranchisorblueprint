@@ -91,10 +91,10 @@ export default async function SchedulePage() {
 
       <section className="py-10 md:py-14">
         <div className="max-w-[1100px] mx-auto px-6 md:px-8">
-          <div className="bg-white rounded-2xl border border-navy/10 p-3 md:p-4 shadow-[0_8px_24px_rgba(30,58,95,0.08)] overflow-hidden">
+          <div className="bg-white rounded-2xl border border-card-border p-3 md:p-4 shadow-[0_8px_24px_rgba(30,58,95,0.08)] overflow-hidden">
             <CalendlyEmbed url={prefillUrl.toString()} minHeight={760} />
           </div>
-          <p className="text-center text-xs text-grey-4 italic mt-4">
+          <p className="text-center text-xs text-grey-3 italic mt-4">
             Trouble loading?{" "}
             <a
               href={calendlyUrl}
@@ -115,7 +115,7 @@ function ZeroCreditsView({ firstName, tier }: { firstName: string | null; tier: 
   return (
     <section className="py-16 md:py-24">
       <div className="max-w-[640px] mx-auto px-6 md:px-8">
-        <div className="bg-white rounded-2xl border border-navy/10 p-8 md:p-10 text-center">
+        <div className="bg-white rounded-2xl border border-card-border p-8 md:p-10 text-center">
           <div className="inline-flex w-14 h-14 rounded-full bg-cream items-center justify-center text-gold-warm mb-5">
             <MessageSquare size={22} />
           </div>
@@ -151,7 +151,7 @@ function SetupPendingView({ firstName, credits }: { firstName: string | null; cr
   return (
     <section className="py-16 md:py-24">
       <div className="max-w-[640px] mx-auto px-6 md:px-8">
-        <div className="bg-white rounded-2xl border border-navy/10 p-8 md:p-10 text-center">
+        <div className="bg-white rounded-2xl border border-card-border p-8 md:p-10 text-center">
           <div className="inline-flex w-14 h-14 rounded-full bg-cream items-center justify-center text-gold-warm mb-5">
             <Calendar size={22} />
           </div>

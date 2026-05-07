@@ -39,12 +39,12 @@ type Props = {
 
 export function RegulatoryMilestones({ states, summary }: Props) {
   return (
-    <section className="bg-white rounded-2xl border border-navy/10 p-5 sm:p-6 md:p-8">
+    <section className="bg-white rounded-2xl border border-card-border p-5 sm:p-6 md:p-8">
       <div className="flex items-baseline justify-between gap-3 mb-1">
         <span className="text-[10px] uppercase tracking-[0.18em] text-gold-warm font-bold">
           Regulatory milestones
         </span>
-        <span className="text-[10px] uppercase tracking-[0.14em] text-grey-4 font-bold tabular-nums">
+        <span className="text-[10px] uppercase tracking-[0.14em] text-grey-3 font-bold tabular-nums">
           {summary.completed} of {summary.total} complete
         </span>
       </div>
@@ -76,7 +76,7 @@ export function RegulatoryMilestones({ states, summary }: Props) {
             <div key={phase.id}>
               <div className="flex items-baseline gap-3 mb-2">
                 <h3 className="text-navy font-bold text-sm">{phase.label}</h3>
-                <span className="text-grey-4 text-xs">{phase.subtitle}</span>
+                <span className="text-grey-3 text-xs">{phase.subtitle}</span>
               </div>
               <ul className="space-y-1.5">
                 {phaseMilestones.map((m) => (
@@ -156,7 +156,7 @@ function MilestoneRow({
           {milestone.relatedChapter && (
             <Link
               href={`/portal/chapter/${milestone.relatedChapter}`}
-              className="text-[10px] text-grey-4 hover:text-navy uppercase tracking-[0.1em] font-semibold"
+              className="text-[10px] text-grey-3 hover:text-navy uppercase tracking-[0.1em] font-semibold"
             >
               · open chapter
             </Link>
@@ -204,7 +204,7 @@ function StatusIcon({ status }: { status: MilestoneStatus }) {
   }
   if (status === "skipped") {
     return (
-      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-grey-1 flex items-center justify-center text-grey-4">
+      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-grey-1 flex items-center justify-center text-grey-3">
         <MinusCircle size={13} />
       </span>
     );

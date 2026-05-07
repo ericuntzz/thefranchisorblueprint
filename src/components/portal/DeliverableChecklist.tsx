@@ -75,7 +75,7 @@ export function DeliverableChecklist({ readiness }: Props) {
 
 function Legend() {
   return (
-    <div className="hidden md:flex items-center gap-3 text-[10px] uppercase tracking-[0.12em] font-bold text-grey-4">
+    <div className="hidden md:flex items-center gap-3 text-[10px] uppercase tracking-[0.12em] font-bold text-grey-3">
       {(["green", "amber", "red", "gray"] as const).map((s) => (
         <span key={s} className="inline-flex items-center gap-1">
           <span className={`w-1.5 h-1.5 rounded-full ${STATE_DOT[s]}`} />
@@ -101,12 +101,12 @@ function PhaseGroup({
   const totalCount = states.length;
 
   return (
-    <div className="rounded-2xl border border-navy/10 bg-white p-4 sm:p-5">
+    <div className="rounded-2xl border border-card-border bg-white p-4 sm:p-5">
       <div className="flex items-baseline justify-between gap-2 mb-1">
         <h3 className="text-navy font-extrabold text-base">
           {phase.title}
         </h3>
-        <span className="text-[10px] text-grey-4 font-bold uppercase tracking-wider tabular-nums">
+        <span className="text-[10px] text-grey-3 font-bold uppercase tracking-wider tabular-nums">
           {greenCount}/{totalCount}
         </span>
       </div>
@@ -128,7 +128,7 @@ function PhaseGroup({
                   <span className="font-semibold text-grey-3 flex-1 truncate">
                     {MEMORY_FILE_TITLES[slug]}
                   </span>
-                  <span className="text-[10px] uppercase tracking-wider text-grey-4">
+                  <span className="text-[10px] uppercase tracking-wider text-grey-3">
                     Coming soon
                   </span>
                 </div>
@@ -148,13 +148,13 @@ function PhaseGroup({
                   {MEMORY_FILE_TITLES[slug]}
                 </span>
                 {r.totalRequired > 0 && r.state !== "green" && (
-                  <span className="text-[10px] text-grey-4 tabular-nums">
+                  <span className="text-[10px] text-grey-3 tabular-nums">
                     {r.filledRequired}/{r.totalRequired}
                   </span>
                 )}
                 <ChevronRight
                   size={11}
-                  className="text-grey-4 flex-shrink-0"
+                  className="text-grey-3 flex-shrink-0"
                 />
               </Link>
             </li>

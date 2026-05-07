@@ -109,12 +109,12 @@ export function ExportsSection({ readiness }: Props) {
   }
 
   return (
-    <section className="bg-white rounded-2xl border border-navy/10 p-5 sm:p-6 md:p-8">
+    <section className="bg-white rounded-2xl border border-card-border p-5 sm:p-6 md:p-8">
       <div className="flex items-baseline justify-between gap-3 mb-1">
         <span className="text-[10px] uppercase tracking-[0.18em] text-gold-warm font-bold">
           Deliverables
         </span>
-        <span className="text-[10px] uppercase tracking-[0.14em] text-grey-4 font-bold">
+        <span className="text-[10px] uppercase tracking-[0.14em] text-grey-3 font-bold">
           {allIds.length} ready to assemble
         </span>
       </div>
@@ -130,7 +130,7 @@ export function ExportsSection({ readiness }: Props) {
 
       {/* Bundle action bar — sticky-style at the top so it's always
           visible while the customer scans the list. */}
-      <div className="rounded-xl border border-navy/10 bg-cream/40 p-3 mb-4 flex flex-wrap items-center gap-3">
+      <div className="rounded-xl border border-card-border bg-cream/40 p-3 mb-4 flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -221,7 +221,7 @@ export function ExportsSection({ readiness }: Props) {
                   <h3 className="text-navy font-bold text-base">{def.name}</h3>
                   <ReadinessBadge pct={review.overallPct} gaps={review.totalGaps} />
                   {isSlides && (
-                    <span className="text-[10px] uppercase tracking-wider font-bold text-grey-4 bg-grey-1/40 border border-navy/10 rounded-full px-2 py-0.5">
+                    <span className="text-[10px] uppercase tracking-wider font-bold text-grey-3 bg-grey-1/40 border border-card-border rounded-full px-2 py-0.5">
                       .pptx
                     </span>
                   )}
@@ -238,7 +238,7 @@ export function ExportsSection({ readiness }: Props) {
                   </Link>
                   <a
                     href={directDownloadHref}
-                    className="inline-flex items-center gap-1.5 text-grey-4 hover:text-navy font-semibold py-1 transition-colors"
+                    className="inline-flex items-center gap-1.5 text-grey-3 hover:text-navy font-semibold py-1 transition-colors"
                   >
                     <Download size={12} />
                     {directDownloadLabel}
@@ -270,7 +270,7 @@ function ReadinessBadge({ pct, gaps }: { pct: number; gaps: number }) {
     );
   }
   return (
-    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-grey-4 bg-grey-1/50 border border-navy/10 rounded-full px-2 py-0.5">
+    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-grey-3 bg-grey-1/50 border border-card-border rounded-full px-2 py-0.5">
       {pct}% complete
     </span>
   );

@@ -160,7 +160,7 @@ export default async function UpgradePage() {
       {/* ===== FAQ / fairness explainer ===== */}
       <section className="pb-16 md:pb-24">
         <div className="max-w-[820px] mx-auto px-6 md:px-8">
-          <div className="bg-white rounded-2xl border border-navy/10 p-7 md:p-9">
+          <div className="bg-white rounded-2xl border border-card-border p-7 md:p-9">
             <div className="flex items-center gap-2 mb-3">
               <Sparkles size={18} className="text-gold" />
               <h2 className="text-navy font-bold text-lg">How upgrade pricing works</h2>
@@ -203,7 +203,7 @@ function UpgradeCard({
   includes: string[];
 }) {
   return (
-    <div className="bg-white rounded-3xl border-2 border-navy/10 shadow-[0_8px_28px_rgba(30,58,95,0.08)] overflow-hidden flex flex-col">
+    <div className="bg-white rounded-3xl border-2 border-card-border shadow-[0_8px_28px_rgba(30,58,95,0.08)] overflow-hidden flex flex-col">
       <div className="h-1.5 bg-gradient-to-r from-gold via-gold-warm to-gold" />
       <div className="p-7 md:p-9 flex-1 flex flex-col">
         <div className="flex items-center gap-3 mb-5">
@@ -233,10 +233,10 @@ function UpgradeCard({
               {formatCents(priceCents)}
             </div>
             {promoActive && priceCents !== baseCents && (
-              <div className="text-grey-4 text-base line-through">{formatCents(baseCents)}</div>
+              <div className="text-grey-3 text-base line-through">{formatCents(baseCents)}</div>
             )}
           </div>
-          <div className="text-grey-4 text-xs mb-5">
+          <div className="text-grey-3 text-xs mb-5">
             {promoActive ? (
               <>10% promo applied · credit-forward from your prior purchase</>
             ) : (
@@ -253,7 +253,7 @@ function UpgradeCard({
               <ArrowRight size={15} />
             </button>
           </form>
-          <p className="text-center text-xs text-grey-4 italic mt-3">
+          <p className="text-center text-xs text-grey-3 italic mt-3">
             Secure checkout via Stripe · Save 5% when you pay in full
           </p>
         </div>
@@ -266,7 +266,7 @@ function TopTierView({ firstName }: { firstName: string | null }) {
   return (
     <section className="py-16 md:py-24">
       <div className="max-w-[640px] mx-auto px-6 md:px-8">
-        <div className="bg-white rounded-2xl border border-navy/10 p-8 md:p-10 text-center">
+        <div className="bg-white rounded-2xl border border-card-border p-8 md:p-10 text-center">
           <h1 className="text-navy font-extrabold text-2xl md:text-3xl mb-3">
             {firstName ? `${firstName}, you're already at the top tier` : "You're already at the top tier"}
           </h1>

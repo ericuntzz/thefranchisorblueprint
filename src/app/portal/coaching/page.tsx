@@ -89,7 +89,7 @@ export default async function CoachingPage() {
 
       <section className="pb-16 md:pb-24">
         <div className="max-w-[820px] mx-auto px-6 md:px-8">
-          <div className="bg-white rounded-2xl border border-navy/10 p-7 md:p-9">
+          <div className="bg-white rounded-2xl border border-card-border p-7 md:p-9">
             <h2 className="text-navy font-bold text-lg mb-2">Want full coaching?</h2>
             <p className="text-grey-3 text-[15px] leading-relaxed mb-4">
               Navigator includes 24 weekly 1:1 coaching calls plus document review and milestone gates. If you&apos;re going to need more than 6 calls, the upgrade is the better economics.
@@ -124,7 +124,7 @@ function CoachingCard({
   Icon: React.ComponentType<{ size?: number; className?: string }>;
 }) {
   return (
-    <div className="bg-white rounded-3xl border-2 border-navy/10 shadow-[0_8px_28px_rgba(30,58,95,0.08)] overflow-hidden flex flex-col">
+    <div className="bg-white rounded-3xl border-2 border-card-border shadow-[0_8px_28px_rgba(30,58,95,0.08)] overflow-hidden flex flex-col">
       <div className="h-1.5 bg-gradient-to-r from-gold via-gold-warm to-gold" />
       <div className="p-7 md:p-9 flex-1 flex flex-col">
         <div className="flex items-center gap-3 mb-5">
@@ -158,7 +158,7 @@ function CoachingCard({
               <ArrowRight size={15} />
             </button>
           </form>
-          <p className="text-center text-xs text-grey-4 italic mt-3">
+          <p className="text-center text-xs text-grey-3 italic mt-3">
             Secure checkout via Stripe
           </p>
         </div>

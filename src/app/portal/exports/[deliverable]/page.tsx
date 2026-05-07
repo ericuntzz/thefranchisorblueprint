@@ -72,7 +72,7 @@ export default async function PreExportReviewPage({ params }: Props) {
         <div className="max-w-[1100px] mx-auto px-6 md:px-8 py-6">
           <Link
             href="/portal"
-            className="inline-flex items-center gap-1.5 text-grey-4 hover:text-navy text-xs font-semibold uppercase tracking-[0.12em] transition-colors"
+            className="inline-flex items-center gap-1.5 text-grey-3 hover:text-navy text-xs font-semibold uppercase tracking-[0.12em] transition-colors"
           >
             <ArrowLeft size={12} /> Back to portal
           </Link>
@@ -93,7 +93,7 @@ export default async function PreExportReviewPage({ params }: Props) {
           </p>
 
           {/* Readiness bar */}
-          <div className="bg-white rounded-2xl border border-navy/10 p-5 mb-6">
+          <div className="bg-white rounded-2xl border border-card-border p-5 mb-6">
             <div className="flex items-baseline justify-between gap-3 mb-2">
               <span className="text-navy font-bold">Document readiness</span>
               <span className="text-navy font-bold tabular-nums">
@@ -127,12 +127,12 @@ export default async function PreExportReviewPage({ params }: Props) {
           </div>
 
           {/* Markdown preview */}
-          <div className="bg-white rounded-2xl border border-navy/10 p-5 md:p-7">
+          <div className="bg-white rounded-2xl border border-card-border p-5 md:p-7">
             <div className="flex items-baseline justify-between gap-3 mb-3">
               <span className="text-[10px] uppercase tracking-[0.18em] text-gold-warm font-bold">
                 Live preview
               </span>
-              <span className="text-[10px] text-grey-4">
+              <span className="text-[10px] text-grey-3">
                 Generated {new Date(ctx.generatedAt).toLocaleString("en-US")}
               </span>
             </div>
@@ -144,7 +144,7 @@ export default async function PreExportReviewPage({ params }: Props) {
 
         {/* Right column — chapter checklist + downloads */}
         <aside className="space-y-6">
-          <div className="bg-white rounded-2xl border border-navy/10 p-5 sticky top-6">
+          <div className="bg-white rounded-2xl border border-card-border p-5 sticky top-6">
             <div className="text-[10px] uppercase tracking-[0.18em] text-gold-warm font-bold mb-2">
               Source chapters
             </div>
@@ -224,7 +224,7 @@ function ChapterRow({ chapter }: { chapter: ChapterReviewState }) {
           {chapter.title}
         </span>
       </div>
-      <span className="text-grey-4 text-xs tabular-nums flex-shrink-0">
+      <span className="text-grey-3 text-xs tabular-nums flex-shrink-0">
         {chapter.filledRequired}/{chapter.totalRequired}
         <ArrowRight
           size={11}

@@ -109,7 +109,7 @@ export function BlueprintTOC({ items }: BlueprintTOCProps) {
         <div className="text-[10px] uppercase tracking-[0.18em] text-gold-warm font-bold mb-1">
           Your Blueprint
         </div>
-        <div className="text-grey-4 text-xs">{items.length} chapters</div>
+        <div className="text-grey-3 text-xs">{items.length} chapters</div>
       </div>
       <ol className="space-y-0.5">
         {items.map(({ slug, title, filled }, idx) => {
@@ -130,7 +130,7 @@ export function BlueprintTOC({ items }: BlueprintTOCProps) {
                   className={`font-mono text-[10px] tabular-nums w-5 text-right transition-colors ${
                     isActive
                       ? "text-gold-warm font-bold"
-                      : "text-grey-4 group-hover:text-gold-warm"
+                      : "text-grey-3 group-hover:text-gold-warm"
                   }`}
                 >
                   {String(idx + 1).padStart(2, "0")}
@@ -180,7 +180,7 @@ export function BlueprintTOC({ items }: BlueprintTOCProps) {
             className="transition-transform group-hover:translate-x-0.5"
           />
         </Link>
-        <p className="mt-2 text-[11px] text-grey-4 leading-snug">
+        <p className="mt-2 text-[11px] text-grey-3 leading-snug">
           Pick up where you left off — Jason has the next question
           ready.
         </p>

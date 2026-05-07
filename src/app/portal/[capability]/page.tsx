@@ -121,7 +121,7 @@ export default async function CapabilityDetailPage({ params }: PageProps) {
                 <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-gold-warm border-b-2 border-gold pb-0.5">
                   Mastery {String(cap.number).padStart(2, "0")} · {cap.verb}
                 </span>
-                <span className="text-[10px] font-bold tracking-[0.16em] uppercase text-grey-4">
+                <span className="text-[10px] font-bold tracking-[0.16em] uppercase text-grey-3">
                   Phase {phaseInfo.number} — {phaseInfo.label}
                 </span>
               </div>
@@ -136,7 +136,7 @@ export default async function CapabilityDetailPage({ params }: PageProps) {
               className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold tracking-[0.12em] uppercase ${
                 completed
                   ? "bg-green-50 text-green-700 border border-green-200"
-                  : "bg-grey-1 text-grey-3 border border-navy/10"
+                  : "bg-grey-1 text-grey-3 border border-card-border"
               }`}
             >
               {completed ? (
@@ -185,7 +185,7 @@ export default async function CapabilityDetailPage({ params }: PageProps) {
                 <div className="flex items-center gap-2 text-navy">
                   <FileText size={18} className="text-gold" />
                   <span className="font-bold text-sm">{cap.title}</span>
-                  <span className="text-[10px] text-grey-4 font-semibold tracking-wider uppercase">
+                  <span className="text-[10px] text-grey-3 font-semibold tracking-wider uppercase">
                     {cap.format}
                   </span>
                 </div>
@@ -208,7 +208,7 @@ export default async function CapabilityDetailPage({ params }: PageProps) {
                   </a>
                 </div>
               </div>
-              <div className="bg-white rounded-2xl border border-navy/10 shadow-[0_18px_40px_rgba(30,58,95,0.08)] overflow-hidden">
+              <div className="bg-white rounded-2xl border border-card-border shadow-[0_18px_40px_rgba(30,58,95,0.08)] overflow-hidden">
                 <iframe
                   src={`/api/portal/file/${cap.slug}?mode=view`}
                   className="w-full block bg-grey-1"
@@ -216,7 +216,7 @@ export default async function CapabilityDetailPage({ params }: PageProps) {
                   title={cap.title}
                 />
               </div>
-              <p className="text-grey-4 text-xs mt-3 leading-relaxed">
+              <p className="text-grey-3 text-xs mt-3 leading-relaxed">
                 Preview is rendered via Microsoft Office Online. For best results, download the file and edit it in Word, Pages, or Google Docs to fill in your business&apos;s specifics.
               </p>
             </>
@@ -339,9 +339,9 @@ export default async function CapabilityDetailPage({ params }: PageProps) {
             {prev ? (
               <Link
                 href={`/portal/${prev.slug}`}
-                className="group bg-white rounded-xl border border-navy/10 p-5 hover:border-gold/40 transition-colors"
+                className="group bg-white rounded-xl border border-card-border p-5 hover:border-gold/40 transition-colors"
               >
-                <div className="flex items-center gap-1 text-grey-4 text-[10px] font-bold tracking-[0.16em] uppercase mb-1">
+                <div className="flex items-center gap-1 text-grey-3 text-[10px] font-bold tracking-[0.16em] uppercase mb-1">
                   <ArrowLeft size={11} />
                   Previous
                 </div>
@@ -353,9 +353,9 @@ export default async function CapabilityDetailPage({ params }: PageProps) {
             {next ? (
               <Link
                 href={`/portal/${next.slug}`}
-                className="group bg-white rounded-xl border border-navy/10 p-5 hover:border-gold/40 transition-colors text-right"
+                className="group bg-white rounded-xl border border-card-border p-5 hover:border-gold/40 transition-colors text-right"
               >
-                <div className="text-grey-4 text-[10px] font-bold tracking-[0.16em] uppercase mb-1">
+                <div className="text-grey-3 text-[10px] font-bold tracking-[0.16em] uppercase mb-1">
                   Next →
                 </div>
                 <div className="text-navy font-bold text-base">{next.title}</div>

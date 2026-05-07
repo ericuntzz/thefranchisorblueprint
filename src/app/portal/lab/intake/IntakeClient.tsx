@@ -379,7 +379,7 @@ function UrlStepCard({
       )}
 
       {phase === "scraping" && (
-        <div className="rounded-xl border border-navy/10 bg-cream/40 p-4 mb-3">
+        <div className="rounded-xl border border-card-border bg-cream/40 p-4 mb-3">
           <div className="mb-3 flex items-center gap-2">
             <Loader2 size={14} className="text-gold animate-spin" />
             <div className="text-navy font-bold text-xs">
@@ -399,7 +399,7 @@ function UrlStepCard({
                       ? "text-grey-3"
                       : isCurrent
                         ? "text-navy font-semibold"
-                        : "text-grey-4 opacity-50"
+                        : "text-grey-3 opacity-50"
                   }`}
                 >
                   {isPast ? (
@@ -595,7 +595,7 @@ function UploadStepCard({
         {step.examples.map((ex) => (
           <span
             key={ex}
-            className="inline-flex items-center text-[10px] uppercase tracking-wider font-bold text-grey-3 bg-grey-1 border border-navy/10 px-2 py-0.5 rounded-full"
+            className="inline-flex items-center text-[10px] uppercase tracking-wider font-bold text-grey-3 bg-grey-1 border border-card-border px-2 py-0.5 rounded-full"
           >
             {ex}
           </span>
@@ -624,7 +624,7 @@ function UploadStepCard({
             <span className="text-navy font-semibold">
               Drop files or click to choose
             </span>
-            <span className="text-grey-4 text-xs">
+            <span className="text-grey-3 text-xs">
               PDF, DOC, TXT, MD, or images · multiple files OK
             </span>
           </>
@@ -758,7 +758,7 @@ function SlideCard({
 }) {
   return (
     <div
-      className={`rounded-2xl border border-navy/10 bg-white p-5 sm:p-6 md:p-8 shadow-[0_8px_28px_rgba(30,58,95,0.08)] ${
+      className={`rounded-2xl border border-card-border bg-white p-5 sm:p-6 md:p-8 shadow-[0_8px_28px_rgba(30,58,95,0.08)] ${
         direction === "forward" ? "intake-slide-forward" : "intake-slide-back"
       }`}
     >

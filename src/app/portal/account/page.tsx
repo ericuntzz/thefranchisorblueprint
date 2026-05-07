@@ -215,7 +215,7 @@ export default async function AccountPage({ searchParams }: PageProps) {
             <div className="mt-5 pt-5 border-t border-navy/5 grid sm:grid-cols-2 gap-4 text-sm">
               <Field label="Email">
                 <span className="font-mono text-navy break-all">{user.email}</span>
-                <span className="block text-xs text-grey-4 mt-1 italic">
+                <span className="block text-xs text-grey-3 mt-1 italic">
                   To change your email, email{" "}
                   <a
                     href="mailto:team@thefranchisorblueprint.com"
@@ -239,7 +239,7 @@ export default async function AccountPage({ searchParams }: PageProps) {
               <div className="overflow-x-auto -mx-2">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-[10px] font-bold tracking-[0.16em] uppercase text-grey-4 border-b border-navy/10">
+                    <tr className="text-left text-[10px] font-bold tracking-[0.16em] uppercase text-grey-3 border-b border-navy/10">
                       <th className="py-3 px-2">Date</th>
                       <th className="py-3 px-2">Product</th>
                       <th className="py-3 px-2 text-right">Amount</th>
@@ -338,7 +338,7 @@ export default async function AccountPage({ searchParams }: PageProps) {
                       <span className="text-navy font-semibold">
                         {formatDateTime(s.scheduled_at)}
                       </span>
-                      <span className="text-grey-4 text-xs">· coaching</span>
+                      <span className="text-grey-3 text-xs">· coaching</span>
                     </li>
                   ))}
                 </ul>
@@ -347,7 +347,7 @@ export default async function AccountPage({ searchParams }: PageProps) {
 
             {pastSessions.length > 0 && (
               <div>
-                <div className="text-[10px] font-bold tracking-[0.16em] uppercase text-grey-4 mb-2">
+                <div className="text-[10px] font-bold tracking-[0.16em] uppercase text-grey-3 mb-2">
                   Past sessions
                 </div>
                 <ul className="space-y-2">
@@ -361,7 +361,7 @@ export default async function AccountPage({ searchParams }: PageProps) {
                         aria-hidden
                       />
                       <span>{formatDateTime(s.scheduled_at)}</span>
-                      <span className="text-xs text-grey-4 italic">
+                      <span className="text-xs text-grey-3 italic">
                         ({s.status})
                       </span>
                     </li>
@@ -390,7 +390,7 @@ export default async function AccountPage({ searchParams }: PageProps) {
                 >
                   team@thefranchisorblueprint.com
                 </a>
-                <p className="text-grey-4 text-xs mt-1">
+                <p className="text-grey-3 text-xs mt-1">
                   30 days of email support included with every purchase.
                 </p>
               </div>
@@ -410,7 +410,7 @@ export default async function AccountPage({ searchParams }: PageProps) {
                 </p>
               </div>
             </div>
-            <div className="mt-5 pt-5 border-t border-navy/5 flex items-center gap-2 text-xs text-grey-4">
+            <div className="mt-5 pt-5 border-t border-navy/5 flex items-center gap-2 text-xs text-grey-3">
               <ShieldCheck size={14} className="text-gold" />
               <span>
                 Your account is protected by single-use magic-link authentication —
@@ -436,7 +436,7 @@ function Card({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-navy/10 shadow-[0_8px_24px_rgba(30,58,95,0.06)] p-6 md:p-8">
+    <div className="bg-white rounded-2xl border border-card-border shadow-[0_8px_24px_rgba(30,58,95,0.06)] p-6 md:p-8">
       <div className="flex items-center gap-2 mb-5">
         <Icon size={18} className="text-gold" />
         <h2 className="text-navy font-bold text-lg">{title}</h2>

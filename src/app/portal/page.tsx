@@ -202,7 +202,7 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
                   {isFirstRun ? "Day 1" : "Welcome to your portal"}
                 </span>
                 {daysSinceJoined !== null && !isFirstRun && (
-                  <span className="text-[11px] text-grey-4 font-semibold tracking-wider uppercase">
+                  <span className="text-[11px] text-grey-3 font-semibold tracking-wider uppercase">
                     Day {daysSinceJoined} of your journey
                   </span>
                 )}
@@ -308,7 +308,7 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
       <section className="pt-12 md:pt-16 pb-16 md:pb-24">
         <div className="max-w-[1200px] mx-auto px-6 md:px-8">
           <div className="grid md:grid-cols-2 gap-5">
-            <div className="bg-white rounded-2xl border border-navy/10 p-6 md:p-7 flex gap-4">
+            <div className="bg-white rounded-2xl border border-card-border p-6 md:p-7 flex gap-4">
               <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-navy to-navy-light flex items-center justify-center text-gold">
                 <Calendar size={18} />
               </div>
@@ -319,7 +319,7 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
                 </p>
               </div>
             </div>
-            <div className="bg-white rounded-2xl border border-navy/10 p-6 md:p-7 flex gap-4">
+            <div className="bg-white rounded-2xl border border-card-border p-6 md:p-7 flex gap-4">
               <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-navy to-navy-light flex items-center justify-center text-gold">
                 <FileText size={18} />
               </div>
@@ -385,7 +385,7 @@ function CoachingPanel({ tier }: { tier: Tier }) {
   return (
     <section className="pt-12 md:pt-16 pb-12 md:pb-16">
       <div className="max-w-[1200px] mx-auto px-6 md:px-8">
-        <div className="bg-white rounded-2xl border border-navy/10 p-6 md:p-8">
+        <div className="bg-white rounded-2xl border border-card-border p-6 md:p-8">
           <div className="flex items-baseline gap-3 mb-2">
             <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-gold-warm">
               {tier === 3 ? "Builder coaching" : "Navigator coaching"}
@@ -400,7 +400,7 @@ function CoachingPanel({ tier }: { tier: Tier }) {
               <p className="text-grey-3 text-sm md:text-base leading-relaxed mb-4">
                 You have 24 weekly coaching calls and unlimited Slack/email access included. We&apos;re finalizing your custom coaching schedule and milestone-gate dashboard — your dedicated coach will reach out shortly.
               </p>
-              <div className="text-grey-4 text-xs italic">
+              <div className="text-grey-3 text-xs italic">
                 Coaching tools coming online soon
               </div>
             </div>
@@ -415,7 +415,7 @@ function ProjectPanel() {
   return (
     <section className="pb-12 md:pb-16">
       <div className="max-w-[1200px] mx-auto px-6 md:px-8">
-        <div className="bg-white rounded-2xl border border-navy/10 p-6 md:p-8">
+        <div className="bg-white rounded-2xl border border-card-border p-6 md:p-8">
           <div className="flex items-baseline gap-3 mb-2">
             <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-gold-warm">
               Builder project
@@ -430,7 +430,7 @@ function ProjectPanel() {
               <p className="text-grey-3 text-sm md:text-base leading-relaxed mb-4">
                 Our team is building your franchise system in parallel — your custom FDD, Operations Manual, training program, and franchisee recruitment pipeline. Your project dashboard with vendor coordination, asset deliverables, and candidate pipeline is being prepared.
               </p>
-              <div className="text-grey-4 text-xs italic">
+              <div className="text-grey-3 text-xs italic">
                 Project tools coming online soon
               </div>
             </div>
@@ -555,7 +555,7 @@ function JustPurchasedBanner({
           </div>
           <Link
             href="/portal"
-            className="text-grey-4 hover:text-navy text-sm font-semibold underline"
+            className="text-grey-3 hover:text-navy text-sm font-semibold underline"
           >
             Dismiss
           </Link>
@@ -698,7 +698,7 @@ function CoachingCreditsChip({ credits, tier }: { credits: number; tier: Tier })
         <div className="text-navy font-bold text-base tabular-nums">
           {credits}
         </div>
-        <div className="text-[11px] text-grey-4 group-hover:text-navy transition-colors">
+        <div className="text-[11px] text-grey-3 group-hover:text-navy transition-colors">
           {hasCredits ? "→ Book a call" : "→ Add coaching"}
         </div>
       </div>
@@ -716,7 +716,7 @@ function RevokedAccessView({
   return (
     <section className="py-16 md:py-24">
       <div className="max-w-[640px] mx-auto px-6 md:px-8">
-        <div className="bg-white rounded-2xl border border-navy/10 shadow-[0_18px_40px_rgba(30,58,95,0.10)] p-8 md:p-12 text-center">
+        <div className="bg-white rounded-2xl border border-card-border shadow-[0_18px_40px_rgba(30,58,95,0.10)] p-8 md:p-12 text-center">
           <div className="inline-flex w-14 h-14 rounded-full bg-cream items-center justify-center text-gold-warm mb-5">
             <ShieldOff size={22} />
           </div>

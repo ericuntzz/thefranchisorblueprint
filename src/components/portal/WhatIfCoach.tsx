@@ -26,12 +26,12 @@ import {
 
 export function WhatIfCoach() {
   return (
-    <section className="bg-white rounded-2xl border border-navy/10 p-5 sm:p-6 md:p-8">
+    <section className="bg-white rounded-2xl border border-card-border p-5 sm:p-6 md:p-8">
       <div className="flex items-baseline justify-between gap-3 mb-1">
         <span className="text-[10px] uppercase tracking-[0.18em] text-gold-warm font-bold">
           Jason&apos;s playbook
         </span>
-        <span className="text-[10px] uppercase tracking-[0.14em] text-grey-4 font-bold tabular-nums">
+        <span className="text-[10px] uppercase tracking-[0.14em] text-grey-3 font-bold tabular-nums">
           {TOTAL_SCENARIOS} scenarios
         </span>
       </div>
@@ -72,7 +72,7 @@ function PhaseGroup({
     <div>
       <div className="flex items-baseline gap-3 mb-2">
         <h3 className="text-navy font-bold text-sm">{title}</h3>
-        <span className="text-grey-4 text-xs">{subtitle}</span>
+        <span className="text-grey-3 text-xs">{subtitle}</span>
       </div>
       <ul className="space-y-2">
         {scenarios.map((s) => (
@@ -86,7 +86,7 @@ function PhaseGroup({
 function ScenarioRow({ scenario, phaseId }: { scenario: ScenarioDef; phaseId: PhaseId }) {
   const [open, setOpen] = useState(false);
   return (
-    <li className="border border-navy/10 rounded-lg overflow-hidden">
+    <li className="border border-card-border rounded-lg overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -94,7 +94,7 @@ function ScenarioRow({ scenario, phaseId }: { scenario: ScenarioDef; phaseId: Ph
         aria-expanded={open}
         aria-controls={`scenario-${scenario.id}`}
       >
-        <span className="flex-shrink-0 mt-0.5 text-grey-4">
+        <span className="flex-shrink-0 mt-0.5 text-grey-3">
           {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
         </span>
         <div className="flex-1 min-w-0">
@@ -105,7 +105,7 @@ function ScenarioRow({ scenario, phaseId }: { scenario: ScenarioDef; phaseId: Ph
             <SeverityPill severity={scenario.severity} />
           </div>
           {!open && (
-            <div className="text-grey-4 text-xs mt-1 leading-snug">{scenario.why}</div>
+            <div className="text-grey-3 text-xs mt-1 leading-snug">{scenario.why}</div>
           )}
         </div>
       </button>
@@ -113,7 +113,7 @@ function ScenarioRow({ scenario, phaseId }: { scenario: ScenarioDef; phaseId: Ph
         <div id={`scenario-${scenario.id}`} className="px-4 pb-4 pt-1 border-t border-navy/5 bg-cream/20">
           <p className="text-navy text-sm leading-relaxed mb-3">{scenario.answer}</p>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-            <span className="text-grey-4 italic">Why this matters: {scenario.why}</span>
+            <span className="text-grey-3 italic">Why this matters: {scenario.why}</span>
             {scenario.relatedChapter && (
               <Link
                 href={`/portal/chapter/${scenario.relatedChapter}`}
@@ -147,7 +147,7 @@ function SeverityPill({ severity }: { severity: ScenarioSeverity }) {
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-[0.14em] text-grey-4 bg-grey-1/50 border border-navy/10 rounded-full px-2 py-0.5">
+    <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-[0.14em] text-grey-3 bg-grey-1/50 border border-card-border rounded-full px-2 py-0.5">
       <Eye size={9} /> Watch
     </span>
   );

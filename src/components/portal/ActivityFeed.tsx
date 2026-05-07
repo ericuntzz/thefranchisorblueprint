@@ -30,12 +30,12 @@ export function ActivityFeed({ events }: Props) {
   if (events.length === 0) return null;
 
   return (
-    <section className="bg-white rounded-2xl border border-navy/10 p-5 sm:p-6">
+    <section className="bg-white rounded-2xl border border-card-border p-5 sm:p-6">
       <div className="flex items-baseline justify-between gap-3 mb-4">
         <span className="text-[10px] uppercase tracking-[0.18em] text-gold-warm font-bold">
           Recent activity
         </span>
-        <span className="text-[10px] text-grey-4 font-semibold">
+        <span className="text-[10px] text-grey-3 font-semibold">
           Last {events.length}
         </span>
       </div>
@@ -56,7 +56,7 @@ export function ActivityFeed({ events }: Props) {
                 {e.detail && (
                   <span className="text-grey-3 text-xs truncate">{e.detail}</span>
                 )}
-                <span className="text-grey-4 text-xs flex-shrink-0 ml-auto">
+                <span className="text-grey-3 text-xs flex-shrink-0 ml-auto">
                   {formatRelative(e.at)}
                 </span>
               </div>

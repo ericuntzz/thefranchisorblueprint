@@ -63,7 +63,7 @@ export default async function LibraryPage() {
         <div className="max-w-[1100px] mx-auto px-6 md:px-8 py-6">
           <Link
             href="/portal"
-            className="inline-flex items-center gap-1.5 text-grey-4 hover:text-navy text-xs font-semibold uppercase tracking-[0.12em] transition-colors"
+            className="inline-flex items-center gap-1.5 text-grey-3 hover:text-navy text-xs font-semibold uppercase tracking-[0.12em] transition-colors"
           >
             <ArrowLeft size={12} /> Back to portal
           </Link>
@@ -152,11 +152,11 @@ function EntryCard({ entry, tier }: { entry: LibraryEntry; tier: Tier }) {
   const isExternal = entry.href?.startsWith("http");
   const isInternal = entry.href?.startsWith("/");
   return (
-    <article className="bg-white rounded-xl border border-navy/10 p-5 flex flex-col">
+    <article className="bg-white rounded-xl border border-card-border p-5 flex flex-col">
       <div className="flex items-baseline justify-between gap-2 mb-1">
         <h3 className="text-navy font-bold text-base">{entry.name}</h3>
         {entry.region && (
-          <span className="text-[10px] uppercase tracking-[0.1em] text-grey-4 font-semibold">
+          <span className="text-[10px] uppercase tracking-[0.1em] text-grey-3 font-semibold">
             {entry.region}
           </span>
         )}
@@ -188,7 +188,7 @@ function EntryCard({ entry, tier }: { entry: LibraryEntry; tier: Tier }) {
           </Link>
         )}
         {!entry.href && (
-          <span className="text-grey-4 text-xs italic">{ctaLabel}</span>
+          <span className="text-grey-3 text-xs italic">{ctaLabel}</span>
         )}
         {/* Tier marker for clarity */}
         {(entry.minTier ?? 1) > 1 && tier >= (entry.minTier ?? 1) && (
@@ -211,7 +211,7 @@ function LockedSection({ entries, tier }: { entries: LibraryEntry[]; tier: Tier 
   return (
     <section className="border-t border-navy/10 pt-10">
       <div className="flex items-baseline gap-3 mb-1">
-        <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-navy/5 text-grey-4">
+        <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-navy/5 text-grey-3">
           <Lock size={14} />
         </span>
         <h2 className="text-navy font-bold text-xl">Unlock with an upgrade</h2>
@@ -226,11 +226,11 @@ function LockedSection({ entries, tier }: { entries: LibraryEntry[]; tier: Tier 
           items.map((entry) => (
             <article
               key={`locked-${entry.id}`}
-              className="bg-grey-1/40 rounded-xl border border-navy/10 p-5 flex flex-col opacity-80"
+              className="bg-grey-1/40 rounded-xl border border-card-border p-5 flex flex-col opacity-80"
             >
               <div className="flex items-center gap-2 mb-1">
-                <Lock size={12} className="text-grey-4" />
-                <span className="text-[10px] uppercase tracking-[0.12em] text-grey-4 font-bold">
+                <Lock size={12} className="text-grey-3" />
+                <span className="text-[10px] uppercase tracking-[0.12em] text-grey-3 font-bold">
                   {entry.minTier === 3 ? "Builder" : "Navigator"} only · {cat}
                 </span>
               </div>
