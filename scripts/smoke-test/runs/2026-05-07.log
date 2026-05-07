@@ -55,3 +55,44 @@ Seed complete. Test account ready for smoke test.
 ◇ injected env (53) from .env.local // tip: ⌘ override existing { override: true }
 Email sent: 34311f09-7f76-46bc-a866-aa546309a45f. Report: /Users/fin/Documents/The Franchisor Blueprint Website/scripts/smoke-test/runs/2026-05-07.md
 [smoke-test] === commit ===
+[main 21c5ff3] smoke-test: 2026-05-07 · 23/23 pass · 0 blocker(s)
+ Committer: Fin <fin@Fins-Mac-mini.local>
+Your name and email address were configured automatically based
+on your username and hostname. Please check that they are accurate.
+You can suppress this message by setting them explicitly. Run the
+following command and follow the instructions in your editor to edit
+your configuration file:
+
+    git config --global --edit
+
+After doing this, you may fix the identity used for this commit with:
+
+    git commit --amend --reset-author
+
+ 2 files changed, 87 insertions(+), 5 deletions(-)
+ create mode 100644 scripts/smoke-test/runs/2026-05-07.log
+To https://github.com/ericuntzz/thefranchisorblueprint.git
+   0504bcc..21c5ff3  main -> main
+[smoke-test] === done 2026-05-07T21:29:43Z ===
+[smoke-test] === 2026-05-07T21:43:55Z ===
+[smoke-test] === seed ===
+
+> tfb-site@0.1.0 smoke-test:seed
+> tsx scripts/smoke-test/seed.ts
+
+◇ injected env (54) from .env.local // tip: ◈ secrets for agents [www.dotenvx.com]
+Seeding eric.j.unterberger+smoketest@gmail.com (f6c99e67-2bf0-4159-a486-b0e9fbeb8cd2)...
+✓ test auth user exists
+✓ profile upserted
+✓ paid purchase exists
+✓ 3 redlines already seeded
+
+Seed complete. Test account ready for smoke test.
+[smoke-test] === phase 1 ===
+[smoke-test] phase1 exit=0
+[smoke-test] === phase 2 ===
+[smoke-test] phase2 exit=0
+[smoke-test] === reporter ===
+◇ injected env (54) from .env.local // tip: ◈ secrets for agents [www.dotenvx.com]
+Email sent: 09e75efe-6051-40d1-8b30-21e60d050f88. Report: /Users/fin/Documents/The Franchisor Blueprint Website/scripts/smoke-test/runs/2026-05-07.md
+[smoke-test] === commit ===
