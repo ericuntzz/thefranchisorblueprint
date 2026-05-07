@@ -218,7 +218,7 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
               </h1>
               <p className="text-grey-3 text-base md:text-lg mt-2 max-w-[640px]">
                 {isFirstRun
-                  ? "Your franchisor operating system. Start with the Audit (about 60 minutes) and you'll know whether your business is franchise-ready."
+                  ? "Your franchisor operating system. Pre-fill from your website and answer your first questions — most customers are 25% complete after their first session."
                   : "Your franchisor operating system."}
               </p>
             </div>
