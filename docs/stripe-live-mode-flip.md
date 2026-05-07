@@ -170,7 +170,7 @@ When live, ping Claude to:
 
 - **Forgetting `NEXT_PUBLIC_STRIPE_LIVE=true`** — the most likely
   miss. Symptom: live keys in env, but buy box still shows the
-  founding-member CTA. Fix: add the env var, redeploy.
+  "Book your onboarding call" CTA. Fix: add the env var, redeploy.
 - **Webhook signature mismatch** — symptom: customer pays, no portal
   access granted, Vercel logs show
   `Webhook signature verification failed`. Cause: `STRIPE_WEBHOOK_SECRET`

@@ -7,7 +7,7 @@ import { PageHero } from "@/components/PageHero";
 import { CalendlyEmbed } from "@/components/CalendlyEmbed";
 
 /**
- * 15-minute founding-member kickoff call for The Blueprint (Tier 1).
+ * 15-minute Blueprint onboarding call (Tier 1 entry point).
  *
  * This is the destination for the BlueprintUpsellBuyBox CTA while
  * NEXT_PUBLIC_STRIPE_LIVE !== "true". Once direct Stripe checkout is
@@ -18,13 +18,13 @@ const CALENDLY_URL =
   "https://calendly.com/team-thefranchisorblueprint/15-minute-discovery-call";
 
 export const metadata: Metadata = {
-  title: "15-Minute Founding-Member Call | The Franchisor Blueprint",
+  title: "Book Your Blueprint Onboarding Call | The Franchisor Blueprint",
   description:
-    "We're onboarding our first cohort of Blueprint customers personally. Schedule a 15-minute call — we'll confirm fit, walk you through the system, and lock in founding-member pricing.",
+    "Every Blueprint engagement starts with a 15-minute onboarding call. We confirm fit, walk you through the system, and send you a custom invoice — credit card or ACH.",
   openGraph: {
-    title: "15-Minute Founding-Member Call | The Franchisor Blueprint",
+    title: "Book Your Blueprint Onboarding Call | The Franchisor Blueprint",
     description:
-      "We're onboarding our first cohort of Blueprint customers personally. Schedule a 15-minute call to confirm fit and lock in founding-member pricing.",
+      "Every Blueprint engagement starts with a 15-minute onboarding call. Confirm fit, walk through the system, get a custom invoice.",
     url: "/strategy-call/blueprint",
   },
 };
@@ -35,9 +35,9 @@ export default function BlueprintStrategyCallPage() {
       <SiteNav />
 
       <PageHero
-        eyebrow="Founding Member · 15 Minutes"
-        title="Lock In Your Founding-Member Pricing on The Blueprint"
-        subtitle="We're onboarding our first cohort of Blueprint customers personally. Quick fit check, system walkthrough, and your founding-member discount — no pressure, no sales tactics."
+        eyebrow="Onboarding Call · 15 Minutes"
+        title="Get Started with The Blueprint"
+        subtitle="Every Blueprint engagement starts with a quick onboarding call. Confirm fit, walk through the system, and we'll send you a custom invoice — no pressure, no sales tactics."
       />
 
       {/* ===== Calendly + plan ===== */}
@@ -66,8 +66,8 @@ export default function BlueprintStrategyCallPage() {
                   },
                   {
                     Icon: Calendar,
-                    t: "Last 5 min: Founding-member pricing + next steps",
-                    d: "If The Blueprint is a fit, we lock in your founding-member discount and send you a custom invoice. If it’s not, we tell you straight — and refer you to whatever does fit.",
+                    t: "Last 5 min: Pricing + next steps",
+                    d: "If The Blueprint is a fit, we send you a custom invoice (credit card or ACH) and you get instant access to the system. If it’s not, we tell you straight — and refer you to whatever does fit.",
                   },
                 ].map(({ Icon, t, d }) => (
                   <li key={t} className="flex gap-4">
@@ -107,24 +107,28 @@ export default function BlueprintStrategyCallPage() {
         </div>
       </section>
 
-      {/* ===== Why founding member ===== */}
+      {/* ===== Why a call ===== */}
       <section className="bg-cream py-20 md:py-24">
         <div className="max-w-[860px] mx-auto px-8 text-center">
           <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase mb-4 border-b-2 border-gold pb-1">
-            Why we&apos;re doing this in person
+            Why a quick call
           </span>
           <h2 className="text-2xl md:text-4xl font-bold mb-6 max-w-[680px] mx-auto">
-            We&apos;re Walking the First Cohort Through the System Personally
+            Every Engagement Starts With a Conversation
           </h2>
           <p className="text-grey-3 text-lg leading-relaxed mb-4">
-            Self-serve checkout opens shortly. Until then, every founding
-            member gets a real conversation with the team — so we know who
-            you are, you know what you&apos;re getting, and we both walk away
-            confident this is the right fit.
+            We&apos;ve been doing franchise development for 30 years.
+            The 9-framework system inside The Blueprint is the same
+            playbook we&apos;ve run with every Navigator and Builder
+            client — the only thing different is you&apos;re executing
+            it self-paced instead of with weekly coaching.
           </p>
           <p className="text-grey-3 text-lg leading-relaxed">
-            In exchange: a discount that won&apos;t exist after we open
-            self-serve checkout, and direct access to us during your build.
+            Fifteen minutes lets us confirm The Blueprint is the right
+            tier for where you are, walk you through what&apos;s inside,
+            and get you started right after the call. No sales tactics,
+            no upsell pressure — if it&apos;s not a fit, we&apos;ll
+            tell you and point you elsewhere.
           </p>
         </div>
       </section>

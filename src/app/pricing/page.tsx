@@ -160,7 +160,7 @@ export default function PricingPage() {
                 }}
                 className="block w-full text-center bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-6 py-4 rounded-full hover:bg-gold-dark transition-colors"
               >
-                Buy the Blueprint
+                Get the Blueprint
               </AnalyticsLink>
               <p className="text-center text-grey-4 text-xs italic mt-3">
                 <span className="font-semibold text-navy/70">+$2,000</span> to add 4 coaching calls (

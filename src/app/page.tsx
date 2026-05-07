@@ -496,7 +496,7 @@ export default function Home() {
                 }}
                 className="block w-full text-center bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-6 py-4 rounded-full hover:bg-gold-dark transition-colors"
               >
-                Buy the Blueprint
+                Get the Blueprint
               </AnalyticsLink>
             </div>
 
