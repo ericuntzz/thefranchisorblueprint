@@ -17,7 +17,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Franchise Your Business | The Franchisor Blueprint | Affordable Franchise Consulting",
+  title: "Franchise Your Business | The Franchisor Blueprint",
   description:
     "Stop overpaying for franchise development. Get the complete franchisor operating system plus 6 months of 1:1 coaching for a fraction of the cost. Take the free Franchise Readiness Assessment.",
   metadataBase: new URL(SITE_URL),
