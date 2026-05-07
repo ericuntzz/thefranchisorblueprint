@@ -208,6 +208,7 @@ export default async function BlueprintLabPage() {
                     saveFields={saveMemoryFields}
                     setConfidence={setChapterConfidence}
                     saveSection={saveChapterSection}
+                    readOnly
                   />
                 );
               })}

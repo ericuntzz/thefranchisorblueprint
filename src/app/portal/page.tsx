@@ -28,26 +28,36 @@ import {
   summarizeQueue,
 } from "@/lib/memory/queue";
 import { CommandCenter } from "@/components/portal/CommandCenter";
-import { DeliverableChecklist } from "@/components/portal/DeliverableChecklist";
-import { ExportsSection } from "@/components/portal/ExportsSection";
+import {
+  DeliverableExplorer,
+  type ChapterDataBundle,
+  type DeliverableViewModel,
+} from "@/components/portal/DeliverableExplorer";
 import { ActivityFeed } from "@/components/portal/ActivityFeed";
 import { getRecentActivity } from "@/lib/activity/feed";
-import { RegulatoryMilestones } from "@/components/portal/RegulatoryMilestones";
-import {
-  computeMilestoneSummary,
-  indexMilestones,
-  readMilestones,
-} from "@/lib/milestones/state";
-import { WhatIfCoach } from "@/components/portal/WhatIfCoach";
 import { loadBuildContext } from "@/lib/export/load";
 import { reviewDeliverable } from "@/lib/export/deliverable-readiness";
 import {
   DELIVERABLES,
   DELIVERABLE_DISPLAY_ORDER,
 } from "@/lib/export/deliverables";
+import { MEMORY_FILES, MEMORY_FILE_TITLES } from "@/lib/memory/files";
+import type { MemoryFileSlug } from "@/lib/memory/files";
+import { getChapterSchema } from "@/lib/memory/schemas";
+import type { MemoryFieldsMap } from "@/lib/calc";
+import {
+  saveMemoryFields,
+  saveChapterSection,
+  setChapterConfidence,
+} from "@/app/portal/lab/blueprint/actions";
 import type { DeliverableReview } from "@/lib/export/deliverable-readiness";
 import type { DeliverableId } from "@/lib/export/types";
-import type { CustomerMemory as CM } from "@/lib/supabase/types";
+import type {
+  ChapterAttachment,
+  CustomerMemory,
+  CustomerMemory as CM,
+  CustomerMemoryProvenance,
+} from "@/lib/supabase/types";
 import {
   getActiveOffersForUser,
   isPromoActive,
@@ -117,15 +127,30 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
     ? Math.max(1, Math.floor((Date.now() - joinedAt.getTime()) / (24 * 3600 * 1000)) + 1)
     : null;
 
-  // ---- Franchise Readiness Command Center inputs ----
-  // Read every customer_memory row so we can compute per-chapter
-  // readiness + the question queue. Service-role client because the
-  // dashboard is auth-gated and we want this in one round-trip.
+  // ---- Franchise Readiness Command Center + DeliverableExplorer inputs ----
+  // Read every customer_memory row + provenance so we can compute
+  // per-chapter readiness, the question queue, AND render the inline
+  // chapter editors inside the deliverable explorer. Service-role
+  // client because the dashboard is auth-gated and we want this in
+  // one round-trip.
   const admin = getSupabaseAdmin();
-  const { data: memoryRowsRaw } = await admin
-    .from("customer_memory")
-    .select("file_slug, content_md, fields, confidence, attachments")
-    .eq("user_id", user.id);
+  const [{ data: memoryRowsRaw }, { data: provenanceRows }] = await Promise.all([
+    admin.from("customer_memory").select("*").eq("user_id", user.id),
+    admin
+      .from("customer_memory_provenance")
+      .select("*")
+      .eq("user_id", user.id),
+  ]);
+  const memoryBySlug = new Map<string, CustomerMemory>();
+  for (const row of (memoryRowsRaw ?? []) as CustomerMemory[]) {
+    memoryBySlug.set(row.file_slug, row);
+  }
+  const provenanceBySlug = new Map<string, CustomerMemoryProvenance[]>();
+  for (const row of (provenanceRows ?? []) as CustomerMemoryProvenance[]) {
+    const list = provenanceBySlug.get(row.file_slug) ?? [];
+    list.push(row);
+    provenanceBySlug.set(row.file_slug, list);
+  }
   const memoryIndexed = indexMemoryRows(
     (memoryRowsRaw ?? []) as Array<
       Pick<
@@ -176,19 +201,92 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
   // customer's Memory. Hidden when empty (brand-new customer).
   const recentActivity = await getRecentActivity(user.id, 6);
 
-  // Regulatory milestones — Stripe Atlas-style external-events checklist.
-  // Resilient to migration 0015 not having been applied; shows all-pending
-  // state in that case.
-  const milestoneRows = await readMilestones(user.id);
-  const milestoneIndex = indexMilestones(milestoneRows);
-  const milestoneStatesObj = Object.fromEntries(milestoneIndex);
-  const milestoneSummary = computeMilestoneSummary(milestoneIndex);
+  // Regulatory milestones moved to /portal/checklist — no need to
+  // load them here.
 
   // Active 48hr promo offer — surfaced via the inline UpgradeBanner component
   const offers = tier < 3 ? await getActiveOffersForUser(user.id) : [];
   const activePromo = offers
     .filter((o) => isPromoActive(o))
     .sort((a, b) => new Date(a.promo_expires_at).getTime() - new Date(b.promo_expires_at).getTime())[0] ?? null;
+
+  // ---- DeliverableExplorer view models ----
+  // Build a per-chapter bundle once (shared across deliverables that
+  // include the chapter) and an explorer view model per deliverable.
+  // Cross-chapter fields map drives the chapter editor's computed
+  // formulas (e.g. franchisee_profile.minimum_liquid_capital depends
+  // on unit_economics.initial_investment_high).
+  const allFieldsMap: MemoryFieldsMap = {};
+  for (const [slug, row] of memoryBySlug) {
+    allFieldsMap[slug as keyof MemoryFieldsMap] = (row.fields ?? {}) as Record<
+      string,
+      string | number | boolean | string[] | null
+    >;
+  }
+  // Cross-chapter attachments index (only chapters that have ≥1
+  // attachment) — fed to ChapterCard so the pre-draft modal can offer
+  // "pull a reference from another chapter."
+  const allAttachmentsByChapter: Array<{
+    slug: MemoryFileSlug;
+    attachments: ChapterAttachment[];
+  }> = MEMORY_FILES.flatMap((s) => {
+    const att = (memoryBySlug.get(s)?.attachments ?? []) as ChapterAttachment[];
+    return att.length > 0 ? [{ slug: s, attachments: att }] : [];
+  });
+  // Per-chapter bundle. Chapters not yet in memoryBySlug (brand-new
+  // accounts) still get a bundle with empty content so the explorer
+  // can render them as "Not started."
+  const chapterBundles = new Map<MemoryFileSlug, ChapterDataBundle>();
+  for (const slug of MEMORY_FILES) {
+    const row = memoryBySlug.get(slug);
+    const content = row?.content_md ?? "";
+    const fields = (row?.fields ?? {}) as Record<string, string | number | boolean | string[] | null>;
+    const hasFields = Object.keys(fields).length > 0;
+    const confidence: "verified" | "inferred" | "draft" | "empty" =
+      !content.trim() && !hasFields
+        ? "empty"
+        : ((row?.confidence ?? "draft") as "verified" | "inferred" | "draft");
+    const otherChaptersFields: MemoryFieldsMap = {};
+    for (const [otherSlug, otherFields] of Object.entries(allFieldsMap)) {
+      if (otherSlug !== slug) {
+        otherChaptersFields[otherSlug as keyof MemoryFieldsMap] = otherFields;
+      }
+    }
+    chapterBundles.set(slug, {
+      slug,
+      title: MEMORY_FILE_TITLES[slug],
+      contentMd: content,
+      confidence,
+      readinessState: chapterReadiness[slug]?.state ?? "gray",
+      lastUpdatedBy: row?.last_updated_by ?? null,
+      updatedAt: row?.updated_at ?? null,
+      provenance: provenanceBySlug.get(slug) ?? [],
+      attachments: (row?.attachments ?? []) as ChapterAttachment[],
+      allAttachmentsByChapter,
+      fields,
+      fieldStatus: (row?.field_status ?? undefined) as ChapterDataBundle["fieldStatus"],
+      otherChaptersFields,
+      schema: getChapterSchema(slug),
+    });
+  }
+  const deliverableViewModels: DeliverableViewModel[] = DELIVERABLE_DISPLAY_ORDER.flatMap(
+    (id) => {
+      const def = DELIVERABLES[id];
+      const review = exportReadiness[id];
+      if (!def || !review) return [];
+      const sourceChapters = def.sourceChapters
+        .map((slug) => chapterBundles.get(slug))
+        .filter((b): b is ChapterDataBundle => !!b);
+      return [{
+        id,
+        name: def.name,
+        description: def.description,
+        kind: def.kind,
+        review,
+        sourceChapters,
+      }];
+    },
+  );
 
   return (
     <>
@@ -255,9 +353,19 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
             queue={queueSummary}
             estimateMin={queueEstimateMin}
           />
-          <DeliverableChecklist readiness={chapterReadiness} />
+          {/* DeliverableExplorer replaces both the prior
+              DeliverableChecklist (per-phase chapter grid) and
+              ExportsSection ("Download what you've built"). Each
+              deliverable card expands to show its contributing
+              chapters; each chapter row expands to a full inline
+              editor. Bundle download UI preserved at the top. */}
+          <DeliverableExplorer
+            deliverables={deliverableViewModels}
+            saveFields={saveMemoryFields}
+            saveSection={saveChapterSection}
+            setConfidence={setChapterConfidence}
+          />
           <ActivityFeed events={recentActivity} />
-          <ExportsSection readiness={exportReadiness} />
           {/* RegulatoryMilestones moved to /portal/checklist — that's the
               "what has to happen before launch" surface, distinct from
               the per-chapter readiness grid above. */}

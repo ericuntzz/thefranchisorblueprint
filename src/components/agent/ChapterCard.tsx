@@ -131,6 +131,14 @@ type Props = {
     slug: string;
     confidence: "verified" | "inferred" | "draft";
   }) => Promise<void>;
+  /**
+   * Read-only mode for /portal/lab/blueprint. Hides the footer's
+   * interactive editing affordances (Edit fields, Redraft with Jason,
+   * Approve as verified) so the assembled-view page stays a clean
+   * "read your full blueprint" surface. Editing happens on the
+   * dashboard's deliverable explorer.
+   */
+  readOnly?: boolean;
 };
 
 export function ChapterCard({
@@ -151,6 +159,7 @@ export function ChapterCard({
   saveFields,
   saveSection,
   setConfidence,
+  readOnly = false,
 }: Props) {
   const [drafting, setDrafting] = useState(false);
   const [draftError, setDraftError] = useState<string | null>(null);
@@ -481,9 +490,12 @@ export function ChapterCard({
                   {showProvenance ? "Hide provenance" : "Show provenance"}
                 </button>
               )}
-              {/* "Edit prose" lives on the prose itself as a hover
-                  affordance — see the prose container above. */}
-              {schema && (
+              {/* Editing affordances are hidden in read-only mode
+                  (used on /portal/lab/blueprint where the page is
+                  the assembled "read your full blueprint" view).
+                  Edit happens on the dashboard's deliverable
+                  explorer. */}
+              {!readOnly && schema && (
                 <button
                   type="button"
                   onClick={() => setEditing(true)}
@@ -492,14 +504,16 @@ export function ChapterCard({
                   <Pencil size={11} /> Edit fields
                 </button>
               )}
-              <button
-                type="button"
-                onClick={openDraftModal}
-                disabled={drafting}
-                className="text-gold-warm hover:text-gold-dark font-semibold disabled:opacity-50 py-1.5"
-              >
-                {drafting ? "Redrafting…" : "Redraft with Jason"}
-              </button>
+              {!readOnly && (
+                <button
+                  type="button"
+                  onClick={openDraftModal}
+                  disabled={drafting}
+                  className="text-gold-warm hover:text-gold-dark font-semibold disabled:opacity-50 py-1.5"
+                >
+                  {drafting ? "Redrafting…" : "Redraft with Jason"}
+                </button>
+              )}
               {/* MOCK: "Approve as verified" / "Verified · re-open" buttons
                   removed. Asking the user to verify their own draft is a
                   category mismatch — completion is now derived from the
