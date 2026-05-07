@@ -382,12 +382,12 @@ function sourceLabelFor(
       return "From an upload";
     case "research":
       return "From research";
+    // User-originated values: don't add a label — the user knows
+    // they typed it. The trust signal only earns its place when
+    // the source is non-obvious (AI inference, scrape, upload).
     case "user_correction":
-      return "You corrected this in chat";
     case "user_typed":
-      return "You typed this";
     case "form":
-      return "You answered this";
     default:
       return null;
   }

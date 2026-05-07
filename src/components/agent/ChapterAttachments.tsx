@@ -304,7 +304,7 @@ function AttachmentComposer({
           <input
             type="file"
             className="sr-only"
-            accept=".pdf,.docx,.doc,.txt,.md,.markdown,.csv,.json,.xml,.yaml,.yml,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/*,image/*"
+            accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.txt,.png,.jpg,.jpeg,.heic,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,text/plain,image/*"
             disabled={busy}
             onChange={(e) => {
               const f = e.target.files?.[0];
@@ -353,7 +353,7 @@ function AttachmentComposer({
 }
 
 function formatBytes(n: number): string {
-  if (n < 1024) return `${n} B`;
-  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  if (n < 1024) return "<1 KB";
+  if (n < 1024 * 1024) return `${Math.round(n / 1024)} KB`;
   return `${(n / 1024 / 1024).toFixed(1)} MB`;
 }

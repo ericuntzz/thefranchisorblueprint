@@ -508,7 +508,7 @@ export function DraftWithJasonModal({
               <input
                 type="file"
                 className="sr-only"
-                accept=".pdf,.docx,.doc,.txt,.md,.markdown,.csv,.json,.xml,.yaml,.yml,.toml,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/*"
+                accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.txt,.png,.jpg,.jpeg,.heic,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,text/plain,image/*"
                 disabled={uploading || submitting}
                 onChange={(e) => {
                   const f = e.target.files?.[0];

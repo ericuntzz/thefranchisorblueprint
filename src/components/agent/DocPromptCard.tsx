@@ -134,7 +134,7 @@ export function DocPromptCard({ slug, prompt, compact }: Props) {
               <input
                 type="file"
                 className="sr-only"
-                accept=".pdf,.docx,.doc,.txt,.md,.markdown,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/*,image/*"
+                accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.txt,.png,.jpg,.jpeg,.heic,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,text/plain,image/*"
                 disabled={uploading}
                 onChange={(e) => {
                   const f = e.target.files?.[0];
@@ -210,14 +210,14 @@ export function DocPromptCard({ slug, prompt, compact }: Props) {
               Drop a file or click to choose
             </span>
             <span className="text-amber-700/70 text-xs">
-              · PDF, DOC, TXT, MD, or images
+              · PDF, DOC, XLSX, CSV, or images
             </span>
           </>
         )}
         <input
           type="file"
           className="sr-only"
-          accept=".pdf,.docx,.doc,.txt,.md,.markdown,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/*,image/*"
+          accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.txt,.png,.jpg,.jpeg,.heic,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,text/plain,image/*"
           disabled={uploading}
           onChange={(e) => {
             const f = e.target.files?.[0];

@@ -1909,12 +1909,7 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
             ref={fileInputRef}
             type="file"
             className="sr-only"
-            // Match server-side allowed types in /api/agent/chapter-
-            // attachment (extract-doc-text supports PDF + DOCX; the
-            // text-like fallback handles md/txt/csv/json/xml/yaml/toml).
-            // Without this, the file picker offers .exe / .dmg / etc.
-            // and the upload silently fails server-side.
-            accept=".pdf,.docx,.txt,.md,.markdown,.csv,.json,.xml,.yaml,.yml,.toml,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/*"
+            accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.txt,.png,.jpg,.jpeg,.heic,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,text/plain,image/*"
             aria-label="Attach a reference file"
             onChange={(e) => {
               const f = e.target.files?.[0];

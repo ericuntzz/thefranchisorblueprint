@@ -35,7 +35,6 @@ import type {
 } from "@/lib/supabase/types";
 import { ChapterAttachments } from "./ChapterAttachments";
 import { DraftWithJasonModal } from "./DraftWithJasonModal";
-import { ReadinessPill } from "./ReadinessPill";
 import type { MemoryFileSlug } from "@/lib/memory/files";
 import type { ReadinessState } from "@/lib/memory/readiness";
 import { type ChapterSchema, type FieldDef } from "@/lib/memory/schemas";
@@ -256,16 +255,13 @@ export function ChapterCard({
 
   return (
     <article id={`chapter-${slug}`} className="rounded-2xl border border-card-border bg-white p-5 sm:p-6 md:p-8 scroll-mt-20">
-      <header className="mb-4 flex items-start justify-between gap-3">
+      <header className="mb-4">
         <div className="min-w-0 flex-1">
-          <div className="text-xs uppercase tracking-[0.14em] text-gold-text font-bold mb-1">
-            <span className="font-mono">{slug}</span>
-            {schema && filledFieldCount.total > 0 && !editing && (
-              <span className="ml-2 text-grey-3 normal-case tracking-normal">
-                — {filledFieldCount.filled} of {filledFieldCount.total} filled
-              </span>
-            )}
-          </div>
+          {schema && filledFieldCount.total > 0 && !editing && (
+            <div className="text-xs uppercase tracking-[0.14em] text-grey-3 font-bold mb-1">
+              {filledFieldCount.filled} of {filledFieldCount.total} filled
+            </div>
+          )}
           <h2 className="text-navy font-extrabold text-xl md:text-2xl leading-tight break-words">
             {title}
           </h2>
@@ -274,9 +270,6 @@ export function ChapterCard({
               {schema.description}
             </p>
           )}
-        </div>
-        <div className="flex-shrink-0">
-          <ReadinessPill state={readinessState} />
         </div>
       </header>
 
@@ -462,9 +455,7 @@ export function ChapterCard({
                   className="inline-flex items-center gap-1 text-grey-3 hover:text-navy transition-colors py-1.5"
                 >
                   <ShieldCheck size={11} />
-                  {showProvenance
-                    ? "Hide provenance"
-                    : `Show provenance (${provenance.length})`}
+                  {showProvenance ? "Hide provenance" : "Show provenance"}
                 </button>
               )}
               {/* "Edit prose" lives on the prose itself as a hover
@@ -517,10 +508,10 @@ export function ChapterCard({
           </footer>
           {showProvenance && (
             <div className="mt-4 rounded-xl bg-grey-1 border border-card-border px-4 py-3 text-xs text-grey-3 space-y-2">
-              {provenance.map((p) => (
+              {provenance.map((p, i) => (
                 <div key={p.id} className="flex gap-2">
-                  <span className="font-mono text-gold-warm flex-shrink-0">
-                    [{p.claim_id}]
+                  <span className="text-gold-warm font-bold tabular-nums flex-shrink-0">
+                    {i + 1}.
                   </span>
                   <div>
                     <div>

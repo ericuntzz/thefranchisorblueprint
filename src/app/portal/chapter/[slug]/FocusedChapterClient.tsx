@@ -45,7 +45,6 @@ import { ChapterFieldEditor } from "@/components/agent/ChapterFieldEditor";
 import { ChapterAttachments } from "@/components/agent/ChapterAttachments";
 import { DocPromptCard } from "@/components/agent/DocPromptCard";
 import { DraftWithJasonModal } from "@/components/agent/DraftWithJasonModal";
-import { ReadinessPill } from "@/components/agent/ReadinessPill";
 import { docPromptFor } from "@/lib/memory/doc-prompts";
 
 type FieldValue = string | number | boolean | string[] | null;
@@ -215,11 +214,8 @@ export function FocusedChapterClient(props: Props) {
   return (
     <div className="space-y-6">
       {/* Hero */}
-      <header className="flex items-start justify-between gap-4 flex-wrap">
-        <div className="min-w-0 flex-1">
-          <div className="text-xs uppercase tracking-[0.14em] text-gold-text font-bold mb-1.5">
-            <span className="font-mono">{slug}</span>
-          </div>
+      <header>
+        <div className="min-w-0">
           <h1 className="text-navy font-extrabold text-2xl md:text-4xl leading-tight mb-2 break-words">
             {title}
           </h1>
@@ -233,9 +229,6 @@ export function FocusedChapterClient(props: Props) {
               Compiles into: {schemaCompilesInto}
             </p>
           )}
-        </div>
-        <div className="flex-shrink-0">
-          <ReadinessPill state={readinessState} />
         </div>
       </header>
 

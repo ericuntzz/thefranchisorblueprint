@@ -625,7 +625,7 @@ function UploadStepCard({
               Drop files or click to choose
             </span>
             <span className="text-grey-3 text-xs">
-              PDF, DOC, TXT, MD, or images · multiple files OK
+              PDF, DOC, XLSX, CSV, or images · multiple files OK
             </span>
           </>
         )}
@@ -633,7 +633,7 @@ function UploadStepCard({
           type="file"
           className="sr-only"
           multiple
-          accept=".pdf,.docx,.doc,.txt,.md,.markdown,.csv,.json,.xml,.yaml,.yml,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/*,image/*"
+          accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.txt,.png,.jpg,.jpeg,.heic,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,text/plain,image/*"
           disabled={uploading}
           onChange={(e) => void uploadMany(e.target.files)}
         />
