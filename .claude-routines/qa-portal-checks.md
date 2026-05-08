@@ -95,3 +95,46 @@ Prior run (2026-05-06) noted these three components as needing `accept` but defe
 Prior run flagged as ambiguous. Confirmed this run: `tier` was passed to `PromoBanner` but genuinely unused inside the component (target tier derived from `offer.target_tier`, not the caller's `tier`). Safe to remove. Removed in `784545a`.
 
 **Pattern to watch:** Any JSX expression matching `{[a-z]+ === [a-z]+ && null}` is a dead suppression. Confirm unused → remove prop + call-site attribute in one file edit.
+
+---
+
+## Additions from 2026-05-08
+
+### 10. Stale "coming in next commit / Wave N" inline comments
+
+**Pattern:** JSDoc or inline comments that describe a future state that has since been implemented — e.g. "Email dispatch is wired in Wave 3" when the email is already being sent in the same file. These mislead future readers about what the route actually does.
+
+**Grep:** `grep -rn "next commit\|Wave [0-9]\|coming in\|wired in\|we'll add\|will be added" src/app/api/portal src/app/api/assessment src/app/portal src/app/assessment` — for each hit, check whether the surrounding code already does the described thing. If yes, update the comment to reflect current state.
+
+**Fixed (2026-05-08):** `src/app/api/assessment/complete/route.ts` lines 9-11 — said email dispatch was coming "in the next commit"; email was already being sent in the same file.
+
+---
+
+### 11. `void (async () => {...})()` in route handlers vs. server components
+
+The check from baseline (fire-and-forget promises in server components) does NOT apply equally to `route.ts` files using `export const runtime = "nodejs"`. In the Node.js runtime, pending promises continue to execute after `return res` — the function stays alive until all microtasks complete or the Vercel timeout fires. In contrast, Edge runtime (`export const runtime = "edge"`) and streaming server components may cut off pending work early.
+
+**When auditing fire-and-forget:**
+1. Check the file's `runtime` export. `"nodejs"` → lower risk, continues post-response.
+2. Check for `"edge"` or no `runtime` export in a server component → higher risk.
+3. If Node.js runtime + `.catch()` error handling + intentional best-effort pattern (e.g. email send that shouldn't block the primary response) → REPORT-ONLY, don't flag as HIGH.
+
+**Grep to catch genuinely problematic cases:** `grep -rn "^void " src/app/portal src/app/assessment` (line-start `void` in server component files, excluding `route.ts`).
+
+---
+
+### 12. Verify `accept` strings persist on file inputs across portal renders
+
+Prior runs fixed `accept` attributes on four components. Check that none were reverted in refactors:
+
+```bash
+grep -A3 'type="file"' \
+  src/components/agent/DraftWithJasonModal.tsx \
+  src/components/agent/DocPromptCard.tsx \
+  src/components/agent/ChapterAttachments.tsx \
+  src/app/portal/lab/intake/IntakeClient.tsx \
+  src/components/agent/JasonChatDock.tsx \
+  | grep "accept="
+```
+
+Should return ≥5 matches (DraftWithJasonModal ×1, DocPromptCard ×2, ChapterAttachments ×1, IntakeClient ×1, JasonChatDock ×1). If fewer, flag the missing one.
