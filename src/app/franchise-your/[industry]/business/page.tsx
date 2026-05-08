@@ -26,8 +26,8 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const industry = allIndustries.find((i) => i.slug === slug);
   if (!industry) return {};
 
-  const title = `How to Franchise a ${industry.name} Business (2026 Guide) | The Franchisor Blueprint`;
-  const description = `Franchising a ${industry.name.toLowerCase()} business: typical royalty rates (${industry.royaltyRangePct.min}-${industry.royaltyRangePct.max}%), franchise fees, Item 7 ranges, unit economics, and the operational patterns that determine which ${industry.shortName} concepts succeed.`;
+  const title = `${industry.shortName} Franchise | The Franchisor Blueprint`;
+  const description = `${industry.shortName} franchise: royalty rates (${industry.royaltyRangePct.min}–${industry.royaltyRangePct.max}%), franchise fees, Item 7 ranges, and unit economics. By Jason Stowe, 30 years in franchising.`;
 
   return {
     title,

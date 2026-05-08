@@ -22,10 +22,9 @@ import {
 } from "@/lib/schema";
 
 export const metadata: Metadata = {
-  title:
-    "Franchise Your Business by Industry: Royalty Rates, Fees & Economics by Sector | The Franchisor Blueprint",
+  title: "Franchise by Industry | The Franchisor Blueprint",
   description:
-    "How to franchise a business in 16 major industries — typical royalty rates, franchise fees, Item 7 ranges, unit EBITDA, and the operational patterns that determine which concepts succeed. Food service, fitness, home services, education, beauty, and more.",
+    "Royalty rates, franchise fees, Item 7 ranges, and unit economics for 16 major industries — food service, fitness, home services, education, beauty, and more.",
   alternates: { canonical: "/franchise-by-industry" },
   openGraph: {
     title: "Franchise Your Business by Industry (16 Sector Guides)",

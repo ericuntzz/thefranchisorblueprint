@@ -18,10 +18,9 @@ import {
 } from "@/lib/schema";
 
 export const metadata: Metadata = {
-  title:
-    "Franchise Your Business by State: Complete Guide for All 50 States + DC | The Franchisor Blueprint",
+  title: "Franchise Your Business by State | The Franchisor Blueprint",
   description:
-    "How to franchise a business in every U.S. state — FDD registration tier, regulating agency, filing fees, review timelines, and the operator-pool dynamics that determine which franchise concepts work in each state.",
+    "FDD registration tier, regulating agency, filing fees, and review timelines for every U.S. state — plus the regional dynamics that shape franchise success.",
   alternates: { canonical: "/franchise-by-state" },
   openGraph: {
     title: "Franchise Your Business by State (All 50 States + DC)",

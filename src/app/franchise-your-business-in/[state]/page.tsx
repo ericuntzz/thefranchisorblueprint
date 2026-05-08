@@ -29,8 +29,8 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const state = allStates.find((s) => s.slug === slug);
   if (!state) return {};
 
-  const title = `Franchise Your Business in ${state.name} (2026 Guide) | The Franchisor Blueprint`;
-  const description = `How to franchise a business in ${state.name}: FDD registration requirements, agency, fees, timeline, and the operator-pool dynamics that determine which franchise concepts work in ${state.name}.`;
+  const title = `Franchise in ${state.name} | The Franchisor Blueprint`;
+  const description = `Franchising in ${state.name}: FDD registration tier, fees, and timeline. With the regional economics that determine which franchise concepts fit.`;
 
   return {
     title,

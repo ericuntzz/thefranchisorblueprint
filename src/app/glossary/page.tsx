@@ -15,10 +15,9 @@ import { breadcrumbSchema, faqPageSchema } from "@/lib/schema";
 import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title:
-    "Franchise Glossary: 30+ Franchise Terms Explained in Plain English | The Franchisor Blueprint",
+  title: "Franchise Glossary (30+ Terms) | The Franchisor Blueprint",
   description:
-    "Plain-English definitions of the franchise terms that matter — FDD, royalty, Item 7, Item 19, Discovery Day, master franchise, area developer, and more. Written by Jason Stowe, 30 years in the franchise industry.",
+    "Plain-English definitions of FDD, royalty, Item 7, Item 19, Discovery Day, area developers, and more. By Jason Stowe, 30+ years in the franchise industry.",
   alternates: { canonical: "/glossary" },
   openGraph: {
     title: "The Franchise Glossary (30+ Terms in Plain English)",
