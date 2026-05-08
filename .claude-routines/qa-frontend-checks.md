@@ -42,3 +42,23 @@
 ### Check: legal page description length
 - `src/app/privacy/page.tsx` description was 50 chars (below 70-char minimum). Fixed 2026-05-07.
 - On each QA run: `python3 -c "desc='<description>'; print(len(desc))"` — descriptions under 70 chars on legal pages should be extended.
+
+## Additions from 2026-05-08
+
+### Check: glossary shortDef description length
+- All 31 glossary term `shortDef` values in `src/lib/franchise-glossary.ts` are used verbatim as the `description` in `generateMetadata` for `/glossary/[term]` pages. Currently all 31 exceed 160 chars (range: 161–261 chars).
+- grep: `python3 -c "import re; content=open('src/lib/franchise-glossary.ts').read(); matches=re.findall(r'shortDef:\s*\"([^\"]+)\"', content); [print(len(m), m[:60]) for m in matches if len(m) > 160]"`
+- REPORT-ONLY: requires substantive content editing of 31 technical definitions to stay under 160 chars while preserving keyword density. Not auto-fixable without risk of mid-sentence truncation or keyword loss.
+
+### Check: comparison metaDescription length
+- All 5 `metaDescription` values in `src/lib/franchise-comparisons.ts` are used as meta descriptions for `/compare/[topic]` pages. Currently all 5 exceed 160 chars (range: 185–219 chars).
+- grep: `python3 -c "import re; content=open('src/lib/franchise-comparisons.ts').read(); matches=re.findall(r'metaDescription:\s*\"([^\"]+)\"', content); [print(len(m), m[:60]) for m in matches if len(m) > 160]"`
+- REPORT-ONLY: same constraint as glossary shortDefs above.
+
+### Check: dynamic page title/description templates from data files
+- For `src/app/franchise-your/[industry]/business/page.tsx` and `src/app/franchise-your-business-in/[state]/page.tsx`, the title and description are built from industry/state data. After 2026-05-08 fix, templates are now within bounds for all entries.
+- On any future additions to `src/lib/franchise-industries.ts` or `src/lib/franchise-states.ts`, verify the template outputs stay within bounds by running:
+  `python3 -c "from src.lib.franchise_industries import allIndustries; [print(len(f'{i.shortName} Franchise | The Franchisor Blueprint'), i.shortName) for i in allIndustries if len(f'{i.shortName} Franchise | The Franchisor Blueprint') > 60]"` (adapt to TS as needed).
+
+### Check: programs/pricing/homepage description length after price changes
+- `pricing/page.tsx`, `page.tsx`, and `programs/page.tsx` descriptions were fixed 2026-05-08 (173→150, 191→145, 254→155 chars respectively). On any future price or tier update, re-verify these don't drift back over 160 chars.
