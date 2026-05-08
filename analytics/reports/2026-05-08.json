@@ -1,0 +1,442 @@
+{
+  "ga4": {
+    "metadata": {
+      "generated_at": "2026-05-08T14:00:03.264014+00:00",
+      "window_days": 1,
+      "property_id": "535127773"
+    },
+    "totals": [
+      {
+        "sessions": "15",
+        "activeUsers": "8",
+        "screenPageViews": "119",
+        "engagedSessions": "0",
+        "averageSessionDuration": "3127.5847011333331"
+      }
+    ],
+    "by_channel": [
+      {
+        "sessionDefaultChannelGroup": "Direct",
+        "sessions": "9",
+        "activeUsers": "6",
+        "engagedSessions": "0",
+        "averageSessionDuration": "779.06253444444451"
+      },
+      {
+        "sessionDefaultChannelGroup": "Unassigned",
+        "sessions": "8",
+        "activeUsers": "4",
+        "engagedSessions": "0",
+        "averageSessionDuration": "3071.12887975"
+      },
+      {
+        "sessionDefaultChannelGroup": "Organic Social",
+        "sessions": "3",
+        "activeUsers": "1",
+        "engagedSessions": "0",
+        "averageSessionDuration": "5111.0588896666668"
+      }
+    ],
+    "by_source_medium": [
+      {
+        "sessionSource": "(direct)",
+        "sessionMedium": "(none)",
+        "sessions": "9",
+        "activeUsers": "6"
+      },
+      {
+        "sessionSource": "(not set)",
+        "sessionMedium": "(not set)",
+        "sessions": "8",
+        "activeUsers": "4"
+      },
+      {
+        "sessionSource": "trustpilot",
+        "sessionMedium": "company_profile",
+        "sessions": "3",
+        "activeUsers": "1"
+      }
+    ],
+    "by_city": [
+      {
+        "city": "Summit Park",
+        "region": "Utah",
+        "country": "United States",
+        "sessions": "12",
+        "activeUsers": "5"
+      },
+      {
+        "city": "Chicago",
+        "region": "Illinois",
+        "country": "United States",
+        "sessions": "3",
+        "activeUsers": "3"
+      }
+    ],
+    "top_pages": [
+      {
+        "pagePath": "/portal",
+        "screenPageViews": "29",
+        "activeUsers": "3"
+      },
+      {
+        "pagePath": "/portal/chapter/unit_economics",
+        "screenPageViews": "19",
+        "activeUsers": "3"
+      },
+      {
+        "pagePath": "/portal/login",
+        "screenPageViews": "15",
+        "activeUsers": "3"
+      },
+      {
+        "pagePath": "/portal/lab/blueprint",
+        "screenPageViews": "10",
+        "activeUsers": "3"
+      },
+      {
+        "pagePath": "/",
+        "screenPageViews": "9",
+        "activeUsers": "7"
+      },
+      {
+        "pagePath": "/portal/coaching",
+        "screenPageViews": "8",
+        "activeUsers": "3"
+      },
+      {
+        "pagePath": "/portal/lab/next",
+        "screenPageViews": "8",
+        "activeUsers": "2"
+      },
+      {
+        "pagePath": "/portal/account",
+        "screenPageViews": "4",
+        "activeUsers": "3"
+      },
+      {
+        "pagePath": "/portal/checklist",
+        "screenPageViews": "4",
+        "activeUsers": "1"
+      },
+      {
+        "pagePath": "/portal/coaching/schedule",
+        "screenPageViews": "3",
+        "activeUsers": "1"
+      },
+      {
+        "pagePath": "/portal/library",
+        "screenPageViews": "3",
+        "activeUsers": "2"
+      },
+      {
+        "pagePath": "/portal/upgrade",
+        "screenPageViews": "3",
+        "activeUsers": "3"
+      },
+      {
+        "pagePath": "/portal/chapter/concept_and_story",
+        "screenPageViews": "1",
+        "activeUsers": "1"
+      },
+      {
+        "pagePath": "/pricing",
+        "screenPageViews": "1",
+        "activeUsers": "1"
+      },
+      {
+        "pagePath": "/programs/blueprint",
+        "screenPageViews": "1",
+        "activeUsers": "1"
+      },
+      {
+        "pagePath": "/this-does-not-exist",
+        "screenPageViews": "1",
+        "activeUsers": "1"
+      },
+      {
+        "pagePath": "/portal/chapter/unit-economics",
+        "screenPageViews": "0",
+        "activeUsers": "1"
+      }
+    ],
+    "key_events": [
+      {
+        "eventName": "page_view",
+        "eventCount": "119",
+        "totalUsers": "8"
+      },
+      {
+        "eventName": "user_engagement",
+        "eventCount": "31",
+        "totalUsers": "5"
+      },
+      {
+        "eventName": "scroll",
+        "eventCount": "12",
+        "totalUsers": "2"
+      },
+      {
+        "eventName": "session_start",
+        "eventCount": "12",
+        "totalUsers": "8"
+      },
+      {
+        "eventName": "first_visit",
+        "eventCount": "4",
+        "totalUsers": "4"
+      },
+      {
+        "eventName": "form_start",
+        "eventCount": "3",
+        "totalUsers": "2"
+      },
+      {
+        "eventName": "form_submit",
+        "eventCount": "3",
+        "totalUsers": "2"
+      },
+      {
+        "eventName": "select_item",
+        "eventCount": "1",
+        "totalUsers": "1"
+      }
+    ]
+  },
+  "gsc": {
+    "metadata": {
+      "generated_at": "2026-05-08T14:00:06.156269+00:00",
+      "window_days": 7,
+      "site_url": "sc-domain:thefranchisorblueprint.com"
+    },
+    "by_date": [
+      {
+        "clicks": 0,
+        "impressions": 0,
+        "ctr": 0,
+        "position": 0,
+        "date": "2026-05-01"
+      },
+      {
+        "clicks": 0,
+        "impressions": 0,
+        "ctr": 0,
+        "position": 0,
+        "date": "2026-05-02"
+      },
+      {
+        "clicks": 0,
+        "impressions": 0,
+        "ctr": 0,
+        "position": 0,
+        "date": "2026-05-03"
+      },
+      {
+        "clicks": 0,
+        "impressions": 4,
+        "ctr": 0,
+        "position": 13,
+        "date": "2026-05-04"
+      },
+      {
+        "clicks": 0,
+        "impressions": 2,
+        "ctr": 0,
+        "position": 10.5,
+        "date": "2026-05-05"
+      },
+      {
+        "clicks": 0,
+        "impressions": 2,
+        "ctr": 0,
+        "position": 11.5,
+        "date": "2026-05-06"
+      }
+    ],
+    "top_queries": [
+      {
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 8,
+        "query": "blueprint"
+      }
+    ],
+    "top_pages": [
+      {
+        "clicks": 0,
+        "impressions": 7,
+        "ctr": 0,
+        "position": 12.285714285714286,
+        "page": "https://www.thefranchisorblueprint.com/"
+      },
+      {
+        "clicks": 0,
+        "impressions": 1,
+        "ctr": 0,
+        "position": 10,
+        "page": "https://www.thefranchisorblueprint.com/franchise-your-business-in/delaware"
+      }
+    ],
+    "by_country": [
+      {
+        "clicks": 0,
+        "impressions": 8,
+        "ctr": 0,
+        "position": 12,
+        "country": "usa"
+      }
+    ],
+    "by_device": [
+      {
+        "clicks": 0,
+        "impressions": 8,
+        "ctr": 0,
+        "position": 12,
+        "device": "DESKTOP"
+      }
+    ]
+  },
+  "bing": {
+    "metadata": {
+      "generated_at": "2026-05-08T14:00:07.342942+00:00",
+      "site_url": "https://www.thefranchisorblueprint.com"
+    },
+    "query_stats": [],
+    "page_stats": [],
+    "query_traffic_stats": [],
+    "rank_stats": [
+      {
+        "__type": "RankAndTrafficStats:#Microsoft.Bing.Webmaster.Api",
+        "Clicks": 0,
+        "Date": "/Date(1777878000000-0700)/",
+        "Impressions": 0
+      },
+      {
+        "__type": "RankAndTrafficStats:#Microsoft.Bing.Webmaster.Api",
+        "Clicks": 0,
+        "Date": "/Date(1777964400000-0700)/",
+        "Impressions": 0
+      },
+      {
+        "__type": "RankAndTrafficStats:#Microsoft.Bing.Webmaster.Api",
+        "Clicks": 0,
+        "Date": "/Date(1778050800000-0700)/",
+        "Impressions": 0
+      }
+    ],
+    "crawl_stats": [
+      {
+        "__type": "CrawlStats:#Microsoft.Bing.Webmaster.Api",
+        "AllOtherCodes": 0,
+        "BlockedByRobotsTxt": 0,
+        "Code2xx": 1,
+        "Code301": 1,
+        "Code302": 0,
+        "Code4xx": 0,
+        "Code5xx": 0,
+        "ConnectionTimeout": 0,
+        "ContainsMalware": 0,
+        "CrawlErrors": 0,
+        "CrawledPages": 0,
+        "Date": "/Date(1778137200000-0700)/",
+        "DnsFailures": 0,
+        "InIndex": 0,
+        "InLinks": 0
+      }
+    ]
+  },
+  "stripe": {
+    "metadata": {
+      "generated_at": "2026-05-08T14:00:09.710740+00:00",
+      "window_days": 1
+    },
+    "totals": {
+      "checkout_sessions": 0,
+      "complete_paid_external": 0,
+      "complete_paid_internal": 0,
+      "expired": 0,
+      "open_or_other": 0,
+      "external_revenue_usd": 0.0,
+      "total_charges": 0,
+      "total_refunds": 0,
+      "total_disputes": 0
+    },
+    "external_sessions": [],
+    "anonymous_expired_sessions": []
+  },
+  "supabase": {
+    "metadata": {
+      "generated_at": "2026-05-08T14:00:10.776952+00:00",
+      "window_days": 1
+    },
+    "assessment_funnel": {
+      "starts_in_window": 0,
+      "completions_in_window": 0,
+      "completion_rate_pct": 0,
+      "starts_last_30_days": 11,
+      "completions_last_30_days": 3,
+      "completion_rate_30d_pct": 27.27272727272727,
+      "score_band_distribution_30d": {
+        "building_foundation": 1,
+        "nearly_there": 2
+      },
+      "source_attribution_in_window": {},
+      "completions_detail": []
+    },
+    "contact_form": {
+      "submissions_in_window": 0,
+      "real_submissions_in_window": 0,
+      "spam_submissions_in_window": 0,
+      "real_submissions_detail": []
+    }
+  },
+  "calendly": {
+    "metadata": {
+      "generated_at": "2026-05-08T14:00:11.908711+00:00",
+      "window_days": 1,
+      "user": "TFB Team"
+    },
+    "totals": {
+      "events_in_window": 0,
+      "canceled_in_window": 0,
+      "external_bookings": 0
+    },
+    "external_bookings": [],
+    "canceled_count": 0
+  },
+  "resend": {
+    "metadata": {
+      "generated_at": "2026-05-08T14:00:13.965458+00:00",
+      "window_days": 1
+    },
+    "totals": {
+      "sent": 9,
+      "delivered": 9,
+      "opened": 0,
+      "clicked": 0,
+      "bounced": 0,
+      "complained": 0,
+      "delivery_rate_pct": 100.0,
+      "open_rate_pct": 0.0,
+      "click_rate_pct": 0.0,
+      "bounce_rate_pct": 0.0
+    },
+    "by_status": {
+      "delivered": 9
+    },
+    "by_template_bucket": {
+      "\u2713 Smoke test 2026-05-07": 3,
+      "\u2713 Smoke test 2026-05-08": 1,
+      "TFB Ops": 1,
+      "Your access link to The Blueprint": 1,
+      "\ud83d\udea8 Urgent inbox": 1,
+      "Inbox Review": 1,
+      "TFB traffic": 1
+    },
+    "by_recipient_domain": {
+      "gmail.com": 5,
+      "thefranchisorblueprint.com": 4
+    }
+  }
+}
