@@ -1,0 +1,22 @@
+[smoke-test] === 2026-05-08T13:00:01Z ===
+[smoke-test] === seed ===
+
+> tfb-site@0.1.0 smoke-test:seed
+> tsx scripts/smoke-test/seed.ts
+
+◇ injected env (54) from .env.local // tip: ◈ secrets for agents [www.dotenvx.com]
+Seeding eric.j.unterberger+smoketest@gmail.com (f6c99e67-2bf0-4159-a486-b0e9fbeb8cd2)...
+✓ test auth user exists
+✓ profile upserted
+✓ paid purchase exists
+✓ 3 redlines already seeded
+
+Seed complete. Test account ready for smoke test.
+[smoke-test] === phase 1 ===
+[smoke-test] phase1 exit=0
+[smoke-test] === phase 2 ===
+[smoke-test] phase2 exit=0
+[smoke-test] === reporter ===
+◇ injected env (54) from .env.local // tip: ◈ encrypted .env [www.dotenvx.com]
+Email sent: af10e350-d0f0-4012-a859-88e64dd06934. Report: /Users/fin/Documents/The Franchisor Blueprint Website/scripts/smoke-test/runs/2026-05-08.md
+[smoke-test] === commit ===
