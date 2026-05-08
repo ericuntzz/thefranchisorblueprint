@@ -5,10 +5,9 @@
  * computes the total score + band + category scores, persists those onto
  * the session row, captures lead-info (email/name/business/revenue/urgency),
  * links the session to an existing auth user if the email matches one, and
- * returns the result URL.
- *
- * Email + PDF dispatch is wired in Wave 3 — this route just persists state
- * and returns the URL. (We'll add the email queueing in the next commit.)
+ * returns the result URL. Best-effort: sends a branded PDF email to the
+ * customer and an internal lead notification; both fire-and-forget so a
+ * transient email failure never 500s the submission.
  */
 
 import { NextRequest, NextResponse } from "next/server";
