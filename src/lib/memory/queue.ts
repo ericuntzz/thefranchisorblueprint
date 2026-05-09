@@ -123,6 +123,39 @@ export function computeQuestionQueue(
   return out;
 }
 
+/**
+ * Re-prioritize a queue so items from `focusChapters` come first.
+ *
+ * Used by the dashboard's per-deliverable "Complete Section" button:
+ * the customer clicks it on a specific deliverable, lands on
+ * /portal/lab/next, and the first question they see is the next
+ * unfilled required field in one of THAT deliverable's source
+ * chapters. Once those are exhausted the rest of the queue follows
+ * in its normal phase order, so a customer who keeps hitting "Next"
+ * eventually flows into the rest of the Blueprint.
+ *
+ * The default queue (no focus) is the global "next-best step" used
+ * by the sidebar's Continue Building. Two callers, two behaviors,
+ * one queue engine.
+ */
+export function focusQueueOnChapters(
+  queue: QueueItem[],
+  focusChapters: readonly MemoryFileSlug[],
+): QueueItem[] {
+  if (focusChapters.length === 0) return queue;
+  const focusSet = new Set<MemoryFileSlug>(focusChapters);
+  const focused: QueueItem[] = [];
+  const rest: QueueItem[] = [];
+  for (const item of queue) {
+    if (focusSet.has(item.slug)) {
+      focused.push(item);
+    } else {
+      rest.push(item);
+    }
+  }
+  return [...focused, ...rest];
+}
+
 /** Total queue summary for the Command Center hero. */
 export type QueueSummary = {
   total: number;

@@ -24,13 +24,16 @@
  */
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import {
   AlertCircle,
+  ArrowRight,
   CheckCircle2,
   ChevronDown,
   Download,
   Loader2,
   PackageOpen,
+  Sparkles,
 } from "lucide-react";
 import {
   DELIVERABLES,
@@ -461,9 +464,22 @@ function DeliverableEntry({
             </span>
           </span>
         </button>
-        {/* Preview & download — top-right corner, sticks here in
-            both collapsed and expanded states. Stops propagation
-            so clicking it doesn't also expand the card. */}
+        {/* Top-right action cluster: Complete Section (gold, only
+            when this deliverable has gaps) + Preview (outlined,
+            always). Both stop propagation so the click doesn't
+            also expand the card. */}
+        {review.totalGaps > 0 && (
+          <Link
+            href={`/portal/lab/next?focus=${deliverable.id}`}
+            onClick={(e) => e.stopPropagation()}
+            title={`Complete the ${review.totalGaps} unfilled field${review.totalGaps === 1 ? "" : "s"} for ${deliverable.name}`}
+            className="flex-shrink-0 inline-flex items-center gap-1.5 bg-gold text-navy hover:bg-gold-dark font-bold text-[11px] uppercase tracking-[0.1em] px-3 py-2 rounded-full transition-colors"
+          >
+            <Sparkles size={12} />
+            Complete section
+            <ArrowRight size={12} />
+          </Link>
+        )}
         <button
           type="button"
           onClick={(e) => {

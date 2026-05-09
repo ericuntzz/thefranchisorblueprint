@@ -9,11 +9,19 @@ import {
   type Profile,
   type Purchase,
 } from "@/lib/supabase/types";
-import { computeQuestionQueue, summarizeQueue } from "@/lib/memory/queue";
+import {
+  computeQuestionQueue,
+  focusQueueOnChapters,
+  summarizeQueue,
+} from "@/lib/memory/queue";
 import type { MemoryFieldsMap } from "@/lib/calc";
+import { DELIVERABLES } from "@/lib/export/deliverables";
+import type { DeliverableId } from "@/lib/export/types";
 import { SiteFooter } from "@/components/SiteFooter";
 import { QuestionQueueClient } from "./QuestionQueueClient";
 import { saveQueueAnswer } from "./actions";
+
+type SearchParams = Promise<{ focus?: string }>;
 
 export const metadata: Metadata = {
   title: "What's Next | The Franchisor Blueprint",
@@ -36,7 +44,12 @@ export const dynamic = "force-dynamic";
  * existing /portal/lab/blueprint stays as the "View full draft" mode
  * for power users; this is what most DIY buyers should live in.
  */
-export default async function GuidedNextPage() {
+export default async function GuidedNextPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const { focus: focusParam } = await searchParams;
   const supabase = await getSupabaseServer();
   const {
     data: { user },
@@ -88,7 +101,21 @@ export default async function GuidedNextPage() {
       : 0;
   }
 
-  const queue = computeQuestionQueue(allFields);
+  // Two callers, two behaviors:
+  //   - Sidebar's Continue Building → no focus param → global next-best
+  //     question, walks all 16 chapters in phase order.
+  //   - Dashboard's per-card "Complete Section" → ?focus=<deliverable-id>
+  //     → questions from THAT deliverable's source chapters bubble to the
+  //     top of the queue. After clearing them, the rest of the queue
+  //     follows in normal order.
+  const baseQueue = computeQuestionQueue(allFields);
+  const focusedDeliverable =
+    focusParam && Object.prototype.hasOwnProperty.call(DELIVERABLES, focusParam)
+      ? DELIVERABLES[focusParam as DeliverableId]
+      : null;
+  const queue = focusedDeliverable
+    ? focusQueueOnChapters(baseQueue, focusedDeliverable.sourceChapters)
+    : baseQueue;
   const summary = summarizeQueue(queue);
 
   return (
