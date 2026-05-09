@@ -41,6 +41,7 @@ import {
 } from "@/lib/calc";
 import type { MemoryFileSlug } from "@/lib/memory/files";
 import { lookupIndustryValue } from "@/lib/memory/industry-lookup";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { SchemaFieldInput } from "./SchemaFieldInput";
 
 type FieldValue = string | number | boolean | string[] | null;
@@ -203,12 +204,23 @@ export function ChapterFieldEditor({
             Saved
           </span>
         )}
-        {saveStatus === "error" && (
-          <span className="inline-flex items-center gap-1.5 text-red-700 text-xs font-semibold" title={error ?? undefined}>
-            <X size={12} />
-            Couldn&apos;t save — your last edit isn&apos;t persisted
-          </span>
-        )}
+        {saveStatus === "error" &&
+          (error ? (
+            <Tooltip content={error} side="bottom" maxWidthPx={320}>
+              <span
+                tabIndex={0}
+                className="inline-flex items-center gap-1.5 text-red-700 text-xs font-semibold cursor-help focus:outline-none focus-visible:ring-2 focus-visible:ring-gold rounded"
+              >
+                <X size={12} />
+                Couldn&apos;t save — your last edit isn&apos;t persisted
+              </span>
+            </Tooltip>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 text-red-700 text-xs font-semibold">
+              <X size={12} />
+              Couldn&apos;t save — your last edit isn&apos;t persisted
+            </span>
+          ))}
       </div>
       {grouped.map((group) => {
         const visibleFields = group.fields.filter(
@@ -388,31 +400,41 @@ function FieldLabel({
         )}
       </span>
       {tooltip && (
-        <span
-          className="inline-flex items-center text-grey-3 hover:text-navy cursor-help transition-colors"
-          title={tooltip}
-          aria-label={tooltip}
-        >
-          <Info size={13} />
-        </span>
+        <Tooltip content={tooltip} side="top" maxWidthPx={280}>
+          <span
+            tabIndex={0}
+            role="button"
+            aria-label={tooltip}
+            className="inline-flex items-center text-grey-3 hover:text-navy cursor-help transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gold rounded-full"
+          >
+            <Info size={13} />
+          </span>
+        </Tooltip>
       )}
       {isComputed && (
-        <span
-          className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.06em] font-bold text-white bg-emerald-600 rounded-full px-2 py-0.5 shadow-sm"
-          title="Calculated automatically from your other inputs"
+        <Tooltip
+          content="Calculated automatically from your other inputs"
+          side="top"
         >
-          <Calculator size={11} />
-          Calculated
-        </span>
+          <span
+            tabIndex={0}
+            className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.06em] font-bold text-white bg-emerald-600 rounded-full px-2 py-0.5 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+          >
+            <Calculator size={11} />
+            Calculated
+          </span>
+        </Tooltip>
       )}
       {showSuggested && (
-        <span
-          className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.06em] font-bold text-navy bg-gold rounded-full px-2 py-0.5 shadow-sm"
-          title={suggestedSourceLabel(fieldDef)}
-        >
-          <Sparkles size={11} />
-          Suggested
-        </span>
+        <Tooltip content={suggestedSourceLabel(fieldDef)} side="top">
+          <span
+            tabIndex={0}
+            className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.06em] font-bold text-navy bg-gold rounded-full px-2 py-0.5 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-warm"
+          >
+            <Sparkles size={11} />
+            Suggested
+          </span>
+        </Tooltip>
       )}
     </label>
   );
