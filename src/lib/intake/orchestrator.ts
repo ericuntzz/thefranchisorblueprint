@@ -88,6 +88,15 @@ export type BusinessInfo = {
   city: string | null;
   state: string | null;
   zip: string | null;
+  /**
+   * Short, Places-API-friendly business category (e.g. "Mexican
+   * restaurant", "coffee shop", "fitness studio"). Drives the
+   * competitor-density nearby search — the long concept narrative
+   * was too specific and hit the 20-result page cap on every
+   * market identically. The category gives a more meaningful
+   * saturation signal.
+   */
+  placesCategory: string | null;
 };
 
 export type PrototypeProfile = {
@@ -236,7 +245,11 @@ export async function* runIntake(args: {
             centerLat: sourceLocation.lat,
             centerLng: sourceLocation.lng,
             radiusMeters: 1609, // 1 mile
-            keyword: business.oneLineConcept ?? business.name ?? "restaurant",
+            // Places API works best with simple category terms ("Mexican
+            // restaurant", "coffee shop") rather than long concept
+            // narratives. The LLM extracts a placesCategory specifically
+            // for this use; fall back to name → "restaurant" if missing.
+            keyword: business.placesCategory ?? business.name ?? "restaurant",
           })
         : Promise.resolve(null),
     ]);
@@ -313,7 +326,11 @@ export async function* runIntake(args: {
             centerLat: s.candidate.lat,
             centerLng: s.candidate.lng,
             radiusMeters: 1609,
-            keyword: business.oneLineConcept ?? business.name ?? "restaurant",
+            // Places API works best with simple category terms ("Mexican
+            // restaurant", "coffee shop") rather than long concept
+            // narratives. The LLM extracts a placesCategory specifically
+            // for this use; fall back to name → "restaurant" if missing.
+            keyword: business.placesCategory ?? business.name ?? "restaurant",
           }),
         ),
       )
@@ -421,7 +438,8 @@ async function extractBusinessInfo(scrape: ScrapeArtifacts): Promise<BusinessInf
   "address": "street address with city/state if found, else null",
   "city": "city or null",
   "state": "2-letter state or null",
-  "zip": "5-digit ZIP or null"
+  "zip": "5-digit ZIP or null",
+  "placesCategory": "short Google-Places-friendly category (1-3 words, e.g., 'Mexican restaurant', 'coffee shop', 'fitness studio', 'auto repair'). Should be specific enough to find competitors but not so specific it returns zero results. Null if business type unclear."
 }
 Be concise. Use null when not confident — do not guess.`;
 
@@ -467,6 +485,7 @@ ${scrape.aboutText?.slice(0, 2500) ?? "(no about page found)"}`,
       city: parsed.city ?? null,
       state: parsed.state ?? null,
       zip: parsed.zip ?? null,
+      placesCategory: parsed.placesCategory ?? null,
     };
   } catch {
     return emptyBusinessInfo();
@@ -482,6 +501,7 @@ function emptyBusinessInfo(): BusinessInfo {
     city: null,
     state: null,
     zip: null,
+    placesCategory: null,
   };
 }
 

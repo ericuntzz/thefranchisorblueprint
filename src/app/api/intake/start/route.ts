@@ -173,8 +173,12 @@ export async function POST(req: NextRequest) {
           }
 
           if (event.kind === "complete") {
+            // Capture the snapshot but DON'T forward this event to the
+            // client. The route emits its own complete event (below)
+            // with the sessionId attached, which the client needs.
             snapshot = event.snapshot;
             costCents = event.snapshot.costCents;
+            continue;
           }
 
           write(event);

@@ -537,13 +537,13 @@ function SnapshotView({
       {/* Snapshot card — designed to read as an FDD Item 11 site-criteria sheet,
           not a tech dashboard. Hand-set headers, plain English, four pillars. */}
       <div className="bg-cream rounded-2xl border border-gold/30 shadow-[0_24px_60px_rgba(0,0,0,0.32)] p-6 md:p-8 text-navy">
-        {/* Header */}
-        <div className="flex items-baseline justify-between gap-4 pb-4 border-b border-navy/15">
-          <div>
+        {/* Header — stacks on mobile, side-by-side on sm+ to keep score visible */}
+        <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-3 sm:gap-4 pb-4 border-b border-navy/15">
+          <div className="min-w-0">
             <p className="text-[11px] font-bold tracking-[0.18em] uppercase text-gold-warm">
               Franchise Readiness Snapshot
             </p>
-            <p className="text-navy font-bold text-lg md:text-xl mt-1">
+            <p className="text-navy font-bold text-lg md:text-xl mt-1 break-words">
               {snapshot.business.name ?? "Your Business"}
             </p>
             {snapshot.business.oneLineConcept && (
@@ -552,12 +552,12 @@ function SnapshotView({
               </p>
             )}
           </div>
-          <div className="text-right">
+          <div className="flex sm:flex-col items-baseline sm:items-end gap-2 sm:gap-0 flex-shrink-0">
             <div className="text-4xl md:text-5xl font-extrabold text-navy tabular-nums leading-none">
               {score}
               <span className="text-grey-4 text-2xl font-bold">/100</span>
             </div>
-            <p className="text-[10px] font-bold tracking-[0.15em] uppercase text-grey-4 mt-1">
+            <p className="text-[10px] font-bold tracking-[0.15em] uppercase text-grey-4 sm:mt-1">
               Preliminary
             </p>
           </div>
@@ -595,7 +595,7 @@ function SnapshotView({
                     <div className="text-navy font-extrabold text-xl tabular-nums">{m.score}</div>
                   </div>
                   <p className="text-grey-3 text-[13px] leading-relaxed mt-1.5">{m.why}.</p>
-                  <div className="grid grid-cols-4 gap-2 mt-3 text-[10px] font-semibold uppercase tracking-wider">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 text-[10px] font-semibold uppercase tracking-wider">
                     <PillarCell label="Demographics" score={m.pillars.demographicsAndMarket} max={25} />
                     <PillarCell label="Traffic" score={m.pillars.trafficAndAccess} max={25} />
                     <PillarCell label="Competition" score={m.pillars.competition} max={25} />
