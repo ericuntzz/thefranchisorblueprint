@@ -185,6 +185,14 @@ export async function* runIntake(args: {
   const business = await extractBusinessInfo(scrape);
   costCents += COST.LLM_BUSINESS_EXTRACT_CENTS;
 
+  // Fallback: if the LLM couldn't extract a business name (thin page,
+  // JS-rendered SPA, etc.), derive one from the page title or domain
+  // before downstream phases lean on it. Better to show "Costa Vida"
+  // (from costavida.com) than the placeholder "Your Business" UX flagged.
+  if (!business.name) {
+    business.name = inferBusinessNameFallback(scrape, args.url);
+  }
+
   yield { kind: "phase-done", phase: "business", data: business };
 
   // ─── Phase 3: Geocode current location ───────────────────────────
@@ -444,6 +452,57 @@ export async function* runIntake(args: {
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────
+
+/**
+ * Last-ditch business-name inference when the LLM extract returns null.
+ * Tries two paths in order of reliability:
+ *
+ *   1. Parse the page <title>. Real titles look like "Costa Vida — Fresh
+ *      Mexican Grill" or "Costa Vida | Order Online" — we take the
+ *      chunk before the first separator (em-dash, en-dash, hyphen,
+ *      pipe, colon).
+ *   2. Derive from the domain. `costavida.com` → "Costavida". Not
+ *      pretty for concatenated domains, but materially better than
+ *      "Your Business" — at minimum it tells the visitor we know
+ *      whose URL they dropped.
+ *
+ * Returns null only if both fail (very rare — title is almost always
+ * present, and domain canonicalization upstream guarantees a domain).
+ */
+function inferBusinessNameFallback(scrape: ScrapeArtifacts, url: string): string | null {
+  // Path 1: page title before the first common separator.
+  if (scrape.title) {
+    const SEPARATORS = /[—–|:·•\-]/; // em, en, pipe, colon, mid-dot, bullet, hyphen
+    const head = scrape.title.split(SEPARATORS)[0]?.trim();
+    if (head && head.length >= 2 && head.length <= 60) {
+      // Skip obvious placeholders ("Home", "Welcome", etc.)
+      const generic = /^(home|welcome|index|untitled|page|loading)$/i;
+      if (!generic.test(head)) {
+        return head;
+      }
+    }
+  }
+
+  // Path 2: derive from domain. Strip TLD, replace dashes with spaces,
+  // title-case word boundaries. `costavida.com` → "Costavida";
+  // `high-point-coffee.com` → "High Point Coffee".
+  try {
+    const u = new URL(url.startsWith("http") ? url : `https://${url}`);
+    const host = u.hostname.toLowerCase().replace(/^www\./, "");
+    const sld = host.split(".")[0];
+    if (sld && sld.length >= 2) {
+      const titled = sld
+        .split(/[-_]+/)
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(" ");
+      return titled;
+    }
+  } catch {
+    // Fall through.
+  }
+
+  return null;
+}
 
 async function extractBusinessInfo(scrape: ScrapeArtifacts): Promise<BusinessInfo> {
   const anthropic = getAnthropic();

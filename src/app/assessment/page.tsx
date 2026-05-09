@@ -44,32 +44,15 @@ export default async function AssessmentPage() {
         subtitle="15 honest questions across the four dimensions that actually predict franchise success. You'll get a 0–100 score, your specific gaps, and a clear next step — built on the same readiness criteria a franchise attorney runs before they take the case."
       />
 
-      {/* ===== Trust strip: proof points above the assessment flow ===== */}
-      <section className="bg-white pt-10 md:pt-14 pb-2">
-        <div className="max-w-[1100px] mx-auto px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 text-center">
-            {[
-              { stat: "5 min", label: "Average completion time" },
-              { stat: "0–100", label: "Personalized readiness score" },
-              { stat: "30+ yrs", label: "Of franchise SME experience behind it" },
-              { stat: "$0", label: "No email gate. No sales follow-up." },
-            ].map(({ stat, label }) => (
-              <div key={stat} className="px-2">
-                <div className="text-2xl md:text-3xl font-extrabold text-navy mb-1">
-                  {stat}
-                </div>
-                <div className="text-xs md:text-sm text-grey-3 leading-tight">
-                  {label}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ===== In-house assessment flow (replaces the prior JotForm embed) =====
-          Cream section background so the white assessment card pops with a
-          real drop-shadow instead of disappearing into the page bg. */}
+          The stat bar (5 min / 0-100 / 30 yrs / $0) used to live above
+          this section but added no real value to a small-business-owner
+          deciding whether to start the assessment. Removed 2026-05-09
+          per UX feedback — the page hero already tells them the
+          5-minute, 0-100, no-email-gate facts in plain prose, so a
+          duplicate stat strip just dilutes the call to action.
+          Cream section background so the white assessment card pops with
+          a real drop-shadow instead of disappearing into the page bg. */}
       <section className="bg-cream py-16 md:py-24">
         <AssessmentFlow
           source="assessment_page"
