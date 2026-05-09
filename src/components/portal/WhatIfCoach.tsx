@@ -19,7 +19,6 @@ import { ChevronDown, ChevronRight, AlertTriangle, Eye, ShieldAlert } from "luci
 import { PHASES, type PhaseId } from "@/lib/memory/phases";
 import {
   SCENARIOS,
-  TOTAL_SCENARIOS,
   type ScenarioDef,
   type ScenarioSeverity,
 } from "@/lib/coaching/scenarios";
@@ -27,13 +26,8 @@ import {
 export function WhatIfCoach() {
   return (
     <section className="bg-white rounded-2xl border border-card-border p-5 sm:p-6 md:p-8">
-      <div className="flex items-baseline justify-between gap-3 mb-1">
-        <span className="text-xs uppercase tracking-[0.14em] text-gold-text font-bold">
-          Jason&apos;s playbook
-        </span>
-        <span className="text-xs uppercase tracking-[0.12em] text-grey-3 font-bold tabular-nums">
-          {TOTAL_SCENARIOS} scenarios
-        </span>
+      <div className="text-xs uppercase tracking-[0.14em] text-gold-text font-bold mb-1">
+        Jason&apos;s playbook
       </div>
       <h2 className="text-navy font-extrabold text-xl md:text-2xl mb-1">
         What-if coaching

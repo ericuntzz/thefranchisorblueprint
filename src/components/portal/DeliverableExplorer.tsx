@@ -234,13 +234,8 @@ export function DeliverableExplorer({
 
   return (
     <section className="bg-white rounded-2xl border border-card-border p-5 sm:p-6 md:p-8">
-      <div className="flex items-baseline justify-between gap-3 mb-1">
-        <span className="text-xs uppercase tracking-[0.14em] text-gold-text font-bold">
-          Your Blueprint
-        </span>
-        <span className="text-xs uppercase tracking-[0.12em] text-grey-3 font-bold">
-          {allIds.length} deliverables
-        </span>
+      <div className="text-xs uppercase tracking-[0.14em] text-gold-text font-bold mb-1">
+        Your Blueprint
       </div>
       {isFirstRun ? (
         <>
@@ -248,10 +243,9 @@ export function DeliverableExplorer({
             {firstName ? `${firstName}, here's where it all assembles.` : "Here's where it all assembles."}
           </h2>
           <p className="text-grey-3 text-sm md:text-base leading-relaxed mb-5 max-w-[680px]">
-            Every deliverable is built from the chapters below. We
-            opened the first one for you — fill in a few fields and
-            watch the readiness number climb. You can move at your
-            own pace; nothing has to be done in one sitting.
+            We opened the first card for you. Fill in a few fields
+            and watch the readiness number climb. You can move at
+            your own pace — nothing has to be done in one sitting.
           </p>
         </>
       ) : (
@@ -260,10 +254,9 @@ export function DeliverableExplorer({
             Build, edit, and download what you&apos;re shipping
           </h2>
           <p className="text-grey-3 text-sm md:text-base leading-relaxed mb-5 max-w-[680px]">
-            Each card is a deliverable in your franchise package. Click
-            to see and edit the chapters that feed into it. Tick the
-            boxes across the grid and hit &ldquo;Download bundle&rdquo;
-            for a single ZIP.
+            Each card is a document in your franchise package. Click
+            to edit it. Tick boxes and hit &ldquo;Preview docs&rdquo;
+            to grab several at once.
           </p>
         </>
       )}
@@ -285,8 +278,8 @@ export function DeliverableExplorer({
         </button>
         <span className="text-[11px] text-grey-3">
           {selected.size > 0
-            ? `${selected.size} of ${allIds.length} selected`
-            : `${allIds.length} deliverables available`}
+            ? `${selected.size} selected`
+            : "Pick the docs you want"}
         </span>
         <div className="flex-1" />
         <button
@@ -309,8 +302,8 @@ export function DeliverableExplorer({
             <>
               <PackageOpen size={14} />
               {selected.size > 0
-                ? `Preview ${selected.size} as bundle`
-                : "Preview bundle"}
+                ? `Preview ${selected.size} docs`
+                : "Preview docs"}
             </>
           )}
         </button>
@@ -458,25 +451,48 @@ function DeliverableEntry({
                 </span>
               )}
             </span>
-            <span className="block text-grey-3 text-sm leading-relaxed mb-2">
+            <span className="block text-grey-3 text-sm leading-relaxed">
               {deliverable.description}
             </span>
-            <span className="block text-[11px] uppercase tracking-[0.1em] text-grey-3 font-bold">
-              {deliverable.sourceChapters.length} contributing chapter
-              {deliverable.sourceChapters.length === 1 ? "" : "s"}
-            </span>
           </span>
-          {/* Chevron moved out of the header — see the SHOW MORE
-              row below the action bar. The header stays visually
-              clean, with the disclosure affordance where the user
-              already learned it lives (matching ActivityFeed). */}
         </button>
       </div>
 
-      {/* Footer action bar — direct download. Always visible even
-          when collapsed so the customer doesn't need to expand to
-          grab a single deliverable. The plain-text (.md) export was
-          removed; nobody is shipping markdown to an attorney. */}
+      {/* Expanded content: readiness card + chapter rows. Sits
+          between the header and the footer actions so the editing
+          flow reads top-to-bottom. */}
+      {expanded && (
+        <div className="border-t border-card-border bg-white px-4 sm:px-5 py-4 space-y-4">
+          <ReadinessBar
+            review={review}
+            onJumpToChapter={(slug) => onToggleChapter(slug)}
+            openChapterSlug={openChapterSlug}
+          />
+
+          <div className="space-y-3">
+            {deliverable.sourceChapters.map((chapter) => {
+              const isOpen = openChapterSlug === chapter.slug;
+              return (
+                <ChapterRow
+                  key={chapter.slug}
+                  chapter={chapter}
+                  isOpen={isOpen}
+                  onToggle={() => onToggleChapter(chapter.slug)}
+                  saveFields={saveFields}
+                  saveSection={saveSection}
+                  setConfidence={setConfidence}
+                />
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Preview & download — always at the bottom of the card,
+          before the show-more toggle. When the card is collapsed
+          this gives a one-click path to the deliverable; when
+          expanded it reads as the "ship it" final step after
+          editing the chapters. */}
       <div className="border-t border-card-border px-4 sm:px-5 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
         <button
           type="button"
@@ -488,9 +504,8 @@ function DeliverableEntry({
         </button>
       </div>
 
-      {/* SHOW MORE / SHOW LESS toggle, centered at the bottom. Same
-          pattern as ActivityFeed so users only need to learn one
-          disclosure idiom. */}
+      {/* SHOW MORE / SHOW LESS toggle — centered at the very
+          bottom. Same disclosure idiom as ActivityFeed. */}
       <button
         type="button"
         onClick={onToggleExpand}
@@ -509,54 +524,6 @@ function DeliverableEntry({
           </>
         )}
       </button>
-
-      {/* Expanded content: readiness bar, contributing chapter rows,
-          gaps list, optional live-preview drawer. Pulls everything
-          the old /portal/exports/[id] page used to host into this
-          one inline surface so the customer never jumps off the
-          dashboard to ship. */}
-      {expanded && (
-        <div className="border-t border-card-border bg-white px-4 sm:px-5 py-4 space-y-4">
-          {/* Document readiness — progress bar + inline gaps list.
-              Merged from the old ReadinessBar + GapsList pair so the
-              customer sees the score and what's still missing in
-              one card. Each gap is a button that jumps to its
-              source chapter editor. */}
-          <ReadinessBar
-            review={review}
-            onJumpToChapter={(slug) => onToggleChapter(slug)}
-            openChapterSlug={openChapterSlug}
-          />
-
-          <div>
-            <div className="text-[11px] uppercase tracking-[0.1em] text-grey-3 font-bold mb-2">
-              Edit the chapters that feed this deliverable
-            </div>
-            <div className="space-y-3">
-              {deliverable.sourceChapters.map((chapter) => {
-                const isOpen = openChapterSlug === chapter.slug;
-                return (
-                  <ChapterRow
-                    key={chapter.slug}
-                    chapter={chapter}
-                    isOpen={isOpen}
-                    onToggle={() => onToggleChapter(chapter.slug)}
-                    saveFields={saveFields}
-                    saveSection={saveSection}
-                    setConfidence={setConfidence}
-                  />
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Inline markdown LivePreview was removed in favor of the
-              richer DeliverablePreviewModal (PDF iframe). The customer
-              clicks "Preview & download" in the footer to open the
-              modal — same content, native PDF rendering, single
-              source of truth. */}
-        </div>
-      )}
     </article>
   );
 }
