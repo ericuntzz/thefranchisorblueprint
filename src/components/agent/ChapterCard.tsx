@@ -1162,25 +1162,38 @@ function SectionBlock({
     );
   }
 
-  // READING MODE — for unheaded section 0, just render body + edit
-  // pill. The pill is always visible on touch devices (max-md:
-  // breakpoint) and only hover-revealed on hover-capable screens.
-  // Touch users never get hover, so a hover-only affordance was
-  // effectively invisible to them.
+  // READING MODE — for unheaded section 0, the entire container is
+  // a click-to-edit target. A centered "Edit Text" pill overlays
+  // the prose on hover (desktop) or appears underneath on touch
+  // devices, but the click handler lives on the wrapper itself so
+  // anywhere in the prose works. Keyboard users get role=button +
+  // Enter/Space activation.
   if (heading == null) {
     return (
-      <div className="relative group/sec my-2 -mx-2 px-2 py-1 rounded-lg transition-colors hover:bg-cream/40">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={onStartEdit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onStartEdit();
+          }
+        }}
+        title="Click to edit"
+        className="relative group/sec my-2 -mx-2 px-2 py-1 rounded-lg transition-colors hover:bg-cream/40 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
+      >
         {body.trim() && (
           <NeedsInputProse md={body} onFillFields={onFillFields} />
         )}
-        <button
-          type="button"
-          onClick={onStartEdit}
-          className="absolute top-2 right-2 inline-flex items-center gap-1.5 bg-navy text-cream font-bold text-xs uppercase tracking-[0.1em] px-3 py-1.5 rounded-full hover:bg-gold hover:text-navy shadow-sm transition-opacity opacity-100 md:opacity-0 md:group-hover/sec:opacity-100 focus-visible:opacity-100"
-          title="Edit this section"
-        >
-          <Pencil size={10} /> Edit
-        </button>
+        {/* Centered hover overlay. pointer-events-none so the wrapper
+            stays the click target — the pill is purely a visual
+            affordance, not its own button. */}
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 md:group-hover/sec:opacity-100 group-focus-visible/sec:opacity-100 transition-opacity duration-200">
+          <span className="inline-flex items-center gap-1.5 bg-navy text-cream font-bold text-xs uppercase tracking-[0.1em] px-3 py-1.5 rounded-full shadow-md">
+            <Pencil size={10} /> Edit Text
+          </span>
+        </div>
       </div>
     );
   }
@@ -1222,21 +1235,31 @@ function SectionBlock({
             </span>
           )}
         </button>
-        {isOpen && (
-          <button
-            type="button"
-            onClick={onStartEdit}
-            className="inline-flex items-center gap-1.5 bg-navy text-cream font-bold text-xs uppercase tracking-[0.1em] px-3 py-1.5 rounded-full hover:bg-gold hover:text-navy shadow-sm transition-opacity opacity-100 md:opacity-0 md:group-hover/sec:opacity-100 focus-visible:opacity-100 flex-shrink-0"
-            title="Edit this section"
-          >
-            <Pencil size={10} /> Edit
-          </button>
-        )}
       </div>
-      {/* Body — only rendered when expanded. */}
+      {/* Body — only rendered when expanded. The whole body acts
+          as a click-to-edit target so the customer doesn't have to
+          aim for a tiny pill. Center hover overlay shows "Edit Text"
+          on desktop. */}
       {isOpen && body.trim() && (
-        <div className="pb-3 pl-6">
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={onStartEdit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onStartEdit();
+            }
+          }}
+          title="Click to edit"
+          className="relative group/sec pb-3 pl-6 pr-2 -mx-2 mt-1 rounded-lg transition-colors hover:bg-cream/40 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
+        >
           <NeedsInputProse md={body} onFillFields={onFillFields} />
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 md:group-hover/sec:opacity-100 group-focus-visible/sec:opacity-100 transition-opacity duration-200">
+            <span className="inline-flex items-center gap-1.5 bg-navy text-cream font-bold text-xs uppercase tracking-[0.1em] px-3 py-1.5 rounded-full shadow-md">
+              <Pencil size={10} /> Edit Text
+            </span>
+          </div>
         </div>
       )}
     </div>

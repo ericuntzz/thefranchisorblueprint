@@ -34,7 +34,7 @@ import type { ActivityFeedRow } from "./ActivityFeed";
 import type { ActivityKind } from "@/lib/activity/feed";
 import { AnimatedDisclosure } from "@/components/ui/AnimatedDisclosure";
 
-const COLLAPSED_COUNT = 5;
+const COLLAPSED_COUNT = 2;
 const EXPANDED_VISIBLE_COUNT = 10;
 
 export function ActivityFeedList({ rows }: { rows: ActivityFeedRow[] }) {

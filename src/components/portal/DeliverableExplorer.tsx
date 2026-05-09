@@ -241,7 +241,7 @@ export function DeliverableExplorer({
           <h2 className="text-navy font-extrabold text-xl md:text-2xl mb-1">
             {firstName ? `${firstName}, here's where it all assembles.` : "Here's where it all assembles."}
           </h2>
-          <p className="text-grey-3 text-sm md:text-base leading-relaxed mb-5 max-w-[680px]">
+          <p className="text-grey-3 text-sm md:text-base leading-relaxed mb-5 max-w-[920px]">
             We opened the first card for you. Fill in a few fields
             and watch the readiness number climb. You can move at
             your own pace — nothing has to be done in one sitting.
@@ -252,7 +252,7 @@ export function DeliverableExplorer({
           <h2 className="text-navy font-extrabold text-xl md:text-2xl mb-1">
             Edit and Download Your Franchisor Blueprint Documents
           </h2>
-          <p className="text-grey-3 text-sm md:text-base leading-relaxed mb-5 max-w-[680px]">
+          <p className="text-grey-3 text-sm md:text-base leading-relaxed mb-5 max-w-[920px]">
             This is where every document for your franchise lives.
             Click a card to edit what&apos;s inside, preview the
             finished doc before you send it out, or tick a few boxes
@@ -450,7 +450,6 @@ function DeliverableEntry({
               <span className="text-navy font-bold text-base">
                 {deliverable.name}
               </span>
-              <ReadinessBadge pct={review.overallPct} gaps={review.totalGaps} />
               {isSlides && (
                 <span className="text-xs uppercase tracking-wider font-bold text-grey-3 bg-grey-1/40 border border-card-border rounded-full px-2 py-0.5">
                   .pptx
@@ -511,26 +510,34 @@ function DeliverableEntry({
         </div>
       </AnimatedDisclosure>
 
-      {/* SHOW MORE / SHOW LESS toggle — centered at the very
-          bottom. Chevron rotates 180° in lockstep with the
-          disclosure transition (same 320ms duration + ease-out
-          curve) so the whole interaction reads as one motion. */}
-      <button
-        type="button"
-        onClick={onToggleExpand}
-        aria-expanded={expanded}
-        className="w-full flex items-center justify-center gap-1.5 border-t border-card-border py-2.5 text-xs uppercase tracking-[0.1em] font-bold text-grey-3 hover:text-navy hover:bg-cream-soft transition-colors duration-200"
-      >
-        {expanded ? "Show less" : "Show more"}
-        <ChevronDown
-          size={13}
-          className="transition-transform duration-[320ms] motion-reduce:transition-none"
-          style={{
-            transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
-            transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
-          }}
-        />
-      </button>
+      {/* SHOW MORE row: readiness pill on the left, toggle button
+          centered, blank spacer on the right to keep the toggle
+          truly centered on the row. The pill was previously
+          alongside the title — moving it here puts the readiness
+          signal closest to the action ("oh I'm at 83%, let me see
+          what's left"). */}
+      <div className="border-t border-card-border flex items-center px-4 py-2.5 relative">
+        <div className="flex-1 min-w-0">
+          <ReadinessBadge pct={review.overallPct} gaps={review.totalGaps} />
+        </div>
+        <button
+          type="button"
+          onClick={onToggleExpand}
+          aria-expanded={expanded}
+          className="absolute left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.1em] font-bold text-grey-3 hover:text-navy transition-colors duration-200"
+        >
+          {expanded ? "Show less" : "Show more"}
+          <ChevronDown
+            size={13}
+            className="transition-transform duration-[320ms] motion-reduce:transition-none"
+            style={{
+              transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
+              transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
+            }}
+          />
+        </button>
+        <div className="flex-1" aria-hidden="true" />
+      </div>
     </article>
   );
 }
@@ -737,6 +744,14 @@ const STATE_DOT_COLOR: Record<ChapterReadiness["state"], string> = {
 };
 
 function ReadinessBadge({ pct, gaps }: { pct: number; gaps: number }) {
+  // Two states only: Ready (≥95%) or in-progress. The earlier
+  // gray-vs-amber split read as inconsistent — same data
+  // ("how done is this doc"), different colors based on a
+  // 50% threshold that wasn't surfaced anywhere else. Now any
+  // doc that isn't Ready uses the same amber pill, so the
+  // colors carry one signal each: emerald = ready to ship,
+  // amber = still has gaps. Gap count appears when there are
+  // any required gaps; otherwise just the percentage.
   if (pct >= 95) {
     return (
       <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.12em] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
@@ -745,16 +760,10 @@ function ReadinessBadge({ pct, gaps }: { pct: number; gaps: number }) {
       </span>
     );
   }
-  if (pct >= 50) {
-    return (
-      <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
-        {pct}% · {gaps} gap{gaps === 1 ? "" : "s"}
-      </span>
-    );
-  }
   return (
-    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-grey-3 bg-grey-1/50 border border-card-border rounded-full px-2 py-0.5">
+    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
       {pct}% complete
+      {gaps > 0 && ` · ${gaps} gap${gaps === 1 ? "" : "s"}`}
     </span>
   );
 }
