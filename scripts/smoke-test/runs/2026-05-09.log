@@ -22,3 +22,47 @@ Seed complete. Test account ready for smoke test.
 ◇ injected env (53) from .env.local // tip: ⌁ auth for agents [www.vestauth.com]
 Email sent: 6d107440-35e2-4575-a5dc-2eb55e8bd4a3. Report: /Users/fin/Documents/The Franchisor Blueprint Website/scripts/smoke-test/runs/2026-05-09.md
 [smoke-test] === commit ===
+[main c217411] smoke-test: 2026-05-09 · 24/24 pass · 0 blocker(s)
+ Committer: Fin <fin@Fins-Mac-mini.local>
+Your name and email address were configured automatically based
+on your username and hostname. Please check that they are accurate.
+You can suppress this message by setting them explicitly. Run the
+following command and follow the instructions in your editor to edit
+your configuration file:
+
+    git config --global --edit
+
+After doing this, you may fix the identity used for this commit with:
+
+    git commit --amend --reset-author
+
+ 7 files changed, 83 insertions(+)
+ create mode 100644 scripts/smoke-test/runs/2026-05-09.log
+ create mode 100644 scripts/smoke-test/runs/2026-05-09.md
+To https://github.com/ericuntzz/thefranchisorblueprint.git
+   d201314..c217411  main -> main
+[smoke-test] === done 2026-05-09T03:11:24Z ===
+[smoke-test] === 2026-05-09T13:00:02Z ===
+[smoke-test] === seed ===
+
+> tfb-site@0.1.0 smoke-test:seed
+> tsx scripts/smoke-test/seed.ts
+
+◇ injected env (54) from .env.local // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+Seeding eric.j.unterberger+smoketest@gmail.com (f6c99e67-2bf0-4159-a486-b0e9fbeb8cd2)...
+✓ test auth user exists
+✓ profile upserted
+✓ paid purchase exists
+✓ 3 redlines already seeded
+
+Seed complete. Test account ready for smoke test.
+[smoke-test] === phase 1 ===
+[smoke-test] phase1 exit=0
+[smoke-test] === phase 2 (structural) ===
+[smoke-test] phase2 (structural) exit=0
+[smoke-test] === phase 2 (visual) ===
+[smoke-test] phase2 (visual) exit=0
+[smoke-test] === reporter ===
+◇ injected env (54) from .env.local // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+Email sent: 9bc199e8-5691-4783-99df-7fcfc0f59e22. Report: /Users/fin/Documents/The Franchisor Blueprint Website/scripts/smoke-test/runs/2026-05-09.md
+[smoke-test] === commit ===
