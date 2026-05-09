@@ -47,12 +47,12 @@
 
 ### Check: glossary shortDef description length
 - All 31 glossary term `shortDef` values in `src/lib/franchise-glossary.ts` are used verbatim as the `description` in `generateMetadata` for `/glossary/[term]` pages. Currently all 31 exceed 160 chars (range: 161–261 chars).
-- grep: `python3 -c "import re; content=open('src/lib/franchise-glossary.ts').read(); matches=re.findall(r'shortDef:\s*\"([^\"]+)\"', content); [print(len(m), m[:60]) for m in matches if len(m) > 160]"`
+- grep: `python3 -c "import re; content=open('src/lib/franchise-glossary.ts').read(); matches=re.findall(r'shortDef:\\s*\"([^\"]+)\"', content); [print(len(m), m[:60]) for m in matches if len(m) > 160]"`
 - REPORT-ONLY: requires substantive content editing of 31 technical definitions to stay under 160 chars while preserving keyword density. Not auto-fixable without risk of mid-sentence truncation or keyword loss.
 
 ### Check: comparison metaDescription length
 - All 5 `metaDescription` values in `src/lib/franchise-comparisons.ts` are used as meta descriptions for `/compare/[topic]` pages. Currently all 5 exceed 160 chars (range: 185–219 chars).
-- grep: `python3 -c "import re; content=open('src/lib/franchise-comparisons.ts').read(); matches=re.findall(r'metaDescription:\s*\"([^\"]+)\"', content); [print(len(m), m[:60]) for m in matches if len(m) > 160]"`
+- grep: `python3 -c "import re; content=open('src/lib/franchise-comparisons.ts').read(); matches=re.findall(r'metaDescription:\\s*\"([^\"]+)\"', content); [print(len(m), m[:60]) for m in matches if len(m) > 160]"`
 - REPORT-ONLY: same constraint as glossary shortDefs above.
 
 ### Check: dynamic page title/description templates from data files
@@ -62,3 +62,23 @@
 
 ### Check: programs/pricing/homepage description length after price changes
 - `pricing/page.tsx`, `page.tsx`, and `programs/page.tsx` descriptions were fixed 2026-05-08 (173→150, 191→145, 254→155 chars respectively). On any future price or tier update, re-verify these don't drift back over 160 chars.
+
+## Additions from 2026-05-09
+
+### Check: heading hierarchy — h3 before h2 in non-content pages
+- grep: For each marketing page, check that no h3 appears before the first h2 (after the h1 from PageHero).
+- Pattern: `grep -n '<h[1-6]' src/app/<page>/page.tsx | head -20` — any h3 line number that precedes the first h2 line number is a violation.
+- Fixed 2026-05-09: `pricing/page.tsx` had h3 tier names before any h2. Added `<h2 className="sr-only">Pricing Tiers</h2>` before the pricing cards grid.
+- Known safe: programs/page.tsx (h3 tier names are under an explicit h2 "What you can expect at each tier"). pricing/page.tsx had no such parent h2 wrapper.
+
+### Check: alternates.canonical coverage on core marketing pages
+- Pages that derive their content from the layout's `alternates: { canonical: "/" }` and do NOT override it will emit "/" as their canonical — a potential duplicate-content signal in Google Search Console.
+- grep: `grep -rL "alternates" src/app/about/page.tsx src/app/pricing/page.tsx src/app/programs/page.tsx src/app/programs/blueprint/page.tsx src/app/contact/page.tsx src/app/strategy-call/page.tsx src/app/strategy-call/builder/page.tsx src/app/strategy-call/blueprint/page.tsx src/app/page.tsx`
+- Pages without explicit `alternates.canonical`: about, pricing, programs, programs/blueprint, contact, strategy-call, strategy-call/builder, strategy-call/blueprint (as of 2026-05-09).
+- REPORT-ONLY: touches >3 files; also depends on verifying Next.js App Router metadata inheritance behavior in production (can't verify without a running build in this environment).
+
+### Check: email address routing consistency
+- The site uses two support email addresses: `info@thefranchisorblueprint.com` (general contact, legal, footer) and `team@thefranchisorblueprint.com` (post-purchase support in thank-you/page.tsx and BlueprintUpsellBuyBox.tsx).
+- This may be intentional (different routing), but verify both inboxes are active and routed correctly.
+- grep: `grep -rn "@thefranchisorblueprint.com" src/app/ src/components/ --include="*.tsx" | grep -vE "portal|assessment" | grep -v "PORTAL_SUPPORT_EMAIL"`
+- REPORT-ONLY: could be intentional (pre-purchase vs post-purchase routing). Eric should confirm both addresses are active.
