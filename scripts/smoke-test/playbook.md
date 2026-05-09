@@ -54,6 +54,7 @@ Current check set (the script encodes this — keep this table in sync):
 | `chat-history` | `/api/agent/chat-history` returns `{transcript:[], savedThreads:[]}` | info |
 | `nudge` | `/api/agent/nudge` returns `{nudge: null|object}` | info |
 | `single-docx` | GET `/api/agent/export/concept-and-story` returns valid DOCX (Word 2007+ magic) | warn |
+| `single-pdf` | GET `/api/agent/export/concept-and-story?format=pdf&inline=1` returns valid PDF (`%PDF-` magic). Powers the preview-before-download modal added in commit 6897642. | warn |
 | `bundle-zip` | POST `/api/agent/export/bundle` with 3 ids returns valid ZIP w/ `_README.md` + 3 DOCX | warn |
 | `admin-gate` | `/api/admin/diagnostics` returns 403 for the test account (NOT in ADMIN_USER_IDS) | blocker |
 
@@ -75,7 +76,7 @@ The 5 flows:
 
 | Flow | URL | What to verify |
 |---|---|---|
-| `portal-landing` | `/portal` | "Smoke" first name, 17 deliverables, "0% complete" progress, navy/gold/cream brand consistency |
+| `portal-landing` | `/portal` | "Smoke" first name, 17 deliverables, "0% complete" progress, navy/gold/cream brand consistency, "Preview & download" / "Preview bundle" buttons present (added in commit 6897642) |
 | `chapter-with-redlines` | `/portal/chapter/business_overview` | Chapter title "Concept & Story", form fields (Concept summary / Founder / Audience), back link to /portal. Toolbar was simplified in commit 0d7e10b — only status pills + back arrow remain in SSR; redline badge + Jason dock are client-rendered. |
 | `redline-drawer` | (click the redline badge) | Drawer slides in, shows 3 cards (1 blocker, 1 warning, 1 info-resolved), severity pills correct color, "Mark resolved" button per open card |
 | `export-pre-review` | `/portal/exports/concept-and-story` | "Download .docx now" button, readiness % rendered, [NEEDS ATTORNEY REVIEW] markers visible if applicable |

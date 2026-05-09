@@ -105,9 +105,11 @@ async function main() {
     const hasSmoke = text.includes("Welcome aboard, Smoke");
     const has17 = /17\s+(?:ready to assemble|deliverables)/.test(text);
     const hasNav = $('a[href="/portal/library"]').length > 0;
+    const hasPreviewButton =
+      text.includes("Preview & download") || text.includes("Preview bundle");
     return {
-      pass: hasSmoke && has17 && hasNav,
-      evidence: `welcomeSmoke=${hasSmoke} 17deliv=${has17} hasLibraryNav=${hasNav}`,
+      pass: hasSmoke && has17 && hasNav && hasPreviewButton,
+      evidence: `welcomeSmoke=${hasSmoke} 17deliv=${has17} hasLibraryNav=${hasNav} hasPreviewButton=${hasPreviewButton}`,
     };
   }));
 

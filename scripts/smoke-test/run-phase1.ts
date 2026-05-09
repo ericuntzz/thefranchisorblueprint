@@ -289,6 +289,19 @@ async function main() {
     return { pass: status === 200 && isDocx && size > 1000, evidence: `status=${status} size=${size} ct=${contentType}` };
   });
 
+  await runCheck("single-pdf", "/api/agent/export/concept-and-story PDF (preview)", "warn", async () => {
+    const { status, contentType, size, body } = await curlGet(
+      jar,
+      "/api/agent/export/concept-and-story?format=pdf&inline=1",
+    );
+    const isPdf = contentType.includes("application/pdf");
+    const hasPdfMagic = body.startsWith("%PDF-");
+    return {
+      pass: status === 200 && isPdf && hasPdfMagic && size > 1000,
+      evidence: `status=${status} size=${size} ct=${contentType} pdfMagic=${hasPdfMagic}`,
+    };
+  });
+
   await runCheck("bundle-zip", "/api/agent/export/bundle ZIP", "warn", async () => {
     const { status, body } = await curlPost(jar, "/api/agent/export/bundle", {
       deliverableIds: ["concept-and-story", "operations-manual", "fdd-draft"],
