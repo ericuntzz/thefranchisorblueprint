@@ -16,6 +16,20 @@ export const DAILY_CAP_CENTS = 2000; // $20.00
 export const PER_DOMAIN_CACHE_DAYS = 7;
 
 /**
+ * Cache freshness floor. Bump this ISO timestamp whenever the
+ * orchestrator's scoring, narrative, or business-extraction logic
+ * changes — older cached snapshots will be skipped and a fresh run
+ * will replace them. Acts as a manual cache-busting key.
+ *
+ * Last bumped:
+ *   2026-05-09  saturation-aware scoring + geographic diversity +
+ *               plain-English narratives + page-title fallback for
+ *               business name. (Pre-fix snapshots still claim
+ *               "Crowded — 20 within 1 mile" on every market.)
+ */
+export const CACHE_FRESHNESS_FLOOR_ISO = "2026-05-09T15:00:00Z";
+
+/**
  * Per-IP rate limit — N distinct intake starts per hour. Stops
  * scrapers cold without throttling legitimate "I want to show this
  * to my partner" repeat visits (the per-domain cache covers those
@@ -93,9 +107,16 @@ export async function findCachedIntakeForDomain(
   domain: string,
 ): Promise<{ id: string; cookieToken: string } | null> {
   const supabase = getSupabaseAdmin();
-  const cutoff = new Date(
+  // Two cutoffs: the rolling 7-day window AND the freshness floor that
+  // gets bumped on logic-changing deploys. Use the LATER of the two so
+  // a recent deploy invalidates older snapshots even if they're still
+  // inside the rolling window.
+  const rollingCutoff = new Date(
     Date.now() - PER_DOMAIN_CACHE_DAYS * 24 * 60 * 60 * 1000,
   ).toISOString();
+  const freshnessFloor = CACHE_FRESHNESS_FLOOR_ISO;
+  const cutoff = rollingCutoff > freshnessFloor ? rollingCutoff : freshnessFloor;
+
   const { data } = await supabase
     .from("intake_sessions")
     .select("id, cookie_token")
