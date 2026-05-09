@@ -25,7 +25,6 @@ import {
   Loader2,
   MessageCircle,
   Pencil,
-  ShieldCheck,
   Sparkles,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -139,6 +138,13 @@ type Props = {
    * dashboard's deliverable explorer.
    */
   readOnly?: boolean;
+  /**
+   * "Embedded" mode — strips the outer card chrome (rounded border,
+   * background, padding) so the chapter content flows flush inside
+   * a parent container. Used by DeliverableExplorer's chapter rows
+   * so the editor doesn't render as a card-inside-a-card.
+   */
+  embedded?: boolean;
 };
 
 export function ChapterCard({
@@ -160,11 +166,11 @@ export function ChapterCard({
   saveSection,
   setConfidence,
   readOnly = false,
+  embedded = false,
 }: Props) {
   const [drafting, setDrafting] = useState(false);
   const [draftError, setDraftError] = useState<string | null>(null);
   const [insufficientCtx, setInsufficientCtx] = useState<string | null>(null);
-  const [showProvenance, setShowProvenance] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draftModalOpen, setDraftModalOpen] = useState(false);
   const [approving, setApproving] = useState(false);
@@ -263,7 +269,14 @@ export function ChapterCard({
   }
 
   return (
-    <article id={`chapter-${slug}`} className="rounded-2xl border border-card-border bg-white p-5 sm:p-6 md:p-8 scroll-mt-20">
+    <article
+      id={`chapter-${slug}`}
+      className={
+        embedded
+          ? "scroll-mt-20"
+          : "rounded-2xl border border-card-border bg-white p-5 sm:p-6 md:p-8 scroll-mt-20"
+      }
+    >
       <header className="mb-4 flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           {schema && filledFieldCount.total > 0 && !editing && (
@@ -480,21 +493,17 @@ export function ChapterCard({
                 : "Never updated"}
             </span>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              {provenance.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setShowProvenance((v) => !v)}
-                  className="inline-flex items-center gap-1 text-grey-3 hover:text-navy transition-colors py-1.5"
-                >
-                  <ShieldCheck size={11} />
-                  {showProvenance ? "Hide provenance" : "Show provenance"}
-                </button>
-              )}
-              {/* Editing affordances are hidden in read-only mode
-                  (used on /portal/lab/blueprint where the page is
-                  the assembled "read your full blueprint" view).
-                  Edit happens on the dashboard's deliverable
-                  explorer. */}
+              {/* "Show provenance" was tech-speak ("provenance"
+                  doesn't mean anything to a customer). The same
+                  data is available to support if anyone needs to
+                  audit where a fact came from; surfacing it on the
+                  per-chapter footer added clutter without value.
+
+                  "Redraft with Jason" was removed because the
+                  Jason chat dock at the bottom-right already
+                  handles this conversationally. The button
+                  introduced a parallel path that competed with the
+                  dock and confused users about which to use. */}
               {!readOnly && schema && (
                 <button
                   type="button"
@@ -504,51 +513,8 @@ export function ChapterCard({
                   <Pencil size={11} /> Edit fields
                 </button>
               )}
-              {!readOnly && (
-                <button
-                  type="button"
-                  onClick={openDraftModal}
-                  disabled={drafting}
-                  className="text-gold-warm hover:text-gold-dark font-semibold disabled:opacity-50 py-1.5"
-                >
-                  {drafting ? "Redrafting…" : "Redraft with Jason"}
-                </button>
-              )}
-              {/* MOCK: "Approve as verified" / "Verified · re-open" buttons
-                  removed. Asking the user to verify their own draft is a
-                  category mismatch — completion is now derived from the
-                  field-fill state and surfaced as a checkmark next to the
-                  chapter title. Jason's separate "approved" stamp still
-                  appears as a status pill in the chapter toolbar. */}
             </div>
           </footer>
-          {showProvenance && (
-            <div className="mt-4 rounded-xl bg-grey-1 border border-card-border px-4 py-3 text-xs text-grey-3 space-y-2">
-              {provenance.map((p, i) => (
-                <div key={p.id} className="flex gap-2">
-                  <span className="text-gold-warm font-bold tabular-nums flex-shrink-0">
-                    {i + 1}.
-                  </span>
-                  <div>
-                    <div>
-                      <span className="font-semibold text-navy">
-                        {prettySource(p.source_type)}
-                      </span>
-                      {p.source_ref && (
-                        <span className="ml-2 text-grey-3">{p.source_ref}</span>
-                      )}
-                    </div>
-                    {p.source_excerpt && (
-                      <div className="italic text-grey-3 mt-0.5">
-                        &ldquo;{p.source_excerpt.slice(0, 240)}
-                        {p.source_excerpt.length > 240 ? "…" : ""}&rdquo;
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
           {insufficientCtx && (
             <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-xs text-amber-900 flex items-start gap-2">
               <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />

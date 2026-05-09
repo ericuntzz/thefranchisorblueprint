@@ -669,7 +669,11 @@ function ChapterRow({
         </span>
       </button>
       {isOpen && (
-        <div className="border-t border-card-border bg-white p-4 sm:p-5 md:p-6">
+        // No nested card. The chapter row already provides the
+        // border + background; ChapterCard renders embedded so its
+        // content flows flush with the row's edges (no card-inside-
+        // a-card visual nesting).
+        <div className="border-t border-card-border bg-white p-4 sm:p-5">
           <ChapterCard
             slug={chapter.slug}
             title={chapter.title}
@@ -688,6 +692,7 @@ function ChapterRow({
             saveFields={saveFields}
             saveSection={saveSection}
             setConfidence={setConfidence}
+            embedded
           />
         </div>
       )}
