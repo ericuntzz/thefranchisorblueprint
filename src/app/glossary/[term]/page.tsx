@@ -72,8 +72,8 @@ export default async function GlossaryTermPage({ params }: { params: Params }) {
       : t.category === "Operations"
         ? {
             eyebrow: "Skip the structural work",
-            title: "Get the 17-chapter Operations Manual template",
-            body: `The Blueprint includes the full Operations Manual template with prompts and examples for each chapter. Same framework Navigator clients use. $2,997 one-time, lifetime template updates.`,
+            title: "Get the 17-section Operations Manual template",
+            body: `The Blueprint includes the full Operations Manual template with prompts and examples for each section. Same framework Navigator clients use. $2,997 one-time, lifetime template updates.`,
             href: "/programs/blueprint",
             ctaLabel: "Get The Blueprint",
           }

@@ -9,12 +9,12 @@
  */
 
 import type { BuildContext, DeliverableDoc, DocBlock } from "../types";
-import { chapterFields } from "../context-helpers";
+import { sectionFields } from "../context-helpers";
 import { fmtBool, fmtCurrency, fmtInt, fmtList, fmtText, isFilled } from "../format";
 
 export function buildQualifyMatrix(ctx: BuildContext): DeliverableDoc {
-  const profile = chapterFields(ctx, "franchisee_profile");
-  const overview = chapterFields(ctx, "business_overview");
+  const profile = sectionFields(ctx, "franchisee_profile");
+  const overview = sectionFields(ctx, "business_overview");
 
   const businessName =
     fmtText(overview.concept_summary).split(/[.\n]/)[0]?.trim() || "Your Franchise";
@@ -208,7 +208,7 @@ export function buildQualifyMatrix(ctx: BuildContext): DeliverableDoc {
             ? ({ kind: "bullets", items: fmtList(profile.target_recruitment_channels) } as DocBlock)
             : ({
                 kind: "paragraph",
-                text: "No channels specified — capture in the franchisee_profile chapter so the marketing team knows where to focus spend.",
+                text: "No channels specified — capture in the franchisee_profile section so the marketing team knows where to focus spend.",
               } as DocBlock),
         ],
       },

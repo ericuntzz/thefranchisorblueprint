@@ -3,7 +3,7 @@
  *
  * These are the EXTERNAL events a franchisor must complete to launch —
  * things that involve a regulator, a law firm, an audit firm, or an
- * insurance carrier. Distinct from chapter content (which is the
+ * insurance carrier. Distinct from section content (which is the
  * franchisor's own knowledge work).
  *
  * Sequenced loosely chronologically — entity formation comes before
@@ -31,8 +31,8 @@ export type MilestoneDef = {
   label: string;
   /** One-sentence description for the row's secondary line. */
   description: string;
-  /** Related Memory chapter (deep-link from the milestone row). */
-  relatedChapter?: MemoryFileSlug;
+  /** Related Memory section (deep-link from the milestone row). */
+  relatedSection?: MemoryFileSlug;
   /** Display order within the phase (lower is first). */
   order: number;
 };
@@ -44,7 +44,7 @@ export const MILESTONES: MilestoneDef[] = [
     phase: "entity",
     label: "Entity formed",
     description: "LLC, S-corp, or C-corp registered with your state.",
-    relatedChapter: "compliance_legal",
+    relatedSection: "compliance_legal",
     order: 1,
   },
   {
@@ -52,7 +52,7 @@ export const MILESTONES: MilestoneDef[] = [
     phase: "entity",
     label: "EIN issued",
     description: "Employer Identification Number from the IRS.",
-    relatedChapter: "compliance_legal",
+    relatedSection: "compliance_legal",
     order: 2,
   },
   {
@@ -60,7 +60,7 @@ export const MILESTONES: MilestoneDef[] = [
     phase: "entity",
     label: "Trademark application filed",
     description: "USPTO filing for your brand name and primary marks.",
-    relatedChapter: "brand_voice",
+    relatedSection: "brand_voice",
     order: 3,
   },
   {
@@ -68,7 +68,7 @@ export const MILESTONES: MilestoneDef[] = [
     phase: "entity",
     label: "Trademark registered",
     description: "USPTO registration certificate received.",
-    relatedChapter: "brand_voice",
+    relatedSection: "brand_voice",
     order: 4,
   },
 
@@ -78,7 +78,7 @@ export const MILESTONES: MilestoneDef[] = [
     phase: "compliance",
     label: "Franchise attorney engaged",
     description: "Engagement letter signed with a franchise-specialist attorney.",
-    relatedChapter: "compliance_legal",
+    relatedSection: "compliance_legal",
     order: 1,
   },
   {
@@ -86,7 +86,7 @@ export const MILESTONES: MilestoneDef[] = [
     phase: "compliance",
     label: "Audit firm engaged",
     description: "CPA firm engaged to prepare Item 21 audited financial statements.",
-    relatedChapter: "compliance_legal",
+    relatedSection: "compliance_legal",
     order: 2,
   },
   {
@@ -94,7 +94,7 @@ export const MILESTONES: MilestoneDef[] = [
     phase: "compliance",
     label: "General liability insurance bound",
     description: "Coverage that meets your franchisee minimum (usually $1M / $2M).",
-    relatedChapter: "compliance_legal",
+    relatedSection: "compliance_legal",
     order: 3,
   },
 
@@ -104,7 +104,7 @@ export const MILESTONES: MilestoneDef[] = [
     phase: "filings",
     label: "FDD drafted",
     description: "Attorney-finalized FDD ready for state submissions.",
-    relatedChapter: "compliance_legal",
+    relatedSection: "compliance_legal",
     order: 1,
   },
   {
@@ -112,7 +112,7 @@ export const MILESTONES: MilestoneDef[] = [
     phase: "filings",
     label: "FDD filed in first state",
     description: "First registration or filing accepted by a state regulator.",
-    relatedChapter: "compliance_legal",
+    relatedSection: "compliance_legal",
     order: 2,
   },
   {
@@ -120,7 +120,7 @@ export const MILESTONES: MilestoneDef[] = [
     phase: "filings",
     label: "First franchisee signed",
     description: "First Franchise Agreement executed with a qualified buyer.",
-    relatedChapter: "franchisee_profile",
+    relatedSection: "franchisee_profile",
     order: 3,
   },
 
@@ -130,7 +130,7 @@ export const MILESTONES: MilestoneDef[] = [
     phase: "operations",
     label: "Operations Manual finalized",
     description: "Brand-mandated daily operations + people standards locked in.",
-    relatedChapter: "operating_model",
+    relatedSection: "operating_model",
     order: 1,
   },
   {
@@ -138,7 +138,7 @@ export const MILESTONES: MilestoneDef[] = [
     phase: "operations",
     label: "Training program certified",
     description: "Initial training curriculum + certification exam in production.",
-    relatedChapter: "training_program",
+    relatedSection: "training_program",
     order: 2,
   },
 ];

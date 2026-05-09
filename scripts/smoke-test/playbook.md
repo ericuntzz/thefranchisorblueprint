@@ -46,7 +46,7 @@ Current check set (the script encodes this — keep this table in sync):
 |---|---|---|
 | `auth-confirm` | `/auth/confirm` with token_hash → 307 to /portal, sets `sb-...-auth-token` cookie | blocker |
 | `portal-landing` | `/portal` returns 200, includes "Welcome aboard, Smoke" + 17 deliverable rows | blocker |
-| `ssr-pages` | 12 SSR pages return 200 (chapters, lab/*, library, upgrade, account, coaching, exports/*) | blocker per page |
+| `ssr-pages` | 12 SSR pages return 200 (sections, lab/*, library, upgrade, account, coaching, exports/*) | blocker per page |
 | `redlines-get` | `/api/agent/redlines?slug=business_overview` returns `{redlines:[], blockerCount, approved}` | blocker |
 | `redlines-patch` | PATCH `/api/agent/redlines` resolves a redline; subsequent GET reflects it | warn |
 | `snapshots-get` | `/api/agent/snapshots?slug=business_overview` returns `{snapshots:[]}` | warn |
@@ -89,10 +89,10 @@ Current flows:
 | ID | URL | Assertion |
 |---|---|---|
 | `visual-portal-landing` | `/portal` | First deliverable card renders; "Preview bundle" + "Preview & download" buttons present (catches regression on commit 6897642) |
-| `visual-chapter-business-overview` | `/portal/chapter/business_overview` | "Concept summary" form label visible; back-to-/portal link present |
+| `visual-section-business-overview` | `/portal/section/business_overview` | "Concept summary" form label visible; back-to-/portal link present |
 | `visual-lab-next-centering` | `/portal/lab/next` | `<main>` has `display:flex` + `align-items:center`; question card top/bottom space symmetric within 5% tolerance (catches regression on commit ced8a53) |
 | `visual-preview-modal` | `/portal` (then click "Preview & download") | Modal `[role="dialog"]` opens, contains `<iframe>` for the PDF, footer has both Download buttons (catches regression on the morning-2026-05-08 feature ship) |
-| `visual-lab-blueprint-canvas` | `/portal/lab/blueprint` | No horizontal overflow at 1440×900; multiple chapter cards visible |
+| `visual-lab-blueprint-canvas` | `/portal/lab/blueprint` | No horizontal overflow at 1440×900; multiple section cards visible |
 
 Daily orchestrator runs both 2a and 2b; results merged into a single `phase2.flows` array in the morning report.
 

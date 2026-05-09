@@ -9,8 +9,8 @@
  * Why this matters: the Command Center showed readiness % + "next
  * question" but not what just happened. A returning customer couldn't
  * see that Jason had drafted three paragraphs, or that the scrape
- * had pre-filled a chapter — the work was invisible until they
- * navigated into the chapter. The feed makes the portal feel inhabited
+ * had pre-filled a section — the work was invisible until they
+ * navigated into the section. The feed makes the portal feel inhabited
  * rather than static.
  *
  * Coordination note: this is intentionally read-only and orthogonal to
@@ -25,7 +25,7 @@ import { MEMORY_FILE_TITLES, type MemoryFileSlug } from "@/lib/memory/files";
 import type { CustomerMemory } from "@/lib/supabase/types";
 
 export type ActivityKind =
-  | "chapter_updated"
+  | "section_updated"
   | "fields_extracted_from_upload"
   | "fields_filled_by_scrape"
   | "fields_filled_by_user"
@@ -33,13 +33,13 @@ export type ActivityKind =
   | "attachment_uploaded";
 
 export type ActivityEvent = {
-  /** Stable id for React keys — chapter slug + kind + timestamp suffices. */
+  /** Stable id for React keys — section slug + kind + timestamp suffices. */
   id: string;
   kind: ActivityKind;
   /** ISO timestamp — the source "happened at". Newer is later. */
   at: string;
-  chapterSlug: MemoryFileSlug;
-  chapterTitle: string;
+  sectionSlug: MemoryFileSlug;
+  sectionTitle: string;
   /** Short, customer-facing one-liner. No exclamation marks per brand. */
   summary: string;
   /** Optional secondary line — count, attachment label, etc. */
@@ -70,7 +70,7 @@ const LAST_UPDATED_BY_VERB: Record<CustomerMemory["last_updated_by"], string> = 
  * Compute the most recent N activity events for a user.
  *
  * Returns events in newest-first order. The synthesis logic is
- * intentionally bucket-y: per-field updates are grouped by chapter +
+ * intentionally bucket-y: per-field updates are grouped by section +
  * source so the feed doesn't list 22 individual `unit_economics` field
  * writes from one upload as 22 events.
  */
@@ -110,19 +110,19 @@ export async function getRecentActivity(
     const slug = row.file_slug as MemoryFileSlug;
     const title = MEMORY_FILE_TITLES[slug] ?? slug;
 
-    // ── Chapter prose update — only if there's real content + a recent
+    // ── Section prose update — only if there's real content + a recent
     // updated_at. Skip when the only change was attachment append or
     // field write (those have their own buckets).
     if (
       (row.content_md ?? "").trim().length >= 80 &&
-      row.last_updated_by !== "user" // user typing into the chapter editor
+      row.last_updated_by !== "user" // user typing into the section editor
     ) {
       events.push({
-        id: `${slug}.chapter_updated.${row.updated_at}`,
-        kind: "chapter_updated",
+        id: `${slug}.section_updated.${row.updated_at}`,
+        kind: "section_updated",
         at: row.updated_at,
-        chapterSlug: slug,
-        chapterTitle: title,
+        sectionSlug: slug,
+        sectionTitle: title,
         summary: `${LAST_UPDATED_BY_VERB[row.last_updated_by] ?? "Updated"} ${title}`,
         detail:
           row.confidence === "verified"
@@ -134,7 +134,7 @@ export async function getRecentActivity(
     }
 
     // ── Field updates: bucket by source so we get one row per
-    // (chapter, source) per ~recent window rather than one per field.
+    // (section, source) per ~recent window rather than one per field.
     const fieldStatus = (row.field_status ?? {}) as CustomerMemory["field_status"];
     const groupedBySource = new Map<
       string,
@@ -162,8 +162,8 @@ export async function getRecentActivity(
         id: `${slug}.${kind}.${group.latestAt}`,
         kind,
         at: group.latestAt,
-        chapterSlug: slug,
-        chapterTitle: title,
+        sectionSlug: slug,
+        sectionTitle: title,
         summary: summarizeFieldGroup(kind, group.count, title),
       });
     }
@@ -175,8 +175,8 @@ export async function getRecentActivity(
         id: `${slug}.attachment.${att.id}`,
         kind: "attachment_uploaded",
         at: att.created_at,
-        chapterSlug: slug,
-        chapterTitle: title,
+        sectionSlug: slug,
+        sectionTitle: title,
         summary: `${att.kind === "file" ? "File" : "Link"} added to ${title}`,
         detail: att.label,
       });

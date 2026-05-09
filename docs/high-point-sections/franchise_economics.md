@@ -2,9 +2,9 @@
 
 > Source: HP_Franchise_Operations_Manual_v3_0.docx (Section 5.1 Royalty & Fee Structure, Section 6.1–6.2 BMF / LSM), HP_Utah_Market_Strategy_Report.docx (Recommended Franchise Economics Guardrails), HPMF_Policy_and_Procedure_Manual_v1_0.docx (collections mechanics)
 
-## What a strong Royalty, Ad Fund & Fees chapter looks like
+## What a strong Royalty, Ad Fund & Fees section looks like
 
-A precise, table-driven chapter — typically 2–3 pages — that names every dollar a franchisee will pay the franchisor, when they pay it, and what they get for it. The reader should be able to plug the numbers straight into a spreadsheet and have nothing left to ask. It pairs the *number* with the *rationale* — why this royalty rate, why this ad-fund split — so the franchisee understands the model rather than just memorizing rates.
+A precise, table-driven section — typically 2–3 pages — that names every dollar a franchisee will pay the franchisor, when they pay it, and what they get for it. The reader should be able to plug the numbers straight into a spreadsheet and have nothing left to ask. It pairs the *number* with the *rationale* — why this royalty rate, why this ad-fund split — so the franchisee understands the model rather than just memorizing rates.
 
 ## Structure observed
 
@@ -43,4 +43,4 @@ Precise, contractual, neutral. Reads like a finance spec. Every number has a uni
 - Royalty rates with no peer benchmark — leaves the franchisee unable to evaluate fairness.
 - Ambiguous "Gross Sales" definitions that invite disputes (sales tax, third-party delivery commissions, gift card redemptions).
 - Implying any fee is negotiable when it is not.
-- Sales-pitch language about "investing in your success" — this chapter is about money, not motivation.
+- Sales-pitch language about "investing in your success" — this section is about money, not motivation.

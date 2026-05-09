@@ -1,7 +1,7 @@
 /**
  * Canonical file slugs for the customer Memory directory.
  *
- * Every chapter of the customer's living Franchisor Blueprint is identified
+ * Every section of the customer's living Franchisor Blueprint is identified
  * by one of these slugs. The slug is also the row-key in `customer_memory`
  * (composite PK with user_id) and the directory name in any export bundle.
  *
@@ -34,7 +34,7 @@ export const MEMORY_FILES = [
   "competitor_landscape", // Direct/indirect competitors → Competitor Maps (research-heavy)
 
   // -- People --
-  "training_program", // Training + certification → Train chapter
+  "training_program", // Training + certification → Train section
   "franchisee_profile", // Ideal franchisee → Qualify Matrix, Discovery Day deck
   "employee_handbook", // HR & employment → Employee Handbook
   "reimbursement_policy", // Expense reimbursement → Reimbursement Policy
@@ -46,7 +46,7 @@ export const MEMORY_FILES = [
 export type MemoryFileSlug = (typeof MEMORY_FILES)[number];
 
 /**
- * Human-readable chapter titles (for UI rendering and the agent's prompt
+ * Human-readable section titles (for UI rendering and the agent's prompt
  * context). Keep these in sync with the slug list above.
  */
 export const MEMORY_FILE_TITLES: Record<MemoryFileSlug, string> = {

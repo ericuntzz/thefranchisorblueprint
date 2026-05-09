@@ -1,7 +1,7 @@
 /**
  * Extract text from uploaded documents.
  *
- * The chapter-attachment endpoint stores files in customer-uploads
+ * The section-attachment endpoint stores files in customer-uploads
  * AND saves an `excerpt` string on the attachment record. The
  * draft pipeline includes that excerpt in Opus's prompt context so
  * the agent can pull facts from uploaded docs at draft time.
@@ -25,7 +25,7 @@ import mammoth from "mammoth";
 
 /** Truncate excerpts to bound prompt size. Opus 4.7's 1M context
  *  is roomy, but we still want to keep individual attachment
- *  excerpts manageable so a chapter's combined context doesn't
+ *  excerpts manageable so a section's combined context doesn't
  *  blow out cache breakpoints. ~12K chars ≈ 3K tokens, tight
  *  enough that 5 attachments still fit comfortably. */
 const MAX_EXCERPT_CHARS = 12_000;

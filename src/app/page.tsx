@@ -42,7 +42,7 @@ const docs = [
   { icon: ListChecks, title: "Audit Your Business", body: "150-point readiness audit covering every detail attorneys and franchisees will ask about." },
   { icon: CalendarClock, title: "Build Your 12-Month Roadmap", body: "Gantt chart with the critical path from concept to first signed franchisee." },
   { icon: DollarSign, title: "Model Your Unit Economics", body: "Pro forma templates for FDD Items 7 and 19 — the numbers candidates evaluate before they sign." },
-  { icon: BookMarked, title: "Codify Your Operations", body: "17-chapter, 100+ page Operations Manual template — the brand bible franchisees live by." },
+  { icon: BookMarked, title: "Codify Your Operations", body: "17-section, 100+ page Operations Manual template — the brand bible franchisees live by." },
   { icon: GraduationCap, title: "Train Your Team to Replicate", body: "Staff training and certification modules so service quality stays consistent at every unit." },
   { icon: ScrollText, title: "Decode the FDD", body: "All 23 federal disclosure items in plain English — walk into your franchise attorney prepared, not lost." },
   { icon: MapPin, title: "Score Real Estate Like a Franchisor", body: "Proprietary scoring system for evaluating any location objectively before you sign a lease." },

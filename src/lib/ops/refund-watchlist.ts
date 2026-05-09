@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, CustomerMemory } from "@/lib/supabase/types";
 import {
   indexMemoryRows,
-  computeChapterReadiness,
+  computeSectionReadiness,
   overallReadinessPct,
 } from "@/lib/memory/readiness";
 import type { RefundWatchItem } from "./types";
@@ -79,7 +79,7 @@ export async function collect(
         attachments: (r.attachments ?? []) as CustomerMemory["attachments"],
       })),
     );
-    const readinessPct = overallReadinessPct(computeChapterReadiness(indexed));
+    const readinessPct = overallReadinessPct(computeSectionReadiness(indexed));
 
     if (readinessPct >= 50) continue;
 

@@ -1,9 +1,9 @@
 /**
- * Section-level slicing of chapter prose.
+ * Section-level slicing of section prose.
  *
  * The Blueprint canvas treats each `##` (h2) heading as a section
  * boundary so the inline-edit UX can edit one section at a time
- * instead of dumping the whole chapter into a single textarea (which,
+ * instead of dumping the whole section into a single textarea (which,
  * per Eric's feedback, "feels like editing a codebase"). Sub-headings
  * (`###`+) stay nested inside their parent section.
  *
@@ -14,8 +14,8 @@
  *
  * Section identity for save round-trips is the index, not the heading
  * text — that way the customer can rename a heading without breaking
- * the persistence link. Concurrent saves to the same chapter share an
- * inherent race window, but our UI is single-user-single-chapter so
+ * the persistence link. Concurrent saves to the same section share an
+ * inherent race window, but our UI is single-user-single-section so
  * the practical risk is nil.
  */
 
@@ -41,7 +41,7 @@ export function parseSections(md: string): Section[] {
   for (const line of lines) {
     if (/^##\s+/.test(line) && !/^###/.test(line)) {
       // Commit the in-flight section if it has any content. Skip an
-      // empty pre-heading section so chapters that start with a
+      // empty pre-heading section so sections that start with a
       // heading don't carry a phantom section 0.
       if (current.heading !== null || current.body.trim().length > 0) {
         sections.push(current);
@@ -86,7 +86,7 @@ export function joinSections(sections: Section[]): string {
  * markers if appropriate.
  *
  * Throws if `sectionIndex` is out of range so the caller surfaces a
- * clean 400 instead of silently corrupting the chapter.
+ * clean 400 instead of silently corrupting the section.
  */
 export function replaceSection(
   md: string,
@@ -96,7 +96,7 @@ export function replaceSection(
   const sections = parseSections(md);
   if (sectionIndex < 0 || sectionIndex >= sections.length) {
     throw new Error(
-      `Section index ${sectionIndex} out of range (chapter has ${sections.length} sections).`,
+      `Section index ${sectionIndex} out of range (section has ${sections.length} sections).`,
     );
   }
   const updated: Section = {

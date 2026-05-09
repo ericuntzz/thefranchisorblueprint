@@ -5,7 +5,7 @@
   "expectedShapes": {
     "redlines-get": {
       "topLevelKeys": ["redlines", "openCount", "blockerCount", "approved"],
-      "redlineKeys": ["id", "user_id", "chapter_slug", "claim_id", "comment", "severity", "reviewer_user_id", "reviewer_name", "resolved_at", "resolved_by_user_id", "created_at", "updated_at"],
+      "redlineKeys": ["id", "user_id", "section_slug", "claim_id", "comment", "severity", "reviewer_user_id", "reviewer_name", "resolved_at", "resolved_by_user_id", "created_at", "updated_at"],
       "approvedType": "boolean",
       "blockerCountType": "number",
       "openCountType": "number"
@@ -40,9 +40,9 @@
   },
   "expectedSsrTitles": {
     "/portal": "Your Blueprint Portal | The Franchisor Blueprint",
-    "/portal/chapter/business_overview": "Concept & Story | The Franchisor Blueprint",
-    "/portal/chapter/training_program": "Training & Certification | The Franchisor Blueprint",
-    "/portal/chapter/compliance_legal": "FDD Posture & State Strategy | The Franchisor Blueprint",
+    "/portal/section/business_overview": "Concept & Story | The Franchisor Blueprint",
+    "/portal/section/training_program": "Training & Certification | The Franchisor Blueprint",
+    "/portal/section/compliance_legal": "FDD Posture & State Strategy | The Franchisor Blueprint",
     "/portal/lab/intake": "Day 1 · Pre-fill your Blueprint | The Franchisor Blueprint",
     "/portal/lab/blueprint": "Your Franchisor Blueprint | The Franchisor Blueprint",
     "/portal/lab/next": "What's Next | The Franchisor Blueprint",

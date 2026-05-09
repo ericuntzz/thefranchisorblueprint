@@ -1,14 +1,14 @@
 "use client";
 
 /**
- * ChapterFieldsCard — data-entry view for the dashboard's per-chapter
- * inline editor. Replaces ChapterCard in that surface.
+ * SectionFieldsCard — data-entry view for the dashboard's per-section
+ * inline editor. Replaces SectionCard in that surface.
  *
  * Mental model split (Eric, May 2026):
- *   - Dashboard `/portal` chapter row  →  THIS card. Pure structured-
+ *   - Dashboard `/portal` section row  →  THIS card. Pure structured-
  *     field entry. Autosave, attachments, no prose. The user is in
  *     "fill it in" mode.
- *   - Blueprint `/portal/lab/blueprint`  →  ChapterCard. Assembled prose
+ *   - Blueprint `/portal/lab/blueprint`  →  SectionCard. Assembled prose
  *     with section-level "Edit Text" hover. The user is in "read +
  *     polish" mode.
  *
@@ -16,22 +16,22 @@
  *
  * Bridge: a small "See how this reads in the Blueprint →" link in
  * the footer takes the user to the Blueprint page anchored to this
- * chapter, so they can flip between modes without losing context.
+ * section, so they can flip between modes without losing context.
  *
- * For chapters without a schema (e.g. the few legacy slugs), this
+ * For sections without a schema (e.g. the few legacy slugs), this
  * card falls back to a stub message that punts the user to the
  * Blueprint page where the prose can still be edited.
  */
 
 import Link from "next/link";
 import { ArrowRight, BookOpen, Clock } from "lucide-react";
-import { ChapterFieldEditor } from "@/components/agent/ChapterFieldEditor";
-import { ChapterAttachments } from "@/components/agent/ChapterAttachments";
+import { SectionFieldEditor } from "@/components/agent/SectionFieldEditor";
+import { SectionAttachments } from "@/components/agent/SectionAttachments";
 import type {
-  ChapterAttachment,
+  SectionAttachment,
   CustomerMemoryProvenance,
 } from "@/lib/supabase/types";
-import type { ChapterSchema } from "@/lib/memory/schemas";
+import type { SectionSchema } from "@/lib/memory/schemas";
 import type { MemoryFieldsMap } from "@/lib/calc";
 import type { MemoryFileSlug } from "@/lib/memory/files";
 
@@ -49,8 +49,8 @@ type FieldSource =
 type Props = {
   slug: MemoryFileSlug;
   title: string;
-  schema: ChapterSchema | null;
-  attachments: ChapterAttachment[];
+  schema: SectionSchema | null;
+  attachments: SectionAttachment[];
   fields: Record<string, FieldValue>;
   fieldStatus?: Record<
     string,
@@ -60,7 +60,7 @@ type Props = {
       note?: string;
     }
   >;
-  otherChaptersFields: MemoryFieldsMap;
+  otherSectionsFields: MemoryFieldsMap;
   lastUpdatedBy: "agent" | "user" | "jason" | "scraper" | null;
   updatedAt: string | null;
   /** Provenance is data-entry context (which source filled what); not
@@ -68,7 +68,7 @@ type Props = {
    *  has it on hand. */
   provenance?: CustomerMemoryProvenance[];
   /** Increments every time the user clicks the row's Attach button.
-   *  Forwarded to ChapterAttachments which pops its composer open
+   *  Forwarded to SectionAttachments which pops its composer open
    *  whenever this changes. Optional — undefined just means "no
    *  Attach shortcut wired up here." */
   attachOpenSignal?: number;
@@ -88,20 +88,20 @@ type Props = {
   }) => Promise<void>;
 };
 
-export function ChapterFieldsCard({
+export function SectionFieldsCard({
   slug,
   title,
   schema,
   attachments,
   fields,
   fieldStatus,
-  otherChaptersFields,
+  otherSectionsFields,
   lastUpdatedBy,
   updatedAt,
   attachOpenSignal,
   saveFields,
 }: Props) {
-  // No-schema fallback. Most chapters will have one; brand_voice and
+  // No-schema fallback. Most sections will have one; brand_voice and
   // a few others are still being authored. Punt these to the Blueprint
   // page where prose editing is the entry point.
   if (!schema) {
@@ -110,11 +110,11 @@ export function ChapterFieldsCard({
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
           <div className="font-bold mb-1">{title}</div>
           <p className="text-amber-900/85 leading-relaxed">
-            This chapter doesn&apos;t have a structured questionnaire yet
+            This section doesn&apos;t have a structured questionnaire yet
             — it&apos;s edited as freeform prose.
           </p>
           <Link
-            href={`/portal/lab/blueprint#chapter-${slug}`}
+            href={`/portal/lab/blueprint#section-${slug}`}
             className="inline-flex items-center gap-1.5 mt-3 text-navy hover:text-navy-light font-bold text-xs uppercase tracking-[0.1em] transition-colors"
           >
             <BookOpen size={12} />
@@ -129,7 +129,7 @@ export function ChapterFieldsCard({
   return (
     <div className="space-y-4">
       {/* Description — context for what the customer is filling in.
-          The chapter title lives in the row header above; no need to
+          The section title lives in the row header above; no need to
           repeat it here. */}
       {schema.description && (
         <p className="text-grey-3 text-sm leading-relaxed max-w-[680px]">
@@ -144,11 +144,11 @@ export function ChapterFieldsCard({
 
       {/* The actual field editor. Autosaves; no explicit Save/Cancel
           (the row's Close toggle ends the session). */}
-      <ChapterFieldEditor
+      <SectionFieldEditor
         schema={schema}
         initialFields={fields}
         fieldStatus={fieldStatus}
-        otherChaptersFields={otherChaptersFields}
+        otherSectionsFields={otherSectionsFields}
         onSave={async (changes) => {
           await saveFields({ slug, changes });
         }}
@@ -158,13 +158,13 @@ export function ChapterFieldsCard({
           Inputs that influence drafting belong with the data-entry
           surface, not the prose-review one. attachOpenSignal lets
           the row-header Attach button shortcut into the composer. */}
-      <ChapterAttachments
+      <SectionAttachments
         slug={slug}
         attachments={attachments}
         openComposerSignal={attachOpenSignal}
       />
 
-      {/* Footer: when the chapter was last touched + a bridge to the
+      {/* Footer: when the section was last touched + a bridge to the
           Blueprint page where the customer can read what got drafted
           and polish the prose. */}
       <footer className="pt-3 border-t border-card-border flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-xs text-grey-3">
@@ -175,7 +175,7 @@ export function ChapterFieldsCard({
             : "Never updated"}
         </span>
         <Link
-          href={`/portal/lab/blueprint#chapter-${slug}`}
+          href={`/portal/lab/blueprint#section-${slug}`}
           className="inline-flex items-center gap-1.5 text-navy hover:text-navy-light font-bold uppercase tracking-[0.1em] transition-colors"
         >
           <BookOpen size={12} />

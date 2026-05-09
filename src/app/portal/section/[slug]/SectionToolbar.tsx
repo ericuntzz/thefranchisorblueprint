@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * Chapter toolbar — renders next to the page-level back arrow at the
- * top of /portal/chapter/[slug].
+ * Section toolbar — renders next to the page-level back arrow at the
+ * top of /portal/section/[slug].
  *
  * MOCK (Pass E preview): the only thing this component now surfaces is
  * status pills (open redlines, Jason approved). Talk to Jason was
@@ -12,8 +12,8 @@
  * was removed — the new left sidebar's "Blueprint" entry is the
  * primary way to reach the assembled view.
  *
- * Result: top of the chapter page goes from 4 ghost-pill buttons +
- * an overflow menu down to a back arrow + the chapter title. Status
+ * Result: top of the section page goes from 4 ghost-pill buttons +
+ * an overflow menu down to a back arrow + the section title. Status
  * pills appear inline if and only if there's something to surface.
  */
 
@@ -27,7 +27,7 @@ type Props = {
   slug: MemoryFileSlug;
 };
 
-export function ChapterToolbar({ slug }: Props) {
+export function SectionToolbar({ slug }: Props) {
   const router = useRouter();
   const [redlineSummary, setRedlineSummary] = useState<{
     open: number;

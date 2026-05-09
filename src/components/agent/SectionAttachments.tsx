@@ -1,16 +1,16 @@
 "use client";
 
 /**
- * Per-chapter attachments panel. Renders the list of files + links the
- * customer has added to this chapter, plus an "Attach reference" CTA
+ * Per-section attachments panel. Renders the list of files + links the
+ * customer has added to this section, plus an "Attach reference" CTA
  * that pops a small composer for either a file upload or a URL save.
  *
- * Sits in the chapter card footer (or, when the chapter is empty, near
- * the empty-state CTAs). Uses the /api/agent/chapter-attachment endpoint
+ * Sits in the section card footer (or, when the section is empty, near
+ * the empty-state CTAs). Uses the /api/agent/section-attachment endpoint
  * for both directions.
  *
  * The agent reads attachments at draft time — labels + excerpts get
- * threaded into Opus's prompt context so chapters drafted after an
+ * threaded into Opus's prompt context so sections drafted after an
  * attachment lands incorporate the new material.
  */
 
@@ -26,19 +26,19 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import type { ChapterAttachment } from "@/lib/supabase/types";
+import type { SectionAttachment } from "@/lib/supabase/types";
 
 type Props = {
   slug: string;
-  attachments: ChapterAttachment[];
+  attachments: SectionAttachment[];
   /** Counter that bumps every time an external trigger (e.g. the
-   *  chapter-row Attach button) wants to pop the composer. Each new
+   *  section-row Attach button) wants to pop the composer. Each new
    *  value > 0 opens the composer; the increment-on-click pattern
    *  means re-clicks after the user dismisses still re-open it. */
   openComposerSignal?: number;
 };
 
-export function ChapterAttachments({
+export function SectionAttachments({
   slug,
   attachments,
   openComposerSignal,
@@ -49,7 +49,7 @@ export function ChapterAttachments({
 
   // Pop the composer when an external trigger fires. The first render
   // with a defined signal > 0 also fires — that's the path used when
-  // the customer clicks Attach on a collapsed row: ChapterAttachments
+  // the customer clicks Attach on a collapsed row: SectionAttachments
   // mounts fresh inside the newly-expanded row with the signal
   // already at its post-click value.
   useEffect(() => {
@@ -63,7 +63,7 @@ export function ChapterAttachments({
     setBusy(true);
     setErr(null);
     try {
-      const res = await fetch("/api/agent/chapter-attachment", {
+      const res = await fetch("/api/agent/section-attachment", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ slug, attachmentId: id }),
@@ -84,7 +84,7 @@ export function ChapterAttachments({
     // hairline border-top didn't separate this section enough from
     // the field grid above. A subtle cream panel with rounded corners
     // reads as its own zone (uploads / references) without competing
-    // with the parent chapter card's white surface.
+    // with the parent section card's white surface.
     <div className="mt-5 rounded-xl border border-card-border bg-cream/40 p-4 sm:p-5">
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex-1 min-w-0">
@@ -153,7 +153,7 @@ function AttachmentRow({
   onDelete,
   busy,
 }: {
-  attachment: ChapterAttachment;
+  attachment: SectionAttachment;
   onDelete: () => void;
   busy: boolean;
 }) {
@@ -224,7 +224,7 @@ function AttachmentComposer({
       const fd = new FormData();
       fd.append("slug", slug);
       fd.append("file", file);
-      const res = await fetch("/api/agent/chapter-attachment", {
+      const res = await fetch("/api/agent/section-attachment", {
         method: "POST",
         body: fd,
       });
@@ -245,7 +245,7 @@ function AttachmentComposer({
     onError(null);
     setBusy(true);
     try {
-      const res = await fetch("/api/agent/chapter-attachment", {
+      const res = await fetch("/api/agent/section-attachment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

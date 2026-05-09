@@ -552,11 +552,11 @@ Practical signal: a franchisor who participates in VetFran is publicly committin
 
 Most manuals run 100-300 pages. Service franchises typically land near 100-150 pages; food service often exceeds 250 because of food-safety, recipe, and equipment-handling depth.
 
-A defensible 17-chapter framework groups the manual into four sections:
-- **Foundation** (chapters 1-4): brand story, identity standards, system overview, pre-opening checklist
-- **Operations** (chapters 5-10): daily operations, customer experience, products/services, vendor management, inventory, equipment maintenance
-- **People** (chapters 11-13): hiring, training and certification, performance management
-- **Systems** (chapters 14-17): marketing, technology, financial management, compliance
+A defensible 17-section framework groups the manual into four sections:
+- **Foundation** (sections 1-4): brand story, identity standards, system overview, pre-opening checklist
+- **Operations** (sections 5-10): daily operations, customer experience, products/services, vendor management, inventory, equipment maintenance
+- **People** (sections 11-13): hiring, training and certification, performance management
+- **Systems** (sections 14-17): marketing, technology, financial management, compliance
 
 Without an operations manual, your Item 11 disclosure is dishonest, your franchise agreement's quality-control provisions are unenforceable, and brand consistency collapses by unit number five. Building it is non-negotiable for any franchisor seriously preparing to scale.`,
     relatedTerms: ["fdd-item-11", "field-consultant", "franchise-disclosure-document"],

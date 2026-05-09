@@ -7,7 +7,7 @@
  * Hits each external API with a small known-good test input and
  * reports back which ones answered. Lets the admin verify that
  * env vars are actually wired and the wrappers are working without
- * having to navigate to 4 different chapter pages.
+ * having to navigate to 4 different section pages.
  *
  * Auth: ADMIN_USER_IDS gate. Probes are real API calls so they
  * count against quotas — admin-only avoids drive-by usage.

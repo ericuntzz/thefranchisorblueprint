@@ -16,7 +16,7 @@ export type Profile = {
   coaching_credits: number;
   /** Customer's website. Captured at assessment or post-purchase, scraped
    *  by the website pre-fill service to seed brand_voice + business_overview
-   *  Memory chapters before the customer even starts voice intake. */
+   *  Memory sections before the customer even starts voice intake. */
   website_url: string | null;
   created_at: string;
   updated_at: string;
@@ -133,14 +133,14 @@ export type AssessmentResponse = {
  */
 /**
  * Tier 2/3 redline note left by Jason (or another admin reviewer)
- * against a customer's chapter draft. The customer resolves redlines
+ * against a customer's section draft. The customer resolves redlines
  * one by one; once every blocker-severity redline is resolved, the
- * admin can stamp the chapter as Jason-approved.
+ * admin can stamp the section as Jason-approved.
  */
-export type ChapterRedline = {
+export type SectionRedline = {
   id: string;
   user_id: string;
-  chapter_slug: string;
+  section_slug: string;
   claim_id: string | null;
   comment: string;
   severity: "info" | "warning" | "blocker";
@@ -153,16 +153,16 @@ export type ChapterRedline = {
 };
 
 /**
- * Versioned snapshot of a customer_memory chapter at a point in
+ * Versioned snapshot of a customer_memory section at a point in
  * time. Captured BEFORE every meaningful write (agent redraft,
  * scrape, user edit) so the customer can roll back. Pruned to
- * the most-recent N per (user, chapter) by the snapshots helper.
+ * the most-recent N per (user, section) by the snapshots helper.
  */
 export type MemorySnapshot = {
   id: string;
   user_id: string;
-  chapter_slug: string;
-  /** Snapshot payload — the chapter contents at capture time.
+  section_slug: string;
+  /** Snapshot payload — the section contents at capture time.
    *  Validated as `SnapshotPayload` in lib/memory/snapshots.ts. */
   payload: unknown;
   reason: string | null;
@@ -211,11 +211,11 @@ export type ScheduledEmail = {
 /**
  * Per-user directory of structured business knowledge. One row per
  * (user, file_slug). content_md is *both* the agent's source of truth AND
- * the live draft of the corresponding chapter that compiles into the
+ * the live draft of the corresponding section that compiles into the
  * customer's Franchisor Blueprint export bundle.
  *
  * `fields` is the structured-data layer added in Phase 1.5a — typed
- * values per chapter, keyed by field name. The schema lives in
+ * values per section, keyed by field name. The schema lives in
  * `src/lib/memory/schemas.ts`. The actual values are JSON-serializable:
  * strings, numbers, booleans, and `string[]` for lists. Empty/unknown
  * values are stored as `null` (not undefined) so the diff stays
@@ -227,15 +227,15 @@ export type ScheduledEmail = {
  * field's value came from (voice_session, scraper, user_typed, etc.).
  *
  * See `src/lib/memory/files.ts` for the canonical list of file_slug values
- * and `src/lib/memory/schemas.ts` for the per-chapter field schemas.
+ * and `src/lib/memory/schemas.ts` for the per-section field schemas.
  */
 export type CustomerMemory = {
   user_id: string;
   file_slug: string;
   content_md: string;
-  /** Structured field values per chapter. See `ChapterFields` in schemas.ts. */
+  /** Structured field values per section. See `SectionFields` in schemas.ts. */
   fields: Record<string, string | number | boolean | string[] | null>;
-  /** Per-field provenance metadata. See `ChapterFieldStatus` in schemas.ts. */
+  /** Per-field provenance metadata. See `SectionFieldStatus` in schemas.ts. */
   field_status: Record<
     string,
     {
@@ -254,11 +254,11 @@ export type CustomerMemory = {
   >;
   confidence: "verified" | "inferred" | "draft";
   last_updated_by: "agent" | "user" | "jason" | "scraper";
-  /** Per-chapter attachments (files + links) the customer added to
+  /** Per-section attachments (files + links) the customer added to
    *  enrich the agent's drafting context. See migration 0012 for shape. */
-  attachments: ChapterAttachment[];
-  /** Stamped when Jason (or another admin reviewer) marks the chapter
-   *  approved. Surfaced on export cover pages + chapter cards.
+  attachments: SectionAttachment[];
+  /** Stamped when Jason (or another admin reviewer) marks the section
+   *  approved. Surfaced on export cover pages + section cards.
    *  Null = no human review yet. See migration 0022. */
   jason_approved_at: string | null;
   jason_approved_by_user_id: string | null;
@@ -267,12 +267,12 @@ export type CustomerMemory = {
 };
 
 /**
- * One per-chapter attachment. Files live in the customer-uploads
+ * One per-section attachment. Files live in the customer-uploads
  * storage bucket; links are external URLs we may have lightly scraped
- * for an excerpt. Both surface in the chapter card and feed into
+ * for an excerpt. Both surface in the section card and feed into
  * Opus's draft prompt as additional context.
  */
-export type ChapterAttachment = {
+export type SectionAttachment = {
   id: string;
   kind: "file" | "link";
   /** Storage object path for files; absolute https URL for links. */
@@ -339,7 +339,7 @@ export type CoachingSession = {
 export type CustomerRescueSend = {
   id: string;
   user_id: string;
-  chapter_slug: string;
+  section_slug: string;
   days_idle: number;
   sent_at: string;
 };
@@ -661,7 +661,7 @@ export type Database = {
         Insert: {
           id?: string;
           user_id: string;
-          chapter_slug: string;
+          section_slug: string;
           payload: unknown;
           reason?: string | null;
           source: MemorySnapshot["source"];
@@ -670,15 +670,15 @@ export type Database = {
         Update: Partial<Omit<MemorySnapshot, "id" | "user_id">>;
         Relationships: [];
       };
-      chapter_redlines: {
-        Row: ChapterRedline;
+      section_redlines: {
+        Row: SectionRedline;
         Insert: {
           id?: string;
           user_id: string;
-          chapter_slug: string;
+          section_slug: string;
           claim_id?: string | null;
           comment: string;
-          severity?: ChapterRedline["severity"];
+          severity?: SectionRedline["severity"];
           reviewer_user_id: string;
           reviewer_name?: string | null;
           resolved_at?: string | null;
@@ -686,7 +686,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
-        Update: Partial<Omit<ChapterRedline, "id" | "user_id">>;
+        Update: Partial<Omit<SectionRedline, "id" | "user_id">>;
         Relationships: [];
       };
       inbox_reviews: {

@@ -2,9 +2,9 @@
 
 > Source: HP_Franchise_Operations_Manual_v3_0.docx (Section 11 F&B Procurement & Supply Chain, Section 4.1 Required Equipment, Section 12.1 Core Menu)
 
-## What a strong Approved Suppliers chapter looks like
+## What a strong Approved Suppliers section looks like
 
-A category-by-category supplier governance document — typically 2–4 pages — that defines which products must be sourced from a designated supplier (Tier 1), which must be sourced from an approved list (Tier 2), and where the franchisee has discretion. The chapter is the operational counterpart to FDD Item 8: it translates legal restrictions into a daily ordering playbook, with par levels, ordering cadences, and a non-compliance escalation path.
+A category-by-category supplier governance document — typically 2–4 pages — that defines which products must be sourced from a designated supplier (Tier 1), which must be sourced from an approved list (Tier 2), and where the franchisee has discretion. The section is the operational counterpart to FDD Item 8: it translates legal restrictions into a daily ordering playbook, with par levels, ordering cadences, and a non-compliance escalation path.
 
 ## Structure observed
 
@@ -46,4 +46,4 @@ Operational, prescriptive, FDD-aware. Uses language like "required," "approved,"
 - Single-source requirements that aren't justified by brand consistency or proprietary specs (read as rent-seeking).
 - Par-level guidance in dollar amounts (breaks at scale).
 - Supplier non-compliance procedures that don't define escalation timeframes.
-- Listing specific vendor names in the chapter itself — those belong in the Portal where they can be updated; the chapter governs the *categories* and *rules*.
+- Listing specific vendor names in the section itself — those belong in the Portal where they can be updated; the section governs the *categories* and *rules*.

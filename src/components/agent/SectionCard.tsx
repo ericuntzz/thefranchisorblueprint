@@ -1,14 +1,14 @@
 "use client";
 
 /**
- * One chapter on the Blueprint canvas. Renders the markdown content as
- * polished prose, with a "Draft with Jason" CTA when the chapter is empty
+ * One section on the Blueprint canvas. Renders the markdown content as
+ * polished prose, with a "Draft with Jason" CTA when the section is empty
  * or stale, and a confidence pill that quietly tells the customer where
  * the content came from.
  *
  * Provenance UI: invisible by default. The customer can click the small
  * `provenance` button to expand a list of every source that fed this
- * chapter. We keep this off the main read path so the page reads as a
+ * section. We keep this off the main read path so the page reads as a
  * polished document, not an audit trail.
  */
 
@@ -30,14 +30,14 @@ import {
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type {
-  ChapterAttachment,
+  SectionAttachment,
   CustomerMemoryProvenance,
 } from "@/lib/supabase/types";
-import { ChapterAttachments } from "./ChapterAttachments";
+import { SectionAttachments } from "./SectionAttachments";
 import { DraftWithJasonModal } from "./DraftWithJasonModal";
 import type { MemoryFileSlug } from "@/lib/memory/files";
 import type { ReadinessState } from "@/lib/memory/readiness";
-import { type ChapterSchema, type FieldDef } from "@/lib/memory/schemas";
+import { type SectionSchema, type FieldDef } from "@/lib/memory/schemas";
 import { isValidMemoryFileSlug } from "@/lib/memory/files";
 import {
   computeAllFormulas,
@@ -45,7 +45,7 @@ import {
   type MemoryFieldsMap,
 } from "@/lib/calc";
 import { parseSections } from "@/lib/memory/sections";
-import { ChapterFieldEditor } from "./ChapterFieldEditor";
+import { SectionFieldEditor } from "./SectionFieldEditor";
 
 type FieldValue = string | number | boolean | string[] | null;
 
@@ -61,21 +61,21 @@ type Props = {
   lastUpdatedBy: "agent" | "user" | "jason" | "scraper" | null;
   updatedAt: string | null;
   provenance: CustomerMemoryProvenance[];
-  /** Per-chapter attachments (files + links). */
-  attachments: ChapterAttachment[];
+  /** Per-section attachments (files + links). */
+  attachments: SectionAttachment[];
   /**
-   * Every attachment across the customer's chapters — used by the
-   * pre-draft modal to show a cross-chapter checkbox list. The page
+   * Every attachment across the customer's sections — used by the
+   * pre-draft modal to show a cross-section checkbox list. The page
    * already has this data from its single Memory read; passing it
    * down avoids a second round-trip when the modal opens.
    */
-  allAttachmentsByChapter: Array<{
+  allAttachmentsBySection: Array<{
     slug: MemoryFileSlug;
-    attachments: ChapterAttachment[];
+    attachments: SectionAttachment[];
   }>;
-  /** Structured fields for THIS chapter. Empty object if none yet. */
+  /** Structured fields for THIS section. Empty object if none yet. */
   fields: Record<string, FieldValue>;
-  /** Per-field provenance metadata, fed into ChapterFieldEditor so
+  /** Per-field provenance metadata, fed into SectionFieldEditor so
    *  it can render small "From your website / your answer / Jason
    *  inferred" trust labels under each filled input. */
   fieldStatus?: Record<
@@ -94,14 +94,14 @@ type Props = {
       note?: string;
     }
   >;
-  /** Cross-chapter field state — for computed-field formulas. */
-  otherChaptersFields: MemoryFieldsMap;
+  /** Cross-section field state — for computed-field formulas. */
+  otherSectionsFields: MemoryFieldsMap;
   /**
-   * The chapter's field schema (from src/lib/memory/schemas.ts). Null
-   * when the chapter has no schema yet (e.g. brand_voice — deferred to
+   * The section's field schema (from src/lib/memory/schemas.ts). Null
+   * when the section has no schema yet (e.g. brand_voice — deferred to
    * Phase 1.5b). Null = render prose only, no field editor.
    */
-  schema: ChapterSchema | null;
+  schema: SectionSchema | null;
   /**
    * Server action to save field changes. Called by the editor's onSave.
    * Receives `{ slug, changes }` and persists via writeMemoryFields.
@@ -123,7 +123,7 @@ type Props = {
     heading?: string | null;
   }) => Promise<void>;
   /**
-   * Server action to flip the chapter's confidence column. Used for
+   * Server action to flip the section's confidence column. Used for
    * the Approve flow ("→ verified") and re-open for edits ("→ draft").
    */
   setConfidence: (args: {
@@ -140,14 +140,14 @@ type Props = {
   readOnly?: boolean;
   /**
    * "Embedded" mode — strips the outer card chrome (rounded border,
-   * background, padding) so the chapter content flows flush inside
-   * a parent container. Used by DeliverableExplorer's chapter rows
+   * background, padding) so the section content flows flush inside
+   * a parent container. Used by DeliverableExplorer's section rows
    * so the editor doesn't render as a card-inside-a-card.
    */
   embedded?: boolean;
 };
 
-export function ChapterCard({
+export function SectionCard({
   slug,
   title,
   contentMd,
@@ -157,10 +157,10 @@ export function ChapterCard({
   updatedAt,
   provenance,
   attachments,
-  allAttachmentsByChapter,
+  allAttachmentsBySection,
   fields,
   fieldStatus,
-  otherChaptersFields,
+  otherSectionsFields,
   schema,
   saveFields,
   saveSection,
@@ -195,7 +195,7 @@ export function ChapterCard({
   // pre-draft modal — the actual API call happens when the customer
   // confirms inside the modal (with their extra context + selected
   // attachments). Keeps the click-to-draft flow consistent for empty
-  // chapters and redrafts.
+  // sections and redrafts.
   function openDraftModal() {
     setDraftError(null);
     setInsufficientCtx(null);
@@ -257,20 +257,20 @@ export function ChapterCard({
   // Autosave commits each edit via the server action — no reload.
   // The editor stays open until the customer clicks "Done" (or
   // navigates away). The parent page will reflect persisted state
-  // on its next render; for the assembled-view chapter card the
+  // on its next render; for the assembled-view section card the
   // cached prose stays as-is until the user navigates back to it,
   // which matches their mental model (the prose is the read-only
   // view, the field editor is the live one).
   async function handleSaveFields(changes: Record<string, FieldValue>) {
     if (!isValidMemoryFileSlug(slug)) {
-      throw new Error(`Unknown chapter: ${slug}`);
+      throw new Error(`Unknown section: ${slug}`);
     }
     await saveFields({ slug, changes });
   }
 
   return (
     <article
-      id={`chapter-${slug}`}
+      id={`section-${slug}`}
       className={
         embedded
           ? "scroll-mt-20"
@@ -320,11 +320,11 @@ export function ChapterCard({
       </header>
 
       {editing && schema ? (
-        <ChapterFieldEditor
+        <SectionFieldEditor
           schema={schema}
           initialFields={fields}
           fieldStatus={fieldStatus}
-          otherChaptersFields={otherChaptersFields}
+          otherSectionsFields={otherSectionsFields}
           onSave={handleSaveFields}
         />
       ) : isEmpty ? (
@@ -340,7 +340,7 @@ export function ChapterCard({
         ) : (
           <div className="rounded-xl border border-dashed border-navy/15 bg-grey-1 px-5 py-8 text-center">
             <p className="text-grey-3 text-sm mb-4">
-              This chapter is empty. Jason can take a first pass from
+              This section is empty. Jason can take a first pass from
               everything you&apos;ve given the system so far — or you can fill
               in the details yourself.
             </p>
@@ -375,7 +375,7 @@ export function ChapterCard({
             </div>
             {drafting && (
               <p className="mt-3 text-xs text-grey-3 italic">
-                Jason is reading your full Memory and writing a chapter from
+                Jason is reading your full Memory and writing a section from
                 scratch. This usually takes 60–90 seconds — the page will
                 refresh when he&apos;s done.
               </p>
@@ -390,11 +390,11 @@ export function ChapterCard({
           {/* Per-section render: each `## heading` slice becomes its
               own block with its own hover-edit affordance. Editing one
               section leaves the others rendered as polished prose, so
-              the customer never sees the whole chapter as one
+              the customer never sees the whole section as one
               raw-markdown textarea (Eric: "feels like editing a
-              codebase"). The chapter-wide overlay is gone. */}
-          <div className="chapter-prose text-navy/90 leading-relaxed">
-            <ChapterSections
+              codebase"). The section-wide overlay is gone. */}
+          <div className="section-prose text-navy/90 leading-relaxed">
+            <SectionSections
               slug={slug}
               contentMd={contentMd}
               saveSection={saveSection}
@@ -402,7 +402,7 @@ export function ChapterCard({
             />
           </div>
           <style jsx>{`
-            .chapter-prose {
+            .section-prose {
               /* Long URLs / tokens in scraped content (e.g.
                  "https://www.thefranchisorblueprint.com/opengraph-image?9425c002f44aadf5"
                  from the brand_voice scrape) will otherwise blow out the
@@ -410,49 +410,49 @@ export function ChapterCard({
               overflow-wrap: anywhere;
               word-break: break-word;
             }
-            .chapter-prose :global(h1),
-            .chapter-prose :global(h2) {
+            .section-prose :global(h1),
+            .section-prose :global(h2) {
               font-weight: 700;
               color: rgb(30 58 95);
               margin: 1.25em 0 0.5em;
               font-size: 1.05rem;
             }
-            .chapter-prose :global(h3) {
+            .section-prose :global(h3) {
               font-weight: 600;
               color: rgb(30 58 95);
               margin: 1em 0 0.4em;
               font-size: 0.97rem;
             }
-            .chapter-prose :global(p) {
+            .section-prose :global(p) {
               margin: 0 0 0.85em;
               font-size: 0.92rem;
               line-height: 1.6;
             }
-            .chapter-prose :global(ul),
-            .chapter-prose :global(ol) {
+            .section-prose :global(ul),
+            .section-prose :global(ol) {
               margin: 0 0 0.85em 1.2em;
               font-size: 0.92rem;
               line-height: 1.55;
             }
-            .chapter-prose :global(li) {
+            .section-prose :global(li) {
               margin: 0.2em 0;
             }
-            .chapter-prose :global(strong) {
+            .section-prose :global(strong) {
               color: rgb(30 58 95);
               font-weight: 600;
             }
-            .chapter-prose :global(em) {
+            .section-prose :global(em) {
               color: rgb(120 113 108);
             }
-            .chapter-prose :global(code) {
+            .section-prose :global(code) {
               background: rgb(245 245 244);
               padding: 0.1em 0.35em;
               border-radius: 0.25em;
               font-size: 0.85em;
             }
             /* Defensive: any future fenced code block scrolls inside its
-               own box rather than blowing out the chapter card width. */
-            .chapter-prose :global(pre) {
+               own box rather than blowing out the section card width. */
+            .section-prose :global(pre) {
               max-width: 100%;
               overflow-x: auto;
               background: rgb(245 245 244);
@@ -462,18 +462,18 @@ export function ChapterCard({
               font-size: 0.85em;
               line-height: 1.4;
             }
-            .chapter-prose :global(pre code) {
+            .section-prose :global(pre code) {
               background: transparent;
               padding: 0;
             }
-            .chapter-prose :global(blockquote) {
+            .section-prose :global(blockquote) {
               border-left: 3px solid rgb(202 138 4 / 0.45);
               padding-left: 0.9em;
               margin: 0.85em 0;
               color: rgb(120 113 108);
               font-style: italic;
             }
-            .chapter-prose :global(hr) {
+            .section-prose :global(hr) {
               border: 0;
               border-top: 1px solid rgb(30 58 95 / 0.1);
               margin: 1.25em 0;
@@ -497,7 +497,7 @@ export function ChapterCard({
                   doesn't mean anything to a customer). The same
                   data is available to support if anyone needs to
                   audit where a fact came from; surfacing it on the
-                  per-chapter footer added clutter without value.
+                  per-section footer added clutter without value.
 
                   "Redraft with Jason" was removed because the
                   Jason chat dock at the bottom-right already
@@ -527,20 +527,20 @@ export function ChapterCard({
         </>
       )}
       {/* Attachments live below all branches except the active field
-          editor — they're chapter-scoped material the customer adds
+          editor — they're section-scoped material the customer adds
           to enrich Jason's drafting context. Per-section prose edits
-          happen inline inside ChapterSections, so attachments stay
+          happen inline inside SectionSections, so attachments stay
           visible during them; only the field editor swaps the whole
           surface and hides this. */}
       {!editing && (
-        <ChapterAttachments slug={slug} attachments={attachments} />
+        <SectionAttachments slug={slug} attachments={attachments} />
       )}
       {draftModalOpen && isValidMemoryFileSlug(slug) && (
         <DraftWithJasonModal
           slug={slug}
-          chapterTitle={title}
-          thisChapterAttachments={attachments}
-          allAttachmentsByChapter={allAttachmentsByChapter}
+          sectionTitle={title}
+          thisSectionAttachments={attachments}
+          allAttachmentsBySection={allAttachmentsBySection}
           isRedraft={!isEmpty}
           onClose={() => {
             if (!drafting) setDraftModalOpen(false);
@@ -570,7 +570,7 @@ function InsufficientContextPanel({
   onFillFields,
 }: {
   message: string;
-  schema: ChapterSchema | null;
+  schema: SectionSchema | null;
   onFillFields: () => void;
 }) {
   return (
@@ -605,7 +605,7 @@ function InsufficientContextPanel({
             </span>
             <span className="block text-grey-3">
               ~90 seconds. Jason scrapes your site and seeds the foundational
-              chapters.
+              sections.
             </span>
           </span>
         </Link>
@@ -624,7 +624,7 @@ function InsufficientContextPanel({
                 Fill in the fields here
               </span>
               <span className="block text-grey-3">
-                Type the basics for this chapter directly. Jason picks it up
+                Type the basics for this section directly. Jason picks it up
                 from there.
               </span>
             </span>
@@ -660,7 +660,7 @@ function InsufficientContextPanel({
 }
 
 /**
- * Renders chapter markdown with `[NEEDS INPUT: ...]` patterns extracted
+ * Renders section markdown with `[NEEDS INPUT: ...]` patterns extracted
  * into visually distinct callout boxes.
  *
  * Why a custom renderer: passing the raw markdown to ReactMarkdown
@@ -809,7 +809,7 @@ function UserLockedBlock({ text }: { text: string }) {
 /**
  * One styled `[NEEDS INPUT: ...]` callout. Visually distinct from
  * surrounding prose — amber rule, AlertCircle icon, "Needs input"
- * label, and (when the chapter has a schema) a "Fill in fields" CTA
+ * label, and (when the section has a schema) a "Fill in fields" CTA
  * that flips the card into edit mode. The customer always knows what
  * Jason wrote vs what Jason is asking for.
  */
@@ -901,13 +901,13 @@ function formatRelative(iso: string): string {
 
 /**
  * Count how many non-advanced, non-computed fields have been filled in.
- * Used to render the "X of Y filled" microcopy under the chapter title.
+ * Used to render the "X of Y filled" microcopy under the section title.
  * Computed fields don't count (they're derived); advanced fields don't
  * count toward the "primary" total (they're hidden by default).
  */
 function countFilledFields(
   fields: Record<string, FieldValue>,
-  schema: ChapterSchema | null,
+  schema: SectionSchema | null,
 ): { filled: number; total: number } {
   if (!schema) return { filled: 0, total: 0 };
   let filled = 0;
@@ -928,7 +928,7 @@ function countFilledFields(
 /**
  * Per-section render with FAQ-style collapse.
  *
- * Splits the chapter at every `##` heading; each headed section starts
+ * Splits the section at every `##` heading; each headed section starts
  * collapsed and expands when the customer clicks its heading row. Only
  * one section is open at a time — opening another collapses the prior
  * (Eric: "auto collapse when another section opens up"). Section 0
@@ -939,7 +939,7 @@ function countFilledFields(
  * opens it and closes any other open section so the editor has visual
  * space.
  */
-function ChapterSections({
+function SectionSections({
   slug,
   contentMd,
   saveSection,
@@ -1007,7 +1007,7 @@ function ChapterSections({
 }
 
 /**
- * One slice of the chapter.
+ * One slice of the section.
  *
  * Three render states:
  *   1. Collapsed (only when `heading != null` and `!isOpen`):

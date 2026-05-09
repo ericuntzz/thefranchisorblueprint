@@ -1,10 +1,10 @@
 /**
  * Admin Redline UI — Tier 2/3 review surface.
  *
- * Lists every paid customer and their per-chapter readiness, with a
- * per-chapter "open redline thread" link. Inside a thread the admin
- * sees the chapter's current draft, leaves redline notes (info /
- * warning / blocker), and stamps the chapter approved when ready.
+ * Lists every paid customer and their per-section readiness, with a
+ * per-section "open redline thread" link. Inside a thread the admin
+ * sees the section's current draft, leaves redline notes (info /
+ * warning / blocker), and stamps the section approved when ready.
  *
  * Auth: ADMIN_USER_IDS gate. Non-admins get redirected to the regular
  * portal.
@@ -18,7 +18,7 @@ import { getSupabaseServer } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { getAuthenticatedAdminId } from "@/lib/admin";
 import {
-  computeChapterReadiness,
+  computeSectionReadiness,
   indexMemoryRows,
   overallReadinessPct,
 } from "@/lib/memory/readiness";
@@ -27,7 +27,7 @@ import {
   MEMORY_FILE_TITLES,
 } from "@/lib/memory/files";
 import type {
-  ChapterRedline,
+  SectionRedline,
   CustomerMemory,
   Profile,
 } from "@/lib/supabase/types";
@@ -57,8 +57,8 @@ export default async function AdminRedlinePage() {
         .from("customer_memory")
         .select("user_id, file_slug, content_md, fields, confidence, attachments, jason_approved_at"),
       admin
-        .from("chapter_redlines")
-        .select("user_id, chapter_slug, resolved_at, severity"),
+        .from("section_redlines")
+        .select("user_id, section_slug, resolved_at, severity"),
     ]);
 
   const paidUserIds = new Set(
@@ -77,10 +77,10 @@ export default async function AdminRedlinePage() {
     arr.push(row);
     memoryByUser.set(row.user_id, arr);
   }
-  const redlinesByUser = new Map<string, Pick<ChapterRedline, "chapter_slug" | "resolved_at" | "severity">[]>();
-  for (const r of (redlines ?? []) as Pick<ChapterRedline, "user_id" | "chapter_slug" | "resolved_at" | "severity">[]) {
+  const redlinesByUser = new Map<string, Pick<SectionRedline, "section_slug" | "resolved_at" | "severity">[]>();
+  for (const r of (redlines ?? []) as Pick<SectionRedline, "user_id" | "section_slug" | "resolved_at" | "severity">[]) {
     const arr = redlinesByUser.get(r.user_id) ?? [];
-    arr.push({ chapter_slug: r.chapter_slug, resolved_at: r.resolved_at, severity: r.severity });
+    arr.push({ section_slug: r.section_slug, resolved_at: r.resolved_at, severity: r.severity });
     redlinesByUser.set(r.user_id, arr);
   }
 
@@ -106,9 +106,9 @@ export default async function AdminRedlinePage() {
           Customer redline queue
         </h1>
         <p className="text-grey-3 text-sm md:text-base leading-relaxed mb-8 max-w-[640px]">
-          Every paid customer with at least one Memory chapter. Click any
-          chapter to leave redline notes; once every blocker is resolved,
-          stamp the chapter approved and the export bundles will reflect it.
+          Every paid customer with at least one Memory section. Click any
+          section to leave redline notes; once every blocker is resolved,
+          stamp the section approved and the export bundles will reflect it.
         </p>
 
         <div className="grid gap-3">
@@ -128,7 +128,7 @@ export default async function AdminRedlinePage() {
                 attachments: r.attachments ?? [],
               })),
             );
-            const readiness = computeChapterReadiness(indexed);
+            const readiness = computeSectionReadiness(indexed);
             const overall = overallReadinessPct(readiness);
             const userRedlines = redlinesByUser.get(c.id) ?? [];
             const openCount = userRedlines.filter((r) => !r.resolved_at).length;
@@ -174,7 +174,7 @@ export default async function AdminRedlinePage() {
                     const row = rows.find((r) => r.file_slug === slug);
                     const status = readiness[slug];
                     const open = userRedlines.filter(
-                      (r) => r.chapter_slug === slug && !r.resolved_at,
+                      (r) => r.section_slug === slug && !r.resolved_at,
                     ).length;
                     const approved = !!row?.jason_approved_at;
                     return (

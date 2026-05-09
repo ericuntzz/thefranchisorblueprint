@@ -210,9 +210,9 @@ async function main() {
   });
 
   const ssrPages = [
-    "/portal/chapter/business_overview",
-    "/portal/chapter/training_program",
-    "/portal/chapter/compliance_legal",
+    "/portal/section/business_overview",
+    "/portal/section/training_program",
+    "/portal/section/compliance_legal",
     "/portal/lab/intake",
     "/portal/lab/blueprint",
     "/portal/lab/next",

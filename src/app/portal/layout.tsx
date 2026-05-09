@@ -6,7 +6,7 @@ import { PortalSidebar } from "@/components/PortalSidebar";
 import { PortalSidebarMobile } from "@/components/PortalSidebarMobile";
 import { JasonChatDock } from "@/components/agent/JasonChatDock";
 import {
-  computeChapterReadiness,
+  computeSectionReadiness,
   indexMemoryRows,
   overallReadinessPct,
 } from "@/lib/memory/readiness";
@@ -73,19 +73,19 @@ export default async function PortalLayout({ children }: { children: ReactNode }
     ? Math.max(...purchases.map((p) => p.tier))
     : 1) as Tier;
 
-  // Blueprint progress = overall readiness across the 16 chapters.
+  // Blueprint progress = overall readiness across the 16 sections.
   // Drives the ring next to "Continue Building".
   const memoryIndexed = indexMemoryRows(
     (memoryRowsRaw ?? []) as Array<
       Pick<CM, "file_slug" | "content_md" | "fields" | "confidence" | "attachments">
     >,
   );
-  const chapterReadiness = computeChapterReadiness(memoryIndexed);
-  const blueprintPct = overallReadinessPct(chapterReadiness);
+  const sectionReadiness = computeSectionReadiness(memoryIndexed);
+  const blueprintPct = overallReadinessPct(sectionReadiness);
 
   // Launch checklist progress = % of regulatory milestones complete.
   // These are external-facing (regulators, attorneys, audit firms),
-  // distinct from the chapter-fill progress above. Drives the ring
+  // distinct from the section-fill progress above. Drives the ring
   // next to "Launch Checklist".
   const milestoneSummary = computeMilestoneSummary(indexMilestones(milestoneRows));
   const checklistPct = milestoneSummary.percentComplete;

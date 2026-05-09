@@ -2,7 +2,7 @@ export type RescueResult = {
   firstName: string | null;
   email: string;
   daysIdle: number;
-  nextChapter: string;
+  nextSection: string;
   sent: boolean;
 };
 

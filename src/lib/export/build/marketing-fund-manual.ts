@@ -1,7 +1,7 @@
 /**
  * Marketing Fund Manual builder.
  *
- * Compiles `marketing_fund` chapter into the governance document
+ * Compiles `marketing_fund` section into the governance document
  * franchisees receive describing how the brand fund is collected,
  * what it can be spent on, who decides, and how it's audited.
  * Distinct from the FDD (which discloses the fund) and the brand
@@ -10,7 +10,7 @@
  */
 
 import type { BuildContext, DeliverableDoc, DocBlock } from "../types";
-import { chapterFields } from "../context-helpers";
+import { sectionFields } from "../context-helpers";
 import {
   fmtBool,
   fmtCurrency,
@@ -23,9 +23,9 @@ import {
 } from "../format";
 
 export function buildMarketingFundManual(ctx: BuildContext): DeliverableDoc {
-  const fund = chapterFields(ctx, "marketing_fund");
-  const overview = chapterFields(ctx, "business_overview");
-  const franchise = chapterFields(ctx, "franchise_economics");
+  const fund = sectionFields(ctx, "marketing_fund");
+  const overview = sectionFields(ctx, "business_overview");
+  const franchise = sectionFields(ctx, "franchise_economics");
 
   const businessName =
     fmtText(overview.concept_summary).split(/[.\n]/)[0]?.trim() ||
@@ -132,7 +132,7 @@ export function buildMarketingFundManual(ctx: BuildContext): DeliverableDoc {
             : [
                 {
                   kind: "callout",
-                  text: "Approved uses haven't been documented yet. Add them to the marketing_fund chapter so this section reads with authority.",
+                  text: "Approved uses haven't been documented yet. Add them to the marketing_fund section so this section reads with authority.",
                   tone: "warning",
                 } as DocBlock,
               ]),

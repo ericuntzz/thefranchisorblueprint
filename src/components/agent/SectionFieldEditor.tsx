@@ -1,10 +1,10 @@
 "use client";
 
 /**
- * ChapterFieldEditor — Profound-style structured-fields editor for one
- * chapter of the customer's Franchisor Blueprint.
+ * SectionFieldEditor — Profound-style structured-fields editor for one
+ * section of the customer's Franchisor Blueprint.
  *
- * Reads the chapter's schema from `src/lib/memory/schemas.ts`, renders
+ * Reads the section's schema from `src/lib/memory/schemas.ts`, renders
  * one labeled input per field grouped by category, and tracks edits
  * locally until the customer hits Save.
  *
@@ -14,7 +14,7 @@
  * a small "suggested" badge with the source.
  *
  * Save fires the `saveMemoryFields` server action passed in via prop
- * — the parent ChapterCard handles the round-trip and refreshes the
+ * — the parent SectionCard handles the round-trip and refreshes the
  * page state.
  */
 
@@ -29,7 +29,7 @@ import {
   X,
 } from "lucide-react";
 import {
-  type ChapterSchema,
+  type SectionSchema,
   type FieldDef,
   type FieldType,
 } from "@/lib/memory/schemas";
@@ -62,32 +62,32 @@ type FieldSource =
   | "user_typed";
 
 type Props = {
-  schema: ChapterSchema;
+  schema: SectionSchema;
   initialFields: Record<string, FieldValue>;
   /** Per-field provenance from customer_memory.field_status. Optional
    *  — when a field has no entry we fall back to "no badge". Empty
-   *  object on a fresh chapter. */
+   *  object on a fresh section. */
   fieldStatus?: Record<
     string,
     { source: FieldSource; updated_at?: string; note?: string } | undefined
   >;
   /**
-   * Field values from OTHER chapters — needed to compute cross-chapter
+   * Field values from OTHER sections — needed to compute cross-section
    * derivations (e.g. franchisee_profile.minimum_liquid_capital depends
    * on unit_economics.initial_investment_high). Passed in by the parent
-   * (ChapterCard's host page) which has the full Memory state available.
+   * (SectionCard's host page) which has the full Memory state available.
    */
-  otherChaptersFields: MemoryFieldsMap;
+  otherSectionsFields: MemoryFieldsMap;
   onSave: (fields: Record<string, FieldValue>) => Promise<void>;
 };
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
-export function ChapterFieldEditor({
+export function SectionFieldEditor({
   schema,
   initialFields,
   fieldStatus,
-  otherChaptersFields,
+  otherSectionsFields,
   onSave,
 }: Props) {
   const [values, setValues] = useState<Record<string, FieldValue>>(initialFields);
@@ -109,11 +109,11 @@ export function ChapterFieldEditor({
   // update as the customer types. Cheap — pure JS, no async.
   const computedValues = useMemo(() => {
     const memory: MemoryFieldsMap = {
-      ...otherChaptersFields,
+      ...otherSectionsFields,
       [schema.slug]: values,
     };
     return computeAllFormulas(memory)[schema.slug] ?? {};
-  }, [values, otherChaptersFields, schema.slug]);
+  }, [values, otherSectionsFields, schema.slug]);
 
   // Group fields by category. Preserve schema order within each group.
   const grouped = useMemo(() => {
@@ -244,12 +244,12 @@ export function ChapterFieldEditor({
                 // Industry-suggested value for fields that declare
                 // suggestedFrom: industry_lookup. Pulled fresh from
                 // either local values (if we're editing
-                // business_overview) or otherChaptersFields. Returns
+                // business_overview) or otherSectionsFields. Returns
                 // null when industry isn't set or there's no mapping.
                 const industryCategory =
                   schema.slug === "business_overview"
                     ? (values["industry_category"] as string | null)
-                    : ((otherChaptersFields.business_overview?.[
+                    : ((otherSectionsFields.business_overview?.[
                         "industry_category"
                       ] as string | null) ?? null);
                 const industrySuggestion =

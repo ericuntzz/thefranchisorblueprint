@@ -20,7 +20,7 @@
  */
 
 import type { BuildContext, DeliverableDoc, DocBlock } from "../types";
-import { chapterFields } from "../context-helpers";
+import { sectionFields } from "../context-helpers";
 import {
   fmtCurrency,
   fmtInt,
@@ -33,9 +33,9 @@ import {
 const REVIEW = "[NEEDS ATTORNEY REVIEW]";
 
 export function buildFranchiseAgreement(ctx: BuildContext): DeliverableDoc {
-  const overview = chapterFields(ctx, "business_overview");
-  const franchise = chapterFields(ctx, "franchise_economics");
-  const compliance = chapterFields(ctx, "compliance_legal");
+  const overview = sectionFields(ctx, "business_overview");
+  const franchise = sectionFields(ctx, "franchise_economics");
+  const compliance = sectionFields(ctx, "compliance_legal");
 
   const businessName =
     fmtText(overview.concept_summary).split(/[.\n]/)[0]?.trim() || "Your Franchise";

@@ -327,7 +327,7 @@ function DeliverablePdfDocument({ doc }: { doc: DeliverableDoc }) {
       </Page>
 
       {/* Body. Each top-level (level-1) section starts on a fresh page so
-          chapter-style content reads cleanly. */}
+          section-style content reads cleanly. */}
       {doc.sections.map((section, i) => (
         <Page key={i} size="LETTER" style={styles.page}>
           <Section section={section} />

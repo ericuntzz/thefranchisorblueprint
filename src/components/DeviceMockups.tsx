@@ -351,7 +351,7 @@ function FloatingCapabilityCard() {
           <div className="flex items-center gap-1 mb-1.5">
             <ClipboardCheck size={9} className="text-gold-warm" strokeWidth={2} />
             <span className="text-[6px] font-bold tracking-[0.12em] text-gold-warm uppercase">
-              17-Chapter Manual
+              17-Section Manual
             </span>
           </div>
           <div className="space-y-0.5 mb-2">
@@ -370,7 +370,7 @@ function FloatingCapabilityCard() {
                 <span className="text-[7px] text-navy">{c}</span>
               </div>
             ))}
-            <div className="text-[6px] text-grey-4 italic pl-2">+ 13 more chapters</div>
+            <div className="text-[6px] text-grey-4 italic pl-2">+ 13 more sections</div>
           </div>
           <div className="h-1 bg-navy/10 rounded-full overflow-hidden">
             <div className="h-full w-[12%] bg-gradient-to-r from-gold to-[#e6c266] rounded-full" />

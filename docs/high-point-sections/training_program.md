@@ -2,7 +2,7 @@
 
 > Source: HP_Barista_Certification_Program_v2_1.docx (full document — 14 modules + practice test + sign-off sheet), HP_Franchise_Operations_Manual_v3_0.docx (Section 3.4 Training Program Overview)
 
-## What a strong Training & Certification chapter looks like
+## What a strong Training & Certification section looks like
 
 A leveled, gated training curriculum — typically 40–80 pages — that takes a new hire from zero knowledge to certified independent operator across measurable stages. The strongest version structures certification as a *ladder* (Level 1 → Level 2 → Level 3 → Trainer/GM), with each level gated by a written exam at a named pass rate, a practical assessment, and a recorded sign-off. It pairs the curriculum (modules) with the assessment (exams + practical demos) and the credentialing (signed certification sheet retained in the employee file).
 
@@ -53,5 +53,5 @@ Trainer voice. Imperative, pattern-rich, mistake-anticipating. Uses "you" addres
 - Pass/fail gates on opinion ("trainer signs off when the candidate is ready") — replace with a named score on a written exam plus a named practical demo.
 - Training content that lives only in the franchisor's head — every module should have a written SOP that survives turnover at the franchise location.
 - Certification records held only at the location — the franchisor's Portal needs the upload to audit system-wide skill levels.
-- Mixing "good attitude is enough" hiring language into the training section — that belongs in the Franchisee Profile chapter, not the curriculum.
+- Mixing "good attitude is enough" hiring language into the training section — that belongs in the Franchisee Profile section, not the curriculum.
 - Training programs that don't include a troubleshooting matrix — you teach baristas to react when things go wrong, not just when they go right.

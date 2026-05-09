@@ -4,7 +4,7 @@ import { sendTemplate } from "@/lib/email/dispatch";
 import { SITE_URL } from "@/lib/site";
 import {
   indexMemoryRows,
-  computeChapterReadiness,
+  computeSectionReadiness,
   overallReadinessPct,
 } from "@/lib/memory/readiness";
 import type { CustomerMemory, Purchase, Profile } from "@/lib/supabase/types";
@@ -145,7 +145,7 @@ export async function GET(req: NextRequest) {
         attachments: (r.attachments ?? []) as CustomerMemory["attachments"],
       })),
     );
-    const readinessPct = overallReadinessPct(computeChapterReadiness(indexed));
+    const readinessPct = overallReadinessPct(computeSectionReadiness(indexed));
 
     if (readinessPct >= READINESS_THRESHOLD) continue;
 

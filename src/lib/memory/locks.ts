@@ -1,8 +1,8 @@
 /**
- * User-locked spans inside chapter prose.
+ * User-locked spans inside section prose.
  *
  * The Blueprint canvas is co-authored: Jason (Opus) drafts most prose,
- * but the customer can also type directly into a chapter via inline
+ * but the customer can also type directly into a section via inline
  * editing. The locked-span pattern lets both coexist without the agent
  * ever overwriting words the customer hand-wrote.
  *
@@ -18,7 +18,7 @@
  * verbatim; we post-validate every redraft to be sure (belt + braces).
  *
  * IDs are short, monotonic, base36 timestamps. Uniqueness within one
- * chapter is enough — we never collide across chapters because the
+ * section is enough — we never collide across sections because the
  * markers are scoped to a single `content_md`.
  */
 
@@ -74,7 +74,7 @@ export function hasLockedSpans(md: string): boolean {
 /**
  * Wrap a string of customer-authored text as a single user-locked span
  * with a freshly-generated short ID. Used by the inline-prose-edit save
- * path the first time a customer hand-edits a chapter.
+ * path the first time a customer hand-edits a section.
  */
 export function wrapAsLocked(text: string, idHint?: string): string {
   const id = idHint ?? mintLockId();
@@ -117,7 +117,7 @@ export function lockedSpansMissing(
 
 /**
  * Defensive splice: if a redraft dropped any locked spans, append them
- * to the end of the chapter under a small "Restored from prior edits"
+ * to the end of the section under a small "Restored from prior edits"
  * heading rather than silently losing the customer's words. Better to
  * have them duplicated and visible than disappeared.
  */
@@ -139,7 +139,7 @@ export function spliceMissingLocksBack(
  * Strip user-locked markers (but keep the text inside) — used when
  * sending content to a renderer that doesn't understand the markers
  * and we want a plain reading view. The custom prose renderer in
- * `ChapterCard` does NOT use this; it splits on the markers so the
+ * `SectionCard` does NOT use this; it splits on the markers so the
  * locked spans can be visually distinguished.
  */
 export function stripLockMarkers(md: string): string {

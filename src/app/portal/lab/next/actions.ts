@@ -30,7 +30,7 @@ export async function saveQueueAnswer(args: {
   value: FieldValue;
 }): Promise<void> {
   if (!isValidMemoryFileSlug(args.slug)) {
-    throw new Error(`Unknown chapter: ${args.slug}`);
+    throw new Error(`Unknown section: ${args.slug}`);
   }
   if (!args.fieldName || typeof args.fieldName !== "string") {
     throw new Error("fieldName is required");
@@ -59,7 +59,7 @@ export async function saveQueueAnswer(args: {
   });
 
   // Revalidate both the queue route (so the next visit recomputes
-  // freshly) and the Blueprint canvas (so the chapter card's filled-
+  // freshly) and the Blueprint canvas (so the section card's filled-
   // count picks up the change if the customer flips back).
   revalidatePath("/portal/lab/next");
   revalidatePath("/portal/lab/blueprint");

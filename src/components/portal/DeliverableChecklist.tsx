@@ -3,8 +3,8 @@
  * Command Center.
  *
  * Sits below the hero on /portal. The customer scans the grid and
- * sees, at a glance, which chapters are green/amber/red/gray. Click
- * any chapter card → jumps to that chapter on /portal/lab/blueprint.
+ * sees, at a glance, which sections are green/amber/red/gray. Click
+ * any section card → jumps to that section on /portal/lab/blueprint.
  *
  * The grouping mirrors the Question Queue's phase order so the two
  * surfaces feel like the same product:
@@ -13,7 +13,7 @@
  * What this is NOT:
  *   - Not a navigation surface for the queue (use the Continue
  *     Building CTA in the hero for that).
- *   - Not the chapter editor (that's /portal/lab/blueprint).
+ *   - Not the section editor (that's /portal/lab/blueprint).
  *   - Not an export checklist (that ships with the export pipeline
  *     in Phase 2 proper).
  *
@@ -23,13 +23,13 @@
 
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import type { ChapterReadiness } from "@/lib/memory/readiness";
+import type { SectionReadiness } from "@/lib/memory/readiness";
 import type { MemoryFileSlug } from "@/lib/memory/files";
 import { PHASES, type PhaseDef } from "@/lib/memory/phases";
 import { MEMORY_FILE_TITLES } from "@/lib/memory/files";
 
 type Props = {
-  readiness: Record<MemoryFileSlug, ChapterReadiness>;
+  readiness: Record<MemoryFileSlug, SectionReadiness>;
 };
 
 const STATE_LABEL = {
@@ -100,12 +100,12 @@ function PhaseGroup({
   readiness,
 }: {
   phase: PhaseDef;
-  readiness: Record<MemoryFileSlug, ChapterReadiness>;
+  readiness: Record<MemoryFileSlug, SectionReadiness>;
 }) {
-  // Per-phase summary: count states across the phase's chapters.
+  // Per-phase summary: count states across the phase's sections.
   const states = phase.slugs
     .map((s) => readiness[s]?.state)
-    .filter((s): s is ChapterReadiness["state"] => !!s);
+    .filter((s): s is SectionReadiness["state"] => !!s);
   const greenCount = states.filter((s) => s === "green").length;
   const totalCount = states.length;
 
@@ -126,7 +126,7 @@ function PhaseGroup({
         {phase.slugs.map((slug) => {
           const r = readiness[slug];
           if (!r) {
-            // Schema-less chapters (e.g. brand_voice today) still get
+            // Schema-less sections (e.g. brand_voice today) still get
             // a row but render as "gray" + "no schema yet" — they
             // aren't ranked by the queue and the customer can't act
             // on them through this surface yet.
@@ -147,7 +147,7 @@ function PhaseGroup({
           return (
             <li key={slug}>
               <Link
-                href={`/portal/chapter/${slug}`}
+                href={`/portal/section/${slug}`}
                 className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs transition-colors ${STATE_ROW[r.state]}`}
               >
                 <span

@@ -102,9 +102,9 @@ export const allPosts: BlogPost[] = [
   // ─── Cluster: Operations ───────────────────────────────────────────────
   {
     slug: "how-to-write-franchise-operations-manual",
-    title: "How to Write a Franchise Operations Manual: The 17-Chapter Framework Every Franchisor Needs",
+    title: "How to Write a Franchise Operations Manual: The 17-Section Framework Every Franchisor Needs",
     excerpt:
-      "Your Operations Manual is the document franchisees actually live by. Skip it or write it weak and your brand standards collapse the moment you sell unit #5. Here's the 17-chapter framework that separates real franchise systems from glorified licensing deals.",
+      "Your Operations Manual is the document franchisees actually live by. Skip it or write it weak and your brand standards collapse the moment you sell unit #5. Here's the 17-section framework that separates real franchise systems from glorified licensing deals.",
     category: "Operations",
     date: "2026-04-29",
     readingTimeMin: 14,

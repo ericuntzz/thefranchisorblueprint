@@ -31,7 +31,7 @@
  */
 
 import type { BuildContext, DeliverableDoc, DocBlock, DocSection } from "../types";
-import { chapterFields, computedFields } from "../context-helpers";
+import { sectionFields, computedFields } from "../context-helpers";
 import {
   fmtBool,
   fmtCurrency,
@@ -46,17 +46,17 @@ import {
 } from "../format";
 
 export function buildFddDraft(ctx: BuildContext): DeliverableDoc {
-  const businessOverview = chapterFields(ctx, "business_overview");
-  const unitEcon = chapterFields(ctx, "unit_economics");
+  const businessOverview = sectionFields(ctx, "business_overview");
+  const unitEcon = sectionFields(ctx, "unit_economics");
   const unitEconComputed = computedFields(ctx, "unit_economics");
-  const franchiseEcon = chapterFields(ctx, "franchise_economics");
-  const franchiseeProfile = chapterFields(ctx, "franchisee_profile");
+  const franchiseEcon = sectionFields(ctx, "franchise_economics");
+  const franchiseeProfile = sectionFields(ctx, "franchisee_profile");
   const franchiseeProfileComputed = computedFields(ctx, "franchisee_profile");
-  const vendorSupply = chapterFields(ctx, "vendor_supply_chain");
-  const marketingFund = chapterFields(ctx, "marketing_fund");
-  const training = chapterFields(ctx, "training_program");
-  const territory = chapterFields(ctx, "territory_real_estate");
-  const compliance = chapterFields(ctx, "compliance_legal");
+  const vendorSupply = sectionFields(ctx, "vendor_supply_chain");
+  const marketingFund = sectionFields(ctx, "marketing_fund");
+  const training = sectionFields(ctx, "training_program");
+  const territory = sectionFields(ctx, "territory_real_estate");
+  const compliance = sectionFields(ctx, "compliance_legal");
 
   const businessName =
     fmtText(businessOverview.concept_summary).split(".")[0]?.trim() ||

@@ -21,7 +21,7 @@
  * IMPORTANT: vendor referrals must NOT include any rebate/kickback
  * unless disclosed in the customer's FDD Item 8. Default is "no rebate
  * received." If TFB earns referral revenue, it's disclosed in the
- * library card AND the customer's compliance_legal chapter is updated
+ * library card AND the customer's compliance_legal section is updated
  * to reflect it.
  */
 

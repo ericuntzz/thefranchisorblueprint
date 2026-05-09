@@ -5,21 +5,21 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
-  type ChapterAttachment,
+  type SectionAttachment,
   type CustomerMemory,
   type CustomerMemoryProvenance,
   type Profile,
   type Purchase,
 } from "@/lib/supabase/types";
 import { MEMORY_FILES, MEMORY_FILE_TITLES } from "@/lib/memory/files";
-import { getChapterSchema } from "@/lib/memory/schemas";
+import { getSectionSchema } from "@/lib/memory/schemas";
 import type { MemoryFieldsMap } from "@/lib/calc";
-import { ChapterCard } from "@/components/agent/ChapterCard";
+import { SectionCard } from "@/components/agent/SectionCard";
 import { BlueprintTOC } from "@/components/portal/BlueprintTOC";
 import { SiteFooter } from "@/components/SiteFooter";
-import { saveChapterSection, saveMemoryFields, setChapterConfidence } from "./actions";
+import { saveSectionSection, saveMemoryFields, setSectionConfidence } from "./actions";
 import {
-  computeChapterReadiness,
+  computeSectionReadiness,
   indexMemoryRows,
 } from "@/lib/memory/readiness";
 
@@ -34,8 +34,8 @@ export const dynamic = "force-dynamic";
 /**
  * /portal/lab/blueprint — the customer's living Franchisor Blueprint.
  *
- * Renders all 16 chapters in their canonical order. Empty chapters show
- * a "Draft with Jason" CTA; populated chapters render the markdown with
+ * Renders all 16 sections in their canonical order. Empty sections show
+ * a "Draft with Jason" CTA; populated sections render the markdown with
  * an inline confidence pill and on-demand provenance tooltip.
  *
  * The whole page is one document with anchor jumps in the sidebar — the
@@ -81,8 +81,8 @@ export default async function BlueprintLabPage() {
     provenanceBySlug.set(row.file_slug, list);
   }
 
-  // Build a cross-chapter fields map so ChapterCard can pass it down
-  // to the field editor for cross-chapter computed-field formulas
+  // Build a cross-section fields map so SectionCard can pass it down
+  // to the field editor for cross-section computed-field formulas
   // (e.g. franchisee_profile.minimum_liquid_capital_dollars derives
   // from unit_economics.initial_investment_high_dollars).
   const allFields: MemoryFieldsMap = {};
@@ -93,19 +93,19 @@ export default async function BlueprintLabPage() {
     >;
   }
 
-  // Cross-chapter attachments index, fed to every ChapterCard so the
+  // Cross-section attachments index, fed to every SectionCard so the
   // pre-draft modal can offer a "pull a reference from another
-  // chapter" checkbox list. Only includes chapters that have at least
-  // one attachment — keeps the list tight when most chapters are bare.
-  const allAttachmentsByChapter = MEMORY_FILES.flatMap((s) => {
-    const att = (memoryBySlug.get(s)?.attachments ?? []) as ChapterAttachment[];
+  // section" checkbox list. Only includes sections that have at least
+  // one attachment — keeps the list tight when most sections are bare.
+  const allAttachmentsBySection = MEMORY_FILES.flatMap((s) => {
+    const att = (memoryBySlug.get(s)?.attachments ?? []) as SectionAttachment[];
     return att.length > 0 ? [{ slug: s, attachments: att }] : [];
   });
 
-  // Per-chapter readiness state — drives the unified ReadinessPill on
+  // Per-section readiness state — drives the unified ReadinessPill on
   // each card and keeps the visual language consistent with the
   // Command Center checklist on /portal.
-  const chapterReadiness = computeChapterReadiness(
+  const sectionReadiness = computeSectionReadiness(
     indexMemoryRows(
       Array.from(memoryBySlug.values()).map((r) => ({
         file_slug: r.file_slug,
@@ -121,7 +121,7 @@ export default async function BlueprintLabPage() {
     <>
       <main className="min-h-[calc(100vh-200px)] bg-cream-soft">
         {/* Hero — sets the mental model: this is the assembled
-            document, not a form. Per-chapter editing happens from
+            document, not a form. Per-section editing happens from
             the dashboard. */}
         <section className="bg-white border-b border-navy/5">
           <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-12 md:py-16">
@@ -134,14 +134,14 @@ export default async function BlueprintLabPage() {
                 : "Your Franchisor Blueprint"}
             </h1>
             <p className="text-grey-3 text-base md:text-lg max-w-[640px] leading-relaxed mb-6">
-              All {MEMORY_FILES.length}{" "}chapters, compiled into one
+              All {MEMORY_FILES.length}{" "}sections, compiled into one
               document — the closest preview of what your attorney will see
               when you&apos;re ready to file.
             </p>
           </div>
         </section>
 
-        {/* Chapter grid */}
+        {/* Section grid */}
         <section className="py-8 sm:py-10 md:py-14">
           <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 grid md:grid-cols-[260px_1fr] gap-6 md:gap-10">
             {/* Sidebar TOC — see components/portal/BlueprintTOC for
@@ -159,7 +159,7 @@ export default async function BlueprintLabPage() {
               />
             </aside>
 
-            {/* Chapter cards. min-w-0 is critical: as a grid item in a
+            {/* Section cards. min-w-0 is critical: as a grid item in a
                 `260px_1fr` track, this column would otherwise expand
                 to its intrinsic content width (especially with no
                 word-breaking on long markdown lines) and push the
@@ -178,36 +178,36 @@ export default async function BlueprintLabPage() {
                   !content.trim() && !hasFields
                     ? ("empty" as const)
                     : (row?.confidence ?? "draft");
-                const schema = getChapterSchema(slug);
-                // Other chapters' fields, excluding self — passed to the
-                // editor so cross-chapter computed formulas can resolve.
-                const otherChaptersFields: MemoryFieldsMap = {};
+                const schema = getSectionSchema(slug);
+                // Other sections' fields, excluding self — passed to the
+                // editor so cross-section computed formulas can resolve.
+                const otherSectionsFields: MemoryFieldsMap = {};
                 for (const [otherSlug, otherFields] of Object.entries(allFields)) {
                   if (otherSlug !== slug) {
-                    otherChaptersFields[otherSlug as keyof MemoryFieldsMap] =
+                    otherSectionsFields[otherSlug as keyof MemoryFieldsMap] =
                       otherFields;
                   }
                 }
                 return (
-                  <ChapterCard
+                  <SectionCard
                     key={slug}
                     slug={slug}
                     title={MEMORY_FILE_TITLES[slug]}
                     contentMd={content}
                     confidence={confidence}
-                    readinessState={chapterReadiness[slug]?.state ?? "gray"}
+                    readinessState={sectionReadiness[slug]?.state ?? "gray"}
                     lastUpdatedBy={row?.last_updated_by ?? null}
                     updatedAt={row?.updated_at ?? null}
                     provenance={provenance}
-                    attachments={(row?.attachments ?? []) as ChapterAttachment[]}
-                    allAttachmentsByChapter={allAttachmentsByChapter}
+                    attachments={(row?.attachments ?? []) as SectionAttachment[]}
+                    allAttachmentsBySection={allAttachmentsBySection}
                     fields={fields}
-                    fieldStatus={(row?.field_status ?? undefined) as Parameters<typeof ChapterCard>[0]["fieldStatus"]}
-                    otherChaptersFields={otherChaptersFields}
+                    fieldStatus={(row?.field_status ?? undefined) as Parameters<typeof SectionCard>[0]["fieldStatus"]}
+                    otherSectionsFields={otherSectionsFields}
                     schema={schema}
                     saveFields={saveMemoryFields}
-                    setConfidence={setChapterConfidence}
-                    saveSection={saveChapterSection}
+                    setConfidence={setSectionConfidence}
+                    saveSection={saveSectionSection}
                     readOnly
                   />
                 );

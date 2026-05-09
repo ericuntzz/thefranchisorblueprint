@@ -20,22 +20,22 @@ import {
  * fallback for customers who are blocked, not just busy.
  *
  * Personalization is per-merge-field — no LLM call per customer. The
- * variation comes from `daysIdle`, `nextChapterTitle`, and the
- * `blockerHint` (mechanically derived from which chapter has the most
+ * variation comes from `daysIdle`, `nextSectionTitle`, and the
+ * `blockerHint` (mechanically derived from which section has the most
  * unanswered questions).
  */
 export type StuckCustomerRescuePayload = {
   firstName: string | null;
   /** Days since the customer's last Memory update. */
   daysIdle: number;
-  /** Title of the chapter the customer should pick up next. */
-  nextChapterTitle: string;
-  /** Slug for deep-linking into /portal/chapter/<slug>. */
-  nextChapterSlug: string;
-  /** Number of unanswered required questions remaining across all chapters. */
+  /** Title of the section the customer should pick up next. */
+  nextSectionTitle: string;
+  /** Slug for deep-linking into /portal/section/<slug>. */
+  nextSectionSlug: string;
+  /** Number of unanswered required questions remaining across all sections. */
   questionsRemaining: number;
   /**
-   * Optional blocker hint based on which chapter has the most unanswered
+   * Optional blocker hint based on which section has the most unanswered
    * questions. Renders as a callout suggesting a specific area where
    * we can help if they're stuck. Null hides the callout.
    */
@@ -57,23 +57,23 @@ export function stuckCustomerRescueSubject(
 ): string {
   const name = p.firstName ?? "Hey";
   // Subject lines are A/B-testable later. Keep it concrete (the next
-  // chapter, not "your Blueprint") so the inbox preview reads like a
+  // section, not "your Blueprint") so the inbox preview reads like a
   // human follow-up, not an automated drip.
-  return `${name} — picking up on ${p.nextChapterTitle}?`;
+  return `${name} — picking up on ${p.nextSectionTitle}?`;
 }
 
 export function StuckCustomerRescueEmail({
   firstName,
   daysIdle,
-  nextChapterTitle,
-  nextChapterSlug,
+  nextSectionTitle,
+  nextSectionSlug,
   questionsRemaining,
   blockerHint,
   siteUrl,
   bookJasonUrl,
   coachingCreditsRemaining,
 }: StuckCustomerRescuePayload) {
-  const continueUrl = `${siteUrl}/portal/chapter/${nextChapterSlug}`;
+  const continueUrl = `${siteUrl}/portal/section/${nextSectionSlug}`;
   const dashboardUrl = `${siteUrl}/portal`;
   const idleLabel =
     daysIdle === 1
@@ -101,7 +101,7 @@ export function StuckCustomerRescueEmail({
 
       <Text style={paragraphStyle}>
         Your next move is{" "}
-        <strong style={{ color: "#1E3A5F" }}>{nextChapterTitle}</strong>.{" "}
+        <strong style={{ color: "#1E3A5F" }}>{nextSectionTitle}</strong>.{" "}
         {questionsRemaining > 0 ? (
           <>
             You&apos;ve got {questionsRemaining} question
@@ -110,7 +110,7 @@ export function StuckCustomerRescueEmail({
           </>
         ) : (
           <>
-            You&apos;re close — the structured fields are filled, this chapter
+            You&apos;re close — the structured fields are filled, this section
             just needs prose-level polish before legal review.
           </>
         )}
@@ -185,7 +185,7 @@ export function StuckCustomerRescueEmail({
           dashboard
         </a>
         , which shows everything that needs your input across all 16
-        chapters.
+        sections.
       </Text>
     </EmailLayout>
   );
@@ -198,9 +198,9 @@ export function stuckCustomerRescueText(
   return [
     `${name} — where'd we leave off?`,
     "",
-    `I noticed your Blueprint was last touched ${p.daysIdle} day${p.daysIdle === 1 ? "" : "s"} ago. No pressure — life gets in the way. Your next move is ${p.nextChapterTitle}.`,
+    `I noticed your Blueprint was last touched ${p.daysIdle} day${p.daysIdle === 1 ? "" : "s"} ago. No pressure — life gets in the way. Your next move is ${p.nextSectionTitle}.`,
     "",
-    `Continue: ${p.siteUrl}/portal/chapter/${p.nextChapterSlug}`,
+    `Continue: ${p.siteUrl}/portal/section/${p.nextSectionSlug}`,
     "",
     p.blockerHint
       ? `Stuck on something specific? ${p.blockerHint} Just hit reply and tell me where you're stuck.`

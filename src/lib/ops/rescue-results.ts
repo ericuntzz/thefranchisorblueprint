@@ -10,7 +10,7 @@ export async function collect(
 
   const { data: sends } = await admin
     .from("customer_rescue_sends")
-    .select("user_id, chapter_slug, days_idle, sent_at")
+    .select("user_id, section_slug, days_idle, sent_at")
     .gte("sent_at", since);
 
   if (!sends || sends.length === 0) return [];
@@ -31,10 +31,10 @@ export async function collect(
       firstName: profile?.full_name?.split(/\s+/)[0]?.trim() ?? null,
       email: profile?.email ?? "unknown",
       daysIdle: s.days_idle,
-      nextChapter:
+      nextSection:
         MEMORY_FILE_TITLES[
-          s.chapter_slug as keyof typeof MEMORY_FILE_TITLES
-        ] ?? s.chapter_slug,
+          s.section_slug as keyof typeof MEMORY_FILE_TITLES
+        ] ?? s.section_slug,
       sent: true,
     };
   });

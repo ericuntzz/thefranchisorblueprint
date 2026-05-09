@@ -5,11 +5,11 @@
  *
  * Three jobs the prior server-rendered version couldn't do:
  *
- *   1. Scrollspy — the row whose chapter is currently in the
+ *   1. Scrollspy — the row whose section is currently in the
  *      viewport "active band" lights up, so as the customer reads
  *      down the assembled doc the sidebar tracks where they are.
  *      Active band = top 25% of viewport (rootMargin trick) — a
- *      chapter becomes active when its top crosses into that band.
+ *      section becomes active when its top crosses into that band.
  *
  *   2. Sticky behavior that doesn't cut the header off — the panel
  *      is capped at viewport height with internal overflow so even
@@ -48,14 +48,14 @@ export function BlueprintTOC({ items }: BlueprintTOCProps) {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Track which chapter is currently in the "active band" near the
+    // Track which section is currently in the "active band" near the
     // top of the viewport. rootMargin negative-top + negative-bottom
-    // creates a thin horizontal strip; whichever chapter has its top
+    // creates a thin horizontal strip; whichever section has its top
     // inside this strip is the active one.
     //
     // -20% top means: nothing counts as active until it's scrolled
     // past the top 20% of the viewport.
-    // -70% bottom means: chapters whose tops are below the 30% mark
+    // -70% bottom means: sections whose tops are below the 30% mark
     // don't count as active either.
     // Result: a 10%-tall band roughly 20-30% from the top of the
     // viewport — same pattern docs sites use.
@@ -64,8 +64,8 @@ export function BlueprintTOC({ items }: BlueprintTOCProps) {
         for (const entry of entries) {
           if (entry.isIntersecting) {
             const id = entry.target.id;
-            if (id.startsWith("chapter-")) {
-              setActiveSlug(id.slice("chapter-".length));
+            if (id.startsWith("section-")) {
+              setActiveSlug(id.slice("section-".length));
             }
           }
         }
@@ -78,7 +78,7 @@ export function BlueprintTOC({ items }: BlueprintTOCProps) {
 
     const elements: Element[] = [];
     for (const { slug } of items) {
-      const el = document.getElementById(`chapter-${slug}`);
+      const el = document.getElementById(`section-${slug}`);
       if (el) {
         observer.observe(el);
         elements.push(el);
@@ -103,13 +103,13 @@ export function BlueprintTOC({ items }: BlueprintTOCProps) {
   return (
     <nav
       className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto pr-1 -mr-1"
-      aria-label="Chapters"
+      aria-label="Sections"
     >
       <div className="mb-4 pb-4 border-b border-navy/10">
         <div className="text-xs uppercase tracking-[0.14em] text-gold-text font-bold mb-1">
           Your Blueprint
         </div>
-        <div className="text-grey-3 text-xs">{items.length} chapters</div>
+        <div className="text-grey-3 text-xs">{items.length} sections</div>
       </div>
       <ol className="space-y-0.5">
         {items.map(({ slug, title, filled }, idx) => {
@@ -117,7 +117,7 @@ export function BlueprintTOC({ items }: BlueprintTOCProps) {
           return (
             <li key={slug}>
               <a
-                href={`#chapter-${slug}`}
+                href={`#section-${slug}`}
                 onClick={(e) => handleClick(e, slug)}
                 aria-current={isActive ? "location" : undefined}
                 className={`group flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition-colors ${

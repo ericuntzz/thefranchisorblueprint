@@ -9,7 +9,7 @@ A standalone team-member-facing document — typically 20–30 pages — that th
 ## Structure observed
 
 - Welcome letter from leadership (warm, owner-to-team voice)
-- Mission / Vision / Core Values block (mirrors the franchisor's brand chapter)
+- Mission / Vision / Core Values block (mirrors the franchisor's brand section)
 - Section 1 — Culture & values: who we are, what we expect, the hospitality standard
 - Section 2 — First 90 days: introductory period definition, 30/60/90-day milestones, new-hire attendance policy, training path
 - Section 3 — Compensation & pay: pay schedule, overtime, recording hours, tips, pay reviews

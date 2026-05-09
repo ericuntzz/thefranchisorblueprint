@@ -70,8 +70,8 @@ const PROGRESS_STEPS = [
   { delay: 1800, label: "Pulling your home page…" },
   { delay: 3600, label: "Looking for an About page…" },
   { delay: 5400, label: "Reading your brand voice…" },
-  { delay: 8000, label: "Drafting your Brand Standards chapter…" },
-  { delay: 11000, label: "Drafting your Concept & Story chapter…" },
+  { delay: 8000, label: "Drafting your Brand Standards section…" },
+  { delay: 11000, label: "Drafting your Concept & Story section…" },
 ];
 
 type UploadStep = {
@@ -351,7 +351,7 @@ function UrlStepCard({
       </h2>
       <p className="text-grey-3 text-sm leading-relaxed mb-5 max-w-[640px]">
         Drop your URL and Jason reads your site, drafts your Brand Standards
-        + Concept & Story chapters, and pulls structured facts (founder,
+        + Concept & Story sections, and pulls structured facts (founder,
         locations, year founded) automatically. Takes about 15 seconds.
       </p>
 
@@ -493,7 +493,7 @@ function UploadStepCard({
   type Uploaded = {
     id: string;
     label: string;
-    /** Additional chapter slugs the auto-classifier fanned the
+    /** Additional section slugs the auto-classifier fanned the
      *  file out to (does NOT include the primary step slug). */
     alsoAttachedTo: string[];
   };
@@ -514,7 +514,7 @@ function UploadStepCard({
       // likely to also feed training_program, recipes_and_menu,
       // and vendor_supply_chain. Sonnet decides; we fan out.
       fd.append("autoClassify", "true");
-      const res = await fetch("/api/agent/chapter-attachment", {
+      const res = await fetch("/api/agent/section-attachment", {
         method: "POST",
         body: fd,
       });
@@ -729,7 +729,7 @@ function DoneStepCard({ direction }: { direction: "forward" | "back" }) {
       </h2>
       <p className="text-grey-3 text-base leading-relaxed mb-5 max-w-[640px]">
         Jason has everything you just gave him loaded. He&apos;ll pre-fill
-        what he can across the 16 chapters; you&apos;ll see &ldquo;Suggested
+        what he can across the 16 sections; you&apos;ll see &ldquo;Suggested
         / Inferred&rdquo; markers showing which fields to verify. Anything
         you skipped, you can always come back to from your dashboard.
       </p>

@@ -112,10 +112,10 @@ function ActivityRow({ row }: { row: ActivityFeedRow }) {
           right-aligned. The previous two-row layout existed to host a
           `detail` sub-line (filename, "Inferred — needs review",
           etc.) but Eric removed it 2026-05-09 — the dashboard reads
-          cleaner without the secondary text, and the chapter link is
+          cleaner without the secondary text, and the section link is
           one click away if the customer wants the specifics. */}
       <Link
-        href={`/portal/chapter/${row.chapterSlug}`}
+        href={`/portal/section/${row.sectionSlug}`}
         className="flex-1 min-w-0 text-navy text-sm font-semibold hover:underline leading-snug transition-colors"
       >
         {row.summary}
@@ -127,7 +127,7 @@ function ActivityRow({ row }: { row: ActivityFeedRow }) {
 
 function ActivityIcon({ kind }: { kind: ActivityKind }) {
   switch (kind) {
-    case "chapter_updated":
+    case "section_updated":
       return <FileText size={13} />;
     case "fields_extracted_from_upload":
       return <CloudDownload size={13} />;

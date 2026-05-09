@@ -1,11 +1,11 @@
 /**
- * Per-chapter readiness scoring for the Command Center on /portal.
+ * Per-section readiness scoring for the Command Center on /portal.
  *
- * Maps each chapter to one of four states the customer can scan at a
+ * Maps each section to one of four states the customer can scan at a
  * glance:
  *
  *   green   — Verified by the customer. Either confidence === "verified"
- *             OR every required schema field is filled. This chapter
+ *             OR every required schema field is filled. This section
  *             is "attorney-ready" subject to a final review pass.
  *
  *   amber   — Inferred. Confidence === "inferred" (scrape / agent
@@ -15,31 +15,31 @@
  *
  *   red     — Has structured fields started but is blocking on
  *             required gaps. Confidence === "draft" or "empty" but
- *             the chapter has at least some content + still has
+ *             the section has at least some content + still has
  *             required-empty fields. Or: no schema yet but the
- *             chapter sits in an active phase the customer is
+ *             section sits in an active phase the customer is
  *             working through.
  *
  *   gray    — Untouched. No prose, no fields, no scrape. The
- *             chapter hasn't been started.
+ *             section hasn't been started.
  *
- * The state per chapter is purely a *visualization*. The Question
+ * The state per section is purely a *visualization*. The Question
  * Queue uses `queue.ts` to decide what to ask next; this module is
  * for the at-a-glance status indicator.
  */
 
 import type {
-  ChapterAttachment,
+  SectionAttachment,
   CustomerMemory,
 } from "@/lib/supabase/types";
 import type { MemoryFileSlug } from "./files";
-import { CHAPTER_SCHEMAS } from "./schemas";
+import { SECTION_SCHEMAS } from "./schemas";
 import type { MemoryFieldsMap } from "@/lib/calc";
 import { hasCalc } from "@/lib/calc";
 
 export type ReadinessState = "green" | "amber" | "red" | "gray";
 
-export type ChapterReadiness = {
+export type SectionReadiness = {
   slug: MemoryFileSlug;
   state: ReadinessState;
   /** Required non-computed fields filled (numerator). */
@@ -63,18 +63,18 @@ type MemoryRow = Pick<
 >;
 
 /**
- * Compute readiness for every chapter in the schema set, given the
+ * Compute readiness for every section in the schema set, given the
  * full per-user customer_memory rows. Always returns the entries —
  * a missing memory row maps to a `gray` state with zero counts.
  */
-export function computeChapterReadiness(
+export function computeSectionReadiness(
   rowsBySlug: Map<MemoryFileSlug, MemoryRow>,
-): Record<MemoryFileSlug, ChapterReadiness> {
-  const out: Partial<Record<MemoryFileSlug, ChapterReadiness>> = {};
-  const slugs = Object.keys(CHAPTER_SCHEMAS) as MemoryFileSlug[];
+): Record<MemoryFileSlug, SectionReadiness> {
+  const out: Partial<Record<MemoryFileSlug, SectionReadiness>> = {};
+  const slugs = Object.keys(SECTION_SCHEMAS) as MemoryFileSlug[];
 
   for (const slug of slugs) {
-    const schema = CHAPTER_SCHEMAS[slug];
+    const schema = SECTION_SCHEMAS[slug];
     if (!schema) continue;
     const row = rowsBySlug.get(slug);
 
@@ -111,7 +111,7 @@ export function computeChapterReadiness(
     //      a pass; needs confirmation but isn't blocking).
     //   6. started but missing required inputs → red.
     //
-    // Earlier version skipped case (4) — chapters with all required
+    // Earlier version skipped case (4) — sections with all required
     // fields filled but no prose yet were rendering RED. That was
     // misleading: the customer had answered everything that's
     // actionable but the indicator screamed "blocking."
@@ -142,12 +142,12 @@ export function computeChapterReadiness(
     };
   }
 
-  return out as Record<MemoryFileSlug, ChapterReadiness>;
+  return out as Record<MemoryFileSlug, SectionReadiness>;
 }
 
 /**
- * Roll up per-chapter readiness into a single 0-100 percentage for
- * the Command Center hero. We weight each chapter equally (any other
+ * Roll up per-section readiness into a single 0-100 percentage for
+ * the Command Center hero. We weight each section equally (any other
  * weighting feels arbitrary at this stage). State map:
  *   green  → 1.0
  *   amber  → 0.5
@@ -155,7 +155,7 @@ export function computeChapterReadiness(
  *   gray   → 0.0
  */
 export function overallReadinessPct(
-  readiness: Record<MemoryFileSlug, ChapterReadiness>,
+  readiness: Record<MemoryFileSlug, SectionReadiness>,
 ): number {
   const values = Object.values(readiness);
   if (values.length === 0) return 0;
@@ -218,6 +218,6 @@ export function memoryFieldsFromRows(
 export function attachmentsFor(
   rowsBySlug: Map<MemoryFileSlug, MemoryRow>,
   slug: MemoryFileSlug,
-): ChapterAttachment[] {
-  return (rowsBySlug.get(slug)?.attachments ?? []) as ChapterAttachment[];
+): SectionAttachment[] {
+  return (rowsBySlug.get(slug)?.attachments ?? []) as SectionAttachment[];
 }

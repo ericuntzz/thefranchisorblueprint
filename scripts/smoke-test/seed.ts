@@ -85,10 +85,10 @@ async function ensureProfile() {
 
 async function ensureRedlines() {
   const { data: existing } = await supabase
-    .from("chapter_redlines")
+    .from("section_redlines")
     .select("id, severity, resolved_at")
     .eq("user_id", TEST_USER_ID)
-    .eq("chapter_slug", "business_overview");
+    .eq("section_slug", "business_overview");
   const want = ["blocker", "warning", "info"];
   const have = (existing ?? []).map((r) => r.severity);
   const missing = want.filter((s) => !have.includes(s));
@@ -117,11 +117,11 @@ async function ensureRedlines() {
     },
   ].filter((s) => missing.includes(s.severity));
   const { data: inserted, error } = await supabase
-    .from("chapter_redlines")
+    .from("section_redlines")
     .insert(
       seeds.map((s) => ({
         user_id: TEST_USER_ID,
-        chapter_slug: "business_overview",
+        section_slug: "business_overview",
         claim_id: s.claim_id,
         comment: s.comment,
         severity: s.severity,
@@ -137,7 +137,7 @@ async function ensureRedlines() {
   const infoRow = inserted!.find((r) => r.severity === "info");
   if (infoRow) {
     const { error: resErr } = await supabase
-      .from("chapter_redlines")
+      .from("section_redlines")
       .update({ resolved_at: new Date().toISOString(), resolved_by_user_id: TEST_USER_ID })
       .eq("id", infoRow.id);
     if (!resErr) console.log("✓ resolved the info-severity redline");

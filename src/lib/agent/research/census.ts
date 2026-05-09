@@ -3,7 +3,7 @@
  *
  * Public data, free key. Used to answer "what's the median household
  * income / population / age distribution within ZIP X?" for the
- * territory_real_estate + market_strategy chapters.
+ * territory_real_estate + market_strategy sections.
  *
  * We hit the ACS 5-Year Detailed Tables (ACSDT5Y) at the ZIP Code
  * Tabulation Area (ZCTA) level. The customer provides a ZIP, we

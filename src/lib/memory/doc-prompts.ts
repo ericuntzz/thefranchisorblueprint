@@ -1,12 +1,12 @@
 /**
- * Per-chapter document upload prompts.
+ * Per-section document upload prompts.
  *
  * Customers usually have at least one document that maps cleanly to
- * each chapter — an operations manual, a P&L, brand guidelines, etc.
+ * each section — an operations manual, a P&L, brand guidelines, etc.
  * Uploading those docs lets Jason auto-fill structured fields,
  * inform draft prose, and skip a lot of question-typing. The
  * prompts below give the customer a short, contextual nudge at the
- * right surface (chapter page, question queue, etc.) instead of
+ * right surface (section page, question queue, etc.) instead of
  * relying on them to remember the References panel exists.
  *
  * Each entry is intentionally brief — the customer reads this in
@@ -37,7 +37,7 @@ export type DocPrompt = {
   shortLabel: string;
 };
 
-export const CHAPTER_DOC_PROMPTS: Partial<Record<MemoryFileSlug, DocPrompt>> = {
+export const SECTION_DOC_PROMPTS: Partial<Record<MemoryFileSlug, DocPrompt>> = {
   business_overview: {
     prompt:
       "Got something that describes your business in your own words? Drop it here and Jason can pull the founder story + concept summary straight from it.",
@@ -142,8 +142,8 @@ export const CHAPTER_DOC_PROMPTS: Partial<Record<MemoryFileSlug, DocPrompt>> = {
 };
 
 /** Lookup helper. Returns null when there's no prompt configured for
- *  the chapter (every shipped chapter has one today, but we keep the
- *  null path in case future chapters launch before their prompt). */
+ *  the section (every shipped section has one today, but we keep the
+ *  null path in case future sections launch before their prompt). */
 export function docPromptFor(slug: MemoryFileSlug): DocPrompt | null {
-  return CHAPTER_DOC_PROMPTS[slug] ?? null;
+  return SECTION_DOC_PROMPTS[slug] ?? null;
 }

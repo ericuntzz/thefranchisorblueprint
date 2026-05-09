@@ -1,7 +1,7 @@
 /**
- * Per-chapter field schemas — Phase 1.5a.
+ * Per-section field schemas — Phase 1.5a.
  *
- * Each chapter has a STRUCTURED data layer (typed fields) alongside the
+ * Each section has a STRUCTURED data layer (typed fields) alongside the
  * existing narrative `content_md` prose. The structured layer is what:
  *
  *   - The export pipeline substitutes into DOCX/PPTX templates
@@ -25,9 +25,9 @@
  *
  * ─── THE THREE-BUCKET FRAMEWORK ────────────────────────────────────────
  *
- * Not every chapter wants to be heavily field-driven. Forcing structure
- * on inherently prose chapters makes them brittle and removes the
- * agent's ability to write fluid copy. Each chapter belongs to one of
+ * Not every section wants to be heavily field-driven. Forcing structure
+ * on inherently prose sections makes them brittle and removes the
+ * agent's ability to write fluid copy. Each section belongs to one of
  * three buckets:
  *
  *   1. HEAVY STRUCTURED (15–25 fields)
@@ -47,7 +47,7 @@
  *      handful of customer-confirmed anchors. Examples (Phase 3):
  *      market_strategy, competitor_landscape, territory_real_estate.
  *
- * If a chapter is creeping past 25 fields, the bucket is probably wrong.
+ * If a section is creeping past 25 fields, the bucket is probably wrong.
  *
  * ─── THE OPERATOR-VOICE RULE ───────────────────────────────────────────
  *
@@ -57,7 +57,7 @@
  *   - "system", "identity", "platform", "ecosystem" (unless very specific)
  *   - "brand voice/tone/persona" without context
  *   - "drives" / "leverages" / "powers" (consultant verbs)
- *   - "chapter" — that's our internal language for the 16 Memory files,
+ *   - "section" — that's our internal language for the 16 Memory files,
  *     not what the customer calls them. They see them as labeled
  *     sections of their Blueprint. Use "section" or rephrase to avoid
  *     the meta-reference entirely.
@@ -72,7 +72,7 @@
  * Examples that fail:
  *   ✗ "How your brand identity shows up in the system."
  *   ✗ "The cover story for the whole bundle."
- *   ✗ "The first chapter your attorney reads."
+ *   ✗ "The first section your attorney reads."
  *   ✗ "Defines the franchisor's revenue per franchisee."
  *
  * ─── COMPUTATION, SUGGESTION, AND PRE-FILL ─────────────────────────────
@@ -140,9 +140,9 @@
  *
  * Two rules:
  *
- *   1. AUDIT BEFORE DESIGNING. When designing a chapter's schema, the
+ *   1. AUDIT BEFORE DESIGNING. When designing a section's schema, the
  *      first input is whatever existing TFB document maps to that
- *      chapter (e.g. for `unit_economics` → the financial model
+ *      section (e.g. for `unit_economics` → the financial model
  *      template; for `franchisee_profile` → the franchisee scoring
  *      matrix; for `business_overview` → the concept-and-positioning
  *      worksheet). Every prompt or section header in the source
@@ -207,7 +207,7 @@
  *    that DON'T appear in those documents for Jason's review.
  *
  * See `docs/agentic-portal-buildout.md` §4 for the broader Memory
- * architecture and `src/lib/memory/files.ts` for the canonical chapter
+ * architecture and `src/lib/memory/files.ts` for the canonical section
  * slug list.
  */
 
@@ -265,7 +265,7 @@ export type FieldType =
   | "list_long";
 
 /**
- * One typed field within a chapter.
+ * One typed field within a section.
  *
  * The `name` is the storage key inside `customer_memory.fields` (jsonb)
  * and must be a valid JS identifier — snake_case. Renaming a field
@@ -316,8 +316,8 @@ export type FieldDef = {
    * "calculated from X" tooltip. The actual computation function lives
    * in `src/lib/calc/` keyed by the field name.
    *
-   * `deps` may reference fields in the same chapter by bare name
-   * (e.g. `"cogs_pct"`) or in another chapter via `chapter.field`
+   * `deps` may reference fields in the same section by bare name
+   * (e.g. `"cogs_pct"`) or in another section via `section.field`
    * syntax (e.g. `"unit_economics.initial_investment_high_dollars"`).
    *
    * `formula` is a human-readable description for the tooltip — it's
@@ -359,17 +359,17 @@ export type FieldDef = {
 };
 
 /**
- * A chapter's complete field schema, plus a couple of metadata fields
- * the UI uses to render the chapter card header.
+ * A section's complete field schema, plus a couple of metadata fields
+ * the UI uses to render the section card header.
  */
-export type ChapterSchema = {
+export type SectionSchema = {
   slug: MemoryFileSlug;
-  /** Page-friendly title — also the H2 of the chapter card. */
+  /** Page-friendly title — also the H2 of the section card. */
   title: string;
   /** One-sentence description for the customer. Renders under the title in edit mode. */
   description: string;
   /**
-   * What this chapter compiles into at export time. Use the actual
+   * What this section compiles into at export time. Use the actual
    * deliverable name(s) so the customer (and Jason) can trace the
    * lineage. e.g. "FDD Item 1, Operations Manual §1".
    */
@@ -378,14 +378,14 @@ export type ChapterSchema = {
 };
 
 // ---------------------------------------------------------------------------
-// Foundational chapter schemas
+// Foundational section schemas
 // ---------------------------------------------------------------------------
 
 /**
  * business_overview — Concept & Story.
  *
  * The narrative anchor for FDD Item 1 (the franchisor's identity and
- * concept) and the Operations Manual's opening chapter. The fields here
+ * concept) and the Operations Manual's opening section. The fields here
  * are the ones a franchise attorney will want documented — and the ones
  * Jason will stress-test in the readiness audit.
  *
@@ -396,7 +396,7 @@ export type ChapterSchema = {
  * Compiles into: FDD Item 1, Operations Manual §1, Discovery Day deck
  * opener, Concept Memo (the Day-1 wow artifact).
  */
-const BUSINESS_OVERVIEW: ChapterSchema = {
+const BUSINESS_OVERVIEW: SectionSchema = {
   slug: "business_overview",
   title: "Concept & Story",
   description:
@@ -574,7 +574,7 @@ const BUSINESS_OVERVIEW: ChapterSchema = {
 /**
  * unit_economics — Unit Economics & Financial Model.
  *
- * The most data-dense chapter and the one with the highest stakes:
+ * The most data-dense section and the one with the highest stakes:
  * every numeric field here drives FDD Item 7 (initial investment),
  * Item 19 (financial performance representations), and the financial
  * model deliverable. Wrong numbers here are the difference between an
@@ -591,7 +591,7 @@ const BUSINESS_OVERVIEW: ChapterSchema = {
  *
  * Compiles into: FDD Item 7, FDD Item 19, Financial Model deliverable.
  */
-const UNIT_ECONOMICS: ChapterSchema = {
+const UNIT_ECONOMICS: SectionSchema = {
   slug: "unit_economics",
   title: "Unit Economics & Financial Model",
   description:
@@ -887,7 +887,7 @@ const UNIT_ECONOMICS: ChapterSchema = {
  * Compiles into: FDD Items 5+6, FDD Item 12 (territory), Marketing
  * Fund Manual, Franchise Agreement scaffolding.
  */
-const FRANCHISE_ECONOMICS: ChapterSchema = {
+const FRANCHISE_ECONOMICS: SectionSchema = {
   slug: "franchise_economics",
   title: "Royalty, Ad Fund & Fees",
   description:
@@ -1159,7 +1159,7 @@ const FRANCHISE_ECONOMICS: ChapterSchema = {
  *
  * The most important filter the franchisor controls. The right
  * franchisee profile compounds — wrong franchisees burn through cash,
- * generate complaints, and drag the brand down. This chapter is where
+ * generate complaints, and drag the brand down. This section is where
  * Jason's "we'd rather tell you not to franchise than sell you something
  * that won't work" trust line gets enforced: at who you let buy in.
  *
@@ -1172,7 +1172,7 @@ const FRANCHISE_ECONOMICS: ChapterSchema = {
  * (a Jason-trademarked tool that weights candidates), Discovery Day
  * pre-qualification questions, marketing-funnel pre-screen.
  */
-const FRANCHISEE_PROFILE: ChapterSchema = {
+const FRANCHISEE_PROFILE: SectionSchema = {
   slug: "franchisee_profile",
   title: "Who You Want as a Franchisee",
   description:
@@ -1422,7 +1422,7 @@ const FRANCHISEE_PROFILE: ChapterSchema = {
 };
 
 // ============================================================================
-// REMAINING 11 CHAPTER SCHEMAS — Phase 1.5a step 3
+// REMAINING 11 SECTION SCHEMAS — Phase 1.5a step 3
 //
 // Designed in one pass after Eric+Jason aligned on the foundational four.
 // Audit-pending: each schema notes whether it's been cross-checked against
@@ -1432,7 +1432,7 @@ const FRANCHISEE_PROFILE: ChapterSchema = {
 // ============================================================================
 
 // ----------------------------------------------------------------------------
-// HEAVY STRUCTURED — typed values + lists drive these chapters
+// HEAVY STRUCTURED — typed values + lists drive these sections
 // ----------------------------------------------------------------------------
 
 /**
@@ -1452,7 +1452,7 @@ const FRANCHISEE_PROFILE: ChapterSchema = {
  * Manual procurement appendix, FDD Item 8 (restrictions on sources of
  * products and services).
  */
-const VENDOR_SUPPLY_CHAIN: ChapterSchema = {
+const VENDOR_SUPPLY_CHAIN: SectionSchema = {
   slug: "vendor_supply_chain",
   title: "Approved Suppliers",
   description:
@@ -1622,7 +1622,7 @@ const VENDOR_SUPPLY_CHAIN: ChapterSchema = {
  * Compiles into: Marketing Fund Manual, FDD Item 11 (Franchisor's
  * Assistance, Advertising, Computer Systems, and Training).
  */
-const MARKETING_FUND: ChapterSchema = {
+const MARKETING_FUND: SectionSchema = {
   slug: "marketing_fund",
   title: "Marketing Fund Governance",
   description:
@@ -1814,7 +1814,7 @@ const MARKETING_FUND: ChapterSchema = {
  * Compiles into: Employee Handbook deliverable, Operations Manual §
  * (people management), portions of FDD Item 11 (training).
  */
-const EMPLOYEE_HANDBOOK: ChapterSchema = {
+const EMPLOYEE_HANDBOOK: SectionSchema = {
   slug: "employee_handbook",
   title: "Employee Handbook",
   description:
@@ -2016,7 +2016,7 @@ const EMPLOYEE_HANDBOOK: ChapterSchema = {
  * Compiles into: Reimbursement Policy deliverable, Operations Manual
  * financial-controls section.
  */
-const REIMBURSEMENT_POLICY: ChapterSchema = {
+const REIMBURSEMENT_POLICY: SectionSchema = {
   slug: "reimbursement_policy",
   title: "Expense Reimbursement Policy",
   description:
@@ -2143,13 +2143,13 @@ const REIMBURSEMENT_POLICY: ChapterSchema = {
  * Captures the legal-strategy decisions a franchisor makes BEFORE the
  * attorney sits down with their FDD: which states to register in,
  * which to skip, exemption strategy, and the key contacts. The
- * attorney owns the actual FDD drafting; this chapter captures the
+ * attorney owns the actual FDD drafting; this section captures the
  * strategy that drives their work.
  *
- * Compiles into: Decode the FDD chapter, Franchise Agreement scaffolding,
+ * Compiles into: Decode the FDD section, Franchise Agreement scaffolding,
  * attorney handoff packet.
  */
-const COMPLIANCE_LEGAL: ChapterSchema = {
+const COMPLIANCE_LEGAL: SectionSchema = {
   slug: "compliance_legal",
   title: "FDD Posture & State Strategy",
   description:
@@ -2244,7 +2244,7 @@ const COMPLIANCE_LEGAL: ChapterSchema = {
       label: "Target FDD completion date",
       type: "date",
       helpText:
-        "When you want the FDD ready for filing. Most emerging franchisors target 90–120 days after they finish the underlying chapters.",
+        "When you want the FDD ready for filing. Most emerging franchisors target 90–120 days after they finish the underlying sections.",
       category: "Timeline",
     },
     {
@@ -2296,10 +2296,10 @@ const COMPLIANCE_LEGAL: ChapterSchema = {
  * specifics — opening rituals, peak-hour playbooks, what makes "the
  * way we do it here" — which would be brittle to fully structure.
  *
- * Compiles into: Operations Manual §3-12 (daily operations chapters),
+ * Compiles into: Operations Manual §3-12 (daily operations sections),
  * Discovery Day operations walkthrough.
  */
-const OPERATING_MODEL: ChapterSchema = {
+const OPERATING_MODEL: SectionSchema = {
   slug: "operating_model",
   title: "Daily Operations",
   description:
@@ -2387,13 +2387,13 @@ const OPERATING_MODEL: ChapterSchema = {
  * Anchors capture the headline menu numbers. The narrative content_md
  * carries the actual recipes and prep procedures — those are the IP
  * the franchisor most wants to protect, and they're inherently long-
- * form. For service businesses (non-restaurant), this chapter pivots
+ * form. For service businesses (non-restaurant), this section pivots
  * to "service offerings" — same structure, different content.
  *
  * Compiles into: Operations Manual §13 (Product Specs), Barista /
  * Operator Certification Program training materials.
  */
-const RECIPES_AND_MENU: ChapterSchema = {
+const RECIPES_AND_MENU: SectionSchema = {
   slug: "recipes_and_menu",
   title: "Product & Service Specs",
   description:
@@ -2489,16 +2489,16 @@ const RECIPES_AND_MENU: ChapterSchema = {
  * disclosure. The narrative content_md carries the actual curriculum
  * design.
  *
- * Compiles into: Train Your Team chapter (currently empty in the
+ * Compiles into: Train Your Team section (currently empty in the
  * existing capability registry), FDD Item 11 (training section),
  * Operations Manual training appendix.
  */
-const TRAINING_PROGRAM: ChapterSchema = {
+const TRAINING_PROGRAM: SectionSchema = {
   slug: "training_program",
   title: "Training & Certification",
   description:
     "How new franchisees and their teams learn the system. The first few weeks are the difference between a great franchisee and a struggling one.",
-  compilesInto: "Train Your Team chapter, FDD Item 11 training section, Operations Manual training appendix.",
+  compilesInto: "Train Your Team section, FDD Item 11 training section, Operations Manual training appendix.",
   fields: [
     // ── Initial training ─────────────────────────────────────────────────
     {
@@ -2626,7 +2626,7 @@ const TRAINING_PROGRAM: ChapterSchema = {
  * Compiles into: Site Selection / Build-Out Manual, FDD Item 12 (territory),
  * trade-area reports per market.
  */
-const TERRITORY_REAL_ESTATE: ChapterSchema = {
+const TERRITORY_REAL_ESTATE: SectionSchema = {
   slug: "territory_real_estate",
   title: "Site Selection & Territory",
   description:
@@ -2748,7 +2748,7 @@ const TERRITORY_REAL_ESTATE: ChapterSchema = {
  * Compiles into: Market Strategy Report, Discovery Day market opportunity
  * deck, FDD market-context appendix.
  */
-const MARKET_STRATEGY: ChapterSchema = {
+const MARKET_STRATEGY: SectionSchema = {
   slug: "market_strategy",
   title: "Market Strategy & Positioning",
   description:
@@ -2827,7 +2827,7 @@ const MARKET_STRATEGY: ChapterSchema = {
  * Compiles into: Competitor Maps Appendix, Discovery Day competitive
  * analysis section, Market Strategy Report supporting research.
  */
-const COMPETITOR_LANDSCAPE: ChapterSchema = {
+const COMPETITOR_LANDSCAPE: SectionSchema = {
   slug: "competitor_landscape",
   title: "Competitive Landscape",
   description:
@@ -2896,13 +2896,13 @@ const COMPETITOR_LANDSCAPE: ChapterSchema = {
 // ---------------------------------------------------------------------------
 
 /**
- * Per-chapter schema registry. Now covers 15 of 16 chapters; only
+ * Per-section schema registry. Now covers 15 of 16 sections; only
  * `brand_voice` remains deferred (planned for Phase 1.5b at ~6-8
  * fields, lighter footprint than the v1 we cut).
  *
  * BUCKET LAYOUT:
  *
- *   Heavy structured (typed values + lists drive the chapter):
+ *   Heavy structured (typed values + lists drive the section):
  *     - unit_economics
  *     - franchise_economics
  *     - franchisee_profile
@@ -2924,7 +2924,7 @@ const COMPETITOR_LANDSCAPE: ChapterSchema = {
  *     - competitor_landscape
  *
  *   Deferred to Phase 1.5b:
- *     - brand_voice (no schema; the chapter exists in Memory but
+ *     - brand_voice (no schema; the section exists in Memory but
  *       renders prose-only until 1.5b)
  *
  * AUDIT STATUS: the 11 newly-added schemas have NOT been cross-checked
@@ -2933,7 +2933,7 @@ const COMPETITOR_LANDSCAPE: ChapterSchema = {
  * for fields specific to TFB's framework that I missed.
  */
 // ---------------------------------------------------------------------------
-// brand_voice — the deferred Phase 1.5b chapter, now landing.
+// brand_voice — the deferred Phase 1.5b section, now landing.
 //
 // Light hybrid. Cypress Lane example values shown in placeholders
 // follow the operator-voice rule: no marketing-speak ("brand
@@ -2943,10 +2943,10 @@ const COMPETITOR_LANDSCAPE: ChapterSchema = {
 // The brand-voice content drives FDD Item 1 boilerplate, the
 // operations manual's "How we sound" section, and the marketing
 // playbook. It's also what the agent reads when adapting prose to
-// the customer's voice on later chapter drafts — so even minimal
+// the customer's voice on later section drafts — so even minimal
 // inputs here meaningfully improve the rest.
 // ---------------------------------------------------------------------------
-const BRAND_VOICE: ChapterSchema = {
+const BRAND_VOICE: SectionSchema = {
   slug: "brand_voice",
   title: "Brand Standards",
   description:
@@ -3035,7 +3035,7 @@ const BRAND_VOICE: ChapterSchema = {
   ],
 };
 
-export const CHAPTER_SCHEMAS: Partial<Record<MemoryFileSlug, ChapterSchema>> = {
+export const SECTION_SCHEMAS: Partial<Record<MemoryFileSlug, SectionSchema>> = {
   business_overview: BUSINESS_OVERVIEW,
   brand_voice: BRAND_VOICE,
   unit_economics: UNIT_ECONOMICS,
@@ -3055,17 +3055,17 @@ export const CHAPTER_SCHEMAS: Partial<Record<MemoryFileSlug, ChapterSchema>> = {
 };
 
 /**
- * Returns the field schema for a chapter, or null if no schema exists yet
- * (the remaining 12 chapters until they're filled in). Callers should
- * fall back gracefully — the chapter still has a `content_md` blob and
+ * Returns the field schema for a section, or null if no schema exists yet
+ * (the remaining 12 sections until they're filled in). Callers should
+ * fall back gracefully — the section still has a `content_md` blob and
  * can be drafted prose-only.
  */
-export function getChapterSchema(slug: MemoryFileSlug): ChapterSchema | null {
-  return CHAPTER_SCHEMAS[slug] ?? null;
+export function getSectionSchema(slug: MemoryFileSlug): SectionSchema | null {
+  return SECTION_SCHEMAS[slug] ?? null;
 }
 
 /**
- * The shape of `customer_memory.fields` (jsonb) for a given chapter.
+ * The shape of `customer_memory.fields` (jsonb) for a given section.
  *
  * Stored values are JSON-serializable: strings, numbers, booleans, and
  * `string[]` for lists. We store ISO-format strings for dates. Color
@@ -3082,7 +3082,7 @@ export type FieldValue =
   | string[]
   | null;
 
-export type ChapterFields = Record<string, FieldValue>;
+export type SectionFields = Record<string, FieldValue>;
 
 /**
  * Per-field provenance metadata. Stored on `customer_memory.field_status`
@@ -3105,7 +3105,7 @@ export type FieldStatus = {
   note?: string;
 };
 
-export type ChapterFieldStatus = Record<string, FieldStatus>;
+export type SectionFieldStatus = Record<string, FieldStatus>;
 
 /**
  * Renaming a field in this file is a destructive migration. Existing
@@ -3119,5 +3119,5 @@ export type ChapterFieldStatus = Record<string, FieldStatus>;
  *
  * Better: avoid renames. Pick the right name the first time. That's
  * partly why this whole file exists for review before we touch the
- * remaining 12 chapters.
+ * remaining 12 sections.
  */

@@ -1,12 +1,12 @@
 /**
  * Structured-field extraction.
  *
- * Given a chapter's content (prose draft, scrape output, or any other
- * source material), ask Claude Sonnet to populate the chapter's
+ * Given a section's content (prose draft, scrape output, or any other
+ * source material), ask Claude Sonnet to populate the section's
  * structured-fields schema with values it can confidently derive.
  *
  * Why this exists: Eric flagged that clicking "Edit fields" on a
- * scraped chapter showed blank inputs — the prose paragraphs were
+ * scraped section showed blank inputs — the prose paragraphs were
  * full of facts (founder name, locations, year founded, etc.) but
  * none of them had been extracted into the `fields` jsonb. This
  * module is the bridge: same facts, structured form.
@@ -34,7 +34,7 @@ import {
   getAnthropic,
 } from "./anthropic";
 import {
-  getChapterSchema,
+  getSectionSchema,
   type FieldDef,
 } from "@/lib/memory/schemas";
 import type { MemoryFileSlug } from "@/lib/memory/files";
@@ -44,26 +44,26 @@ import { coerceListValue, LIST_INSTRUCTIONS_BLOCK } from "./coerce-list";
 type FieldValue = string | number | boolean | string[] | null;
 
 /**
- * Extract structured field values for a chapter from arbitrary source
+ * Extract structured field values for a section from arbitrary source
  * content. Returns only fields the model was confident enough to fill;
  * others are silently omitted (the customer fills them in).
  *
  * Returns an empty object when:
- *   - the chapter has no schema (Phase 1.5b chapters like brand_voice)
+ *   - the section has no schema (Phase 1.5b sections like brand_voice)
  *   - the source content is empty or trivially short
  *   - the model returns malformed JSON
  *   - the API call fails (logged, not thrown — extraction is best-effort)
  */
 export async function extractFieldsFromContent(args: {
   slug: MemoryFileSlug;
-  /** Source material — typically the chapter's just-drafted content_md
+  /** Source material — typically the section's just-drafted content_md
    *  or the raw scrape output. */
   content: string;
   /** Optional extra context the model should consider (raw scrape text,
-   *  cross-chapter facts, customer notes). */
+   *  cross-section facts, customer notes). */
   contextNotes?: string;
 }): Promise<Record<string, FieldValue>> {
-  const schema = getChapterSchema(args.slug);
+  const schema = getSectionSchema(args.slug);
   if (!schema) return {};
   if (!args.content || args.content.trim().length < 30) return {};
 
@@ -78,7 +78,7 @@ export async function extractFieldsFromContent(args: {
     .map((f) => describeFieldForPrompt(f))
     .join("\n");
 
-  const prompt = `You are extracting structured field values from source content for the "${schema.title}" chapter of a customer's Franchisor Blueprint. Output ONLY a JSON object mapping field names to values.
+  const prompt = `You are extracting structured field values from source content for the "${schema.title}" section of a customer's Franchisor Blueprint. Output ONLY a JSON object mapping field names to values.
 
 GROUND RULES:
 - Only fill fields you can derive with HIGH confidence from the source content. If you'd have to guess, OMIT the field.

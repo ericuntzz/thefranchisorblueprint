@@ -1,12 +1,12 @@
 /**
- * Memory snapshot endpoints — version history + rollback for chapters.
+ * Memory snapshot endpoints — version history + rollback for sections.
  *
  *   GET  /api/agent/snapshots?slug=<MemoryFileSlug>
  *        → { snapshots: SnapshotRow[] }
  *
  *   POST /api/agent/snapshots
  *        body: { slug: MemoryFileSlug, snapshotId: string }
- *        → { ok: true } — restores the chapter to that snapshot
+ *        → { ok: true } — restores the section to that snapshot
  *
  * Auth: must be logged in + paid. RLS enforces user-scoped reads on
  * the table itself, but we double-check at the route boundary.
@@ -91,8 +91,8 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
-  // Revalidate the chapter pages so the UI shows the restored content.
-  revalidatePath(`/portal/chapter/${body.slug}`);
+  // Revalidate the section pages so the UI shows the restored content.
+  revalidatePath(`/portal/section/${body.slug}`);
   revalidatePath(`/portal/lab/blueprint`);
   return NextResponse.json({ ok: true });
 }

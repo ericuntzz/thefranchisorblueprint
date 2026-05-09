@@ -221,7 +221,7 @@ export function TeamOpsDigestEmail(p: OpsDigestPayload) {
               <tr>
                 <th style={thStyle}>Who</th>
                 <th style={thStyle}>Days idle</th>
-                <th style={thStyle}>Next chapter</th>
+                <th style={thStyle}>Next section</th>
               </tr>
             </thead>
             <tbody>
@@ -232,7 +232,7 @@ export function TeamOpsDigestEmail(p: OpsDigestPayload) {
                     <span style={{ color: "#888B92" }}>({r.email})</span>
                   </td>
                   <td style={tdStyle}>{r.daysIdle}d</td>
-                  <td style={tdStyle}>{r.nextChapter}</td>
+                  <td style={tdStyle}>{r.nextSection}</td>
                 </tr>
               ))}
             </tbody>
@@ -523,7 +523,7 @@ export function teamOpsDigestText(p: OpsDigestPayload): string {
     lines.push("RESCUE EMAILS:");
     for (const r of p.rescueResults) {
       lines.push(
-        `  ${r.firstName ?? "—"} (${r.email}) — ${r.daysIdle}d idle → ${r.nextChapter}`,
+        `  ${r.firstName ?? "—"} (${r.email}) — ${r.daysIdle}d idle → ${r.nextSection}`,
       );
     }
     lines.push("");

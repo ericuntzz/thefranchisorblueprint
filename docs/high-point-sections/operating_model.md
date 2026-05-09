@@ -2,9 +2,9 @@
 
 > Source: HP_Franchise_Operations_Manual_v3_0.docx (Sections 0–8 + Section 13 — pre-opening roadmap, store SOPs, staffing, equipment, financial reporting, marketing, technology, legal, health/safety/risk)
 
-## What a strong Daily Operations chapter looks like
+## What a strong Daily Operations section looks like
 
-The thickest chapter in the system — typically 30–60 pages — and the centerpiece of the franchise relationship. It defines exactly how a unit runs from the moment the first team member arrives to the moment the last light goes off. The strongest version is sequenced by *time* (pre-opening → opening shift → service hours → closing → reporting cycles) and is dense with checklists, par-level tables, and threshold numbers. It is the working playbook, not a marketing document.
+The thickest section in the system — typically 30–60 pages — and the centerpiece of the franchise relationship. It defines exactly how a unit runs from the moment the first team member arrives to the moment the last light goes off. The strongest version is sequenced by *time* (pre-opening → opening shift → service hours → closing → reporting cycles) and is dense with checklists, par-level tables, and threshold numbers. It is the working playbook, not a marketing document.
 
 ## Structure observed
 
@@ -39,13 +39,13 @@ The thickest chapter in the system — typically 30–60 pages — and the cente
 
 ## Tone & voice
 
-Operational, prescriptive, table-driven. The voice assumes the reader is the GM running the unit at 5:45 AM with a checklist in hand. Direct verbs ("Disarm," "Turn on," "Pull and date-label"). Threshold numbers everywhere. Reservation-of-rights language is present but never inflated — when something is at the franchisor's discretion, the chapter says so plainly.
+Operational, prescriptive, table-driven. The voice assumes the reader is the GM running the unit at 5:45 AM with a checklist in hand. Direct verbs ("Disarm," "Turn on," "Pull and date-label"). Threshold numbers everywhere. Reservation-of-rights language is present but never inflated — when something is at the franchisor's discretion, the section says so plainly.
 
 ## What to avoid
 
 - Aspirational SOPs ("strive for excellence in every cup") — replace with measurable parameters (dose / yield / time / temp).
 - Single-shift staffing as a permitted configuration — solo operation creates safety, theft, and quality risk.
 - Reporting cadences without named due dates and named systems for upload.
-- Mixing "should" and "must" carelessly. The chapter must be read as a contract; "must" means contractual obligation, "should" means recommended practice.
+- Mixing "should" and "must" carelessly. The section must be read as a contract; "must" means contractual obligation, "should" means recommended practice.
 - Food-safety sections that don't enumerate timeframes for incident reporting (4 hours / 24 hours / immediately).
 - Ambiguous escalation paths — every incident type needs a named recipient and timeframe.

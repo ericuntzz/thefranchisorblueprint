@@ -10,12 +10,12 @@
  */
 
 import type { BuildContext, DeliverableDoc, DocBlock } from "../types";
-import { chapterFields } from "../context-helpers";
+import { sectionFields } from "../context-helpers";
 import { fmtDate, fmtInt, fmtList, fmtText, isFilled } from "../format";
 
 export function buildConceptAndStory(ctx: BuildContext): DeliverableDoc {
-  const overview = chapterFields(ctx, "business_overview");
-  const brand = chapterFields(ctx, "brand_voice");
+  const overview = sectionFields(ctx, "business_overview");
+  const brand = sectionFields(ctx, "brand_voice");
 
   const businessName =
     fmtText(brand.brand_name).split(/[.\n]/)[0]?.trim() ||
@@ -40,7 +40,7 @@ export function buildConceptAndStory(ctx: BuildContext): DeliverableDoc {
       },
     ],
     disclaimer:
-      "This document carries the brand's voice. Edit the underlying chapters to refine — the document regenerates from your live Memory.",
+      "This document carries the brand's voice. Edit the underlying sections to refine — the document regenerates from your live Memory.",
     sections: [
       {
         title: "1. The Concept",
@@ -172,7 +172,7 @@ export function buildConceptAndStory(ctx: BuildContext): DeliverableDoc {
             ? ({ kind: "bullets", items: fmtList(overview.business_history_milestones) } as DocBlock)
             : ({
                 kind: "paragraph",
-                text: "Key milestones haven't been captured yet — add them to the business_overview chapter so this section reads as a real timeline.",
+                text: "Key milestones haven't been captured yet — add them to the business_overview section so this section reads as a real timeline.",
               } as DocBlock),
         ],
       },

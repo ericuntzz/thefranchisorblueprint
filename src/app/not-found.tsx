@@ -18,7 +18,7 @@ export default function NotFound() {
             Page not found
           </div>
           <h1 className="text-navy font-extrabold text-4xl sm:text-5xl md:text-6xl leading-[1.05] tracking-tight mb-5">
-            That chapter isn&apos;t in the Blueprint.
+            That section isn&apos;t in the Blueprint.
           </h1>
           <p className="text-grey-3 text-lg leading-relaxed max-w-[560px] mb-10">
             The link you followed points to a page that doesn&apos;t

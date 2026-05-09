@@ -69,7 +69,7 @@ Stripe checkout.session.completed webhook
        └─→ mergeIntakeForUser ← intake snapshot → customer_memory
        │
        ▼
-[Portal opens with welcome banner + 15-20% pre-filled chapters]
+[Portal opens with welcome banner + 15-20% pre-filled sections]
 ```
 
 ## Files added / changed

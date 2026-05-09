@@ -8,13 +8,13 @@
  */
 
 import type { BuildContext, DeliverableDoc, DocBlock } from "../types";
-import { chapterFields } from "../context-helpers";
+import { sectionFields } from "../context-helpers";
 import { fmtBool, fmtInt, fmtList, fmtText, isFilled } from "../format";
 
 export function buildTrainingProgram(ctx: BuildContext): DeliverableDoc {
-  const training = chapterFields(ctx, "training_program");
-  const ops = chapterFields(ctx, "operating_model");
-  const overview = chapterFields(ctx, "business_overview");
+  const training = sectionFields(ctx, "training_program");
+  const ops = sectionFields(ctx, "operating_model");
+  const overview = sectionFields(ctx, "business_overview");
 
   const businessName =
     fmtText(overview.concept_summary).split(/[.\n]/)[0]?.trim() || "Your Franchise";
@@ -170,7 +170,7 @@ export function buildTrainingProgram(ctx: BuildContext): DeliverableDoc {
             : ({
                 kind: "paragraph",
                 text:
-                  "Daily rituals (pre-shift huddle, end-of-day reconciliation, etc.) haven't been captured. Document them in the operating_model chapter so the training program teaches them.",
+                  "Daily rituals (pre-shift huddle, end-of-day reconciliation, etc.) haven't been captured. Document them in the operating_model section so the training program teaches them.",
               } as DocBlock),
         ],
       },

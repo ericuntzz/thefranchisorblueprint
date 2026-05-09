@@ -2,9 +2,9 @@
 
 > Source: HP_Competitor_Maps_Appendix_Branded.pptx (image-heavy slide deck — competitor location maps), HP_Utah_Market_Strategy_Report.docx (Competitor Positioning & Model Comparison table, Benchmark Franchise Economics table, Local Competitive Map narrative)
 
-## What a strong Competitive Landscape chapter looks like
+## What a strong Competitive Landscape section looks like
 
-A visual + tabular chapter — typically 5–10 pages of prose plus a separate map appendix — that names the direct competitors, classifies their operating models, benchmarks their franchise economics, and overlays their footprint geographically against the franchisor's target markets. The strongest version answers three questions: who are the comparables, where do they already exist in our target markets, and how does our concept differ in ways that matter to a franchisee deciding between us and them.
+A visual + tabular section — typically 5–10 pages of prose plus a separate map appendix — that names the direct competitors, classifies their operating models, benchmarks their franchise economics, and overlays their footprint geographically against the franchisor's target markets. The strongest version answers three questions: who are the comparables, where do they already exist in our target markets, and how does our concept differ in ways that matter to a franchisee deciding between us and them.
 
 ## Structure observed
 
@@ -28,7 +28,7 @@ A visual + tabular chapter — typically 5–10 pages of prose plus a separate m
 - Local map narrative breaks down by trade-area *type*, not by submarket — generalizes across markets.
 - Differentiator framing is contestable: "micro small-batch roasting eliminates chemical burn taste from high-volume commercial roasting" — testable, not generic.
 - Acknowledges that direct competitors will be aggressively bidding on the same drive-thru pads — names this as a real-estate risk, not a market-share narrative.
-- Visual map deck is treated as an appendix to the strategy report, not as the chapter itself — structure note: image-heavy assets stay in companion decks, prose chapter cites them.
+- Visual map deck is treated as an appendix to the strategy report, not as the section itself — structure note: image-heavy assets stay in companion decks, prose section cites them.
 
 ## Tone & voice
 
@@ -40,5 +40,5 @@ Analyst register. Comparative, source-cited, disciplined. Names peer concepts di
 - Competitor lists that mix categories (drive-thru kiosk, traditional café, fast-casual restaurant) without classifying by archetype.
 - Benchmark numbers without source attribution — invites disputes.
 - Positioning that requires the competitor to be bad ("they're slow / unfriendly / overpriced") — the strongest positioning works even if the competitor is excellent.
-- Embedded competitor maps inside the prose chapter — they belong in a companion visual deck so prose stays editable.
+- Embedded competitor maps inside the prose section — they belong in a companion visual deck so prose stays editable.
 - Skipping the head-to-head pad-bidding risk — it's the single biggest constraint on franchise expansion in saturated markets.

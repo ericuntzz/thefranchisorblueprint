@@ -7,7 +7,7 @@
  *   - The pre-draft modal — inline blocker inputs when Jason refuses
  *     to draft until specific gaps are filled.
  *
- * Distinct from `ChapterFieldEditor`'s internal `FieldControl` because
+ * Distinct from `SectionFieldEditor`'s internal `FieldControl` because
  * those are in a multi-field form context with derived-default
  * affordances + computed displays + advanced-toggle. This component is
  * the *atomic* unit: one field, one input, one help line. The full-form

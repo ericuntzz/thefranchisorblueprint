@@ -14,7 +14,7 @@
  *     matters, anchored by a single primary CTA → /portal/lab/next
  *   - Secondary actions: View full Blueprint / Pre-fill from your site
  *
- * If the queue is empty (every required chapter answered), we swap to
+ * If the queue is empty (every required section answered), we swap to
  * a celebratory "you're caught up" state pointing at the Blueprint.
  */
 
@@ -25,7 +25,7 @@ import { phaseForSlug } from "@/lib/memory/phases";
 
 type Props = {
   firstName: string | null;
-  /** 0-100 weighted readiness across all chapters with a schema. */
+  /** 0-100 weighted readiness across all sections with a schema. */
   readinessPct: number;
   /** Queue summary used to surface the "next question" hero CTA. */
   queue: QueueSummary;
@@ -130,7 +130,7 @@ function CaughtUpPanel() {
         You&apos;re caught up
       </div>
       <p className="text-cream/85 text-sm leading-relaxed mb-4 max-w-[600px]">
-        Every required question is answered. Time to redraft chapters with the
+        Every required question is answered. Time to redraft sections with the
         new context, or open advanced questions if you want to dig deeper.
       </p>
       <div className="flex flex-wrap items-center gap-2">

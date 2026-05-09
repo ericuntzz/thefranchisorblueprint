@@ -11,7 +11,7 @@ import {
 } from "@/lib/supabase/types";
 import {
   computeQuestionQueue,
-  focusQueueOnChapters,
+  focusQueueOnSections,
   summarizeQueue,
 } from "@/lib/memory/queue";
 import type { MemoryFieldsMap } from "@/lib/calc";
@@ -37,7 +37,7 @@ export const dynamic = "force-dynamic";
  *
  * The portal's primary CTA points here. Customer answers one question
  * at a time; each answer writes to Memory and advances the queue. When
- * the queue empties for a phase, we surface a "Ready to draft <chapter>"
+ * the queue empties for a phase, we surface a "Ready to draft <section>"
  * affordance pointing into the Blueprint canvas.
  *
  * This is the TurboTax-style guided flow that Phase 2A introduces. The
@@ -75,11 +75,11 @@ export default async function GuidedNextPage({
   const hasWebsite =
     !!(profile?.website_url && profile.website_url.trim().length > 0);
 
-  // Read every chapter's fields + attachments. Service-role client
+  // Read every section's fields + attachments. Service-role client
   // because the queue page is a server component reading the
   // customer's own data — RLS would also work but we already use
   // admin elsewhere on this surface. Attachments feed the inline
-  // doc-prompt banner: only show the prompt for chapters that have
+  // doc-prompt banner: only show the prompt for sections that have
   // zero attachments (no point asking for an ops manual if they've
   // already uploaded one).
   const admin = getSupabaseAdmin();
@@ -103,9 +103,9 @@ export default async function GuidedNextPage({
 
   // Two callers, two behaviors:
   //   - Sidebar's Continue Building → no focus param → global next-best
-  //     question, walks all 16 chapters in phase order.
+  //     question, walks all 16 sections in phase order.
   //   - Dashboard's per-card "Complete Section" → ?focus=<deliverable-id>
-  //     → questions from THAT deliverable's source chapters bubble to the
+  //     → questions from THAT deliverable's source sections bubble to the
   //     top of the queue. After clearing them, the rest of the queue
   //     follows in normal order.
   const baseQueue = computeQuestionQueue(allFields);
@@ -114,7 +114,7 @@ export default async function GuidedNextPage({
       ? DELIVERABLES[focusParam as DeliverableId]
       : null;
   const queue = focusedDeliverable
-    ? focusQueueOnChapters(baseQueue, focusedDeliverable.sourceChapters)
+    ? focusQueueOnSections(baseQueue, focusedDeliverable.sourceSections)
     : baseQueue;
   const summary = summarizeQueue(queue);
 
@@ -165,8 +165,8 @@ function AllCaughtUpPanel({ firstName }: { firstName: string | null }) {
           : "You've caught up to Jason."}
       </h1>
       <p className="text-emerald-900/85 mb-6 max-w-[520px] mx-auto leading-relaxed">
-        Every required question Jason has for the foundational chapters is
-        answered. Time to head into the Blueprint canvas, redraft a chapter
+        Every required question Jason has for the foundational sections is
+        answered. Time to head into the Blueprint canvas, redraft a section
         with the new context, or open advanced questions if you want to dig
         deeper.
       </p>

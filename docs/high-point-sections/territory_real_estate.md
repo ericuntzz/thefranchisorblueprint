@@ -2,7 +2,7 @@
 
 > Source: HP_Site_Selection_BuildOut_Guide.docx (full document — 10-step process, scoring system, lease guidance), HP_Salt_Lake_Site_Broker_Scorecard.docx (rapid evaluation tool), HP_Site_Evaluation_Report.docx (full submission form), HP_Location_BuildOut_Manual_v2.docx (build-out portion of the same workflow), HP_Franchise_Operations_Manual_v3_0.docx (Section 9 Site Selection & Real Estate, Section 10 Build-Out)
 
-## What a strong Site Selection & Territory chapter looks like
+## What a strong Site Selection & Territory section looks like
 
 A multi-document workflow — typically 30–50 pages across two or three companion files — that turns "find a good spot" into a defensible, scored, gated process. The strongest version separates concerns into three coordinated documents: a *broker scorecard* (1–2 pages, rapid triage), a *site evaluation report / submission package* (10+ pages, full submission), and a *site selection guide + lease negotiation playbook* (the master framework). Each gates franchisor approval, and no lease may be executed without written franchisor approval.
 

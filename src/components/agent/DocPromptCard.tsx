@@ -2,16 +2,16 @@
 
 /**
  * DocPromptCard — the inline "got a doc?" upload affordance shown on
- * chapter pages and the question queue.
+ * section pages and the question queue.
  *
- * Only renders when the chapter has zero attachments AND a doc prompt
- * is configured for that chapter (see lib/memory/doc-prompts.ts) AND
+ * Only renders when the section has zero attachments AND a doc prompt
+ * is configured for that section (see lib/memory/doc-prompts.ts) AND
  * the customer hasn't dismissed it this session.
  *
  * Drag-drop OR click-to-upload. On success, the file goes through
- * /api/agent/chapter-attachment scoped to the given slug — same
- * pipeline as the in-chapter References panel. Page revalidates so
- * the prompt disappears (chapter now has an attachment).
+ * /api/agent/section-attachment scoped to the given slug — same
+ * pipeline as the in-section References panel. Page revalidates so
+ * the prompt disappears (section now has an attachment).
  *
  * Designed to land in one breath: prompt sentence + 3 example chips
  * + a single dropzone + Skip / Dismiss. No multi-step UI inside the
@@ -24,7 +24,7 @@ import type { DocPrompt } from "@/lib/memory/doc-prompts";
 
 type Props = {
   slug: string;
-  /** The DocPrompt config for this chapter. */
+  /** The DocPrompt config for this section. */
   prompt: DocPrompt;
   /** Compact variant — used inside the Question Queue's question
    *  card where vertical space is limited. */
@@ -47,7 +47,7 @@ export function DocPromptCard({ slug, prompt, compact }: Props) {
       const fd = new FormData();
       fd.append("slug", slug);
       fd.append("file", file);
-      const res = await fetch("/api/agent/chapter-attachment", {
+      const res = await fetch("/api/agent/section-attachment", {
         method: "POST",
         body: fd,
       });
@@ -58,7 +58,7 @@ export function DocPromptCard({ slug, prompt, compact }: Props) {
       const j = (await res.json()) as { attachment?: { label?: string } };
       setUploaded(j.attachment?.label ?? file.name);
       // Soft refresh so the parent re-reads attachments and the
-      // prompt naturally drops out (chapter no longer has zero
+      // prompt naturally drops out (section no longer has zero
       // attachments). Page reload mirrors the existing attachment-
       // upload pattern elsewhere in the app.
       setTimeout(() => {

@@ -4,7 +4,7 @@
 
 ## What a strong Reimbursement Policy looks like
 
-A short companion document — typically 6–10 pages — that defines how the franchisor pays back franchisees and council members for marketing-fund-related expenses. Most marketing-fund disputes happen at the reimbursement layer (a franchisee submits a claim, doesn't get paid, escalates), so the chapter's job is to make every step verifiable and every deadline strict. The policy lives downstream of the Marketing Fund Governance manual and explicitly defers to it on conflicts.
+A short companion document — typically 6–10 pages — that defines how the franchisor pays back franchisees and council members for marketing-fund-related expenses. Most marketing-fund disputes happen at the reimbursement layer (a franchisee submits a claim, doesn't get paid, escalates), so the section's job is to make every step verifiable and every deadline strict. The policy lives downstream of the Marketing Fund Governance manual and explicitly defers to it on conflicts.
 
 ## Structure observed
 

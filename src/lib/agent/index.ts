@@ -24,12 +24,12 @@ export {
 
 export {
   loadAgentSystemPrompt,
-  loadChapterPrinciples,
+  loadSectionPrinciples,
   loadHighPointPrecedent,
   buildDraftContext,
 } from "./prompt";
 
-export { draftChapter, type DraftResult } from "./draft";
+export { draftSection, type DraftResult } from "./draft";
 
 export { streamChatEvents, type ChatTurn, type ChatEvent } from "./chat";
 

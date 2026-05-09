@@ -4,7 +4,7 @@
  * The Memory store is a per-user directory of markdown files
  * (customer_memory) with a parallel per-claim audit table
  * (customer_memory_provenance). Each file double-duty as the agent's
- * source of truth AND the live draft of a chapter in the customer's
+ * source of truth AND the live draft of a section in the customer's
  * Franchisor Blueprint.
  *
  * NEVER import this module from a Client Component — it pulls in the
@@ -16,7 +16,7 @@ import "server-only";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { captureSnapshot } from "./snapshots";
 import type {
-  ChapterAttachment,
+  SectionAttachment,
   CustomerMemory,
   CustomerMemoryProvenance,
 } from "@/lib/supabase/types";
@@ -41,8 +41,8 @@ export type ProvenanceEntry = {
 };
 
 /**
- * Read one chapter from Memory. Returns null when the chapter doesn't
- * exist yet (empty chapter — the agent has nothing to seed it with yet).
+ * Read one section from Memory. Returns null when the section doesn't
+ * exist yet (empty section — the agent has nothing to seed it with yet).
  */
 export async function readMemoryFile(
   userId: string,
@@ -63,7 +63,7 @@ export async function readMemoryFile(
 }
 
 /**
- * Read every chapter the customer has — used for full Memory snapshots
+ * Read every section the customer has — used for full Memory snapshots
  * fed into the agent's prompt context. Returns rows in slug-defined order
  * (so prompt-cache prefixes stay stable).
  */
@@ -81,8 +81,8 @@ export async function readAllMemory(userId: string): Promise<CustomerMemory[]> {
 }
 
 /**
- * Snapshot every Memory chapter for the agent's prompt context. Empty
- * chapters are included with an explicit empty marker so the agent can
+ * Snapshot every Memory section for the agent's prompt context. Empty
+ * sections are included with an explicit empty marker so the agent can
  * see what's missing rather than just what's present.
  *
  * Stable ordering matters: the snapshot string is part of the agent's
@@ -111,7 +111,7 @@ export async function getMemorySnapshotForPrompt(
 }
 
 /**
- * Atomic upsert: replace a chapter's content + its provenance set in one
+ * Atomic upsert: replace a section's content + its provenance set in one
  * RPC call. Defers to the SQL function so we can't end up with a draft
  * pointing at provenance for the prior version (or vice versa).
  *
@@ -205,7 +205,7 @@ export async function userEditMemoryFile(args: {
 }
 
 /**
- * Write a batch of field values for a single chapter. Replaces the
+ * Write a batch of field values for a single section. Replaces the
  * `fields` jsonb wholesale (after merging with what's already there)
  * and updates `field_status` for each field that changed.
  *
@@ -282,9 +282,9 @@ export async function writeMemoryFields(args: {
 }
 
 /**
- * Sufficiency check for the chapter-draft pipeline.
+ * Sufficiency check for the section-draft pipeline.
  *
- * The agent should NOT attempt a fresh chapter draft if Memory is
+ * The agent should NOT attempt a fresh section draft if Memory is
  * effectively empty across the entire customer — Opus will dutifully
  * produce a skeleton riddled with `[NEEDS INPUT: ...]` placeholders
  * (Eric's feedback: "this is confusing"). Cheaper and clearer to refuse
@@ -292,10 +292,10 @@ export async function writeMemoryFields(args: {
  * record a voice intake first.
  *
  * "Sufficient" today means ANY of:
- *   - At least one chapter has ≥100 chars of `content_md` (scrape, prior
+ *   - At least one section has ≥100 chars of `content_md` (scrape, prior
  *     draft, or customer prose). 100 chars eliminates near-empty rows
  *     that exist only because some metadata column was set.
- *   - At least 3 structured fields populated across all chapters
+ *   - At least 3 structured fields populated across all sections
  *     (signals the customer has typed at least the basics).
  *
  * Returns the signals so the caller can pass them to the UI for a
@@ -304,8 +304,8 @@ export async function writeMemoryFields(args: {
 export async function hasSufficientMemoryForDraft(userId: string): Promise<{
   sufficient: boolean;
   signals: {
-    chaptersWithContent: number;
-    chaptersWithFields: number;
+    sectionsWithContent: number;
+    sectionsWithFields: number;
     totalFieldsPopulated: number;
   };
 }> {
@@ -319,15 +319,15 @@ export async function hasSufficientMemoryForDraft(userId: string): Promise<{
     throw new Error(`Memory read failed: ${error.message}`);
   }
 
-  let chaptersWithContent = 0;
-  let chaptersWithFields = 0;
+  let sectionsWithContent = 0;
+  let sectionsWithFields = 0;
   let totalFieldsPopulated = 0;
 
   for (const row of (data ?? []) as Array<{
     content_md: string | null;
     fields: Record<string, unknown> | null;
   }>) {
-    if ((row.content_md ?? "").trim().length >= 100) chaptersWithContent += 1;
+    if ((row.content_md ?? "").trim().length >= 100) sectionsWithContent += 1;
     const fields = row.fields ?? {};
     let countThisRow = 0;
     for (const v of Object.values(fields)) {
@@ -336,24 +336,24 @@ export async function hasSufficientMemoryForDraft(userId: string): Promise<{
       if (Array.isArray(v) && v.length === 0) continue;
       countThisRow += 1;
     }
-    if (countThisRow > 0) chaptersWithFields += 1;
+    if (countThisRow > 0) sectionsWithFields += 1;
     totalFieldsPopulated += countThisRow;
   }
 
-  const sufficient = chaptersWithContent >= 1 || totalFieldsPopulated >= 3;
+  const sufficient = sectionsWithContent >= 1 || totalFieldsPopulated >= 3;
   return {
     sufficient,
     signals: {
-      chaptersWithContent,
-      chaptersWithFields,
+      sectionsWithContent,
+      sectionsWithFields,
       totalFieldsPopulated,
     },
   };
 }
 
 /**
- * Read just the structured-fields layer for one chapter. Returns null
- * if the chapter has no row yet (every field is empty).
+ * Read just the structured-fields layer for one section. Returns null
+ * if the section has no row yet (every field is empty).
  */
 export async function readMemoryFields(
   userId: string,
@@ -381,14 +381,14 @@ export async function readMemoryFields(
 }
 
 /**
- * Read the per-chapter attachments list. Returns an empty array when
- * the chapter has no row yet or no attachments. Order matches the
+ * Read the per-section attachments list. Returns an empty array when
+ * the section has no row yet or no attachments. Order matches the
  * stored array (insertion order = newest at the end).
  */
 export async function readAttachments(
   userId: string,
   slug: MemoryFileSlug,
-): Promise<ChapterAttachment[]> {
+): Promise<SectionAttachment[]> {
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from("customer_memory")
@@ -400,21 +400,21 @@ export async function readAttachments(
     console.error(`[memory] readAttachments(${slug}) failed:`, error.message);
     throw new Error(`Attachments read failed: ${error.message}`);
   }
-  return ((data?.attachments ?? []) as ChapterAttachment[]) ?? [];
+  return ((data?.attachments ?? []) as SectionAttachment[]) ?? [];
 }
 
 /**
- * Read every attachment across all of a customer's chapters. Used by
+ * Read every attachment across all of a customer's sections. Used by
  * the pre-draft modal so the customer can pull a reference uploaded
- * to one chapter into another chapter's draft, and by the draft route
+ * to one section into another section's draft, and by the draft route
  * to resolve `referencedAttachmentIds` into actual attachment records.
  *
- * Returns an array per chapter (only chapters with at least one
+ * Returns an array per section (only sections with at least one
  * attachment) to keep the payload tight.
  */
 export async function readAllAttachments(
   userId: string,
-): Promise<Array<{ slug: MemoryFileSlug; attachments: ChapterAttachment[] }>> {
+): Promise<Array<{ slug: MemoryFileSlug; attachments: SectionAttachment[] }>> {
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from("customer_memory")
@@ -424,10 +424,10 @@ export async function readAllAttachments(
     console.error(`[memory] readAllAttachments failed:`, error.message);
     throw new Error(`Attachments read failed: ${error.message}`);
   }
-  const out: Array<{ slug: MemoryFileSlug; attachments: ChapterAttachment[] }> = [];
+  const out: Array<{ slug: MemoryFileSlug; attachments: SectionAttachment[] }> = [];
   for (const row of (data ?? []) as Array<{
     file_slug: string;
-    attachments: ChapterAttachment[] | null;
+    attachments: SectionAttachment[] | null;
   }>) {
     const slug = row.file_slug as MemoryFileSlug;
     if (!isValidMemoryFileSlug(slug)) continue;
@@ -438,16 +438,16 @@ export async function readAllAttachments(
 }
 
 /**
- * Append one attachment to a chapter. Creates the chapter row if it
+ * Append one attachment to a section. Creates the section row if it
  * doesn't exist yet (so attaching is allowed before any prose has
  * been drafted). Atomic at the row level — concurrent appends to the
- * same chapter race in JS, but our UI surfaces are single-customer-
- * per-chapter so the practical risk is nil.
+ * same section race in JS, but our UI surfaces are single-customer-
+ * per-section so the practical risk is nil.
  */
 export async function appendAttachment(args: {
   userId: string;
   slug: MemoryFileSlug;
-  attachment: ChapterAttachment;
+  attachment: SectionAttachment;
 }): Promise<void> {
   if (!isValidMemoryFileSlug(args.slug)) {
     throw new Error(`Unknown memory file slug: ${args.slug}`);
@@ -478,7 +478,7 @@ export async function deleteAttachment(args: {
   userId: string;
   slug: MemoryFileSlug;
   attachmentId: string;
-}): Promise<ChapterAttachment | null> {
+}): Promise<SectionAttachment | null> {
   if (!isValidMemoryFileSlug(args.slug)) {
     throw new Error(`Unknown memory file slug: ${args.slug}`);
   }
@@ -500,7 +500,7 @@ export async function deleteAttachment(args: {
 }
 
 /**
- * Read the provenance entries for one chapter — used by the on-hover UI
+ * Read the provenance entries for one section — used by the on-hover UI
  * to surface "where did this come from?" tooltips.
  */
 export async function readProvenance(

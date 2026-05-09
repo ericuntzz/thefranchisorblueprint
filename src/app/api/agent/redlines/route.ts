@@ -16,7 +16,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { isValidMemoryFileSlug } from "@/lib/memory/files";
-import type { ChapterRedline, Purchase } from "@/lib/supabase/types";
+import type { SectionRedline, Purchase } from "@/lib/supabase/types";
 
 export const runtime = "nodejs";
 
@@ -59,10 +59,10 @@ export async function GET(req: NextRequest) {
   const supabase = await getSupabaseServer();
   const [{ data: redlines }, { data: row }] = await Promise.all([
     supabase
-      .from("chapter_redlines")
+      .from("section_redlines")
       .select("*")
       .eq("user_id", auth.userId)
-      .eq("chapter_slug", slug)
+      .eq("section_slug", slug)
       .order("created_at", { ascending: false }),
     supabase
       .from("customer_memory")
@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
       .eq("file_slug", slug)
       .maybeSingle(),
   ]);
-  const list = (redlines ?? []) as ChapterRedline[];
+  const list = (redlines ?? []) as SectionRedline[];
   const open = list.filter((r) => !r.resolved_at);
   return NextResponse.json({
     redlines: list,
@@ -109,7 +109,7 @@ export async function PATCH(req: NextRequest) {
         updated_at: new Date().toISOString(),
       };
   const { error } = await supabase
-    .from("chapter_redlines")
+    .from("section_redlines")
     .update(update)
     .eq("id", body.id)
     .eq("user_id", auth.userId);
@@ -117,7 +117,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
   if (body.slug && isValidMemoryFileSlug(body.slug)) {
-    revalidatePath(`/portal/chapter/${body.slug}`);
+    revalidatePath(`/portal/section/${body.slug}`);
   }
   return NextResponse.json({ ok: true });
 }

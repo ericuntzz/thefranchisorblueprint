@@ -1,5 +1,5 @@
 /**
- * Loads the Jason agent's system prompt and per-chapter principles files
+ * Loads the Jason agent's system prompt and per-section principles files
  * from `docs/`. The markdown is the source of truth — Eric and Jason edit
  * those files, the agent picks up changes on the next request, no rebuild
  * needed beyond a deploy.
@@ -16,7 +16,7 @@ import path from "node:path";
 const DOCS_DIR = path.join(process.cwd(), "docs");
 const SYSTEM_PROMPT_PATH = path.join(DOCS_DIR, "jason-agent-prompt.md");
 const PRINCIPLES_DIR = path.join(DOCS_DIR, "jason-principles");
-const PRECEDENT_DIR = path.join(DOCS_DIR, "high-point-chapters");
+const PRECEDENT_DIR = path.join(DOCS_DIR, "high-point-sections");
 
 let _systemPrompt: string | null = null;
 
@@ -39,29 +39,29 @@ export async function loadAgentSystemPrompt(): Promise<string> {
 }
 
 /**
- * Load Jason's per-chapter principles (`docs/jason-principles/<slug>.md`).
- * These come from transcribed videos Jason records explaining each chapter.
+ * Load Jason's per-section principles (`docs/jason-principles/<slug>.md`).
+ * These come from transcribed videos Jason records explaining each section.
  * Returns null if the file doesn't exist yet — the agent operates on the
  * global prompt + High Point precedent alone in that case.
  */
-export async function loadChapterPrinciples(
+export async function loadSectionPrinciples(
   slug: string,
 ): Promise<string | null> {
   const filePath = path.join(PRINCIPLES_DIR, `${slug}.md`);
   try {
     return await fs.readFile(filePath, "utf8");
   } catch {
-    return null; // expected — many chapters won't have principles recorded yet
+    return null; // expected — many sections won't have principles recorded yet
   }
 }
 
 /**
- * Load the High Point precedent chapter for `slug`. Returns null when no
- * precedent exists for that chapter (e.g. brand-new chapter we're adding
+ * Load the High Point precedent section for `slug`. Returns null when no
+ * precedent exists for that section (e.g. brand-new section we're adding
  * outside the High Point bundle).
  *
  * Curated subset of the High Point bundle, structured as the canonical
- * "good" example for that chapter. The agent uses these as few-shot
+ * "good" example for that section. The agent uses these as few-shot
  * examples to anchor the quality bar.
  */
 export async function loadHighPointPrecedent(
@@ -76,8 +76,8 @@ export async function loadHighPointPrecedent(
 }
 
 /**
- * Build the full context for a chapter draft request: system prompt,
- * Jason's principles for this chapter, and High Point precedent. Joined
+ * Build the full context for a section draft request: system prompt,
+ * Jason's principles for this section, and High Point precedent. Joined
  * with stable separators so the prompt-cache prefix is deterministic.
  *
  * Order is important — anything that changes invalidates the cache from
@@ -90,19 +90,19 @@ export async function buildDraftContext(slug: string): Promise<{
 }> {
   const [systemPrompt, principles, precedent] = await Promise.all([
     loadAgentSystemPrompt(),
-    loadChapterPrinciples(slug),
+    loadSectionPrinciples(slug),
     loadHighPointPrecedent(slug),
   ]);
 
   const groundingParts: string[] = [];
   if (precedent) {
     groundingParts.push(
-      `<high_point_precedent slug="${slug}">\nThe canonical "good" example for this chapter, drawn from a real customer (High Point Coffee) who completed the program. Use this to calibrate depth, structure, and quality bar — DO NOT copy specifics.\n\n${precedent}\n</high_point_precedent>`,
+      `<high_point_precedent slug="${slug}">\nThe canonical "good" example for this section, drawn from a real customer (High Point Coffee) who completed the program. Use this to calibrate depth, structure, and quality bar — DO NOT copy specifics.\n\n${precedent}\n</high_point_precedent>`,
     );
   }
   if (principles) {
     groundingParts.push(
-      `<jason_principles slug="${slug}">\nJason's recorded guidance on this chapter (transcribed from his per-chapter video). These are how Jason thinks about this domain.\n\n${principles}\n</jason_principles>`,
+      `<jason_principles slug="${slug}">\nJason's recorded guidance on this section (transcribed from his per-section video). These are how Jason thinks about this domain.\n\n${principles}\n</jason_principles>`,
     );
   }
 

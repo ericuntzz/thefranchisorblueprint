@@ -21,7 +21,7 @@ export type PortalNavItem = {
   label: string;
   icon: LucideIcon;
   /** Pathname prefixes that should also light this item up. Useful
-   *  when, e.g., `/portal/chapter/foo` should highlight Blueprint. */
+   *  when, e.g., `/portal/section/foo` should highlight Blueprint. */
   matchPrefixes?: string[];
   /** Optional progress ring — 0..100. */
   progressPct?: number;
@@ -61,7 +61,7 @@ export function getPortalNavItems({
       href: "/portal/lab/blueprint",
       label: "Blueprint",
       icon: BookOpen,
-      matchPrefixes: ["/portal/lab/blueprint", "/portal/chapter/"],
+      matchPrefixes: ["/portal/lab/blueprint", "/portal/section/"],
     },
     {
       href: "/portal/checklist",

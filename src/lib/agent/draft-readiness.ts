@@ -1,12 +1,12 @@
 /**
- * Per-chapter draft readiness — the gate for proactive Jason.
+ * Per-section draft readiness — the gate for proactive Jason.
  *
- * When the customer hits "Draft with Jason" on a chapter that's
+ * When the customer hits "Draft with Jason" on a section that's
  * missing half its required inputs, the resulting draft is just
  * `[NEEDS INPUT]` placeholders dressed up as prose — the same
  * problem we've already designed against (sufficiency check at the
  * route, the InsufficientContextPanel routing CTA). This module is
- * the per-chapter sibling: instead of refusing to draft, it surfaces
+ * the per-section sibling: instead of refusing to draft, it surfaces
  * *exactly which questions* would unblock a credible draft, so the
  * pre-draft modal can show them inline.
  *
@@ -21,15 +21,15 @@
  *      then Draft.
  *
  * Score formula: percentage of required fields filled, weighted
- * 100% on required and 0% on optional. If a chapter has zero
- * required fields (rare — most foundational chapters declare
+ * 100% on required and 0% on optional. If a section has zero
+ * required fields (rare — most foundational sections declare
  * several), we fall back to filledAll / totalAll so the score still
  * means something.
  */
 
 import "server-only";
 import {
-  CHAPTER_SCHEMAS,
+  SECTION_SCHEMAS,
   type FieldDef,
 } from "@/lib/memory/schemas";
 import { hasCalc } from "@/lib/calc";
@@ -45,7 +45,7 @@ export const MIN_DRAFTABLE_SCORE = 60;
 export const MAX_BLOCKERS = 5;
 
 export type DraftBlocker = {
-  /** The field's technical name on the chapter schema. */
+  /** The field's technical name on the section schema. */
   fieldName: string;
   /** Subset of the FieldDef the client renderer needs. We don't
    *  serialize the whole schema across the wire — just the bits the
@@ -61,13 +61,13 @@ export type DraftReadiness = {
   totalRequired: number;
   filledAll: number;
   totalAll: number;
-  /** Top blockers in schema order. Empty when the chapter is ready
-   *  OR when the chapter has no schema (Phase 1.5b chapters). */
+  /** Top blockers in schema order. Empty when the section is ready
+   *  OR when the section has no schema (Phase 1.5b sections). */
   blockers: DraftBlocker[];
 };
 
 /**
- * Compute readiness for one chapter. Pulls Memory fields fresh — this
+ * Compute readiness for one section. Pulls Memory fields fresh — this
  * is called from a route, so we want canonical state, not whatever
  * the client thinks Memory looks like.
  */
@@ -75,9 +75,9 @@ export async function assessDraftReadiness(args: {
   userId: string;
   slug: MemoryFileSlug;
 }): Promise<DraftReadiness> {
-  const schema = CHAPTER_SCHEMAS[args.slug];
+  const schema = SECTION_SCHEMAS[args.slug];
   // No schema yet → can't assess; return a "ready" score so the modal
-  // proceeds normally. This lets prose-only chapters (brand_voice)
+  // proceeds normally. This lets prose-only sections (brand_voice)
   // continue to work the way they did before.
   if (!schema) {
     return {

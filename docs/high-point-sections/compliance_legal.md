@@ -2,9 +2,9 @@
 
 > Source: LMF_FDD_Guide.docx (23-Item FDD breakdown), HP_Document_Review_Franchise_Audit.docx (franchise-readiness review of operational documents), HP_Franchise_Operations_Manual_v3_0.docx (Section 8 Legal, Compliance & Franchisee Obligations)
 
-## What a strong FDD Posture & State Strategy chapter looks like
+## What a strong FDD Posture & State Strategy section looks like
 
-A two-layer chapter — typically 8–12 pages — that covers (1) how the franchisor's FDD is structured Item by Item, and (2) which states the franchisor will register in, in what order, and on what timeline. The audience is dual: the franchisor's leadership team running the program, and the prospective franchisee evaluating the disclosure document's quality. The strongest version reads like an internal compliance plan that the franchisee is allowed to see.
+A two-layer section — typically 8–12 pages — that covers (1) how the franchisor's FDD is structured Item by Item, and (2) which states the franchisor will register in, in what order, and on what timeline. The audience is dual: the franchisor's leadership team running the program, and the prospective franchisee evaluating the disclosure document's quality. The strongest version reads like an internal compliance plan that the franchisee is allowed to see.
 
 ## Structure observed
 
@@ -37,12 +37,12 @@ A two-layer chapter — typically 8–12 pages — that covers (1) how the franc
 
 ## Tone & voice
 
-Bilingual: "plain English" annotations sit alongside the FTC-required disclosures. The chapter assumes the reader is not a lawyer but will be working with one. Heavy use of tables, complexity ratings, and time estimates. Disclaimer language ("not legal advice; engage qualified franchise counsel") appears repeatedly.
+Bilingual: "plain English" annotations sit alongside the FTC-required disclosures. The section assumes the reader is not a lawyer but will be working with one. Heavy use of tables, complexity ratings, and time estimates. Disclaimer language ("not legal advice; engage qualified franchise counsel") appears repeatedly.
 
 ## What to avoid
 
 - Treating the FDD as a single deliverable — it's 23 distinct items with very different complexity profiles. Each needs its own treatment.
 - Skipping the Registration vs. Business Opportunity vs. Federal-Rule classification — the timeline and budget swing significantly based on which states the franchisor targets first.
 - Single-state strategy framed as "we'll figure it out later" — sequencing matters because Registration States review FDDs before any sales are authorized.
-- Item 19 pep talks. Item 19 is risky if poorly substantiated; the chapter should *encourage* franchisors with audited data and *discourage* franchisors without it.
+- Item 19 pep talks. Item 19 is risky if poorly substantiated; the section should *encourage* franchisors with audited data and *discourage* franchisors without it.
 - Operational documents that leak the wrong brand name, store-specific contacts, or corporate-only system references into franchisee-facing materials. The audit document found multiple such failures and treated them as critical fixes — a useful negative example.

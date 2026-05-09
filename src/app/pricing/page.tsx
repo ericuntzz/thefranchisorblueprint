@@ -50,7 +50,7 @@ export const metadata: Metadata = {
 };
 
 const valueStack = [
-  { item: "Codify Your Operations (17-chapter manual)", value: "$10,000" },
+  { item: "Codify Your Operations (17-section manual)", value: "$10,000" },
   { item: "Train Your Team to Replicate (certification program)", value: "$5,000" },
   { item: "Decode the FDD (all 23 federal items)", value: "$5,000" },
   { item: "Score Real Estate Like a Franchisor (scoring system)", value: "$3,500" },

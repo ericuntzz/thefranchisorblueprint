@@ -1,7 +1,7 @@
 /**
  * GET /api/agent/draft-readiness?slug=<MemoryFileSlug>
  *
- * Returns DraftReadiness for the given chapter. Called by the
+ * Returns DraftReadiness for the given section. Called by the
  * pre-draft modal on open so it can decide whether to show the
  * normal "notes + attachments" view OR the "answer these blockers
  * first" view.

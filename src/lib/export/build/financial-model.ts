@@ -9,14 +9,14 @@
  */
 
 import type { BuildContext, DeliverableDoc, DocBlock } from "../types";
-import { chapterFields, computedFields } from "../context-helpers";
+import { sectionFields, computedFields } from "../context-helpers";
 import { fmtCurrency, fmtCurrencyRange, fmtInt, fmtPct, fmtText, isFilled } from "../format";
 
 export function buildFinancialModel(ctx: BuildContext): DeliverableDoc {
-  const businessOverview = chapterFields(ctx, "business_overview");
-  const unit = chapterFields(ctx, "unit_economics");
+  const businessOverview = sectionFields(ctx, "business_overview");
+  const unit = sectionFields(ctx, "unit_economics");
   const unitComputed = computedFields(ctx, "unit_economics");
-  const franchise = chapterFields(ctx, "franchise_economics");
+  const franchise = sectionFields(ctx, "franchise_economics");
 
   const businessName =
     fmtText(businessOverview.concept_summary).split(".")[0]?.trim() || "Your Franchise";

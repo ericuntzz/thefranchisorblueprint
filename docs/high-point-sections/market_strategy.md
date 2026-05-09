@@ -2,9 +2,9 @@
 
 > Source: HP_Utah_Market_Strategy_Report.docx (full document), LMF-Franchise Development Strategy and 12-Month Gantt Chart.docx (cross-cutting development sequencing template — partially filled)
 
-## What a strong Market Strategy & Positioning chapter looks like
+## What a strong Market Strategy & Positioning section looks like
 
-A category-and-geography chapter — typically 8–14 pages — that defines where the franchisor will sell franchises first, why those markets, and how the brand differentiates against the competitive set in each market. The strongest version pairs a brand snapshot (current footprint, current AUV estimates, operational model) with a competitive analysis, target-market demographics, recommended positioning, recommended fee structure, and a phased go-to-market sequence. The audience is dual: leadership making sequencing decisions and franchisee candidates understanding the long-term plan.
+A category-and-geography section — typically 8–14 pages — that defines where the franchisor will sell franchises first, why those markets, and how the brand differentiates against the competitive set in each market. The strongest version pairs a brand snapshot (current footprint, current AUV estimates, operational model) with a competitive analysis, target-market demographics, recommended positioning, recommended fee structure, and a phased go-to-market sequence. The audience is dual: leadership making sequencing decisions and franchisee candidates understanding the long-term plan.
 
 ## Structure observed
 
@@ -19,7 +19,7 @@ A category-and-geography chapter — typically 8–14 pages — that defines whe
 - Recommended positioning: how to lean into local authenticity vs. competitor archetypes
 - Recommended prototype strategy: 2 named prototypes (flagship café+drive-thru / express drive-thru) sized differently for different trade-area types
 - Recommended franchise economics guardrails: initial fee range, royalty %, ad fund %, target initial investment range — each with rationale tied to the competitive set
-- Priority site-selection criteria (synthesized with the territory chapter)
+- Priority site-selection criteria (synthesized with the territory section)
 - Go-to-market / franchise launch sequencing: phased plan with named timeframes and named geographies
   - Phase 1 (Months 1–4): finalize FDD, audit financials, optimize supply chain
   - Phase 2 (Months 4–12): target X regional markets for first 3–5 franchise units
@@ -43,7 +43,7 @@ A category-and-geography chapter — typically 8–14 pages — that defines whe
 
 ## Tone & voice
 
-Strategy-deck register, but written in prose. Calm, numerate, source-cited. The voice anticipates skepticism from both legal counsel and prospective franchisees — names risks in plain language with named mitigations. Disclaimers are present but never inflated. Treats the chapter as a planning document, not a marketing piece.
+Strategy-deck register, but written in prose. Calm, numerate, source-cited. The voice anticipates skepticism from both legal counsel and prospective franchisees — names risks in plain language with named mitigations. Disclaimers are present but never inflated. Treats the section as a planning document, not a marketing piece.
 
 ## What to avoid
 
@@ -53,4 +53,4 @@ Strategy-deck register, but written in prose. Calm, numerate, source-cited. The 
 - Positioning that boils down to "we have great service" — every competitor claims that.
 - Geographic plans that name a state rather than specific submarkets — sequencing matters.
 - Skipping the recommended-fee rationale — franchise economics need to be defended against the competitive set, not asserted.
-- Mixing FDD disclosure into the strategy chapter as if it's already done — flag it as a phase-1 deliverable.
+- Mixing FDD disclosure into the strategy section as if it's already done — flag it as a phase-1 deliverable.

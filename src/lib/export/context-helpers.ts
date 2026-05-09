@@ -11,12 +11,12 @@ import type { MemoryFileSlug } from "@/lib/memory/files";
 import type { BuildContext } from "./types";
 
 /**
- * Convenience accessor — pull a chapter's fields without the caller
+ * Convenience accessor — pull a section's fields without the caller
  * having to type-narrow on the optional. Returns an empty object when
- * the chapter has no row, so builders can call `.fields.foo` without
+ * the section has no row, so builders can call `.fields.foo` without
  * throwing.
  */
-export function chapterFields(
+export function sectionFields(
   ctx: BuildContext,
   slug: MemoryFileSlug,
 ): Record<string, string | number | boolean | string[] | null> {

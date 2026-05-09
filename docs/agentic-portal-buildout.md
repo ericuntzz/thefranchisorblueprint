@@ -14,13 +14,13 @@ what's still open as of this update.
 
 - **Phase 0** — Migrations 0010–0016, agent helpers, memory CRUD, prompt
   loader, types. ✅ All in.
-- **Phase 1** — Website scrape, first-chapter draft pipeline (Opus 4.7),
-  provenance through ChapterCard + ChapterFieldEditor, alive UI patterns,
+- **Phase 1** — Website scrape, first-section draft pipeline (Opus 4.7),
+  provenance through SectionCard + SectionFieldEditor, alive UI patterns,
   Sonnet chat dock with Memory-aware context. The single Phase 1 gap
   closed in this milestone is **voice intake** (MediaRecorder + Whisper),
   scaffolded with env-gated transcription.
-- **Phase 2** — All 16 chapter schemas, drop-anything upload zone with
-  auto-classify, per-chapter focused workspace, Blueprint canvas, question
+- **Phase 2** — All 16 section schemas, drop-anything upload zone with
+  auto-classify, per-section focused workspace, Blueprint canvas, question
   queue, deterministic calc library, Command Center, regulatory milestones,
   stuck-customer rescue cron. **Versioned Memory snapshots / rollback
   added in this milestone.**
@@ -38,15 +38,15 @@ what's still open as of this update.
   Training Program, Franchise Agreement)
 - Bundle export ZIP — checkbox-driven multi-select with readiness %
   rendered on each deliverable's cover page
-- Attorney-readiness scoring per chapter
+- Attorney-readiness scoring per section
 - Versioned Memory snapshots (migration 0017) + rollback UI
 - Voice intake (MediaRecorder UI + storage; Whisper transcription
   env-gated on `OPENAI_API_KEY`)
 - State-by-state FDD registration matrix (50 rows + classification)
 - Franchise Agreement template scaffold (every clause marked
   `[NEEDS ATTORNEY REVIEW]`)
-- Compliance/Legal chapter wired with state strategy fields
-- Per-chapter "Jason approved" stamp
+- Compliance/Legal section wired with state strategy fields
+- Per-section "Jason approved" stamp
 - Jason redline admin UI (gated on `ADMIN_USER_IDS` env list)
 - Stuck-customer Calendly nudge integration
 - Tavily web search + Google Places + Census Bureau agent tools
@@ -57,7 +57,7 @@ what's still open as of this update.
 ### Still open (need Jason or external decisions)
 
 - **Real attorney-network partnership** — the bundle currently exports
-  with `[NEEDS ATTORNEY REVIEW]` markers throughout the legal chapters.
+  with `[NEEDS ATTORNEY REVIEW]` markers throughout the legal sections.
   Production launch needs Jason to either (a) partner with a vetted
   franchise attorney or (b) point customers at their own counsel.
 - **Tier 2/3 unique value beyond redlines** — the redline UI is built,
@@ -66,11 +66,11 @@ what's still open as of this update.
 - **Real research API keys** — the integrations are wired but inactive
   until `TAVILY_API_KEY`, `GOOGLE_MAPS_API_KEY`, `CENSUS_API_KEY`,
   `OPENAI_API_KEY` are added to `.env.local`. See §8 below.
-- **Jason's per-chapter principles videos** — `docs/jason-principles/`
+- **Jason's per-section principles videos** — `docs/jason-principles/`
   is empty. Drafting works without these but the "Jason's voice" layer
   doesn't fire yet.
-- **High Point precedent excerpts** — `docs/high-point-chapters/` has
-  partial coverage. Each chapter without a precedent file falls back
+- **High Point precedent excerpts** — `docs/high-point-sections/` has
+  partial coverage. Each section without a precedent file falls back
   to schema-only drafting (lower quality but functional).
 
 ### Stale items in the rest of this doc
@@ -105,7 +105,7 @@ Today TFB ships 9 capabilities. The High Point Coffee bundle has 16 documents. T
 1. Audit Your Business (checklist)
 2. Model Your Unit Economics (FDD Items 7/19)
 3. Build Your 12-Month Roadmap (Gantt)
-4. Codify Your Operations (17-chapter Operations Manual)
+4. Codify Your Operations (17-section Operations Manual)
 5. Decode the FDD (23 items)
 6. Train Your Team to Replicate ⚠️ *no content yet — natural v1 surface*
 7. Score Real Estate Like a Franchisor
@@ -145,7 +145,7 @@ The data behind all of these clusters into 5 foundational data shapes (see §4 �
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │  src/lib/agent/                                        │   │
 │  │    anthropic.ts   ← shared SDK client + caching        │   │
-│  │    draft.ts       ← chapter draft pipeline (Opus 4.7)  │   │
+│  │    draft.ts       ← section draft pipeline (Opus 4.7)  │   │
 │  │    chat.ts        ← in-portal chat (Sonnet 4.6)        │   │
 │  │    prompt.ts      ← loads jason-agent-prompt.md        │   │
 │  │    voice.ts       ← Whisper transcription              │   │
@@ -183,7 +183,7 @@ The data behind all of these clusters into 5 foundational data shapes (see §4 �
                  ▼
 ┌──────────────────────────────────────────────────────────────┐
 │  Anthropic API                                                 │
-│    Claude Opus 4.7 (1M ctx)  — heavy drafts, full chapters     │
+│    Claude Opus 4.7 (1M ctx)  — heavy drafts, full sections     │
 │    Claude Sonnet 4.6         — chat, classification            │
 │    Whisper API               — voice transcription             │
 └──────────────────────────────────────────────────────────────┘
@@ -195,7 +195,7 @@ The data behind all of these clusters into 5 foundational data shapes (see §4 �
 
 ### Core principle
 
-**The deliverable IS the memory.** Each customer has a directory of markdown-ish files keyed to chapters of the Blueprint. Each file is *simultaneously* the agent's source of truth for that domain AND the draft of that chapter that compiles into the export bundle. No hidden user model. No JSON blob the customer can't read.
+**The deliverable IS the memory.** Each customer has a directory of markdown-ish files keyed to sections of the Blueprint. Each file is *simultaneously* the agent's source of truth for that domain AND the draft of that section that compiles into the export bundle. No hidden user model. No JSON blob the customer can't read.
 
 This pattern is borrowed from the Cline / Cursor "memory bank" convention and Anthropic's released `memory_20250818` tool — both are file-based directories with view/create/update/delete operations.
 
@@ -207,7 +207,7 @@ This pattern is borrowed from the Cline / Cursor "memory bank" convention and An
 public.customer_memory
   user_id          uuid        FK auth.users
   file_slug        text        e.g. "business_overview", "unit_economics"
-  content_md       text        markdown — both the agent's memory AND a draft chapter
+  content_md       text        markdown — both the agent's memory AND a draft section
   confidence       text        "verified" | "inferred" | "draft"
   last_updated_by  text        "agent" | "user" | "jason" | "scraper"
   created_at       timestamptz
@@ -254,9 +254,9 @@ customer-uploads/
 
 ### Canonical file slugs
 
-These map to chapters of the living Blueprint. New chapters are added by appending to the registry — no schema migration needed.
+These map to sections of the living Blueprint. New sections are added by appending to the registry — no schema migration needed.
 
-| Slug | Chapter title | Compiles into deliverable(s) |
+| Slug | Section title | Compiles into deliverable(s) |
 |---|---|---|
 | `business_overview` | Concept & Story | FDD Item 1, Operations Manual §1 |
 | `brand_voice` | Brand Standards | Operations Manual §2, Marketing Fund Manual |
@@ -266,7 +266,7 @@ These map to chapters of the living Blueprint. New chapters are added by appendi
 | `vendor_supply_chain` | Approved Suppliers | Operations Manual §14 |
 | `franchise_economics` | Royalty / Ad Fund / Fees | FDD Items 5+6, Marketing Fund Manual, Franchise Agreement |
 | `territory_real_estate` | Site Selection & Territory | Site Selection Guide, FDD Item 12 |
-| `training_program` | Training & Certification | Train chapter (currently empty) |
+| `training_program` | Training & Certification | Train section (currently empty) |
 | `franchisee_profile` | Ideal Franchisee | Qualify Matrix, Discovery Day deck |
 | `compliance_legal` | FDD Posture & State Strategy | Decode FDD, Franchise Agreement scaffolding |
 | `marketing_fund` | Ad Fund Governance | Marketing Fund Manual |
@@ -283,7 +283,7 @@ These map to chapters of the living Blueprint. New chapters are added by appendi
 
 | Use case | Model | Why |
 |---|---|---|
-| Heavy chapter drafting | `claude-opus-4-7` | 1M context — fits Jason's playbooks + High Point precedent + customer's full Memory in a single call. Adaptive thinking with `effort: "high"` or `"xhigh"`. |
+| Heavy section drafting | `claude-opus-4-7` | 1M context — fits Jason's playbooks + High Point precedent + customer's full Memory in a single call. Adaptive thinking with `effort: "high"` or `"xhigh"`. |
 | In-portal chat assistant | `claude-sonnet-4-6` | Fast, cheap, plenty smart for conversational turns with Memory-aware context. Adaptive thinking with `effort: "medium"`. |
 | Voice transcription | OpenAI Whisper (v1) → Deepgram streaming (v2) | Whisper is cheap and trivial to wire up; Deepgram gives Wispr-Flow-quality realtime later. |
 | Long-tail upload embedding | Voyage 3 (later phase) | Better retrieval quality than OpenAI's embeddings at similar cost. |
@@ -293,9 +293,9 @@ These map to chapters of the living Blueprint. New chapters are added by appendi
 Every agent call structures inputs to maximize prefix reuse. The cache prefix is:
 
 ```
-[ system: AGENTS.md content + jason_principles_<chapter>.md ]   ← cached, 1h TTL
+[ system: AGENTS.md content + jason_principles_<section>.md ]   ← cached, 1h TTL
 [ tools: deterministic toolset (sorted by name) ]                ← cached
-[ messages: High Point precedent for this chapter ]              ← cached, 1h TTL
+[ messages: High Point precedent for this section ]              ← cached, 1h TTL
 [ messages: customer Memory snapshot ]                            ← cached, 5m TTL
 [ messages: the actual question/draft request (volatile) ]        ← uncached
 ```
@@ -306,22 +306,22 @@ Top-level `cache_control: { type: "ephemeral", ttl: "1h" }` on `messages.create(
 
 Lives at `docs/jason-agent-prompt.md` — version-controlled markdown that the agent helper library loads at startup. Co-edited by Eric and Jason. This file is the product's voice.
 
-### Per-chapter prompt addenda
+### Per-section prompt addenda
 
-When Jason records his per-chapter videos, Whisper transcribes them and they're processed into `docs/jason-principles/<chapter_slug>.md` files. The drafting pipeline loads the relevant chapter's principles file alongside the global system prompt:
+When Jason records his per-section videos, Whisper transcribes them and they're processed into `docs/jason-principles/<section_slug>.md` files. The drafting pipeline loads the relevant section's principles file alongside the global system prompt:
 
 ```typescript
 // src/lib/agent/draft.ts
 const systemPrompt = await loadAgentPrompt();          // global Jason voice
-const chapterPrinciples = await loadChapterPrinciples(slug);  // Jason on this topic
-const highPointPrecedent = await loadHighPointChapter(slug);  // canonical "good"
+const sectionPrinciples = await loadSectionPrinciples(slug);  // Jason on this topic
+const highPointPrecedent = await loadHighPointSection(slug);  // canonical "good"
 const memorySnapshot = await getMemorySnapshot(userId);       // what we know
 
-const draft = await draftChapter({
-  system: [systemPrompt, chapterPrinciples].join("\n\n---\n\n"),
+const draft = await draftSection({
+  system: [systemPrompt, sectionPrinciples].join("\n\n---\n\n"),
   precedent: highPointPrecedent,
   memory: memorySnapshot,
-  chapter: slug,
+  section: slug,
 });
 ```
 
@@ -337,7 +337,7 @@ const draft = await draftChapter({
 | `web_search` | Phase 3 | Tavily / Perplexity-style research |
 | `census_demographics` | Phase 3 | Trade-area demographics |
 | `competitor_lookup` | Phase 3 | Google Places / Maps API |
-| `compile_deliverable` | Phase 5 | Convert Memory chapters → DOCX/PPTX |
+| `compile_deliverable` | Phase 5 | Convert Memory sections → DOCX/PPTX |
 
 ---
 
@@ -362,7 +362,7 @@ Each phase commits to `main` with hidden routes (e.g. `/portal/lab/*`) so deploy
 - Website-URL field added to assessment + post-purchase form
 - Website scrape service (Playwright + Cheerio + Claude reads home/about page)
 - Voice intake UI under `/portal/lab/intake` (MediaRecorder + Whisper)
-- First chapter draft pipeline: **Brand & Story** chapter, drafted from voice + scrape
+- First section draft pipeline: **Brand & Story** section, drafted from voice + scrape
 - Provenance hover system (invisible until hovered/clicked)
 - Alive UI patterns:
   - Welcome message types out character-by-character
@@ -372,9 +372,9 @@ Each phase commits to `main` with hidden routes (e.g. `/portal/lab/*`) so deploy
 - Chat dock connected to Sonnet 4.6 with Memory-aware context
 - Jason video upload + transcription pipeline (admin route)
 
-**Deliverable:** A test customer can purchase, do a 30-minute voice intake, watch their Brand & Story chapter draft live, and see provenance for every paragraph.
+**Deliverable:** A test customer can purchase, do a 30-minute voice intake, watch their Brand & Story section draft live, and see provenance for every paragraph.
 
-### Phase 2 — Mechanical-but-judgment-light chapters *(8–10 weeks)*
+### Phase 2 — Mechanical-but-judgment-light sections *(8–10 weeks)*
 
 - `business_overview`, `operating_model`, `unit_economics`, `recipes_and_menu`, `vendor_supply_chain`, `franchise_economics`
 - Drop-anything upload zone with streaming classification
@@ -384,18 +384,18 @@ Each phase commits to `main` with hidden routes (e.g. `/portal/lab/*`) so deploy
 
 **Deliverable:** Tier 1 customer can take a Blueprint from 0% → ~60% attorney-ready without ever talking to Jason.
 
-### Phase 3 — Research-heavy chapters *(10–14 weeks)*
+### Phase 3 — Research-heavy sections *(10–14 weeks)*
 
 - Web search tool integration (Tavily or Perplexity API)
 - Mapbox / Google Places integration for trade-area + competitor analysis
 - Census + BLS demographics
-- `market_strategy` and `competitor_landscape` chapters
+- `market_strategy` and `competitor_landscape` sections
 - Site Broker Scorecard generator (uses real estate APIs)
 - Tier-aware: Tier 1 gets agent-only output with "Jason recommends review" callout; Tier 2/3 routes through Jason for redlines.
 
-### Phase 4 — Legal-sensitive chapters *(10–14 weeks)*
+### Phase 4 — Legal-sensitive sections *(10–14 weeks)*
 
-- `compliance_legal` chapter with state-by-state registration matrix
+- `compliance_legal` section with state-by-state registration matrix
 - Franchise Agreement scaffolding (templated, attorney-required-review banner)
 - `marketing_fund`, `employee_handbook`, `reimbursement_policy`
 - Attorney handoff workflow:
@@ -407,13 +407,13 @@ Each phase commits to `main` with hidden routes (e.g. `/portal/lab/*`) so deploy
 - DOCX generation (`docx` npm library)
 - PPTX generation (`pptxgenjs`)
 - Bundle export: 14–16 polished deliverables in High Point format, downloadable as zip
-- Attorney-readiness scoring (per-chapter checklist)
+- Attorney-readiness scoring (per-section checklist)
 
 ### Phase 6 — Tier 2/3 mode *(ongoing)*
 
 - Jason redline UI (admin-only review of customer drafts)
-- Calendly handoffs ("you're stuck on Chapter X — book Jason")
-- Per-chapter "Jason approved" stamp
+- Calendly handoffs ("you're stuck on Section X — book Jason")
+- Per-section "Jason approved" stamp
 - Live coaching call notes feed back into Memory
 
 ---
@@ -424,8 +424,8 @@ Each phase commits to `main` with hidden routes (e.g. `/portal/lab/*`) so deploy
 |---|---|
 | `docs/agentic-portal-buildout.md` | This file. Always update first when scope changes. |
 | `docs/jason-agent-prompt.md` | Global system prompt for the Jason agent. Co-edited by Eric + Jason. |
-| `docs/jason-principles/<chapter>.md` | Per-chapter Jason video transcripts, structured as principles. Generated by the video pipeline; reviewable as markdown. |
-| `docs/high-point-chapters/<chapter>.md` | High Point precedent excerpts used as few-shot examples. Curated subset of the actual High Point bundle. |
+| `docs/jason-principles/<section>.md` | Per-section Jason video transcripts, structured as principles. Generated by the video pipeline; reviewable as markdown. |
+| `docs/high-point-sections/<section>.md` | High Point precedent excerpts used as few-shot examples. Curated subset of the actual High Point bundle. |
 | `src/lib/agent/*.ts` | Agent runtime: SDK client, prompts, drafting, chat, voice, scrape. All server-side only. |
 | `src/lib/memory/*.ts` | Memory CRUD + provenance helpers. Used by both agent code and UI server components. |
 | `src/lib/calc/*.ts` | Deterministic math (FDD totals, royalty calc, financial model). NEVER call an LLM from here. |
@@ -478,10 +478,10 @@ CALENDLY_*
 ## 9. Locked decisions (do not relitigate without Jason)
 
 - Voice-first intake (Whisper v1 → Deepgram v2 for streaming)
-- Memory always-editable (with confirmation when downstream chapters are affected)
+- Memory always-editable (with confirmation when downstream sections are affected)
 - Single-user workspaces v1 (multi-user is Phase 6+)
 - Agent does maximum work; Jason layered on at higher tiers as reviewer/refiner
-- Build without a workflow audit; Jason's per-chapter videos ARE the workflow audit
+- Build without a workflow audit; Jason's per-section videos ARE the workflow audit
 - Training corpus = High Point only at v1; capture future engagements as paired examples
 - Math is deterministic code, not LLM inference (no confidence badges on numbers)
 - Provenance is invisible by default, on-hover/click only (no UI clutter)
@@ -495,7 +495,7 @@ CALENDLY_*
 
 - Q10 — Attorney handoff: partnership / packet / punt?
 - Q11 — POS integrations (Square / Toast / QuickBooks): Phase 3 or skip?
-- Additions to the 9 (Marketing Fund Manual, Employee Handbook, etc.) — promote to first-class capabilities or treat as bundled chapters of one of the 9?
+- Additions to the 9 (Marketing Fund Manual, Employee Handbook, etc.) — promote to first-class capabilities or treat as bundled sections of one of the 9?
 - Tier 2/3 unique value beyond Jason coaching calls — bespoke benchmarks? Industry comp data? Attorney-network access?
 
 ---

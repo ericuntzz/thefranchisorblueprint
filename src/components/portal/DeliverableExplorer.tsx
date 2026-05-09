@@ -4,18 +4,18 @@
  * DeliverableExplorer — primary "build + ship" surface on the dashboard.
  *
  * Replaces the prior pair of components:
- *   - DeliverableChecklist (per-phase chapter readiness grid — flat)
+ *   - DeliverableChecklist (per-phase section readiness grid — flat)
  *   - ExportsSection ("Download what you've built" — flat)
  *
  * with a single nested structure: deliverable cards expand to reveal
- * the contributing chapter rows; each chapter row expands again to
+ * the contributing section rows; each section row expands again to
  * show the full editor inline. Same surface, deliverable-aware
- * grouping, no jumping to /portal/lab/blueprint or /portal/chapter/[slug]
+ * grouping, no jumping to /portal/lab/blueprint or /portal/section/[slug]
  * to edit.
  *
  * Two-level expansion model:
  *   Level 1: One deliverable expanded at a time (others stay collapsed)
- *   Level 2: Inside an expanded deliverable, one chapter editor open
+ *   Level 2: Inside an expanded deliverable, one section editor open
  *            at a time (others show their summary row)
  *
  * Bundle download UI (multi-select + ZIP) preserved at the top of
@@ -44,36 +44,36 @@ import { MEMORY_FILE_TITLES } from "@/lib/memory/files";
 import type { MemoryFileSlug } from "@/lib/memory/files";
 import type { DeliverableReview } from "@/lib/export/deliverable-readiness";
 import type { DeliverableId } from "@/lib/export/types";
-import type { ChapterReadiness } from "@/lib/memory/readiness";
-import { ChapterFieldsCard } from "@/components/portal/ChapterFieldsCard";
+import type { SectionReadiness } from "@/lib/memory/readiness";
+import { SectionFieldsCard } from "@/components/portal/SectionFieldsCard";
 import { DeliverablePreviewModal } from "@/components/portal/DeliverablePreviewModal";
 import { AnimatedDisclosure } from "@/components/ui/AnimatedDisclosure";
 import type {
-  ChapterAttachment,
+  SectionAttachment,
   CustomerMemoryProvenance,
 } from "@/lib/supabase/types";
-import type { ChapterSchema } from "@/lib/memory/schemas";
+import type { SectionSchema } from "@/lib/memory/schemas";
 import type { MemoryFieldsMap } from "@/lib/calc";
 
 type FieldValue = string | number | boolean | string[] | null;
 type ConfidenceValue = "verified" | "inferred" | "draft" | "empty";
 
-/** Shape of everything one ChapterCard needs to render inline. The
- *  dashboard server component pre-computes all of these per chapter
+/** Shape of everything one SectionCard needs to render inline. The
+ *  dashboard server component pre-computes all of these per section
  *  so the client component is a pure render. */
-export type ChapterDataBundle = {
+export type SectionDataBundle = {
   slug: MemoryFileSlug;
   title: string;
   contentMd: string;
   confidence: ConfidenceValue;
-  readinessState: ChapterReadiness["state"];
+  readinessState: SectionReadiness["state"];
   lastUpdatedBy: "agent" | "user" | "jason" | "scraper" | null;
   updatedAt: string | null;
   provenance: CustomerMemoryProvenance[];
-  attachments: ChapterAttachment[];
-  allAttachmentsByChapter: Array<{
+  attachments: SectionAttachment[];
+  allAttachmentsBySection: Array<{
     slug: MemoryFileSlug;
-    attachments: ChapterAttachment[];
+    attachments: SectionAttachment[];
   }>;
   fields: Record<string, FieldValue>;
   fieldStatus?: Record<
@@ -92,8 +92,8 @@ export type ChapterDataBundle = {
       note?: string;
     }
   >;
-  otherChaptersFields: MemoryFieldsMap;
-  schema: ChapterSchema | null;
+  otherSectionsFields: MemoryFieldsMap;
+  schema: SectionSchema | null;
 };
 
 export type DeliverableViewModel = {
@@ -102,7 +102,7 @@ export type DeliverableViewModel = {
   description: string;
   kind: "doc" | "slides";
   review: DeliverableReview;
-  sourceChapters: ChapterDataBundle[];
+  sourceSections: SectionDataBundle[];
 };
 
 type SaveFieldsArgs = {
@@ -147,7 +147,7 @@ export function DeliverableExplorer({
   const [selected, setSelected] = useState<Set<DeliverableId>>(new Set());
   const [bundling, setBundling] = useState(false);
   const [bundleErr, setBundleErr] = useState<string | null>(null);
-  // Two-level expansion: only one deliverable open, only one chapter
+  // Two-level expansion: only one deliverable open, only one section
   // editor open inside that deliverable. First-run accounts get the
   // first deliverable expanded automatically so they have one obvious
   // place to start; otherwise everything stays collapsed and the
@@ -155,7 +155,7 @@ export function DeliverableExplorer({
   const [expandedDeliverableId, setExpandedDeliverableId] = useState<
     DeliverableId | null
   >(isFirstRun && deliverables.length > 0 ? deliverables[0].id : null);
-  const [openChapterSlug, setOpenChapterSlug] = useState<MemoryFileSlug | null>(
+  const [openSectionSlug, setOpenSectionSlug] = useState<MemoryFileSlug | null>(
     null,
   );
   // Preview-before-download modal state. Either previewing a single
@@ -194,11 +194,11 @@ export function DeliverableExplorer({
   }
   function toggleDeliverable(id: DeliverableId) {
     setExpandedDeliverableId((prev) => (prev === id ? null : id));
-    // Collapsing a deliverable also closes any chapter editor inside it.
-    setOpenChapterSlug(null);
+    // Collapsing a deliverable also closes any section editor inside it.
+    setOpenSectionSlug(null);
   }
-  function toggleChapter(slug: MemoryFileSlug) {
-    setOpenChapterSlug((prev) => (prev === slug ? null : slug));
+  function toggleSection(slug: MemoryFileSlug) {
+    setOpenSectionSlug((prev) => (prev === slug ? null : slug));
   }
 
   async function downloadBundle() {
@@ -330,10 +330,10 @@ export function DeliverableExplorer({
             onToggleExpand={() => toggleDeliverable(d.id)}
             isSelected={selected.has(d.id)}
             onToggleSelect={() => toggleSelect(d.id)}
-            openChapterSlug={
-              expandedDeliverableId === d.id ? openChapterSlug : null
+            openSectionSlug={
+              expandedDeliverableId === d.id ? openSectionSlug : null
             }
-            onToggleChapter={toggleChapter}
+            onToggleSection={toggleSection}
             saveFields={saveFields}
             saveSection={saveSection}
             setConfidence={setConfidence}
@@ -384,8 +384,8 @@ function DeliverableEntry({
   onToggleExpand,
   isSelected,
   onToggleSelect,
-  openChapterSlug,
-  onToggleChapter,
+  openSectionSlug,
+  onToggleSection,
   saveFields,
   saveSection,
   setConfidence,
@@ -396,8 +396,8 @@ function DeliverableEntry({
   onToggleExpand: () => void;
   isSelected: boolean;
   onToggleSelect: () => void;
-  openChapterSlug: MemoryFileSlug | null;
-  onToggleChapter: (slug: MemoryFileSlug) => void;
+  openSectionSlug: MemoryFileSlug | null;
+  onToggleSection: (slug: MemoryFileSlug) => void;
   saveFields: (args: SaveFieldsArgs) => Promise<void>;
   saveSection: (args: SaveSectionArgs) => Promise<void>;
   setConfidence: (args: SetConfidenceArgs) => Promise<void>;
@@ -494,7 +494,7 @@ function DeliverableEntry({
         </button>
       </div>
 
-      {/* Expanded content: readiness card + chapter rows. Wrapped
+      {/* Expanded content: readiness card + section rows. Wrapped
           in AnimatedDisclosure so the card opens with a smooth
           height transition instead of snapping. The 320ms duration
           + ease-out feels intentional without being slow — Linear /
@@ -504,19 +504,19 @@ function DeliverableEntry({
         <div className="border-t border-card-border bg-white px-4 sm:px-5 py-4 space-y-4">
           <ReadinessBar
             review={review}
-            onJumpToChapter={(slug) => onToggleChapter(slug)}
-            openChapterSlug={openChapterSlug}
+            onJumpToSection={(slug) => onToggleSection(slug)}
+            openSectionSlug={openSectionSlug}
           />
 
           <div className="space-y-3">
-            {deliverable.sourceChapters.map((chapter) => {
-              const isOpen = openChapterSlug === chapter.slug;
+            {deliverable.sourceSections.map((section) => {
+              const isOpen = openSectionSlug === section.slug;
               return (
-                <ChapterRow
-                  key={chapter.slug}
-                  chapter={chapter}
+                <SectionRow
+                  key={section.slug}
+                  section={section}
                   isOpen={isOpen}
-                  onToggle={() => onToggleChapter(chapter.slug)}
+                  onToggle={() => onToggleSection(section.slug)}
                   saveFields={saveFields}
                   saveSection={saveSection}
                   setConfidence={setConfidence}
@@ -561,15 +561,15 @@ function DeliverableEntry({
 
 function ReadinessBar({
   review,
-  onJumpToChapter,
-  openChapterSlug,
+  onJumpToSection,
+  openSectionSlug,
 }: {
   review: DeliverableReview;
-  onJumpToChapter: (slug: MemoryFileSlug) => void;
-  openChapterSlug: MemoryFileSlug | null;
+  onJumpToSection: (slug: MemoryFileSlug) => void;
+  openSectionSlug: MemoryFileSlug | null;
 }) {
   const pct = review.overallPct;
-  const allGaps = review.chapters.flatMap((c) => c.gaps);
+  const allGaps = review.sections.flatMap((c) => c.gaps);
   const visibleGaps = allGaps.slice(0, 12);
   return (
     <div className="rounded-xl border border-card-border bg-cream/30 p-4">
@@ -604,18 +604,18 @@ function ReadinessBar({
           <ul className="space-y-1 list-disc pl-5 marker:text-amber-600">
             {visibleGaps.map((g) => (
               <li
-                key={`${g.chapterSlug}.${g.fieldName}`}
+                key={`${g.sectionSlug}.${g.fieldName}`}
                 className="text-sm text-navy"
               >
                 <button
                   type="button"
                   onClick={() => {
-                    if (openChapterSlug !== g.chapterSlug) {
-                      onJumpToChapter(g.chapterSlug);
+                    if (openSectionSlug !== g.sectionSlug) {
+                      onJumpToSection(g.sectionSlug);
                     }
                     window.setTimeout(() => {
                       const target = document.getElementById(
-                        `chapter-row-${g.chapterSlug}`,
+                        `section-row-${g.sectionSlug}`,
                       );
                       if (target) {
                         target.scrollIntoView({
@@ -630,7 +630,7 @@ function ReadinessBar({
                   <span className="font-semibold">{g.fieldLabel}</span>
                   <span className="text-grey-3 text-xs">
                     {" "}
-                    · {g.chapterTitle}
+                    · {g.sectionTitle}
                   </span>
                 </button>
               </li>
@@ -647,24 +647,24 @@ function ReadinessBar({
   );
 }
 
-function ChapterRow({
-  chapter,
+function SectionRow({
+  section,
   isOpen,
   onToggle,
   saveFields,
   saveSection,
   setConfidence,
 }: {
-  chapter: ChapterDataBundle;
+  section: SectionDataBundle;
   isOpen: boolean;
   onToggle: () => void;
   saveFields: (args: SaveFieldsArgs) => Promise<void>;
   saveSection: (args: SaveSectionArgs) => Promise<void>;
   setConfidence: (args: SetConfidenceArgs) => Promise<void>;
 }) {
-  const stateColor = STATE_DOT_COLOR[chapter.readinessState];
+  const stateColor = STATE_DOT_COLOR[section.readinessState];
   // Increment-on-click signal — every Attach press bumps this. The
-  // attachments panel inside ChapterFieldsCard listens for changes
+  // attachments panel inside SectionFieldsCard listens for changes
   // and pops its composer open. Initial 0 = "no intent yet"; any
   // value > 0 means "open the composer." Using an incrementing
   // counter (instead of a boolean) means a second click after the
@@ -678,7 +678,7 @@ function ChapterRow({
 
   return (
     <div
-      id={`chapter-row-${chapter.slug}`}
+      id={`section-row-${section.slug}`}
       className={`rounded-lg border bg-cream/30 overflow-hidden scroll-mt-4 transition-[border-color,background-color,box-shadow] duration-200 ease-out ${
         isOpen
           ? "border-navy/20 bg-white shadow-[0_2px_8px_rgba(30,58,95,0.05)]"
@@ -688,7 +688,7 @@ function ChapterRow({
       {/* Header is a flex row, not a single button — we need the
           Attach button to be its own click target alongside Open
           (which toggles), and nesting buttons is invalid. The
-          title region is its own button so clicking the chapter
+          title region is its own button so clicking the section
           name still toggles the row. */}
       <div className="flex items-center gap-2 px-4 py-3">
         <button
@@ -702,7 +702,7 @@ function ChapterRow({
             aria-hidden="true"
           />
           <span className="flex-1 min-w-0 text-navy font-semibold text-sm truncate">
-            {MEMORY_FILE_TITLES[chapter.slug]}
+            {MEMORY_FILE_TITLES[section.slug]}
           </span>
         </button>
 
@@ -718,7 +718,7 @@ function ChapterRow({
         <button
           type="button"
           onClick={handleAttach}
-          aria-label="Attach a file or link to this chapter"
+          aria-label="Attach a file or link to this section"
           className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.1em] text-navy font-bold whitespace-nowrap px-2.5 py-1 rounded-md border border-navy/15 bg-white hover:bg-cream hover:border-gold/40 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
         >
           <Paperclip size={11} className="text-gold-warm" />
@@ -743,7 +743,7 @@ function ChapterRow({
         </button>
       </div>
 
-      {/* Data-entry view (ChapterFieldsCard) — fields editor +
+      {/* Data-entry view (SectionFieldsCard) — fields editor +
           attachments + bridge to the Blueprint page for prose
           review. Prose lives on /portal/lab/blueprint where the
           customer can read what's been drafted and polish it
@@ -751,17 +751,17 @@ function ChapterRow({
           trees mounted just to animate. */}
       <AnimatedDisclosure open={isOpen} duration={320} unmountWhenClosed>
         <div className="border-t border-card-border bg-white p-4 sm:p-5">
-          <ChapterFieldsCard
-            slug={chapter.slug}
-            title={chapter.title}
-            schema={chapter.schema}
-            attachments={chapter.attachments}
-            fields={chapter.fields}
-            fieldStatus={chapter.fieldStatus}
-            otherChaptersFields={chapter.otherChaptersFields}
-            lastUpdatedBy={chapter.lastUpdatedBy}
-            updatedAt={chapter.updatedAt}
-            provenance={chapter.provenance}
+          <SectionFieldsCard
+            slug={section.slug}
+            title={section.title}
+            schema={section.schema}
+            attachments={section.attachments}
+            fields={section.fields}
+            fieldStatus={section.fieldStatus}
+            otherSectionsFields={section.otherSectionsFields}
+            lastUpdatedBy={section.lastUpdatedBy}
+            updatedAt={section.updatedAt}
+            provenance={section.provenance}
             attachOpenSignal={attachSignal}
             saveFields={saveFields}
             saveSection={saveSection}
@@ -774,11 +774,11 @@ function ChapterRow({
 }
 
 // countFilled() helper removed 2026-05-09 — its only consumer was the
-// "11 / 11" text on the chapter row header, which Eric removed as
+// "11 / 11" text on the section row header, which Eric removed as
 // fluff. The same data is conveyed by the readiness dot + the
 // dashboard's overall progress bar.
 
-const STATE_DOT_COLOR: Record<ChapterReadiness["state"], string> = {
+const STATE_DOT_COLOR: Record<SectionReadiness["state"], string> = {
   green: "bg-emerald-500",
   amber: "bg-amber-400",
   red: "bg-amber-400",

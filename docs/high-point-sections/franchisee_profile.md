@@ -2,9 +2,9 @@
 
 > Source: HP_Franchisee_Profile_Scoring_Matrix.docx (full document)
 
-## What a strong Who You Want as a Franchisee chapter looks like
+## What a strong Who You Want as a Franchisee section looks like
 
-A working evaluation framework — typically 5–8 pages — that turns "we know it when we see it" into a defensible, repeatable scoring system. The chapter answers four questions: who you want, who you don't want, how you score them, and how the sales process gates them. The strongest version reads like an internal sales-ops document, not a marketing piece — it's written for the franchisor team running the funnel, not for the candidate.
+A working evaluation framework — typically 5–8 pages — that turns "we know it when we see it" into a defensible, repeatable scoring system. The section answers four questions: who you want, who you don't want, how you score them, and how the sales process gates them. The strongest version reads like an internal sales-ops document, not a marketing piece — it's written for the franchisor team running the funnel, not for the candidate.
 
 ## Structure observed
 

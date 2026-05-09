@@ -7,7 +7,7 @@
  * Design:
  *  - Navy background, cream/white text. Active item is a white pill
  *    with navy text — inversion mirrors the contrast of the rest
- *    of the portal where chapter cards are white on cream.
+ *    of the portal where section cards are white on cream.
  *  - "Continue Building" sits at the top in gold to project the
  *    primary call-to-action; matches the gold "Continue building"
  *    pill on the dashboard so users recognize it as the same path.

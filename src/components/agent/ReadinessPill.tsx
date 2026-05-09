@@ -2,7 +2,7 @@
 
 /**
  * ReadinessPill — the four-state status indicator used everywhere a
- * chapter's "where does this stand?" needs to be visible at a glance.
+ * section's "where does this stand?" needs to be visible at a glance.
  *
  * The four states mirror the deliverable checklist on /portal:
  *

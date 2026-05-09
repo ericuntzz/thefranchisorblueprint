@@ -5,7 +5,7 @@
  * redlines (resolve / delete inline) and a "leave new note" composer
  * with severity dropdown.
  *
- * Wired to /api/admin/redlines (CRUD) and /api/admin/approve-chapter
+ * Wired to /api/admin/redlines (CRUD) and /api/admin/approve-section
  * (Jason-approved stamp).
  */
 
@@ -18,13 +18,13 @@ import {
   Stamp,
   Trash2,
 } from "lucide-react";
-import type { ChapterRedline } from "@/lib/supabase/types";
+import type { SectionRedline } from "@/lib/supabase/types";
 import type { MemoryFileSlug } from "@/lib/memory/files";
 
 type Props = {
   userId: string;
   slug: MemoryFileSlug;
-  initialRedlines: ChapterRedline[];
+  initialRedlines: SectionRedline[];
   jasonApprovedAt: string | null;
 };
 
@@ -34,7 +34,7 @@ export function RedlineThread({
   initialRedlines,
   jasonApprovedAt: initialApprovedAt,
 }: Props) {
-  const [redlines, setRedlines] = useState<ChapterRedline[]>(initialRedlines);
+  const [redlines, setRedlines] = useState<SectionRedline[]>(initialRedlines);
   const [approvedAt, setApprovedAt] = useState<string | null>(initialApprovedAt);
   const [comment, setComment] = useState("");
   const [severity, setSeverity] = useState<"info" | "warning" | "blocker">(
@@ -61,7 +61,7 @@ export function RedlineThread({
         const j = await res.json().catch(() => ({}));
         throw new Error((j as { error?: string }).error ?? `HTTP ${res.status}`);
       }
-      const j = (await res.json()) as { redline: ChapterRedline };
+      const j = (await res.json()) as { redline: SectionRedline };
       setRedlines((prev) => [j.redline, ...prev]);
       setComment("");
     } catch (e) {
@@ -120,7 +120,7 @@ export function RedlineThread({
     setErr(null);
     try {
       const method = approvedAt ? "DELETE" : "POST";
-      const res = await fetch("/api/admin/approve-chapter", {
+      const res = await fetch("/api/admin/approve-section", {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, slug }),

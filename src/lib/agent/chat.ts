@@ -5,7 +5,7 @@
  * The chat dock at the bottom-right of every portal page calls into here.
  * It's much shorter and cheaper per turn than the drafting pipeline:
  * we want sub-second time-to-first-token, conversational tone, and the
- * ability to reference any Memory chapter the customer has built up.
+ * ability to reference any Memory section the customer has built up.
  *
  * Tool use (v1.5b): Jason can call `update_memory_field` mid-conversation
  * to write structured-field changes the moment a customer states a fact.
@@ -80,7 +80,7 @@ const MAX_TOOL_ROUNDS = 6;
 
 /**
  * Chat-mode style addendum. The base system prompt is tuned for
- * drafting chapter-quality long-form output; in the chat dock that
+ * drafting section-quality long-form output; in the chat dock that
  * register is way too verbose and reads as condescending. This
  * second system block tells Jason to talk like a senior advisor
  * over Slack: tight, plain, no preamble, no recap, no bullet
@@ -92,7 +92,7 @@ const MAX_TOOL_ROUNDS = 6;
  */
 const CHAT_STYLE_DIRECTIVE = `
 <chat_mode>
-You're in the in-portal chat dock right now, not drafting a chapter. The customer reads your reply between other things — they don't want a polished essay, they want the answer.
+You're in the in-portal chat dock right now, not drafting a section. The customer reads your reply between other things — they don't want a polished essay, they want the answer.
 
 Style rules for chat:
 - Default to 1–3 sentences. Stretch only when the question genuinely needs the air.

@@ -69,7 +69,7 @@ export function RefundWindowOutreachEmail({
         </Heading>
         <Text style={{ ...paragraphStyle, margin: "0 0 8px" }}>
           Hit reply and tell me where. One sentence is enough. I&apos;ve
-          helped hundreds of founders through exactly these chapters, and
+          helped hundreds of founders through exactly these sections, and
           I can usually unblock you in one email or a 15-minute call.
         </Text>
       </Section>

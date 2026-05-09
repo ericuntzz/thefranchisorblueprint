@@ -1,7 +1,7 @@
 /**
- * Phase grouping over the 16-chapter Memory layer.
+ * Phase grouping over the 16-section Memory layer.
  *
- * The chapters are the deliverable structure (each compiles into
+ * The sections are the deliverable structure (each compiles into
  * specific FDD items + manual sections). Phases are the navigation
  * structure shown to the customer — fewer, broader buckets that map to
  * how a founder actually thinks about franchising:
@@ -15,11 +15,11 @@
  *
  * The Question Queue iterates through phases in order. The Command
  * Center renders the deliverable checklist grouped this way. Customers
- * never see "16 chapters" as the front-line structure — they see the
- * six phases, with chapters as the substructure.
+ * never see "16 sections" as the front-line structure — they see the
+ * six phases, with sections as the substructure.
  *
  * Why phase grouping lives here (not in schemas.ts): schemas describe
- * what each chapter *is*; phases describe how the customer *navigates*.
+ * what each section *is*; phases describe how the customer *navigates*.
  * Two different audiences (Jason-the-SME vs. the customer-flow), kept
  * separate so we can reorder phases without touching the schema work.
  */
@@ -42,7 +42,7 @@ export type PhaseDef = {
   title: string;
   /** One-sentence subtitle for the phase card. */
   subtitle: string;
-  /** Chapter slugs that roll up into this phase, in display order. */
+  /** Section slugs that roll up into this phase, in display order. */
   slugs: MemoryFileSlug[];
 };
 
@@ -95,7 +95,7 @@ export const PHASES: PhaseDef[] = [
   },
 ];
 
-/** Lookup: which phase does a given chapter belong to? Cached at module load. */
+/** Lookup: which phase does a given section belong to? Cached at module load. */
 const PHASE_BY_SLUG = new Map<MemoryFileSlug, PhaseDef>();
 for (const phase of PHASES) {
   for (const slug of phase.slugs) {
@@ -103,26 +103,26 @@ for (const phase of PHASES) {
   }
 }
 
-/** Phase containing this chapter, or null if the chapter is unphased. */
+/** Phase containing this section, or null if the section is unphased. */
 export function phaseForSlug(slug: MemoryFileSlug): PhaseDef | null {
   return PHASE_BY_SLUG.get(slug) ?? null;
 }
 
-/** Pretty title for one chapter — re-export for convenience so phase
+/** Pretty title for one section — re-export for convenience so phase
  *  callers don't need to import MEMORY_FILE_TITLES separately. */
-export function chapterTitle(slug: MemoryFileSlug): string {
+export function sectionTitle(slug: MemoryFileSlug): string {
   return MEMORY_FILE_TITLES[slug];
 }
 
 /**
- * Per-phase "anchor chapter" — the single chapter inside the phase
+ * Per-phase "anchor section" — the single section inside the phase
  * the customer is most likely to have a real document for. Used by
  * the Question Queue's phase-transition card to surface the right
  * doc-prompt at exactly the moment they cross into a new phase
  * (e.g., entering Economics → "Got a P&L?"). Picking one anchor
  * per phase (rather than all of them) keeps the transition card
  * focused on the highest-leverage upload — fan-out via auto-classify
- * spreads the doc across the rest of the phase's chapters anyway.
+ * spreads the doc across the rest of the phase's sections anyway.
  *
  * Choices reflect what's most-likely-to-already-exist in a real
  * operator's filing cabinet:
@@ -143,7 +143,7 @@ export const PHASE_DOC_ANCHOR: Record<PhaseId, MemoryFileSlug> = {
 };
 
 /**
- * Sanity check at module load — every chapter slug should belong to
+ * Sanity check at module load — every section slug should belong to
  * exactly one phase. If we add a slug to MEMORY_FILES without
  * registering it here, the next dev-server restart logs a warning so
  * the omission gets caught fast.
@@ -155,7 +155,7 @@ import { MEMORY_FILES } from "./files";
   const missing = MEMORY_FILES.filter((s) => !phasedSlugs.has(s));
   if (missing.length > 0) {
     console.warn(
-      `[memory/phases] These chapter slugs are not in any phase — they won't appear in the Question Queue or Command Center:`,
+      `[memory/phases] These section slugs are not in any phase — they won't appear in the Question Queue or Command Center:`,
       missing,
     );
   }

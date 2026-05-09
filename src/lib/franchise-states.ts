@@ -396,7 +396,7 @@ export const allStates: FranchiseState[] = [
     topMetros: ["Milwaukee", "Madison", "Green Bay", "Kenosha"],
     populationMillions: 5.9,
     hookFact:
-      "Wisconsin's Fair Dealership Law (chapter 135) is one of the strongest franchisee-protection statutes in the country — review your termination and non-renewal language carefully before filing.",
+      "Wisconsin's Fair Dealership Law (section 135) is one of the strongest franchisee-protection statutes in the country — review your termination and non-renewal language carefully before filing.",
     uniqueFacts: [
       "The Wisconsin Fair Dealership Law extends substantial post-sale protections to franchisees, materially affecting how you draft Item 17 of the FDD.",
       "Madison and Milwaukee both have strong food service and casual dining franchise penetration — the state's tavern and supper club culture creates familiarity with operator economics.",
@@ -495,7 +495,7 @@ export const allStates: FranchiseState[] = [
     hookFact:
       "Iowa is one of the most franchisee-protective states in the country — its Iowa Franchise Act is sometimes called the toughest franchise relationship statute in the U.S.",
     uniqueFacts: [
-      "The Iowa Franchise Act (Chapter 537A) requires good cause for termination and provides extended cure rights to franchisees.",
+      "The Iowa Franchise Act (Section 537A) requires good cause for termination and provides extended cure rights to franchisees.",
       "Iowa's stable, well-capitalized operator demographic makes it a strong market for service and home-services franchise categories.",
       "Des Moines has emerged as a quiet financial-services hub, generating a steady pool of executive franchise candidates.",
     ],

@@ -62,7 +62,7 @@ export default function BlueprintStrategyCallPage() {
                   {
                     Icon: Sparkles,
                     t: "Next 5 min: Walk through the system",
-                    d: "We show you exactly what's inside The Blueprint — the 9 frameworks, the 17-chapter operations manual, the 150-point readiness checklist — so you know what you're getting before you buy.",
+                    d: "We show you exactly what's inside The Blueprint — the 9 frameworks, the 17-section operations manual, the 150-point readiness checklist — so you know what you're getting before you buy.",
                   },
                   {
                     Icon: Calendar,

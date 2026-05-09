@@ -1,9 +1,9 @@
 /**
- * Chapter draft pipeline.
+ * Section draft pipeline.
  *
- * Single entry point: `draftChapter()`. Loads the customer's Memory,
+ * Single entry point: `draftSection()`. Loads the customer's Memory,
  * Jason's principles, and the High Point precedent for the requested
- * chapter; calls Claude Opus 4.7 with adaptive thinking; returns the
+ * section; calls Claude Opus 4.7 with adaptive thinking; returns the
  * drafted markdown with provenance entries the caller can persist.
  *
  * Streaming variant for when we want to surface progress in the UI live.
@@ -30,7 +30,7 @@ import {
   readMemoryFile,
   type ProvenanceEntry,
 } from "@/lib/memory";
-import type { ChapterAttachment } from "@/lib/supabase/types";
+import type { SectionAttachment } from "@/lib/supabase/types";
 import {
   hasLockedSpans,
   lockedSpansMissing,
@@ -38,7 +38,7 @@ import {
   spliceMissingLocksBack,
 } from "@/lib/memory/locks";
 import { extractFieldsFromContent } from "./extract-fields";
-import { performChapterResearch } from "./research/preflight";
+import { performSectionResearch } from "./research/preflight";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import type { CustomerMemory } from "@/lib/supabase/types";
 
@@ -66,12 +66,12 @@ export type DraftResult = {
 };
 
 /**
- * Draft (or redraft) a chapter for a specific customer.
+ * Draft (or redraft) a section for a specific customer.
  *
  * The agent reads:
  *   - The global Jason system prompt
- *   - Jason's per-chapter principles (if recorded)
- *   - The High Point precedent for this chapter (if curated)
+ *   - Jason's per-section principles (if recorded)
+ *   - The High Point precedent for this section (if curated)
  *   - The customer's full Memory snapshot
  *   - The caller's specific instruction (e.g. "draft based on what we have"
  *     or "redraft incorporating these new facts...")
@@ -79,23 +79,23 @@ export type DraftResult = {
  * Returns the drafted markdown with claim anchors AND a list of provenance
  * entries the caller persists alongside.
  */
-export async function draftChapter(args: {
+export async function draftSection(args: {
   userId: string;
   slug: MemoryFileSlug;
   /** Free-form instruction for this draft pass. */
   instruction: string;
-  /** Override the default effort level (e.g. "max" for a critical chapter). */
+  /** Override the default effort level (e.g. "max" for a critical section). */
   effort?: EffortLevel;
   /**
-   * Cross-chapter attachments the customer explicitly opted-in to via
-   * the pre-draft modal. Merged with the chapter's own attachments
+   * Cross-section attachments the customer explicitly opted-in to via
+   * the pre-draft modal. Merged with the section's own attachments
    * (de-duped by id) for Opus's prompt. Each entry includes
-   * `fromSlug` so the prompt can label "from another chapter" so Opus
-   * knows it's external context, not chapter-native source material.
+   * `fromSlug` so the prompt can label "from another section" so Opus
+   * knows it's external context, not section-native source material.
    */
   additionalAttachments?: Array<{
     fromSlug: MemoryFileSlug;
-    attachment: ChapterAttachment;
+    attachment: SectionAttachment;
   }>;
 }): Promise<DraftResult> {
   const { userId, slug, instruction } = args;
@@ -104,7 +104,7 @@ export async function draftChapter(args: {
   const [
     { systemPrompt, groundingMessage },
     memorySnapshot,
-    existingChapter,
+    existingSection,
     attachments,
     research,
   ] = await Promise.all([
@@ -112,25 +112,25 @@ export async function draftChapter(args: {
     getMemorySnapshotForPrompt(userId),
     readMemoryFile(userId, slug),
     readAttachments(userId, slug),
-    // Pre-draft research bundle for chapters that benefit from
+    // Pre-draft research bundle for sections that benefit from
     // external data (market_strategy, competitor_landscape,
     // territory_real_estate). Best-effort; returns empty when
     // env-gated APIs aren't configured.
     runResearchPreflight(userId, slug),
   ]);
 
-  // If the chapter already has user-locked spans (the customer has
+  // If the section already has user-locked spans (the customer has
   // hand-edited prose at some point), we MUST preserve them verbatim
   // through the redraft. Build an explicit instruction for Opus and
   // post-validate after the response.
-  const previousContent = existingChapter?.content_md ?? "";
+  const previousContent = existingSection?.content_md ?? "";
   const previousLocks = previousContent ? parseLockedSpans(previousContent) : [];
   const lockPreservationInstruction =
     previousLocks.length > 0
       ? buildLockPreservationInstruction(previousContent, previousLocks)
       : null;
 
-  const chapterTitle = MEMORY_FILE_TITLES[slug];
+  const sectionTitle = MEMORY_FILE_TITLES[slug];
   const client = getAnthropic();
 
   // Render order is: tools → system → messages. We have no tools here,
@@ -138,7 +138,7 @@ export async function draftChapter(args: {
   // - System prompt: cached 1h (stable across all drafts for all customers
   //   on this deploy).
   // - Grounding message (precedent + principles): cached 1h (stable
-  //   per-chapter across all customers).
+  //   per-section across all customers).
   // - Memory snapshot: cached 5m (stable per-customer across drafts in
   //   the same session).
   // - Instruction: NOT cached (volatile by definition).
@@ -167,26 +167,26 @@ export async function draftChapter(args: {
     content: [
       {
         type: "text",
-        text: `<customer_memory>\nEverything I currently know about the customer's business, organized by chapter. Some chapters are empty — that's where there are gaps to fill.\n\n${memorySnapshot}\n</customer_memory>`,
+        text: `<customer_memory>\nEverything I currently know about the customer's business, organized by section. Some sections are empty — that's where there are gaps to fill.\n\n${memorySnapshot}\n</customer_memory>`,
         cache_control: CACHE_5M,
       },
       ...(research.markdown
         ? ([
             {
               type: "text" as const,
-              text: `<research>\nLive external data gathered for this chapter. Cite any claim derived from this block with \`source_type: "research"\` and put the tool used (Tavily / Google Places / Census) in \`source_ref\`. Don't restate research data verbatim — synthesize and credit.\n\n${research.markdown}\n</research>`,
+              text: `<research>\nLive external data gathered for this section. Cite any claim derived from this block with \`source_type: "research"\` and put the tool used (Tavily / Google Places / Census) in \`source_ref\`. Don't restate research data verbatim — synthesize and credit.\n\n${research.markdown}\n</research>`,
             },
           ] as const)
         : []),
       {
         type: "text",
-        text: `Now draft the **${chapterTitle}** (\`${slug}\`) chapter.\n\nDrafting instruction:\n${instruction}${lockPreservationInstruction ? `\n\n${lockPreservationInstruction}` : ""}${(() => {
-          // Merge chapter-native attachments (always-on) with any
-          // cross-chapter attachments the customer explicitly opted
+        text: `Now draft the **${sectionTitle}** (\`${slug}\`) section.\n\nDrafting instruction:\n${instruction}${lockPreservationInstruction ? `\n\n${lockPreservationInstruction}` : ""}${(() => {
+          // Merge section-native attachments (always-on) with any
+          // cross-section attachments the customer explicitly opted
           // into via the pre-draft modal. De-dupe by id in case an
           // attachment is somehow listed in both buckets.
           const merged: Array<{
-            attachment: ChapterAttachment;
+            attachment: SectionAttachment;
             fromSlug: MemoryFileSlug | null;
           }> = attachments.map((a) => ({ attachment: a, fromSlug: null }));
           const seen = new Set(attachments.map((a) => a.id));
@@ -198,7 +198,7 @@ export async function draftChapter(args: {
           return merged.length > 0
             ? `\n\n${formatAttachmentsForPrompt(merged)}`
             : "";
-        })()}\n\nFormat requirements:\n- Output the chapter as polished markdown.\n- Embed claim anchors as HTML comments: \`<!-- claim:short-id -->\` immediately before each meaningfully sourced paragraph or numeric assertion. Keep the IDs short and unique within the chapter.\n- After the chapter body, output a fenced \`\`\`json block named \`provenance\` containing an array of objects of the form: \`{ "claim_id": "...", "source_type": "voice_session|upload|form|agent_inference|jason_playbook|research|assessment|scraper", "source_ref": "...", "source_excerpt": "..." }\`. One entry per claim_id used in the chapter. Use \`agent_inference\` for any claim derived from other Memory content vs. directly stated by the customer.\n- Where you don't have enough information, leave a clearly marked \`[NEEDS INPUT: short description]\` block — don't fabricate.\n\nDraft the chapter now.`,
+        })()}\n\nFormat requirements:\n- Output the section as polished markdown.\n- Embed claim anchors as HTML comments: \`<!-- claim:short-id -->\` immediately before each meaningfully sourced paragraph or numeric assertion. Keep the IDs short and unique within the section.\n- After the section body, output a fenced \`\`\`json block named \`provenance\` containing an array of objects of the form: \`{ "claim_id": "...", "source_type": "voice_session|upload|form|agent_inference|jason_playbook|research|assessment|scraper", "source_ref": "...", "source_excerpt": "..." }\`. One entry per claim_id used in the section. Use \`agent_inference\` for any claim derived from other Memory content vs. directly stated by the customer.\n- Where you don't have enough information, leave a clearly marked \`[NEEDS INPUT: short description]\` block — don't fabricate.\n\nDraft the section now.`,
       },
     ],
   });
@@ -271,11 +271,11 @@ export async function draftChapter(args: {
 }
 
 /**
- * Pull the chapter markdown and the trailing JSON provenance block apart.
+ * Pull the section markdown and the trailing JSON provenance block apart.
  *
  * Format we instructed the agent to produce:
  *
- *   <chapter markdown body...>
+ *   <section markdown body...>
  *
  *   ```json
  *   provenance
@@ -293,7 +293,7 @@ function parseDraftWithProvenance(text: string): {
   provenance: ProvenanceEntry[];
 } {
   // Match the LAST fenced JSON block — drafts may contain illustrative
-  // JSON inside the chapter body, but the provenance block is always
+  // JSON inside the section body, but the provenance block is always
   // last.
   const fenceRegex = /```json(?:\s*provenance)?\s*\n([\s\S]*?)\n```\s*$/i;
   const match = text.match(fenceRegex);
@@ -372,19 +372,19 @@ function parseDraftWithProvenance(text: string): {
  * uploader pipeline captured (text-file content, scraped link text, or
  * a placeholder for opaque files like PDFs we don't yet parse).
  *
- * The block is wrapped in <chapter_attachments> so Opus sees it as
+ * The block is wrapped in <section_attachments> so Opus sees it as
  * structured input distinct from Memory. This is what powers the "I
  * uploaded our training manual — use it when drafting" workflow.
  */
 function formatAttachmentsForPrompt(
   attachments: Array<{
-    attachment: ChapterAttachment;
+    attachment: SectionAttachment;
     fromSlug: MemoryFileSlug | null;
   }>,
 ): string {
   const blocks = attachments.map(({ attachment: a, fromSlug }, i) => {
     const origin = fromSlug
-      ? `  [from ${fromSlug} chapter]`
+      ? `  [from ${fromSlug} section]`
       : "";
     const head = `${i + 1}. [${a.kind === "file" ? "FILE" : "LINK"}] ${a.label}${a.kind === "link" ? `  (${a.ref})` : ""}${origin}`;
     const excerpt = a.excerpt
@@ -392,21 +392,21 @@ function formatAttachmentsForPrompt(
       : "";
     return `${head}${excerpt}`;
   });
-  return `<chapter_attachments>
-The customer has attached ${attachments.length} reference${attachments.length === 1 ? "" : "s"} for this draft. Items marked "from <slug> chapter" were pulled in by the customer as additional context. Use them as primary source material when relevant.
+  return `<section_attachments>
+The customer has attached ${attachments.length} reference${attachments.length === 1 ? "" : "s"} for this draft. Items marked "from <slug> section" were pulled in by the customer as additional context. Use them as primary source material when relevant.
 
 ${blocks.join("\n\n")}
-</chapter_attachments>`;
+</section_attachments>`;
 }
 
 /**
  * Build the prompt fragment that tells Opus how to handle existing
- * user-locked spans on a redraft. Inlines the prior chapter content so
+ * user-locked spans on a redraft. Inlines the prior section content so
  * the model sees both the locked text it must preserve AND the
  * surrounding agent prose it can rewrite.
  *
  * Why so explicit: the marker convention is unusual, and Opus's
- * default instinct on a "redraft this chapter" prompt is to rewrite
+ * default instinct on a "redraft this section" prompt is to rewrite
  * everything. Without an unambiguous instruction it will paraphrase
  * the customer's words. We post-validate as a safety net, but the
  * goal is to never need the splice.
@@ -421,8 +421,8 @@ function buildLockPreservationInstruction(
         `${i + 1}. id="${s.id}" — ${s.text.slice(0, 140).replace(/\n/g, " ")}${s.text.length > 140 ? "…" : ""}`,
     )
     .join("\n");
-  return `<existing_chapter_with_user_edits>
-The customer has hand-edited this chapter previously. Their exact words are wrapped in HTML-comment markers like:
+  return `<existing_section_with_user_edits>
+The customer has hand-edited this section previously. Their exact words are wrapped in HTML-comment markers like:
 
   <!-- user-locked:abc123 -->
   …customer's words…
@@ -434,7 +434,7 @@ ${lockSummary}
 HARD RULE: Every locked span (markers + content) must appear in your output, byte-for-byte identical to what's below. You may:
   • Rewrite or replace any prose that is NOT inside locked markers.
   • Add new sections before, between, or after locked spans.
-  • Move a locked span to a more appropriate place in the chapter — but the markers and the text inside them stay intact.
+  • Move a locked span to a more appropriate place in the section — but the markers and the text inside them stay intact.
 
 You may NOT:
   • Paraphrase, shorten, or expand text inside the markers.
@@ -444,12 +444,12 @@ You may NOT:
 Here is the existing draft with the locked markers shown:
 
 ${previousContent}
-</existing_chapter_with_user_edits>`;
+</existing_section_with_user_edits>`;
 }
 
 /**
- * Pre-draft research bundle. Reads every chapter's structured fields
- * once (the preflight queries depend on cross-chapter data — e.g.
+ * Pre-draft research bundle. Reads every section's structured fields
+ * once (the preflight queries depend on cross-section data — e.g.
  * competitor_landscape uses business_overview.first_location_address
  * to anchor the Places search). Returns the markdown block + the
  * source list for provenance hints.
@@ -458,7 +458,7 @@ async function runResearchPreflight(
   userId: string,
   slug: MemoryFileSlug,
 ): Promise<{ markdown: string; sourcesUsed: string[] }> {
-  // Skip the round-trip for chapters without any preflight queries.
+  // Skip the round-trip for sections without any preflight queries.
   if (
     slug !== "market_strategy" &&
     slug !== "competitor_landscape" &&
@@ -479,7 +479,7 @@ async function runResearchPreflight(
         unknown
       >;
     }
-    const result = await performChapterResearch({ slug, fieldsBySlug });
+    const result = await performSectionResearch({ slug, fieldsBySlug });
     return result;
   } catch (err) {
     console.warn(

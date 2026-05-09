@@ -8,12 +8,12 @@
  */
 
 import type { BuildContext, DeliverableDoc, DocBlock } from "../types";
-import { chapterFields } from "../context-helpers";
+import { sectionFields } from "../context-helpers";
 import { fmtList, fmtText, isFilled } from "../format";
 
 export function buildCompetitorLandscape(ctx: BuildContext): DeliverableDoc {
-  const competitors = chapterFields(ctx, "competitor_landscape");
-  const overview = chapterFields(ctx, "business_overview");
+  const competitors = sectionFields(ctx, "competitor_landscape");
+  const overview = sectionFields(ctx, "business_overview");
 
   const businessName =
     fmtText(overview.concept_summary).split(/[.\n]/)[0]?.trim() || "Your Franchise";
@@ -47,7 +47,7 @@ export function buildCompetitorLandscape(ctx: BuildContext): DeliverableDoc {
             : ({
                 kind: "callout",
                 text:
-                  "Direct competitors not yet captured. Add them to the competitor_landscape chapter — every candidate asks about them.",
+                  "Direct competitors not yet captured. Add them to the competitor_landscape section — every candidate asks about them.",
                 tone: "warning",
               } as DocBlock),
         ],
@@ -61,7 +61,7 @@ export function buildCompetitorLandscape(ctx: BuildContext): DeliverableDoc {
             : ({
                 kind: "paragraph",
                 text:
-                  "Indirect competitors are the alternatives a customer might choose instead — different categories that solve the same job. Capture them in the competitor_landscape chapter.",
+                  "Indirect competitors are the alternatives a customer might choose instead — different categories that solve the same job. Capture them in the competitor_landscape section.",
               } as DocBlock),
         ],
       },
@@ -98,7 +98,7 @@ export function buildCompetitorLandscape(ctx: BuildContext): DeliverableDoc {
             : ({
                 kind: "paragraph",
                 text:
-                  "Free-form research notes go in the competitor_landscape chapter — observations from store visits, mystery shops, articles, etc.",
+                  "Free-form research notes go in the competitor_landscape section — observations from store visits, mystery shops, articles, etc.",
               } as DocBlock),
         ],
       },

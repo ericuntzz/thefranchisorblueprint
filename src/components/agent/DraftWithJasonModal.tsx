@@ -2,25 +2,25 @@
 
 /**
  * Pre-draft modal — appears when the customer clicks "Draft with Jason"
- * (or "Redraft with Jason") on a chapter card. Lets them seed the
+ * (or "Redraft with Jason") on a section card. Lets them seed the
  * upcoming Opus draft with:
  *
  *   1. Free-form instruction text ("focus on the back-of-house ops",
  *      "use a more formal tone", "we just opened a third location",
  *      etc.) — appended to the default drafting instruction.
  *
- *   2. New file uploads (this chapter's `customer-uploads` bucket).
- *      Posts to /api/agent/chapter-attachment; new attachments appear
- *      in the modal's "for this chapter" list immediately, pre-checked.
+ *   2. New file uploads (this section's `customer-uploads` bucket).
+ *      Posts to /api/agent/section-attachment; new attachments appear
+ *      in the modal's "for this section" list immediately, pre-checked.
  *
  *   3. A checkbox list of every existing attachment across all of
- *      the customer's chapters. This-chapter attachments are
+ *      the customer's sections. This-section attachments are
  *      pre-checked (they'd be loaded automatically anyway).
- *      Attachments on OTHER chapters are unchecked — the customer
+ *      Attachments on OTHER sections are unchecked — the customer
  *      opts in if they want Jason to consider them when drafting.
  *
  * On confirm: calls onConfirm({extraContext, referencedAttachmentIds})
- * which the parent ChapterCard wires up to /api/agent/draft.
+ * which the parent SectionCard wires up to /api/agent/draft.
  *
  * UX rationale (from the TurboTax reference): give the customer a
  * brief, opinionated chance to add context BEFORE the long-running
@@ -42,23 +42,23 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import type { ChapterAttachment } from "@/lib/supabase/types";
+import type { SectionAttachment } from "@/lib/supabase/types";
 import type { FieldDef } from "@/lib/memory/schemas";
 import { SchemaFieldInput } from "./SchemaFieldInput";
 import { MEMORY_FILE_TITLES } from "@/lib/memory/files";
 import type { MemoryFileSlug } from "@/lib/memory/files";
 
-type AttachmentsByChapter = Array<{
+type AttachmentsBySection = Array<{
   slug: MemoryFileSlug;
-  attachments: ChapterAttachment[];
+  attachments: SectionAttachment[];
 }>;
 
 type Props = {
   slug: MemoryFileSlug;
-  chapterTitle: string;
-  thisChapterAttachments: ChapterAttachment[];
-  allAttachmentsByChapter: AttachmentsByChapter;
-  /** True when the parent is mid-redraft (chapter already has prose). */
+  sectionTitle: string;
+  thisSectionAttachments: SectionAttachment[];
+  allAttachmentsBySection: AttachmentsBySection;
+  /** True when the parent is mid-redraft (section already has prose). */
   isRedraft: boolean;
   onClose: () => void;
   onConfirm: (args: {
@@ -69,25 +69,25 @@ type Props = {
 
 export function DraftWithJasonModal({
   slug,
-  chapterTitle,
-  thisChapterAttachments,
-  allAttachmentsByChapter,
+  sectionTitle,
+  thisSectionAttachments,
+  allAttachmentsBySection,
   isRedraft,
   onClose,
   onConfirm,
 }: Props) {
   const [extraContext, setExtraContext] = useState("");
-  // Pre-select every attachment on THIS chapter — Jason loads them
+  // Pre-select every attachment on THIS section — Jason loads them
   // automatically anyway, but checking them here makes the relationship
-  // obvious. Other-chapter attachments start unchecked.
+  // obvious. Other-section attachments start unchecked.
   const [selectedIds, setSelectedIds] = useState<Set<string>>(
-    () => new Set(thisChapterAttachments.map((a) => a.id)),
+    () => new Set(thisSectionAttachments.map((a) => a.id)),
   );
   // Locally-uploaded files added during this modal session — kept here
   // so we don't have to round-trip through the page reload to show
-  // them. They start checked and merge into the "this chapter"
+  // them. They start checked and merge into the "this section"
   // section below.
-  const [sessionUploads, setSessionUploads] = useState<ChapterAttachment[]>([]);
+  const [sessionUploads, setSessionUploads] = useState<SectionAttachment[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadErr, setUploadErr] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -105,7 +105,7 @@ export function DraftWithJasonModal({
 
   // ---- Proactive Jason: pre-draft readiness check ----
   // Fetched once when the modal opens. While loading, we render a
-  // small placeholder. If the chapter is below MIN_DRAFTABLE_SCORE
+  // small placeholder. If the section is below MIN_DRAFTABLE_SCORE
   // (60), we swap the body to a "Jason can draft, but it'll be weak
   // unless we answer these:" panel with inline inputs for the top
   // blockers. Customer can save those, then proceed to drafting.
@@ -159,7 +159,7 @@ export function DraftWithJasonModal({
     };
   }, [slug]);
 
-  /** True iff the chapter is below the draftability threshold AND
+  /** True iff the section is below the draftability threshold AND
    *  the customer hasn't explicitly said "draft anyway". */
   const showBlockerGate =
     !!readiness &&
@@ -182,7 +182,7 @@ export function DraftWithJasonModal({
     try {
       // POST to the queue's saveQueueAnswer is server-action only.
       // For modal use, we hit a thin endpoint via the same route.
-      // Easiest path: reuse /api/agent/chapter-attachment-style
+      // Easiest path: reuse /api/agent/section-attachment-style
       // contract isn't quite right; we need a generic field write.
       // The chat tool's update_memory_field server-side function is
       // best, but it's only invokable through the chat. Simplest:
@@ -244,15 +244,15 @@ export function DraftWithJasonModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose, submitting, uploading]);
 
-  // Merge session uploads into the "this chapter" list so they appear
+  // Merge session uploads into the "this section" list so they appear
   // alongside pre-existing ones with consistent UX.
-  const thisChapterAll = useMemo(
-    () => [...thisChapterAttachments, ...sessionUploads],
-    [thisChapterAttachments, sessionUploads],
+  const thisSectionAll = useMemo(
+    () => [...thisSectionAttachments, ...sessionUploads],
+    [thisSectionAttachments, sessionUploads],
   );
-  const otherChapters = useMemo(
-    () => allAttachmentsByChapter.filter((c) => c.slug !== slug),
-    [allAttachmentsByChapter, slug],
+  const otherSections = useMemo(
+    () => allAttachmentsBySection.filter((c) => c.slug !== slug),
+    [allAttachmentsBySection, slug],
   );
 
   function toggleId(id: string) {
@@ -318,7 +318,7 @@ export function DraftWithJasonModal({
       const fd = new FormData();
       fd.append("slug", slug);
       fd.append("file", file);
-      const res = await fetch("/api/agent/chapter-attachment", {
+      const res = await fetch("/api/agent/section-attachment", {
         method: "POST",
         body: fd,
       });
@@ -326,7 +326,7 @@ export function DraftWithJasonModal({
         const j = await res.json().catch(() => ({}));
         throw new Error((j as { error?: string }).error ?? `HTTP ${res.status}`);
       }
-      const j = (await res.json()) as { attachment: ChapterAttachment };
+      const j = (await res.json()) as { attachment: SectionAttachment };
       // Append + auto-select.
       setSessionUploads((prev) => [...prev, j.attachment]);
       setSelectedIds((prev) => new Set(prev).add(j.attachment.id));
@@ -361,11 +361,11 @@ export function DraftWithJasonModal({
   const hasUnsavedInput =
     extraContext.trim().length > 0 ||
     sessionUploads.length > 0 ||
-    // Selection drift from "default = this chapter's attachments" means
+    // Selection drift from "default = this section's attachments" means
     // the customer has touched the checkbox list.
     !setEqualsByMembership(
       selectedIds,
-      thisChapterAttachments.map((a) => a.id),
+      thisSectionAttachments.map((a) => a.id),
     );
 
   return (
@@ -395,7 +395,7 @@ export function DraftWithJasonModal({
                 {isRedraft ? "Redraft" : "Draft"} with Jason
               </div>
               <h2 className="text-navy font-extrabold text-xl leading-tight">
-                {chapterTitle}
+                {sectionTitle}
               </h2>
             </div>
             <button
@@ -523,19 +523,19 @@ export function DraftWithJasonModal({
             )}
           </div>
 
-          {/* This chapter's attachments */}
-          {thisChapterAll.length > 0 && (
+          {/* This section's attachments */}
+          {thisSectionAll.length > 0 && (
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-xs uppercase tracking-[0.14em] text-gold-text font-bold">
-                  References on this chapter
+                  References on this section
                 </label>
                 <span className="text-[10px] text-grey-3">
                   Pre-selected — Jason loads these by default
                 </span>
               </div>
               <ul className="space-y-1.5">
-                {thisChapterAll.map((a) => (
+                {thisSectionAll.map((a) => (
                   <AttachmentCheckRow
                     key={a.id}
                     attachment={a}
@@ -548,19 +548,19 @@ export function DraftWithJasonModal({
             </div>
           )}
 
-          {/* Other chapters' attachments */}
-          {otherChapters.length > 0 && (
+          {/* Other sections' attachments */}
+          {otherSections.length > 0 && (
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-xs uppercase tracking-[0.14em] text-gold-text font-bold">
-                  References on other chapters
+                  References on other sections
                 </label>
                 <span className="text-[10px] text-grey-3">
                   Tick any that should inform this draft
                 </span>
               </div>
               <ul className="space-y-1.5">
-                {otherChapters.flatMap((c) =>
+                {otherSections.flatMap((c) =>
                   c.attachments.map((a) => (
                     <AttachmentCheckRow
                       key={a.id}
@@ -575,7 +575,7 @@ export function DraftWithJasonModal({
             </div>
           )}
 
-          {thisChapterAll.length === 0 && otherChapters.length === 0 && (
+          {thisSectionAll.length === 0 && otherSections.length === 0 && (
             <p className="text-xs text-grey-3 italic">
               No references uploaded yet. You can drop one in above, or just
               hit &ldquo;Start drafting&rdquo; — Jason will work from your
@@ -625,7 +625,7 @@ export function DraftWithJasonModal({
 /**
  * True iff the set contains exactly the members listed (regardless of
  * order). Used to detect whether the customer has touched the
- * checkbox list — if it's still equal to this-chapter-default, a
+ * checkbox list — if it's still equal to this-section-default, a
  * backdrop click is safe to dismiss.
  */
 function setEqualsByMembership<T>(set: Set<T>, members: T[]): boolean {
@@ -644,9 +644,9 @@ function setEqualsByMembership<T>(set: Set<T>, members: T[]): boolean {
  *
  *   0–6s     Reading your Memory
  *   6–14s    Reviewing references
- *   14s+     Drafting your chapter (held until completion)
+ *   14s+     Drafting your section (held until completion)
  *
- * When the background-job refactor lands (chapter_draft_jobs table +
+ * When the background-job refactor lands (section_draft_jobs table +
  * worker writing real `phase` values), this component swaps to read
  * those values via polling — same UI, real signals.
  *
@@ -668,7 +668,7 @@ function DraftingProgressView({ startedAt }: { startedAt: number }) {
   const phases: Array<{ id: string; label: string; startsAt: number }> = [
     { id: "reading", label: "Reading your Memory", startsAt: 0 },
     { id: "reviewing", label: "Reviewing your references", startsAt: 6 },
-    { id: "drafting", label: "Drafting your chapter", startsAt: 14 },
+    { id: "drafting", label: "Drafting your section", startsAt: 14 },
   ];
 
   const phaseStatus: Array<"done" | "active" | "pending"> = phases.map(
@@ -703,7 +703,7 @@ function DraftingProgressView({ startedAt }: { startedAt: number }) {
       </div>
 
       <h3 className="text-navy font-extrabold text-lg sm:text-xl leading-tight mb-1">
-        Jason is drafting your chapter
+        Jason is drafting your section
       </h3>
       <p className="text-grey-3 text-sm sm:text-[15px] mb-6 max-w-[420px]">
         This typically takes 30–90 seconds. Feel free to keep this open — we&apos;ll show you what&apos;s happening as it goes.
@@ -766,7 +766,7 @@ function AttachmentCheckRow({
   onToggle,
   fromLabel,
 }: {
-  attachment: ChapterAttachment;
+  attachment: SectionAttachment;
   checked: boolean;
   onToggle: () => void;
   fromLabel: string | null;
@@ -813,7 +813,7 @@ function AttachmentCheckRow({
 /**
  * Blocker gate — the proactive-Jason face of the modal.
  *
- * Rendered when the chapter readiness score is below 60. Each
+ * Rendered when the section readiness score is below 60. Each
  * blocker row uses the same SchemaFieldInput primitive the Question
  * Queue uses — same look + same input behavior across surfaces.
  *

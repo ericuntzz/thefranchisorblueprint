@@ -4,7 +4,7 @@
 
 ## What a strong Concept & Story looks like
 
-A short, confident chapter — typically 1.5–3 pages — that orients the reader to who the brand is, what it stands for, and why a franchisee should attach their name to it. It opens with a founder voice, names the operating model in plain terms, and ends with mission/vision/values that are short enough to be memorized. The reader should finish able to answer "what business am I in?" in two sentences.
+A short, confident section — typically 1.5–3 pages — that orients the reader to who the brand is, what it stands for, and why a franchisee should attach their name to it. It opens with a founder voice, names the operating model in plain terms, and ends with mission/vision/values that are short enough to be memorized. The reader should finish able to answer "what business am I in?" in two sentences.
 
 ## Structure observed
 

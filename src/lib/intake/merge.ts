@@ -61,11 +61,11 @@ export async function mergeIntakeForUser(args: {
     return { merged: false };
   }
 
-  // ─── Map snapshot → customer_memory chapters ─────────────────────
+  // ─── Map snapshot → customer_memory sections ─────────────────────
   // We only write fields where the snapshot has high-confidence data.
   // The agent / portal flows can verify and overwrite later.
 
-  // business_overview chapter
+  // business_overview section
   const businessFields: Record<string, string | null> = {};
   if (snapshot.business.name) businessFields.business_name = snapshot.business.name;
   if (snapshot.business.oneLineConcept) businessFields.concept_summary = snapshot.business.oneLineConcept;
@@ -84,7 +84,7 @@ export async function mergeIntakeForUser(args: {
     });
   }
 
-  // brand_voice chapter
+  // brand_voice section
   if (snapshot.business.brandVoice) {
     await writeMemoryFields({
       userId: args.userId,
@@ -95,7 +95,7 @@ export async function mergeIntakeForUser(args: {
     });
   }
 
-  // territory_real_estate chapter — prototype profile + expansion markets
+  // territory_real_estate section — prototype profile + expansion markets
   const territoryFields: Record<string, string | number | string[] | null> = {};
   if (snapshot.prototype.zip) {
     territoryFields.prototype_zip = snapshot.prototype.zip;

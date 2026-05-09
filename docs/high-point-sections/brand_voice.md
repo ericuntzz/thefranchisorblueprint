@@ -2,9 +2,9 @@
 
 > Source: HP_Franchise_Operations_Manual_v3_0.docx (Section 1 Brand Standards & Identity), HP_Location_BuildOut_Manual_v2.docx (Phase 04 Interior Design & Finishes, Phase 08 Brand Imaging Signage & Decor), HP_Employee_Handbook_v2.docx (Welcome + Hospitality Standard for tone-mirroring)
 
-## What a strong Brand Standards chapter looks like
+## What a strong Brand Standards section looks like
 
-A precise, asset-driven chapter — typically 8–15 pages — that defines exactly what the brand looks like, sounds like, and stands for, and how franchisees are permitted to use brand assets. The strongest version covers four layers: (1) verbal identity (mission, vision, values, voice), (2) visual identity (logo, colors, typography, photography), (3) physical identity (interior design palette, materials, lighting, signage), and (4) usage rules (what franchisees may and may not do without approval). The job is to make brand consistency mechanical: any compliant franchisee can produce on-brand output by following the rules, with no aesthetic judgment required.
+A precise, asset-driven section — typically 8–15 pages — that defines exactly what the brand looks like, sounds like, and stands for, and how franchisees are permitted to use brand assets. The strongest version covers four layers: (1) verbal identity (mission, vision, values, voice), (2) visual identity (logo, colors, typography, photography), (3) physical identity (interior design palette, materials, lighting, signage), and (4) usage rules (what franchisees may and may not do without approval). The job is to make brand consistency mechanical: any compliant franchisee can produce on-brand output by following the rules, with no aesthetic judgment required.
 
 ## Structure observed
 
@@ -16,7 +16,7 @@ A precise, asset-driven chapter — typically 8–15 pages — that defines exac
   - Typography (primary font, body font, optional script accent — single named font family with permitted weights)
 - Brand voice standards: 4–5 named adjectives ("knowledgeable but not pretentious; warm but not over-familiar; energetic but not frantic; honest and direct")
 - Prohibited brand uses: enumerated closed list (no co-branding without approval; no use of brand name in personal social media; no contests/sweepstakes/giveaways using the brand without approval; no menu modifications on branded materials; no signage outside approved templates)
-- Physical / environmental identity (lives partly in the build-out manual but cross-referenced from the brand chapter):
+- Physical / environmental identity (lives partly in the build-out manual but cross-referenced from the brand section):
   - Design philosophy as 3 named pillars (e.g. Craft / Warmth / Story) with one-sentence definitions
   - Approved color palette extended to environmental finishes (paint colors with manufacturer + product code)
   - Flooring, wall finish, ceiling, and lighting standards with named CCT temperature range (warm 2700–3000K maximum)

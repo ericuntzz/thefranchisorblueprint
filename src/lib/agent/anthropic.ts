@@ -2,14 +2,14 @@
  * Shared Anthropic SDK client + model constants.
  *
  * Two model tiers:
- *   - DRAFT_MODEL (Claude Opus 4.7, 1M context) — heavy chapter drafting,
+ *   - DRAFT_MODEL (Claude Opus 4.7, 1M context) — heavy section drafting,
  *     research synthesis, anything where we want the full Memory + Jason's
  *     playbooks + High Point precedent in context simultaneously.
  *   - CHAT_MODEL  (Claude Sonnet 4.6) — fast, cheap conversational turns
  *     in the in-portal chat dock.
  *
  * Both default to adaptive thinking. Effort is tuned per call site: chat
- * uses "medium", drafting uses "high" or "xhigh" depending on chapter.
+ * uses "medium", drafting uses "high" or "xhigh" depending on section.
  *
  * NEVER import this from a Client Component — the SDK reads
  * ANTHROPIC_API_KEY from the server env.

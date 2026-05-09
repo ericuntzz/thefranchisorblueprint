@@ -3,7 +3,7 @@
  *
  * Read-only summary of what's happened to the customer's Memory in
  * the recent past. Lightweight: each row is one icon + one line + a
- * relative timestamp + a chapter link. Empty state hides the whole
+ * relative timestamp + a section link. Empty state hides the whole
  * card so a brand-new customer doesn't see a vacant feed.
  *
  * Disclosure: ActivityFeedList (client) shows the 5 most recent rows
@@ -28,7 +28,7 @@ export type ActivityFeedRow = {
   id: string;
   kind: ActivityKind;
   summary: string;
-  chapterSlug: string;
+  sectionSlug: string;
   relative: string;
 };
 
@@ -44,7 +44,7 @@ export function ActivityFeed({ events }: Props) {
     id: e.id,
     kind: e.kind,
     summary: e.summary,
-    chapterSlug: e.chapterSlug,
+    sectionSlug: e.sectionSlug,
     relative: formatRelative(e.at),
   }));
 

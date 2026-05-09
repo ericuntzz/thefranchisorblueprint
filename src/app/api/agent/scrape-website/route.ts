@@ -17,7 +17,7 @@ export const maxDuration = 60;
  *
  * Side effects:
  *   - Persists the URL to profiles.website_url if the body provided one.
- *   - Writes brand_voice and business_overview Memory chapters with
+ *   - Writes brand_voice and business_overview Memory sections with
  *     "inferred" confidence and provenance tied to the scrape.
  *
  * Returns a small JSON summary of what landed.

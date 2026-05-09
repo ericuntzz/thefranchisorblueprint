@@ -562,7 +562,7 @@ const TIER_COPY: Record<
   blueprint: {
     headline: "Start with The Blueprint — $2,997",
     body:
-      "You're close. The Blueprint is the complete 9-framework franchisor system you can run yourself: 17-chapter Operations Manual, FDD explainer for all 23 federal items, site-selection rubric, training scaffolding, and a Discovery Day deck. Most DIY-ready operators launch their first franchisee in about 6 months.",
+      "You're close. The Blueprint is the complete 9-framework franchisor system you can run yourself: 17-section Operations Manual, FDD explainer for all 23 federal items, site-selection rubric, training scaffolding, and a Discovery Day deck. Most DIY-ready operators launch their first franchisee in about 6 months.",
   },
   navigator: {
     headline: "Navigator is your match — $8,500",

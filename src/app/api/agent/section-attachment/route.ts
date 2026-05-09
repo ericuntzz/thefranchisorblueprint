@@ -1,12 +1,12 @@
 /**
- * Per-chapter attachment endpoint.
+ * Per-section attachment endpoint.
  *
- * POST  /api/agent/chapter-attachment
+ * POST  /api/agent/section-attachment
  *   - multipart/form-data with `slug` + `file` → upload + record
  *   - application/json `{ slug, url, label? }` → link save (lightly
  *     scrapes the URL for an excerpt the agent can read)
  *
- * DELETE /api/agent/chapter-attachment
+ * DELETE /api/agent/section-attachment
  *   - JSON `{ slug, attachmentId }` → remove the attachment row and
  *     (for files) the underlying storage object
  *
@@ -16,9 +16,9 @@
  * The user-id-prefix is enforced by the bucket's RLS policy (only
  * objects under the caller's own folder are readable/writeable).
  *
- * What the agent does with attachments: when `draftChapter()` runs, it
+ * What the agent does with attachments: when `draftSection()` runs, it
  * reads `customer_memory.attachments` and includes labels + excerpts
- * in Opus's prompt context so chapters drafted after the attachment is
+ * in Opus's prompt context so sections drafted after the attachment is
  * added incorporate the new material.
  */
 
@@ -35,9 +35,9 @@ import {
 } from "@/lib/memory";
 import { fetchSiteArtifacts } from "@/lib/agent/scrape";
 import { extractDocText } from "@/lib/agent/extract-doc-text";
-import { classifyAttachmentToChapters } from "@/lib/agent/classify-attachment";
+import { classifyAttachmentToSections } from "@/lib/agent/classify-attachment";
 import { extractFieldsFromContent } from "@/lib/agent/extract-fields";
-import type { ChapterAttachment, Purchase } from "@/lib/supabase/types";
+import type { SectionAttachment, Purchase } from "@/lib/supabase/types";
 import type { MemoryFileSlug } from "@/lib/memory/files";
 
 export const runtime = "nodejs";
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
     const message = err instanceof Error ? err.message : String(err);
     const stack = err instanceof Error ? err.stack : undefined;
     console.error(
-      "[chapter-attachment] uncaught error:",
+      "[section-attachment] uncaught error:",
       message,
       stack ? `\n${stack}` : "",
     );
@@ -126,12 +126,12 @@ async function handlePOST(req: NextRequest): Promise<NextResponse> {
     }
     const slug = form.get("slug");
     const file = form.get("file");
-    // `autoClassify=true` opts into Sonnet-driven multi-chapter
+    // `autoClassify=true` opts into Sonnet-driven multi-section
     // routing. The intake flow sends this flag so a doc dropped on
     // the Operations step can also fan out to recipes_and_menu /
-    // training_program / etc. when relevant. The per-chapter
+    // training_program / etc. when relevant. The per-section
     // attachment composer leaves this off so a file dropped on a
-    // specific chapter stays scoped there.
+    // specific section stays scoped there.
     const autoClassifyRaw = form.get("autoClassify");
     const autoClassify =
       autoClassifyRaw === "true" || autoClassifyRaw === "1";
@@ -167,7 +167,7 @@ async function handlePOST(req: NextRequest): Promise<NextResponse> {
         upsert: false,
       });
     if (uploadErr) {
-      console.error("[chapter-attachment] storage upload failed:", uploadErr);
+      console.error("[section-attachment] storage upload failed:", uploadErr);
       return NextResponse.json(
         { error: `Upload failed: ${uploadErr.message}` },
         { status: 500 },
@@ -198,7 +198,7 @@ async function handlePOST(req: NextRequest): Promise<NextResponse> {
       }
     }
 
-    const attachment: ChapterAttachment = {
+    const attachment: SectionAttachment = {
       id,
       kind: "file",
       ref: path,
@@ -214,26 +214,26 @@ async function handlePOST(req: NextRequest): Promise<NextResponse> {
     // Auto-classification fan-out — only when explicitly opted-in.
     // The Sonnet call is best-effort; failure here is not surfaced
     // to the customer (the primary attachment already landed). We
-    // attach the SAME ChapterAttachment object to each additional
-    // slug — one logical document, multiple chapter pointers, all
+    // attach the SAME SectionAttachment object to each additional
+    // slug — one logical document, multiple section pointers, all
     // referencing the same underlying storage object.
     let alsoAttachedTo: MemoryFileSlug[] = [];
     if (autoClassify) {
       try {
-        const additional = await classifyAttachmentToChapters({
+        const additional = await classifyAttachmentToSections({
           primarySlug: slug,
           fileName: file.name,
           excerpt,
         });
         for (const otherSlug of additional) {
-          // Mint a distinct id per chapter row so deletes from one
-          // chapter don't ripple into others. The shared `ref`
+          // Mint a distinct id per section row so deletes from one
+          // section don't ripple into others. The shared `ref`
           // (storage path) is what makes it the same logical doc.
-          const fanOut: ChapterAttachment = {
+          const fanOut: SectionAttachment = {
             ...attachment,
             id: mintAttachmentId(),
             // Excerpt + size carry through unchanged so each
-            // chapter's draft pipeline reads the same content.
+            // section's draft pipeline reads the same content.
           };
           await appendAttachment({
             userId,
@@ -245,7 +245,7 @@ async function handlePOST(req: NextRequest): Promise<NextResponse> {
       } catch (err) {
         // Non-fatal — primary attachment already saved.
         console.warn(
-          "[chapter-attachment] auto-classify fan-out failed:",
+          "[section-attachment] auto-classify fan-out failed:",
           err instanceof Error ? err.message : err,
         );
         alsoAttachedTo = [];
@@ -255,12 +255,12 @@ async function handlePOST(req: NextRequest): Promise<NextResponse> {
     // ── Auto-extract structured fields ────────────────────────────────
     // Best-effort: read the excerpt with Sonnet, extract any fields we
     // can confidently derive, and write them with source='upload' to
-    // every chapter the attachment was associated with. We NEVER
+    // every section the attachment was associated with. We NEVER
     // overwrite an existing value — only fill blanks. If the customer
     // has already typed something, the upload's guess is silently
     // skipped (their typed value wins). Failure here is non-fatal; the
     // attachment is already saved.
-    const extractedByChapter: Partial<
+    const extractedBySection: Partial<
       Record<MemoryFileSlug, Record<string, string | number | boolean | string[]>>
     > = {};
     if (excerpt && excerpt.trim().length >= 80) {
@@ -301,12 +301,12 @@ async function handlePOST(req: NextRequest): Promise<NextResponse> {
               source: "upload",
               note: `Auto-extracted from ${file.name}`,
             });
-            extractedByChapter[targetSlug] = toWrite;
+            extractedBySection[targetSlug] = toWrite;
           } catch (err) {
-            // Per-chapter extraction is independent; one failure
+            // Per-section extraction is independent; one failure
             // shouldn't block the others.
             console.warn(
-              `[chapter-attachment] auto-extract failed for ${targetSlug} (non-fatal):`,
+              `[section-attachment] auto-extract failed for ${targetSlug} (non-fatal):`,
               err instanceof Error ? err.message : err,
             );
           }
@@ -316,16 +316,16 @@ async function handlePOST(req: NextRequest): Promise<NextResponse> {
 
     revalidatePath("/portal/lab/blueprint");
     revalidatePath("/portal");
-    revalidatePath(`/portal/chapter/${slug}`);
+    revalidatePath(`/portal/section/${slug}`);
     if (alsoAttachedTo.length > 0) {
       for (const s of alsoAttachedTo)
-        revalidatePath(`/portal/chapter/${s}`);
+        revalidatePath(`/portal/section/${s}`);
     }
     return NextResponse.json({
       ok: true,
       attachment,
       alsoAttachedTo,
-      extractedByChapter,
+      extractedBySection,
     });
   }
 
@@ -365,13 +365,13 @@ async function handlePOST(req: NextRequest): Promise<NextResponse> {
     excerpt = artifacts.homeExcerpt.slice(0, 2000);
   } catch (err) {
     console.warn(
-      `[chapter-attachment] link scrape failed for ${normalizedUrl} (non-fatal):`,
+      `[section-attachment] link scrape failed for ${normalizedUrl} (non-fatal):`,
       err instanceof Error ? err.message : err,
     );
     excerpt = "(Link saved — page could not be auto-fetched. Jason will reference the URL only.)";
   }
 
-  const attachment: ChapterAttachment = {
+  const attachment: SectionAttachment = {
     id: mintAttachmentId(),
     kind: "link",
     ref: normalizedUrl,
@@ -421,7 +421,7 @@ export async function DELETE(req: NextRequest) {
       // Non-fatal: the row is gone, the storage object will be cleaned
       // up by a periodic sweep. Log so we know to look.
       console.error(
-        `[chapter-attachment] storage remove failed for ${removed.ref}:`,
+        `[section-attachment] storage remove failed for ${removed.ref}:`,
         error.message,
       );
     }

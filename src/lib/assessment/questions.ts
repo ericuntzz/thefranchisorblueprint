@@ -154,7 +154,7 @@ export const QUESTIONS: AssessmentQuestion[] = [
     insight: {
       A: "That's the foundation 80% of franchise candidates lack. Everything else gets easier from here.",
       B: "Owner-dependent steps are the #1 thing we fix in Phase 1 — Codify Your Operations is built for exactly this.",
-      C: "Replicability isn't intuition, it's a 17-chapter manual. Mastery 04 (Codify Your Operations) handles this end-to-end.",
+      C: "Replicability isn't intuition, it's a 17-section manual. Mastery 04 (Codify Your Operations) handles this end-to-end.",
       D: "Honest answer. Most founders score themselves here on Q1. You can't franchise a business that depends on you — but the work to fix it is teachable.",
     },
   },
@@ -189,7 +189,7 @@ export const QUESTIONS: AssessmentQuestion[] = [
     ],
     insight: {
       A: "Rare. Most successful operators are still in the 'partially' camp when they decide to franchise.",
-      B: "You're further along than 70% of founders we talk to. Mastery 04 turns 'mostly documented' into a 17-chapter franchisee-ready manual.",
+      B: "You're further along than 70% of founders we talk to. Mastery 04 turns 'mostly documented' into a 17-section franchisee-ready manual.",
       C: "Informal notes are a great starting point — that's the raw material we shape into a real Operations Manual in Phase 2.",
       D: "You don't need to write it alone. Mastery 04 gives you the 100+ page template; you fill in your business's specifics.",
     },

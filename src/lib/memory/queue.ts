@@ -1,7 +1,7 @@
 /**
  * The Question Queue.
  *
- * Given the customer's full Memory state + every chapter schema, walk
+ * Given the customer's full Memory state + every section schema, walk
  * the schemas and surface the next set of structured-field questions
  * the customer should answer. This is the engine behind the guided
  * `/portal/lab/next` surface.
@@ -10,7 +10,7 @@
  *   1. Phase order. Discover → Economics → Operations → People →
  *      Growth → Compliance. Don't ask about marketing fund governance
  *      before we know what the business does.
- *   2. Within a phase: chapter order, then field order within a chapter.
+ *   2. Within a phase: section order, then field order within a section.
  *      Schemas are ordered intentionally; respect that.
  *   3. Required-but-empty first. Optional fields can wait.
  *   4. Skip:
@@ -23,13 +23,13 @@
  *          this commit, so we just don't surface them as questions.
  *
  * The queue is recomputed on every page load. Cheap — pure JS over
- * already-loaded Memory. Sub-millisecond at the chapter scale we care
+ * already-loaded Memory. Sub-millisecond at the section scale we care
  * about.
  */
 
 import type { MemoryFileSlug } from "./files";
 import {
-  CHAPTER_SCHEMAS,
+  SECTION_SCHEMAS,
   type FieldDef,
 } from "./schemas";
 import type { MemoryFieldsMap } from "@/lib/calc";
@@ -43,7 +43,7 @@ export type QueueItem = {
   id: string;
   phase: PhaseDef;
   slug: MemoryFileSlug;
-  chapterTitle: string;
+  sectionTitle: string;
   fieldDef: FieldDef;
   /** True if this field is a `required: true` schema field (vs.
    *  optional). Required fields lead the queue; optional fields fall
@@ -75,7 +75,7 @@ export function computeQuestionQueue(
       | undefined) ?? null;
 
   // Walk phases in canonical order. WITHIN a phase, push every
-  // required item first (in chapter+schema order), then every
+  // required item first (in section+schema order), then every
   // optional item. This keeps phase boundaries intact so the
   // QuestionQueueClient's "you're entering Economics" intro lands at
   // the right moment.
@@ -83,7 +83,7 @@ export function computeQuestionQueue(
     const phaseRequired: QueueItem[] = [];
     const phaseOptional: QueueItem[] = [];
     for (const slug of phase.slugs) {
-      const schema = CHAPTER_SCHEMAS[slug];
+      const schema = SECTION_SCHEMAS[slug];
       if (!schema) continue; // brand_voice etc. — no schema yet
       const filled = memory[slug] ?? {};
       for (const fd of schema.fields) {
@@ -108,7 +108,7 @@ export function computeQuestionQueue(
           id: `${slug}.${fd.name}`,
           phase,
           slug,
-          chapterTitle: MEMORY_FILE_TITLES[slug],
+          sectionTitle: MEMORY_FILE_TITLES[slug],
           fieldDef: fd,
           isRequired: !!fd.required,
           industrySuggestion,
@@ -124,13 +124,13 @@ export function computeQuestionQueue(
 }
 
 /**
- * Re-prioritize a queue so items from `focusChapters` come first.
+ * Re-prioritize a queue so items from `focusSections` come first.
  *
  * Used by the dashboard's per-deliverable "Complete Section" button:
  * the customer clicks it on a specific deliverable, lands on
  * /portal/lab/next, and the first question they see is the next
  * unfilled required field in one of THAT deliverable's source
- * chapters. Once those are exhausted the rest of the queue follows
+ * sections. Once those are exhausted the rest of the queue follows
  * in its normal phase order, so a customer who keeps hitting "Next"
  * eventually flows into the rest of the Blueprint.
  *
@@ -138,12 +138,12 @@ export function computeQuestionQueue(
  * by the sidebar's Continue Building. Two callers, two behaviors,
  * one queue engine.
  */
-export function focusQueueOnChapters(
+export function focusQueueOnSections(
   queue: QueueItem[],
-  focusChapters: readonly MemoryFileSlug[],
+  focusSections: readonly MemoryFileSlug[],
 ): QueueItem[] {
-  if (focusChapters.length === 0) return queue;
-  const focusSet = new Set<MemoryFileSlug>(focusChapters);
+  if (focusSections.length === 0) return queue;
+  const focusSet = new Set<MemoryFileSlug>(focusSections);
   const focused: QueueItem[] = [];
   const rest: QueueItem[] = [];
   for (const item of queue) {

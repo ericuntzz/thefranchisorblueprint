@@ -1,7 +1,7 @@
 /**
  * Google Places wrapper — competitor density + trade-area lookups.
  *
- * Used by the territory_real_estate + competitor_landscape chapter
+ * Used by the territory_real_estate + competitor_landscape section
  * drafts to answer questions like "how many of competitor X are
  * within Y miles of this address?" without the customer manually
  * counting on a map.

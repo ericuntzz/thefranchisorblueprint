@@ -20,7 +20,7 @@
  *    bubble, `tool_call` / `tool_result` pairs render as inline action
  *    cards between bubbles.
  *  - When a tool completes successfully, we call router.refresh() so
- *    the chapter cards on the page underneath pick up the new field
+ *    the section cards on the page underneath pick up the new field
  *    values without the customer having to reload.
  */
 
@@ -49,7 +49,7 @@ import {
   X,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import { CHAPTER_DOC_PROMPTS } from "@/lib/memory/doc-prompts";
+import { SECTION_DOC_PROMPTS } from "@/lib/memory/doc-prompts";
 import {
   isValidMemoryFileSlug,
   MEMORY_FILE_TITLES,
@@ -173,7 +173,7 @@ type ChatEvent =
       summary: string;
       detail?: {
         slug: string;
-        chapterTitle: string;
+        sectionTitle: string;
         fieldName: string;
         fieldLabel: string;
         value: unknown;
@@ -199,7 +199,7 @@ const OPENER_DEFAULT =
  * Context-aware greeting. The dock used to open on a generic
  * "ask me anything" line which forced the customer to invent a
  * question. This version reads the current pathname and opens
- * with intent — naming the chapter / surface they're on and
+ * with intent — naming the section / surface they're on and
  * proposing a concrete next move. Result: Jason AI feels embedded
  * in their work, not parked in the corner waiting to be summoned.
  *
@@ -215,10 +215,10 @@ function getContextGreeting(args: {
   const { pathname, firstName } = args;
   const hi = firstName ? `Hey ${firstName} — ` : "";
 
-  // Per-chapter greeting names the chapter and proposes the move.
-  const chapterMatch = pathname.match(/\/portal\/chapter\/([a-z_]+)/);
-  if (chapterMatch && isValidMemoryFileSlug(chapterMatch[1])) {
-    const slug = chapterMatch[1] as MemoryFileSlug;
+  // Per-section greeting names the section and proposes the move.
+  const sectionMatch = pathname.match(/\/portal\/section\/([a-z_]+)/);
+  if (sectionMatch && isValidMemoryFileSlug(sectionMatch[1])) {
+    const slug = sectionMatch[1] as MemoryFileSlug;
     const title = MEMORY_FILE_TITLES[slug];
     return `${hi}you're on **${title}**. Want me to draft what I've got, or do you want to think it through first? Drop a doc anytime and I'll pull what I can.`;
   }
@@ -232,11 +232,11 @@ function getContextGreeting(args: {
   }
 
   if (pathname.includes("/portal/lab/blueprint")) {
-    return `${hi}looking at your Blueprint as a whole. Want me to flag what's still missing, or pick a chapter to push forward?`;
+    return `${hi}looking at your Blueprint as a whole. Want me to flag what's still missing, or pick a section to push forward?`;
   }
 
-  if (pathname.includes("/portal/chapter")) {
-    return `${hi}what chapter do you want to push on? I've got everything we know about your business loaded.`;
+  if (pathname.includes("/portal/section")) {
+    return `${hi}what section do you want to push on? I've got everything we know about your business loaded.`;
   }
 
   if (pathname.includes("/portal/coaching")) {
@@ -244,7 +244,7 @@ function getContextGreeting(args: {
   }
 
   // /portal dashboard or anywhere else.
-  return `${hi}what do you want to work on? I can pick up where you left off, draft a chapter, read a doc you drop here, or just talk through what's on your mind.`;
+  return `${hi}what do you want to work on? I can pick up where you left off, draft a section, read a doc you drop here, or just talk through what's on your mind.`;
 }
 
 /**
@@ -255,9 +255,9 @@ function getContextGreeting(args: {
  * "Thinking…".
  */
 function getStatusLine(pathname: string): string {
-  const chapterMatch = pathname.match(/\/portal\/chapter\/([a-z_]+)/);
-  if (chapterMatch && isValidMemoryFileSlug(chapterMatch[1])) {
-    return `Reading ${MEMORY_FILE_TITLES[chapterMatch[1] as MemoryFileSlug]}`;
+  const sectionMatch = pathname.match(/\/portal\/section\/([a-z_]+)/);
+  if (sectionMatch && isValidMemoryFileSlug(sectionMatch[1])) {
+    return `Reading ${MEMORY_FILE_TITLES[sectionMatch[1] as MemoryFileSlug]}`;
   }
   if (pathname.includes("/portal/lab/next")) return "Watching the question queue";
   if (pathname.includes("/portal/lab/intake")) return "Watching intake";
@@ -342,7 +342,7 @@ function formatRelative(iso: string): string {
  * when the chat first opens. Each chip is a short user-message that
  * the customer can send with one click. The set is derived from
  * pageContext so the suggestions land where the customer is right
- * now (chapter page → "got an X doc?", queue → "what would speed
+ * now (section page → "got an X doc?", queue → "what would speed
  * this up?", dashboard → "where do I start?").
  *
  * Keep the count tight (3 max). More than that and the chip strip
@@ -361,11 +361,11 @@ type StarterChip = {
 
 function getStarterChips(pageContext: string | undefined): StarterChip[] {
   const ctx = (pageContext ?? "").toLowerCase();
-  // Per-chapter context: extract the slug from /portal/chapter/[slug].
-  const chapterMatch = ctx.match(/\/portal\/chapter\/([a-z_]+)/);
-  if (chapterMatch && isValidMemoryFileSlug(chapterMatch[1])) {
-    const slug = chapterMatch[1] as MemoryFileSlug;
-    const prompt = CHAPTER_DOC_PROMPTS[slug];
+  // Per-section context: extract the slug from /portal/section/[slug].
+  const sectionMatch = ctx.match(/\/portal\/section\/([a-z_]+)/);
+  if (sectionMatch && isValidMemoryFileSlug(sectionMatch[1])) {
+    const slug = sectionMatch[1] as MemoryFileSlug;
+    const prompt = SECTION_DOC_PROMPTS[slug];
     const title = MEMORY_FILE_TITLES[slug];
     if (prompt) {
       // Drop the leading article — telegraphic UI copy reads
@@ -375,17 +375,17 @@ function getStarterChips(pageContext: string | undefined): StarterChip[] {
       return [
         {
           label: `Got ${prompt.shortLabel}?`,
-          send: `I have ${prompt.shortLabel} I can share — what's the best way to upload it for the ${title} chapter?`,
+          send: `I have ${prompt.shortLabel} I can share — what's the best way to upload it for the ${title} section?`,
           icon: "upload",
         },
         {
           label: `Help me draft ${title}`,
-          send: `Walk me through what I need to finish the ${title} chapter.`,
+          send: `Walk me through what I need to finish the ${title} section.`,
           icon: "sparkle",
         },
         {
           label: "What docs would help?",
-          send: `What documents would speed up the ${title} chapter?`,
+          send: `What documents would speed up the ${title} section?`,
         },
       ];
     }
@@ -435,7 +435,7 @@ function getStarterChips(pageContext: string | undefined): StarterChip[] {
       },
       {
         label: "Help me prioritize",
-        send: "Which chapters should I focus on next?",
+        send: "Which sections should I focus on next?",
       },
       {
         label: "Got more docs to share",
@@ -1151,7 +1151,7 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
       setStreaming(false);
       abortRef.current = null;
       // If any tool fired during this turn, refresh the page data
-      // so the chapter cards reflect the new field values without
+      // so the section cards reflect the new field values without
       // the customer having to reload the page manually.
       if (toolFired) router.refresh();
     }
@@ -1425,16 +1425,16 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
 
   /**
    * Upload a file dropped or attached in the chat dock. The file
-   * lands at `business_overview` (the most general primary chapter)
-   * with `autoClassify=true` so Sonnet fans it out to the chapters
+   * lands at `business_overview` (the most general primary section)
+   * with `autoClassify=true` so Sonnet fans it out to the sections
    * it actually belongs to. We surface the in-flight + result state
    * as a tool-card-style row in the transcript, then auto-fire a
    * follow-up chat turn so Jason reads the new excerpt and tells
    * the customer what he extracted.
    *
-   * Why business_overview as the default primary: every chapter is
+   * Why business_overview as the default primary: every section is
    * a candidate for the doc, but the classifier will only attach
-   * the file to chapters it's actually relevant for. Picking a
+   * the file to sections it's actually relevant for. Picking a
    * neutral, almost-always-relevant primary minimizes the chance
    * that the file lands somewhere wrong if the classifier returns
    * an empty fan-out list.
@@ -1460,9 +1460,9 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
         fd.append("slug", "business_overview");
         fd.append("file", file);
         // Same fan-out behavior as the intake flow — one drop, many
-        // chapters get the doc indexed.
+        // sections get the doc indexed.
         fd.append("autoClassify", "true");
-        const res = await fetch("/api/agent/chapter-attachment", {
+        const res = await fetch("/api/agent/section-attachment", {
           method: "POST",
           body: fd,
         });
@@ -1496,7 +1496,7 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
               : item,
           ),
         );
-        // Refresh server data so chapter pages underneath the dock
+        // Refresh server data so section pages underneath the dock
         // see the new attachment without a manual reload.
         router.refresh();
         // Auto-fire a follow-up so Jason reads the new excerpt and
@@ -1662,7 +1662,7 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
             Drop to attach
           </div>
           <div className="text-grey-3 text-xs mt-0.5">
-            Jason will read it and route it to the right chapters.
+            Jason will read it and route it to the right sections.
           </div>
         </div>
       )}
@@ -1852,7 +1852,7 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
 
         {/* Starter chips — only render right after the greeting,
             before the customer's typed anything. Chips are
-            context-aware: chapter-page → "Got an X doc?", queue →
+            context-aware: section-page → "Got an X doc?", queue →
             "What docs speed this up?", dashboard → "Where do I
             start?". One click sends the chip's `send` text as a
             user message; Jason's full Memory + tool access then

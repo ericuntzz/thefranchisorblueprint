@@ -8,12 +8,12 @@
  */
 
 import type { BuildContext, DeliverableDoc, DocBlock } from "../types";
-import { chapterFields } from "../context-helpers";
+import { sectionFields } from "../context-helpers";
 import { fmtList, fmtText, isFilled } from "../format";
 
 export function buildBrandStandards(ctx: BuildContext): DeliverableDoc {
-  const brand = chapterFields(ctx, "brand_voice");
-  const overview = chapterFields(ctx, "business_overview");
+  const brand = sectionFields(ctx, "brand_voice");
+  const overview = sectionFields(ctx, "business_overview");
 
   const businessName =
     fmtText(brand.brand_name).split(/[.\n]/)[0]?.trim() ||
@@ -138,7 +138,7 @@ export function buildBrandStandards(ctx: BuildContext): DeliverableDoc {
             ? ({ kind: "bullets", items: fmtList(brand.things_to_avoid) } as DocBlock)
             : ({
                 kind: "callout",
-                text: "Things to avoid haven't been documented yet. The brand_voice chapter has a `things_to_avoid` field that should list common pitfalls (e.g. tones, words, visuals that don't fit the brand).",
+                text: "Things to avoid haven't been documented yet. The brand_voice section has a `things_to_avoid` field that should list common pitfalls (e.g. tones, words, visuals that don't fit the brand).",
                 tone: "neutral",
               } as DocBlock),
         ],

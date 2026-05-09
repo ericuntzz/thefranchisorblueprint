@@ -1,23 +1,23 @@
 /**
  * Memory snapshot helpers — versioning + rollback over `customer_memory`.
  *
- * Every meaningful write to a chapter row should snapshot the prior
+ * Every meaningful write to a section row should snapshot the prior
  * state so the customer (or the agent on their behalf) can roll back.
  * This module centralizes:
  *
  *   - `captureSnapshot()` — call BEFORE a mutating write to record the
- *     current chapter contents under a labeled reason
- *   - `listSnapshots()` — read snapshot history for a chapter
+ *     current section contents under a labeled reason
+ *   - `listSnapshots()` — read snapshot history for a section
  *   - `rollbackToSnapshot()` — restore a snapshot back into
  *     customer_memory; takes a fresh snapshot first so the rollback
  *     itself is reversible
- *   - `pruneOldSnapshots()` — keep at most MAX_PER_CHAPTER per
- *     (user, chapter), drop oldest first
+ *   - `pruneOldSnapshots()` — keep at most MAX_PER_SECTION per
+ *     (user, section), drop oldest first
  *
  * Row schema lives in migration 0021. Snapshot payloads are jsonb of
  * shape { contentMd, fields, fieldStatus, confidence, attachments }.
  *
- * Capacity: we cap at 20 snapshots per chapter. A customer iterating
+ * Capacity: we cap at 20 snapshots per section. A customer iterating
  * heavily over weeks doesn't get unbounded growth, and 20 is more than
  * enough rollback history for the kind of edits that happen in
  * practice — the most-recent ~5 cover 99% of "I want my old text
@@ -29,8 +29,8 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import type { CustomerMemory } from "@/lib/supabase/types";
 import { isValidMemoryFileSlug, type MemoryFileSlug } from "./files";
 
-/** How many snapshots we retain per (user, chapter). Older ones drop. */
-export const MAX_SNAPSHOTS_PER_CHAPTER = 20;
+/** How many snapshots we retain per (user, section). Older ones drop. */
+export const MAX_SNAPSHOTS_PER_SECTION = 20;
 
 export type SnapshotSource =
   | "pre_draft"
@@ -52,7 +52,7 @@ export type SnapshotPayload = {
 export type SnapshotRow = {
   id: string;
   userId: string;
-  chapterSlug: MemoryFileSlug;
+  sectionSlug: MemoryFileSlug;
   payload: SnapshotPayload;
   reason: string | null;
   source: SnapshotSource;
@@ -60,7 +60,7 @@ export type SnapshotRow = {
 };
 
 /**
- * Capture a snapshot of a chapter's current state. Reads the current
+ * Capture a snapshot of a section's current state. Reads the current
  * `customer_memory` row and stores its contents as a snapshot. Skips
  * cleanly if the row doesn't exist yet — no point snapshotting
  * "nothing".
@@ -98,7 +98,7 @@ export async function captureSnapshot(args: {
     .from("memory_snapshots")
     .insert({
       user_id: args.userId,
-      chapter_slug: args.slug,
+      section_slug: args.slug,
       payload,
       reason: args.reason ?? null,
       source: args.source,
@@ -116,7 +116,7 @@ export async function captureSnapshot(args: {
   });
 }
 
-/** Return snapshot history for one chapter, newest first. */
+/** Return snapshot history for one section, newest first. */
 export async function listSnapshots(args: {
   userId: string;
   slug: MemoryFileSlug;
@@ -125,9 +125,9 @@ export async function listSnapshots(args: {
   const admin = getSupabaseAdmin();
   const { data, error } = await admin
     .from("memory_snapshots")
-    .select("id, user_id, chapter_slug, payload, reason, source, created_at")
+    .select("id, user_id, section_slug, payload, reason, source, created_at")
     .eq("user_id", args.userId)
-    .eq("chapter_slug", args.slug)
+    .eq("section_slug", args.slug)
     .order("created_at", { ascending: false });
   if (error) {
     console.warn("[snapshots] list failed:", error.message);
@@ -136,7 +136,7 @@ export async function listSnapshots(args: {
   return (data ?? []).map((r) => ({
     id: r.id,
     userId: r.user_id,
-    chapterSlug: r.chapter_slug as MemoryFileSlug,
+    sectionSlug: r.section_slug as MemoryFileSlug,
     payload: r.payload as SnapshotPayload,
     reason: r.reason ?? null,
     source: r.source as SnapshotSource,
@@ -165,7 +165,7 @@ export async function rollbackToSnapshot(args: {
     .select("payload")
     .eq("id", args.snapshotId)
     .eq("user_id", args.userId)
-    .eq("chapter_slug", args.slug)
+    .eq("section_slug", args.slug)
     .maybeSingle();
   if (snapErr) return { ok: false, error: snapErr.message };
   if (!snapData) return { ok: false, error: "Snapshot not found" };
@@ -196,7 +196,7 @@ export async function rollbackToSnapshot(args: {
   return { ok: true };
 }
 
-/** Trim snapshots beyond MAX_SNAPSHOTS_PER_CHAPTER, oldest first. */
+/** Trim snapshots beyond MAX_SNAPSHOTS_PER_SECTION, oldest first. */
 export async function pruneOldSnapshots(
   userId: string,
   slug: MemoryFileSlug,
@@ -207,12 +207,12 @@ export async function pruneOldSnapshots(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .select("id, created_at" as any)
     .eq("user_id", userId)
-    .eq("chapter_slug", slug)
+    .eq("section_slug", slug)
     .order("created_at", { ascending: false });
-  if (error || !data || data.length <= MAX_SNAPSHOTS_PER_CHAPTER) return;
+  if (error || !data || data.length <= MAX_SNAPSHOTS_PER_SECTION) return;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const toDelete = (data as any[])
-    .slice(MAX_SNAPSHOTS_PER_CHAPTER)
+    .slice(MAX_SNAPSHOTS_PER_SECTION)
     .map((r) => r.id as string);
   if (toDelete.length === 0) return;
   await admin.from("memory_snapshots").delete().in("id", toDelete);

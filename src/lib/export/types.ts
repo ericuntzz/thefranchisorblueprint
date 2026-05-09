@@ -47,7 +47,7 @@ export type DocBlock =
 export type DocSection = {
   /** Display heading (e.g. "Item 1: The Franchisor"). */
   title: string;
-  /** Heading level — 1 = Item / chapter, 2 = subsection. */
+  /** Heading level — 1 = Item / section, 2 = subsection. */
   level: 1 | 2;
   blocks: DocBlock[];
   /** Optional nested subsections; rendered after this section's blocks. */
@@ -157,11 +157,11 @@ export type SlideDoc = {
  */
 export type BuildContext = {
   userId: string;
-  /** Per-chapter Memory rows, indexed by slug. Missing chapters return
-   *  empty fields + empty content; builders MUST handle null chapters
+  /** Per-section Memory rows, indexed by slug. Missing sections return
+   *  empty fields + empty content; builders MUST handle null sections
    *  gracefully (most fields are optional). */
-  memory: Partial<Record<MemoryFileSlug, ChapterContent>>;
-  /** Cross-chapter computed fields (calc lib output). Builders read this
+  memory: Partial<Record<MemoryFileSlug, SectionContent>>;
+  /** Cross-section computed fields (calc lib output). Builders read this
    *  for derived values like EBITDA margin instead of recomputing. */
   computed: Partial<Record<MemoryFileSlug, Record<string, number | null>>>;
   /** Customer profile snapshot — for cover page personalization. */
@@ -178,7 +178,7 @@ export type BuildContext = {
 };
 
 /** Memory row contents the builders actually read. */
-export type ChapterContent = {
+export type SectionContent = {
   slug: MemoryFileSlug;
   contentMd: string;
   fields: Record<string, string | number | boolean | string[] | null>;
@@ -221,7 +221,7 @@ export type DocDeliverableDef = {
   id: DeliverableId;
   name: string;
   description: string;
-  sourceChapters: MemoryFileSlug[];
+  sourceSections: MemoryFileSlug[];
   formats: Array<"docx" | "md" | "pdf">;
   build: (ctx: BuildContext) => DeliverableDoc;
   filenameStem: string;
@@ -232,7 +232,7 @@ export type SlidesDeliverableDef = {
   id: DeliverableId;
   name: string;
   description: string;
-  sourceChapters: MemoryFileSlug[];
+  sourceSections: MemoryFileSlug[];
   formats: ["pptx"];
   build: (ctx: BuildContext) => SlideDoc;
   filenameStem: string;

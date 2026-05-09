@@ -2,24 +2,24 @@
  * Build-context loader for the export pipeline.
  *
  * One round-trip: pulls every customer_memory row + the profile in
- * parallel, then runs the calc lib once to populate cross-chapter
+ * parallel, then runs the calc lib once to populate cross-section
  * computed fields. Returns the BuildContext that every deliverable
  * builder consumes.
  *
  * Service-role client because export is auth-gated upstream and we
- * want one round-trip without re-checking RLS on every chapter.
+ * want one round-trip without re-checking RLS on every section.
  */
 
 import "server-only";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { computeAllFormulas, type MemoryFieldsMap } from "@/lib/calc";
 import {
-  computeChapterReadiness,
+  computeSectionReadiness,
   indexMemoryRows,
   overallReadinessPct,
 } from "@/lib/memory/readiness";
 import { MEMORY_FILES, type MemoryFileSlug } from "@/lib/memory/files";
-import type { BuildContext, ChapterContent } from "./types";
+import type { BuildContext, SectionContent } from "./types";
 import type { CustomerMemory, Profile } from "@/lib/supabase/types";
 
 export async function loadBuildContext(userId: string): Promise<BuildContext> {
@@ -49,14 +49,14 @@ export async function loadBuildContext(userId: string): Promise<BuildContext> {
     "email" | "full_name" | "website_url"
   > | null;
 
-  // Build per-chapter content map (only chapters with a row land here;
+  // Build per-section content map (only sections with a row land here;
   // builders treat missing as empty).
-  const memory: Partial<Record<MemoryFileSlug, ChapterContent>> = {};
+  const memory: Partial<Record<MemoryFileSlug, SectionContent>> = {};
   const fieldsMap: MemoryFieldsMap = {};
   for (const slug of MEMORY_FILES) {
     const row = indexed.get(slug);
     if (!row) continue;
-    const fields = (row.fields ?? {}) as ChapterContent["fields"];
+    const fields = (row.fields ?? {}) as SectionContent["fields"];
     memory[slug] = {
       slug,
       contentMd: row.content_md ?? "",
@@ -71,8 +71,8 @@ export async function loadBuildContext(userId: string): Promise<BuildContext> {
   const computed = computeAllFormulas(fieldsMap) as BuildContext["computed"];
 
   // Readiness % is computed the same way the Command Center does it.
-  const chapterReadiness = computeChapterReadiness(indexed);
-  const readinessPct = overallReadinessPct(chapterReadiness);
+  const sectionReadiness = computeSectionReadiness(indexed);
+  const readinessPct = overallReadinessPct(sectionReadiness);
 
   return {
     userId,
@@ -91,4 +91,4 @@ export async function loadBuildContext(userId: string): Promise<BuildContext> {
 // Pure helpers re-exported for backward compatibility — canonical
 // implementations live in context-helpers.ts (no server-only guard,
 // safe for client-side import chains).
-export { chapterFields, computedFields } from "./context-helpers";
+export { sectionFields, computedFields } from "./context-helpers";

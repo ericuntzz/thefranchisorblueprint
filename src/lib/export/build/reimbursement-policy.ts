@@ -7,7 +7,7 @@
  */
 
 import type { BuildContext, DeliverableDoc } from "../types";
-import { chapterFields } from "../context-helpers";
+import { sectionFields } from "../context-helpers";
 import {
   fmtCurrency,
   fmtList,
@@ -18,8 +18,8 @@ import {
 } from "../format";
 
 export function buildReimbursementPolicy(ctx: BuildContext): DeliverableDoc {
-  const reimburse = chapterFields(ctx, "reimbursement_policy");
-  const overview = chapterFields(ctx, "business_overview");
+  const reimburse = sectionFields(ctx, "reimbursement_policy");
+  const overview = sectionFields(ctx, "business_overview");
 
   const businessName =
     fmtText(overview.concept_summary).split(/[.\n]/)[0]?.trim() || "Your Franchise";

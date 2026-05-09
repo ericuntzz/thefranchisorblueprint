@@ -9,7 +9,7 @@
  * the customer find the right card and click into the field editor.
  *
  * Architecture:
- *   - The schema for each chapter (src/lib/memory/schemas.ts) is the
+ *   - The schema for each section (src/lib/memory/schemas.ts) is the
  *     single source of truth for what fields exist and what types
  *     they accept. The tool validates against it; type coercion lives
  *     in `coerceFieldValue` (lifted from extract-fields.ts intent).
@@ -35,7 +35,7 @@ import {
 } from "@/lib/memory/files";
 import {
   type FieldDef,
-  CHAPTER_SCHEMAS,
+  SECTION_SCHEMAS,
 } from "@/lib/memory/schemas";
 import { hasCalc } from "@/lib/calc";
 import { coerceListValue, LIST_INSTRUCTIONS_BLOCK } from "./coerce-list";
@@ -52,7 +52,7 @@ type FieldValue = string | number | boolean | string[] | null;
  */
 export const UPDATE_MEMORY_FIELD_TOOL: Anthropic.Tool = {
   name: "update_memory_field",
-  description: `Update a single structured field on one chapter of the customer's Franchisor Blueprint.
+  description: `Update a single structured field on one section of the customer's Franchisor Blueprint.
 
 Use this whenever the customer states a concrete, atomic fact that maps to a known field — e.g. "we have 3 locations" → business_overview.locations_count=3, "our royalty is 6%" → franchise_economics.royalty_pct=6, "founded in 2018" → business_overview.year_founded=2018.
 
@@ -64,7 +64,7 @@ CRITICAL RULES:
 - Never call this on a "computed" field — those are calculated automatically and would overwrite themselves.
 - After calling, briefly acknowledge what you updated in your text response (e.g. "Got it — set locations to 3.") so the customer sees the change reflected in your reply, not just in the chip below your message.
 
-Available chapter slugs: ${MEMORY_FILES.join(", ")}.`,
+Available section slugs: ${MEMORY_FILES.join(", ")}.`,
   input_schema: {
     type: "object",
     properties: {
@@ -72,12 +72,12 @@ Available chapter slugs: ${MEMORY_FILES.join(", ")}.`,
         type: "string",
         enum: [...MEMORY_FILES],
         description:
-          "The chapter to update. Match exactly one of the listed slugs.",
+          "The section to update. Match exactly one of the listed slugs.",
       },
       field_name: {
         type: "string",
         description:
-          "The technical name of the field to update (e.g. `locations_count`). Must exist on the chapter's schema.",
+          "The technical name of the field to update (e.g. `locations_count`). Must exist on the section's schema.",
       },
       value: {
         // Anthropic's tool schema accepts a single JSON Schema; we
@@ -127,7 +127,7 @@ Returns 3–5 results with title, URL, and excerpt.`,
 /**
  * Trade-area demographics — Census ACS via ZIP. Returns population,
  * median household income, and median age. Used by the territory
- * + market-strategy chapters to anchor site selection in real data.
+ * + market-strategy sections to anchor site selection in real data.
  */
 export const ZIP_DEMOGRAPHICS_TOOL: Anthropic.Tool = {
   name: "zip_demographics",
@@ -190,7 +190,7 @@ export type ToolResult = {
   /** Full structured detail for the client UI. */
   detail?: {
     slug: MemoryFileSlug;
-    chapterTitle: string;
+    sectionTitle: string;
     fieldName: string;
     fieldLabel: string;
     value: FieldValue;
@@ -199,7 +199,7 @@ export type ToolResult = {
 
 /**
  * Execute the update_memory_field tool. Validates the input against
- * the chapter's schema, coerces the value, writes through
+ * the section's schema, coerces the value, writes through
  * writeMemoryFields, and returns a human-readable confirmation.
  *
  * Errors are returned as `{ ok: false, summary: "..." }` rather than
@@ -224,7 +224,7 @@ export async function executeUpdateMemoryField(args: {
   if (typeof slug !== "string" || !isValidMemoryFileSlug(slug)) {
     return {
       ok: false,
-      summary: `Unknown chapter slug: ${JSON.stringify(slug)}. Use one of: ${MEMORY_FILES.join(", ")}.`,
+      summary: `Unknown section slug: ${JSON.stringify(slug)}. Use one of: ${MEMORY_FILES.join(", ")}.`,
     };
   }
   if (typeof fieldName !== "string" || !fieldName) {
@@ -234,20 +234,20 @@ export async function executeUpdateMemoryField(args: {
     };
   }
 
-  const schema = CHAPTER_SCHEMAS[slug];
+  const schema = SECTION_SCHEMAS[slug];
   if (!schema) {
-    // Phase 1.5b chapters (e.g. brand_voice) don't have a schema yet.
+    // Phase 1.5b sections (e.g. brand_voice) don't have a schema yet.
     // Tell the model so it can route the customer elsewhere.
     return {
       ok: false,
-      summary: `The "${slug}" chapter doesn't have a structured-fields schema yet — its content is freeform prose only. Note the fact in your reply and ask the customer to type it into the chapter directly.`,
+      summary: `The "${slug}" section doesn't have a structured-fields schema yet — its content is freeform prose only. Note the fact in your reply and ask the customer to type it into the section directly.`,
     };
   }
 
   const fieldDef = schema.fields.find((f) => f.name === fieldName);
   if (!fieldDef) {
     // Help Jason self-correct: list every editable field on this
-    // chapter with its technical name and human label. He can re-emit
+    // section with its technical name and human label. He can re-emit
     // the tool call with the right name on the next round of the
     // tool-use loop without bothering the customer.
     const editable = schema.fields
@@ -256,7 +256,7 @@ export async function executeUpdateMemoryField(args: {
       .join(", ");
     return {
       ok: false,
-      summary: `Field "${fieldName}" doesn't exist on chapter "${slug}". Valid editable fields: ${editable}. Pick the closest match and retry.`,
+      summary: `Field "${fieldName}" doesn't exist on section "${slug}". Valid editable fields: ${editable}. Pick the closest match and retry.`,
     };
   }
   if (hasCalc(slug, fieldName) || fieldDef.computed) {
@@ -296,7 +296,7 @@ export async function executeUpdateMemoryField(args: {
     summary: `Updated ${MEMORY_FILE_TITLES[slug]} — ${fieldDef.label}: ${valueDisplay}`,
     detail: {
       slug,
-      chapterTitle: MEMORY_FILE_TITLES[slug],
+      sectionTitle: MEMORY_FILE_TITLES[slug],
       fieldName,
       fieldLabel: fieldDef.label,
       value: coerced,

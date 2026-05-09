@@ -8,7 +8,7 @@
  */
 
 import type { BuildContext, DeliverableDoc, DocBlock } from "../types";
-import { chapterFields } from "../context-helpers";
+import { sectionFields } from "../context-helpers";
 import {
   fmtCurrency,
   fmtInt,
@@ -19,9 +19,9 @@ import {
 } from "../format";
 
 export function buildSiteSelectionGuide(ctx: BuildContext): DeliverableDoc {
-  const territory = chapterFields(ctx, "territory_real_estate");
-  const franchise = chapterFields(ctx, "franchise_economics");
-  const overview = chapterFields(ctx, "business_overview");
+  const territory = sectionFields(ctx, "territory_real_estate");
+  const franchise = sectionFields(ctx, "franchise_economics");
+  const overview = sectionFields(ctx, "business_overview");
 
   const businessName =
     fmtText(overview.concept_summary).split(/[.\n]/)[0]?.trim() || "Your Franchise";

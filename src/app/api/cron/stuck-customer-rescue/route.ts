@@ -8,7 +8,7 @@ import {
 import {
   indexMemoryRows,
   memoryFieldsFromRows,
-  computeChapterReadiness,
+  computeSectionReadiness,
   overallReadinessPct,
 } from "@/lib/memory/readiness";
 import { MEMORY_FILES, MEMORY_FILE_TITLES } from "@/lib/memory/files";
@@ -29,9 +29,9 @@ export const maxDuration = 60;
  * Stuck-customer rescue cron.
  *
  * Detects paying customers whose Memory hasn't moved in 7+ days, picks
- * the next chapter they should pick up, and sends a Jason-voice rescue
+ * the next section they should pick up, and sends a Jason-voice rescue
  * email via Resend. Pure code — no LLM call per customer. Personalization
- * is mechanical: name + days idle + next chapter + (optionally) a
+ * is mechanical: name + days idle + next section + (optionally) a
  * blocker hint derived from where the customer has the most unanswered
  * questions.
  *
@@ -150,14 +150,14 @@ export async function GET(req: NextRequest) {
     ((recentSendsRaw ?? []) as Array<{ user_id: string }>).map((r) => r.user_id),
   );
 
-  // 5) For each candidate, compute idle-days + next chapter + blocker hint.
+  // 5) For each candidate, compute idle-days + next section + blocker hint.
   type Candidate = {
     userId: string;
     email: string;
     firstName: string | null;
     daysIdle: number;
-    nextChapterSlug: string;
-    nextChapterTitle: string;
+    nextSectionSlug: string;
+    nextSectionTitle: string;
     questionsRemaining: number;
     blockerHint: string | null;
     bookJasonUrl: string | null;
@@ -191,7 +191,7 @@ export async function GET(req: NextRequest) {
     const daysIdle = Math.floor((now - lastTouched) / (24 * 3600 * 1000));
     if (daysIdle < STUCK_DAYS_MIN || daysIdle > STUCK_DAYS_MAX) continue;
 
-    // Compute the queue to pick the next chapter.
+    // Compute the queue to pick the next section.
     const indexed = indexMemoryRows(
       rows.map((r) => ({
         file_slug: r.file_slug,
@@ -207,10 +207,10 @@ export async function GET(req: NextRequest) {
 
     // If the queue is empty AND readiness is high, the customer isn't
     // stuck — they're done. Don't ping.
-    const readinessPct = overallReadinessPct(computeChapterReadiness(indexed));
+    const readinessPct = overallReadinessPct(computeSectionReadiness(indexed));
     if (queue.length === 0 && readinessPct >= 95) continue;
 
-    // Pick the next chapter: the one carrying the queue's first item.
+    // Pick the next section: the one carrying the queue's first item.
     // Fallback (unlikely): first MEMORY_FILES slug with empty content.
     const next = summary.next;
     const nextSlug = (next?.slug ??
@@ -222,7 +222,7 @@ export async function GET(req: NextRequest) {
     const nextTitle =
       MEMORY_FILE_TITLES[nextSlug as keyof typeof MEMORY_FILE_TITLES];
 
-    // Blocker hint: which chapter has the most unanswered questions?
+    // Blocker hint: which section has the most unanswered questions?
     // If it's not the same as nextSlug, name it specifically — that's
     // often where the actual blockage is.
     const counts = new Map<string, number>();
@@ -232,7 +232,7 @@ export async function GET(req: NextRequest) {
     const heaviestSlug = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
     const blockerHint =
       heaviestSlug && heaviestSlug !== nextSlug
-        ? `The chapter that's had the most stuck questions is ${MEMORY_FILE_TITLES[heaviestSlug as keyof typeof MEMORY_FILE_TITLES]} (${counts.get(heaviestSlug) ?? 0} unanswered). If that's the wall, tell me.`
+        ? `The section that's had the most stuck questions is ${MEMORY_FILE_TITLES[heaviestSlug as keyof typeof MEMORY_FILE_TITLES]} (${counts.get(heaviestSlug) ?? 0} unanswered). If that's the wall, tell me.`
         : null;
 
     // Book-Jason eligibility: env must be configured AND customer
@@ -245,8 +245,8 @@ export async function GET(req: NextRequest) {
       email: profile.email,
       firstName: profile.full_name?.split(/\s+/)[0]?.trim() || null,
       daysIdle,
-      nextChapterSlug: nextSlug,
-      nextChapterTitle: nextTitle,
+      nextSectionSlug: nextSlug,
+      nextSectionTitle: nextTitle,
       questionsRemaining: summary.totalRequired,
       blockerHint,
       bookJasonUrl: eligibleForCalendly ? calendlyUrl : null,
@@ -261,7 +261,7 @@ export async function GET(req: NextRequest) {
     email: string;
     firstName: string | null;
     daysIdle: number;
-    nextChapterTitle: string;
+    nextSectionTitle: string;
     sent: boolean;
     reason?: string;
   };
@@ -274,8 +274,8 @@ export async function GET(req: NextRequest) {
         {
           firstName: c.firstName,
           daysIdle: c.daysIdle,
-          nextChapterSlug: c.nextChapterSlug,
-          nextChapterTitle: c.nextChapterTitle,
+          nextSectionSlug: c.nextSectionSlug,
+          nextSectionTitle: c.nextSectionTitle,
           questionsRemaining: c.questionsRemaining,
           blockerHint: c.blockerHint,
           siteUrl: SITE_URL,
@@ -291,7 +291,7 @@ export async function GET(req: NextRequest) {
       if (r.ok) {
         await admin.from("customer_rescue_sends").insert({
           user_id: c.userId,
-          chapter_slug: c.nextChapterSlug,
+          section_slug: c.nextSectionSlug,
           days_idle: c.daysIdle,
         });
         results.push({
@@ -299,7 +299,7 @@ export async function GET(req: NextRequest) {
           email: c.email,
           firstName: c.firstName,
           daysIdle: c.daysIdle,
-          nextChapterTitle: c.nextChapterTitle,
+          nextSectionTitle: c.nextSectionTitle,
           sent: true,
         });
       } else {
@@ -308,7 +308,7 @@ export async function GET(req: NextRequest) {
           email: c.email,
           firstName: c.firstName,
           daysIdle: c.daysIdle,
-          nextChapterTitle: c.nextChapterTitle,
+          nextSectionTitle: c.nextSectionTitle,
           sent: false,
           reason: r.error,
         });
@@ -320,7 +320,7 @@ export async function GET(req: NextRequest) {
         email: c.email,
         firstName: c.firstName,
         daysIdle: c.daysIdle,
-        nextChapterTitle: c.nextChapterTitle,
+        nextSectionTitle: c.nextSectionTitle,
         sent: false,
         reason: msg,
       });

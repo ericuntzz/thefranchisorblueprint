@@ -1,25 +1,25 @@
 /**
- * Auto-classify an uploaded document to one or more chapters.
+ * Auto-classify an uploaded document to one or more sections.
  *
- * The intake flow lands every file at a single primary chapter
+ * The intake flow lands every file at a single primary section
  * (Operations step → operating_model, Financials step →
  * unit_economics, etc.). But many real-world docs span multiple
- * chapters — an operations manual covers operating_model AND
+ * sections — an operations manual covers operating_model AND
  * recipes_and_menu AND vendor_supply_chain AND training_program;
  * a P&L feeds unit_economics AND franchise_economics. Without a
  * classifier, the agent only sees the doc when drafting the
- * primary chapter — every other relevant chapter starts from
+ * primary section — every other relevant section starts from
  * scratch.
  *
  * This module asks Sonnet (low effort) to read the file's name +
  * the first slice of its extracted text and return a small list of
- * additional chapter slugs the file is likely useful for. The
+ * additional section slugs the file is likely useful for. The
  * intake route attaches the doc to each returned slug so it
  * becomes available across the whole Blueprint.
  *
  * Best-effort by design. If Sonnet can't classify, returns []
  * (the primary attachment still lands; we just don't fan out).
- * Cap at 4 additional chapters so we don't flood every chapter
+ * Cap at 4 additional sections so we don't flood every section
  * with the same generic "About Us" PDF.
  */
 
@@ -34,10 +34,10 @@ import {
 
 const MAX_ADDITIONAL_SLUGS = 4;
 
-/** Brief description of each chapter — fed to Sonnet so it can
+/** Brief description of each section — fed to Sonnet so it can
  *  match the doc against the right ones. Mirrors the compilesInto
- *  framing customers see in the chapter hero. */
-const CHAPTER_SUMMARIES: Record<MemoryFileSlug, string> = {
+ *  framing customers see in the section hero. */
+const SECTION_SUMMARIES: Record<MemoryFileSlug, string> = {
   business_overview:
     "What the business does, founder story, locations, industry — the FDD Item 1 / Operations Manual §1 opening.",
   brand_voice:
@@ -73,12 +73,12 @@ const CHAPTER_SUMMARIES: Record<MemoryFileSlug, string> = {
 };
 
 /**
- * Classify an attachment to additional chapters beyond its
+ * Classify an attachment to additional sections beyond its
  * primary slug. Returns an array of MemoryFileSlugs (excluding
  * the primary). Empty array on classifier failure or when no
- * additional chapters apply.
+ * additional sections apply.
  */
-export async function classifyAttachmentToChapters(args: {
+export async function classifyAttachmentToSections(args: {
   primarySlug: MemoryFileSlug;
   fileName: string;
   /** Best-effort excerpt of the file content. May be a placeholder
@@ -96,19 +96,19 @@ export async function classifyAttachmentToChapters(args: {
   const candidateBlock = candidateSlugs
     .map(
       (s) =>
-        `- ${s} ("${MEMORY_FILE_TITLES[s]}"): ${CHAPTER_SUMMARIES[s] ?? ""}`,
+        `- ${s} ("${MEMORY_FILE_TITLES[s]}"): ${SECTION_SUMMARIES[s] ?? ""}`,
     )
     .join("\n");
 
-  const prompt = `You're classifying a customer-uploaded business document. The document has been routed to one primary chapter already (${args.primarySlug}: "${MEMORY_FILE_TITLES[args.primarySlug]}"). Your job is to identify which OTHER chapters this document is also useful for, so the customer's agent can read the same file when drafting those chapters.
+  const prompt = `You're classifying a customer-uploaded business document. The document has been routed to one primary section already (${args.primarySlug}: "${MEMORY_FILE_TITLES[args.primarySlug]}"). Your job is to identify which OTHER sections this document is also useful for, so the customer's agent can read the same file when drafting those sections.
 
 Rules:
-- Return ONLY chapters where the document directly contains relevant facts. Skip "tangentially related" — better to be conservative.
-- Return at most ${MAX_ADDITIONAL_SLUGS} additional chapters.
-- Skip chapters where the document overlap is generic (every business has "a vendor list" mentioned in their ops manual; that doesn't mean an ops manual classifies as vendor_supply_chain unless it actually lists suppliers).
-- DO NOT include the primary chapter (${args.primarySlug}) in your response — it's already attached there.
+- Return ONLY sections where the document directly contains relevant facts. Skip "tangentially related" — better to be conservative.
+- Return at most ${MAX_ADDITIONAL_SLUGS} additional sections.
+- Skip sections where the document overlap is generic (every business has "a vendor list" mentioned in their ops manual; that doesn't mean an ops manual classifies as vendor_supply_chain unless it actually lists suppliers).
+- DO NOT include the primary section (${args.primarySlug}) in your response — it's already attached there.
 
-Available chapters (slug, title, what it's about):
+Available sections (slug, title, what it's about):
 ${candidateBlock}
 
 Document:
@@ -116,7 +116,7 @@ Document:
 - Content excerpt:
 ${args.excerpt}
 
-Output a single JSON array of chapter slugs (strings). No prose, no markdown fence. If no additional chapters apply, output []. Examples:
+Output a single JSON array of section slugs (strings). No prose, no markdown fence. If no additional sections apply, output []. Examples:
 - ["recipes_and_menu", "training_program"]
 - []
 - ["franchise_economics"]`;
@@ -144,7 +144,7 @@ Output a single JSON array of chapter slugs (strings). No prose, no markdown fen
     });
   } catch (err) {
     console.warn(
-      "[classify-attachment] API call failed — falling back to no additional chapters:",
+      "[classify-attachment] API call failed — falling back to no additional sections:",
       err instanceof Error ? err.message : err,
     );
     return [];

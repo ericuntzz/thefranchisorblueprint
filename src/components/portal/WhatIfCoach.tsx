@@ -7,7 +7,7 @@
  * play out a hundred times — the ones a brand-new franchisor doesn't
  * know to ask. Each card collapsed shows the question + severity pill;
  * expanded reveals Jason's 2-3 sentence take + a deep-link to the
- * related chapter.
+ * related section.
  *
  * Browse-able. The customer doesn't have to act on these — but they
  * read them once and the brand benefits forever.
@@ -108,12 +108,12 @@ function ScenarioRow({ scenario, phaseId }: { scenario: ScenarioDef; phaseId: Ph
           <p className="text-navy text-sm leading-relaxed mb-3">{scenario.answer}</p>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
             <span className="text-grey-3 italic">Why this matters: {scenario.why}</span>
-            {scenario.relatedChapter && (
+            {scenario.relatedSection && (
               <Link
-                href={`/portal/chapter/${scenario.relatedChapter}`}
+                href={`/portal/section/${scenario.relatedSection}`}
                 className="text-navy hover:underline font-bold uppercase tracking-[0.1em]"
               >
-                Open the related chapter →
+                Open the related section →
               </Link>
             )}
           </div>

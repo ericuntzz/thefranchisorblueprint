@@ -23,12 +23,12 @@
  *
  * The matrix is shipped as a Deliverable so it's part of the export
  * bundle; customers can also see their CURRENT registration progress
- * by editing the compliance_legal chapter (registration_states,
+ * by editing the compliance_legal section (registration_states,
  * filing_only_states, non_registration_states fields).
  */
 
 import type { BuildContext, DeliverableDoc } from "../types";
-import { chapterFields } from "../context-helpers";
+import { sectionFields } from "../context-helpers";
 import { fmtList, fmtText, isFilled } from "../format";
 
 type StateRow = {
@@ -76,8 +76,8 @@ const NON_REGISTRATION_STATES: string[] = [
 ];
 
 export function buildStateRegistrationMatrix(ctx: BuildContext): DeliverableDoc {
-  const overview = chapterFields(ctx, "business_overview");
-  const compliance = chapterFields(ctx, "compliance_legal");
+  const overview = sectionFields(ctx, "business_overview");
+  const compliance = sectionFields(ctx, "compliance_legal");
 
   const businessName =
     fmtText(overview.concept_summary).split(/[.\n]/)[0]?.trim() || "Your Franchise";
@@ -200,7 +200,7 @@ export function buildStateRegistrationMatrix(ctx: BuildContext): DeliverableDoc 
           {
             kind: "paragraph",
             text:
-              "These states are flagged as active in the compliance_legal chapter. Update the chapter as filings change — this section regenerates from your live Memory.",
+              "These states are flagged as active in the compliance_legal section. Update the section as filings change — this section regenerates from your live Memory.",
           },
           {
             kind: "kvtable",

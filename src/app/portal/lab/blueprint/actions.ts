@@ -9,9 +9,9 @@
  * gate as the rest of /portal — the structured-fields editor is a
  * paid feature.
  *
- * The action is intentionally narrow: it accepts a single chapter's
- * field changes and writes them. Cross-chapter saves don't exist
- * (you edit one chapter at a time in the UI).
+ * The action is intentionally narrow: it accepts a single section's
+ * field changes and writes them. Cross-section saves don't exist
+ * (you edit one section at a time in the UI).
  */
 
 import { revalidatePath } from "next/cache";
@@ -26,7 +26,7 @@ import type { CustomerMemory, Purchase } from "@/lib/supabase/types";
 type FieldValue = string | number | boolean | string[] | null;
 
 /**
- * Save a batch of structured-field changes for one chapter.
+ * Save a batch of structured-field changes for one section.
  * Returns nothing on success; throws on failure (Server Actions
  * surface thrown errors to the client `onSave` rejection).
  */
@@ -36,7 +36,7 @@ export async function saveMemoryFields(args: {
   changes: Record<string, FieldValue>;
 }): Promise<void> {
   if (!isValidMemoryFileSlug(args.slug)) {
-    throw new Error(`Unknown chapter: ${args.slug}`);
+    throw new Error(`Unknown section: ${args.slug}`);
   }
 
   const supabase = await getSupabaseServer();
@@ -70,21 +70,21 @@ export async function saveMemoryFields(args: {
 }
 
 /**
- * Save a customer's inline-prose edit for one chapter.
+ * Save a customer's inline-prose edit for one section.
  *
- * Called when the customer types directly into the chapter prose
+ * Called when the customer types directly into the section prose
  * (instead of editing structured fields). The raw textarea content is
  * wrapped in a single user-locked span so future Opus redrafts know to
  * preserve it verbatim. The draft pipeline reads these markers and is
  * explicitly instructed not to paraphrase, shorten, or drop them.
  *
- * v1 model: hand-editing the prose locks the WHOLE chapter. Opus can
+ * v1 model: hand-editing the prose locks the WHOLE section. Opus can
  * still append new sections on a redraft, but won't modify the saved
  * text. A v2 enhancement is paragraph-level locking via diff so the
  * agent can re-do untouched paragraphs while leaving edited ones
  * alone.
  */
-export async function saveChapterProse(args: {
+export async function saveSectionProse(args: {
   slug: string;
   /** Raw markdown the customer typed. We strip any pre-existing
    *  user-locked markers before re-wrapping the whole thing — the user
@@ -92,7 +92,7 @@ export async function saveChapterProse(args: {
   contentMd: string;
 }): Promise<void> {
   if (!isValidMemoryFileSlug(args.slug)) {
-    throw new Error(`Unknown chapter: ${args.slug}`);
+    throw new Error(`Unknown section: ${args.slug}`);
   }
 
   const supabase = await getSupabaseServer();
@@ -129,12 +129,12 @@ export async function saveChapterProse(args: {
       content_md: wrapped,
       last_updated_by: "user",
       // We don't auto-promote confidence on a user prose edit; leaves
-      // whatever confidence the chapter had.
+      // whatever confidence the section had.
     },
     { onConflict: "user_id,file_slug" },
   );
   if (error) {
-    console.error("[actions] saveChapterProse failed:", error.message);
+    console.error("[actions] saveSectionProse failed:", error.message);
     throw new Error(`Save failed: ${error.message}`);
   }
 
@@ -144,17 +144,17 @@ export async function saveChapterProse(args: {
 /**
  * Save a single section's edits — the per-section flavor of the
  * inline-prose path. Splices the new body (and optionally an updated
- * heading) into the chapter's content_md at the specified section
+ * heading) into the section's content_md at the specified section
  * index, wraps the new body in a user-locked span so future Opus
  * redrafts preserve it verbatim, and persists.
  *
  * Identifies the section by index, not by heading text — the customer
  * is allowed to rename a heading without breaking the persistence
- * link. If the index is out of range (chapter shape changed under us),
+ * link. If the index is out of range (section shape changed under us),
  * the action throws and the client surfaces a "save failed, reload"
  * message.
  */
-export async function saveChapterSection(args: {
+export async function saveSectionSection(args: {
   slug: string;
   sectionIndex: number;
   /** New body markdown (heading line excluded). Will be re-wrapped in
@@ -166,7 +166,7 @@ export async function saveChapterSection(args: {
   heading?: string | null;
 }): Promise<void> {
   if (!isValidMemoryFileSlug(args.slug)) {
-    throw new Error(`Unknown chapter: ${args.slug}`);
+    throw new Error(`Unknown section: ${args.slug}`);
   }
 
   const supabase = await getSupabaseServer();
@@ -209,7 +209,7 @@ export async function saveChapterSection(args: {
     { onConflict: "user_id,file_slug" },
   );
   if (error) {
-    console.error("[actions] saveChapterSection failed:", error.message);
+    console.error("[actions] saveSectionSection failed:", error.message);
     throw new Error(`Save failed: ${error.message}`);
   }
 
@@ -217,20 +217,20 @@ export async function saveChapterSection(args: {
 }
 
 /**
- * Promote a chapter's confidence to a new value (typically "verified"
+ * Promote a section's confidence to a new value (typically "verified"
  * via the customer hitting Approve, or back to "draft" if they want
  * to re-open for edits). The Command Center + ReadinessPill pick this
- * up on next render to flip the chapter from amber → green.
+ * up on next render to flip the section from amber → green.
  *
- * v1 model is per-chapter, not per-section. Section-level approval is
+ * v1 model is per-section, not per-section. Section-level approval is
  * a future enhancement once we see how customers actually use this.
  */
-export async function setChapterConfidence(args: {
+export async function setSectionConfidence(args: {
   slug: string;
   confidence: CustomerMemory["confidence"];
 }): Promise<void> {
   if (!isValidMemoryFileSlug(args.slug)) {
-    throw new Error(`Unknown chapter: ${args.slug}`);
+    throw new Error(`Unknown section: ${args.slug}`);
   }
   const valid: CustomerMemory["confidence"][] = ["verified", "inferred", "draft"];
   if (!valid.includes(args.confidence)) {
@@ -262,7 +262,7 @@ export async function setChapterConfidence(args: {
     .eq("user_id", user.id)
     .eq("file_slug", args.slug);
   if (error) {
-    console.error("[actions] setChapterConfidence failed:", error.message);
+    console.error("[actions] setSectionConfidence failed:", error.message);
     throw new Error(`Save failed: ${error.message}`);
   }
 

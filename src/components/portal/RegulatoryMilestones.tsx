@@ -153,12 +153,12 @@ function MilestoneRow({
           >
             {milestone.label}
           </span>
-          {milestone.relatedChapter && (
+          {milestone.relatedSection && (
             <Link
-              href={`/portal/chapter/${milestone.relatedChapter}`}
+              href={`/portal/section/${milestone.relatedSection}`}
               className="text-[10px] text-grey-3 hover:text-navy uppercase tracking-[0.1em] font-semibold"
             >
-              · open chapter
+              · open section
             </Link>
           )}
         </div>

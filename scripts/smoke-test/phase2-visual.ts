@@ -175,9 +175,9 @@ const flows: FlowSpec[] = [
     },
   },
   {
-    id: "visual-chapter-business-overview",
-    name: "Chapter page — business_overview",
-    url: "/portal/chapter/business_overview",
+    id: "visual-section-business-overview",
+    name: "Section page — business_overview",
+    url: "/portal/section/business_overview",
     waitFor: 'h1, h2:has-text("Concept")',
     assert: async (page) => {
       const hasFormLabel = await page
@@ -276,8 +276,8 @@ const flows: FlowSpec[] = [
     url: "/portal/lab/blueprint",
     waitFor: 'text="Concept & Story"',
     assert: async (page) => {
-      // The canvas should render multiple chapter cards without overflow.
-      const chapterCount = await page
+      // The canvas should render multiple section cards without overflow.
+      const sectionCount = await page
         .locator(":has-text('Concept & Story'):has-text('Operations')")
         .count();
       // No horizontal overflow at desktop viewport.
@@ -287,7 +287,7 @@ const flows: FlowSpec[] = [
       const cardsVisible = (await page.locator('h2, h3, [class*="font-bold"]').count()) > 5;
       return {
         ok: !overflowing && cardsVisible,
-        evidence: `overflowingX=${overflowing} cardsVisible=${cardsVisible} chapterMatches=${chapterCount}`,
+        evidence: `overflowingX=${overflowing} cardsVisible=${cardsVisible} sectionMatches=${sectionCount}`,
       };
     },
   },

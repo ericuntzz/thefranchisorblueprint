@@ -17,7 +17,7 @@ import {
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
-  computeChapterReadiness,
+  computeSectionReadiness,
   indexMemoryRows,
   memoryFieldsFromRows,
   overallReadinessPct,
@@ -31,7 +31,7 @@ import { CommandCenter } from "@/components/portal/CommandCenter";
 import { IntakeWelcomeBanner } from "@/components/portal/IntakeWelcomeBanner";
 import {
   DeliverableExplorer,
-  type ChapterDataBundle,
+  type SectionDataBundle,
   type DeliverableViewModel,
 } from "@/components/portal/DeliverableExplorer";
 import { ActivityFeed } from "@/components/portal/ActivityFeed";
@@ -44,17 +44,17 @@ import {
 } from "@/lib/export/deliverables";
 import { MEMORY_FILES, MEMORY_FILE_TITLES } from "@/lib/memory/files";
 import type { MemoryFileSlug } from "@/lib/memory/files";
-import { getChapterSchema } from "@/lib/memory/schemas";
+import { getSectionSchema } from "@/lib/memory/schemas";
 import type { MemoryFieldsMap } from "@/lib/calc";
 import {
   saveMemoryFields,
-  saveChapterSection,
-  setChapterConfidence,
+  saveSectionSection,
+  setSectionConfidence,
 } from "@/app/portal/lab/blueprint/actions";
 import type { DeliverableReview } from "@/lib/export/deliverable-readiness";
 import type { DeliverableId } from "@/lib/export/types";
 import type {
-  ChapterAttachment,
+  SectionAttachment,
   CustomerMemory,
   CustomerMemory as CM,
   CustomerMemoryProvenance,
@@ -107,7 +107,7 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
       .order("created_at", { ascending: false }),
     // Most recent merged intake — drives the "Picking up where we left off"
     // welcome banner. Show whenever it exists; the data flowed into the
-    // chapters at merge time and is persistent context worth surfacing.
+    // sections at merge time and is persistent context worth surfacing.
     supabase
       .from("intake_sessions")
       .select("domain, score_data, expansion_data, merged_at")
@@ -141,8 +141,8 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
 
   // ---- Franchise Readiness Command Center + DeliverableExplorer inputs ----
   // Read every customer_memory row + provenance so we can compute
-  // per-chapter readiness, the question queue, AND render the inline
-  // chapter editors inside the deliverable explorer. Service-role
+  // per-section readiness, the question queue, AND render the inline
+  // section editors inside the deliverable explorer. Service-role
   // client because the dashboard is auth-gated and we want this in
   // one round-trip.
   const admin = getSupabaseAdmin();
@@ -171,8 +171,8 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
       >
     >,
   );
-  const chapterReadiness = computeChapterReadiness(memoryIndexed);
-  const readinessPct = overallReadinessPct(chapterReadiness);
+  const sectionReadiness = computeSectionReadiness(memoryIndexed);
+  const readinessPct = overallReadinessPct(sectionReadiness);
   const queueItems = computeQuestionQueue(memoryFieldsFromRows(memoryIndexed));
   const queueSummary = summarizeQueue(queueItems);
   const queueEstimateMin = estimateMinutes(queueItems);
@@ -180,7 +180,7 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
   // ---- Milestone fire conditions ----
   // Originally these were keyed on the 9-capability system (started/
   // completed_capability rows). Phase 2A migrated the canonical
-  // progress signal to the 16-chapter Memory readiness percentage,
+  // progress signal to the 16-section Memory readiness percentage,
   // so the celebratory moments (Day 1 hero, halfway-upgrade-pitch,
   // final-readiness review) are now keyed on readinessPct thresholds:
   //
@@ -226,9 +226,9 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
     .sort((a, b) => new Date(a.promo_expires_at).getTime() - new Date(b.promo_expires_at).getTime())[0] ?? null;
 
   // ---- DeliverableExplorer view models ----
-  // Build a per-chapter bundle once (shared across deliverables that
-  // include the chapter) and an explorer view model per deliverable.
-  // Cross-chapter fields map drives the chapter editor's computed
+  // Build a per-section bundle once (shared across deliverables that
+  // include the section) and an explorer view model per deliverable.
+  // Cross-section fields map drives the section editor's computed
   // formulas (e.g. franchisee_profile.minimum_liquid_capital depends
   // on unit_economics.initial_investment_high).
   const allFieldsMap: MemoryFieldsMap = {};
@@ -238,20 +238,20 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
       string | number | boolean | string[] | null
     >;
   }
-  // Cross-chapter attachments index (only chapters that have ≥1
-  // attachment) — fed to ChapterCard so the pre-draft modal can offer
-  // "pull a reference from another chapter."
-  const allAttachmentsByChapter: Array<{
+  // Cross-section attachments index (only sections that have ≥1
+  // attachment) — fed to SectionCard so the pre-draft modal can offer
+  // "pull a reference from another section."
+  const allAttachmentsBySection: Array<{
     slug: MemoryFileSlug;
-    attachments: ChapterAttachment[];
+    attachments: SectionAttachment[];
   }> = MEMORY_FILES.flatMap((s) => {
-    const att = (memoryBySlug.get(s)?.attachments ?? []) as ChapterAttachment[];
+    const att = (memoryBySlug.get(s)?.attachments ?? []) as SectionAttachment[];
     return att.length > 0 ? [{ slug: s, attachments: att }] : [];
   });
-  // Per-chapter bundle. Chapters not yet in memoryBySlug (brand-new
+  // Per-section bundle. Sections not yet in memoryBySlug (brand-new
   // accounts) still get a bundle with empty content so the explorer
   // can render them as "Not started."
-  const chapterBundles = new Map<MemoryFileSlug, ChapterDataBundle>();
+  const sectionBundles = new Map<MemoryFileSlug, SectionDataBundle>();
   for (const slug of MEMORY_FILES) {
     const row = memoryBySlug.get(slug);
     const content = row?.content_md ?? "";
@@ -261,27 +261,27 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
       !content.trim() && !hasFields
         ? "empty"
         : ((row?.confidence ?? "draft") as "verified" | "inferred" | "draft");
-    const otherChaptersFields: MemoryFieldsMap = {};
+    const otherSectionsFields: MemoryFieldsMap = {};
     for (const [otherSlug, otherFields] of Object.entries(allFieldsMap)) {
       if (otherSlug !== slug) {
-        otherChaptersFields[otherSlug as keyof MemoryFieldsMap] = otherFields;
+        otherSectionsFields[otherSlug as keyof MemoryFieldsMap] = otherFields;
       }
     }
-    chapterBundles.set(slug, {
+    sectionBundles.set(slug, {
       slug,
       title: MEMORY_FILE_TITLES[slug],
       contentMd: content,
       confidence,
-      readinessState: chapterReadiness[slug]?.state ?? "gray",
+      readinessState: sectionReadiness[slug]?.state ?? "gray",
       lastUpdatedBy: row?.last_updated_by ?? null,
       updatedAt: row?.updated_at ?? null,
       provenance: provenanceBySlug.get(slug) ?? [],
-      attachments: (row?.attachments ?? []) as ChapterAttachment[],
-      allAttachmentsByChapter,
+      attachments: (row?.attachments ?? []) as SectionAttachment[],
+      allAttachmentsBySection,
       fields,
-      fieldStatus: (row?.field_status ?? undefined) as ChapterDataBundle["fieldStatus"],
-      otherChaptersFields,
-      schema: getChapterSchema(slug),
+      fieldStatus: (row?.field_status ?? undefined) as SectionDataBundle["fieldStatus"],
+      otherSectionsFields,
+      schema: getSectionSchema(slug),
     });
   }
   const deliverableViewModels: DeliverableViewModel[] = DELIVERABLE_DISPLAY_ORDER.flatMap(
@@ -289,16 +289,16 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
       const def = DELIVERABLES[id];
       const review = exportReadiness[id];
       if (!def || !review) return [];
-      const sourceChapters = def.sourceChapters
-        .map((slug) => chapterBundles.get(slug))
-        .filter((b): b is ChapterDataBundle => !!b);
+      const sourceSections = def.sourceSections
+        .map((slug) => sectionBundles.get(slug))
+        .filter((b): b is SectionDataBundle => !!b);
       return [{
         id,
         name: def.name,
         description: def.description,
         kind: def.kind,
         review,
-        sourceChapters,
+        sourceSections,
       }];
     },
   );
@@ -362,7 +362,7 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
               <p className="text-grey-3 text-base md:text-lg mt-2 max-w-[640px]">
                 {isFirstRun
                   ? "Your franchisor operating system. Pre-fill from your website and answer your first questions — most customers are 25% complete after their first session."
-                  : "Your franchisor operating system. Every chapter you fill compiles into the deliverables your attorney needs."}
+                  : "Your franchisor operating system. Every section you fill compiles into the deliverables your attorney needs."}
               </p>
             </div>
             {/* Coaching-credits chip removed 2026-05-09 per Eric — the
@@ -383,7 +383,7 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
 
           {/* Legacy capability-progress meter intentionally removed —
               the Command Center below now owns the "% complete /
-              what's next" surface, scored against the 16-chapter
+              what's next" surface, scored against the 16-section
               Blueprint instead of the older 9-capability framing. */}
         </div>
       </section>
@@ -410,22 +410,22 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
               after ~4 rows so it never dominates the dashboard. */}
           <ActivityFeed events={recentActivity} />
           {/* DeliverableExplorer replaces both the prior
-              DeliverableChecklist (per-phase chapter grid) and
+              DeliverableChecklist (per-phase section grid) and
               ExportsSection ("Download what you've built"). Each
               deliverable card expands to show its contributing
-              chapters; each chapter row expands to a full inline
+              sections; each section row expands to a full inline
               editor. Bundle download UI preserved at the top. */}
           <DeliverableExplorer
             deliverables={deliverableViewModels}
             saveFields={saveMemoryFields}
-            saveSection={saveChapterSection}
-            setConfidence={setChapterConfidence}
+            saveSection={saveSectionSection}
+            setConfidence={setSectionConfidence}
             isFirstRun={isFirstRun}
             firstName={firstName}
           />
           {/* RegulatoryMilestones moved to /portal/checklist — that's the
               "what has to happen before launch" surface, distinct from
-              the per-chapter readiness grid above. */}
+              the per-section readiness grid above. */}
           {/* WhatIfCoach moved to /portal/coaching, above the booking CTAs. */}
         </div>
       </section>
@@ -462,10 +462,10 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
 
       {/* The 9-capability Phases section was removed in the Phase 2A
           dashboard cleanup. Progress is now tracked against the
-          16-chapter Memory system; the Command Center + Deliverable
+          16-section Memory system; the Command Center + Deliverable
           Checklist above are the canonical "what's next" surface.
           The legacy /portal/[capability] detail pages were removed
-          entirely — /portal/chapter/[slug] is the per-item deep link
+          entirely — /portal/section/[slug] is the per-item deep link
           surface. */}
 
       {/* ===== Tier-specific sections (Tier 2/3 scaffolding) ===== */}
@@ -754,7 +754,7 @@ function MidwayUpgradeHero({
     : "You're well into your Blueprint";
 
   const body = isTier1
-    ? "The hardest chapters are still ahead — unit economics, royalty structure, FDD posture. 1:1 coaching dramatically compresses the timeline through them. Want a coach for the hard parts?"
+    ? "The hardest sections are still ahead — unit economics, royalty structure, FDD posture. 1:1 coaching dramatically compresses the timeline through them. Want a coach for the hard parts?"
     : `You've got ${coachingCredits} coaching ${coachingCredits === 1 ? "call" : "calls"} included. Most Navigator customers spend them on the back half of the Blueprint — book your first session.`;
 
   return (

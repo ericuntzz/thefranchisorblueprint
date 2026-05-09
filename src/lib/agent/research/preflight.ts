@@ -1,7 +1,7 @@
 /**
  * Pre-draft research helper.
  *
- * Some chapters (market_strategy, competitor_landscape) draft much
+ * Some sections (market_strategy, competitor_landscape) draft much
  * better with live external data than with Memory alone. Before the
  * draft pipeline calls Opus, this helper gathers a small bundle of
  * external context using the env-gated research wrappers (Tavily,
@@ -34,7 +34,7 @@ import {
   zipDemographics,
 } from "./census";
 
-export type ChapterResearch = {
+export type SectionResearch = {
   /** Markdown block ready to splice into the prompt. Empty string if
    *  no research sources were available. */
   markdown: string;
@@ -47,21 +47,21 @@ const MAX_TAVILY_RESULTS = 5;
 const MAX_PLACES_RESULTS = 8;
 
 /**
- * Run pre-draft research for a chapter that benefits from external
+ * Run pre-draft research for a section that benefits from external
  * data. Returns a markdown block (possibly empty) summarizing what
  * we found.
  *
- * `seedFields` is the structured-fields blob from the relevant chapters
+ * `seedFields` is the structured-fields blob from the relevant sections
  * — used to extract competitor names, location addresses, ZIP codes,
  * etc. The helper has minimal logic: it doesn't try to be clever
  * about which research to do, just runs the obvious queries for each
- * supported chapter.
+ * supported section.
  */
-export async function performChapterResearch(args: {
+export async function performSectionResearch(args: {
   slug: MemoryFileSlug;
-  /** Memory fields for the relevant source chapters, indexed by slug. */
+  /** Memory fields for the relevant source sections, indexed by slug. */
   fieldsBySlug: Partial<Record<MemoryFileSlug, Record<string, unknown>>>;
-}): Promise<ChapterResearch> {
+}): Promise<SectionResearch> {
   const { slug, fieldsBySlug } = args;
 
   if (slug === "market_strategy") {
@@ -78,11 +78,11 @@ export async function performChapterResearch(args: {
 
 async function researchMarketStrategy(
   fieldsBySlug: Partial<Record<MemoryFileSlug, Record<string, unknown>>>,
-): Promise<ChapterResearch> {
+): Promise<SectionResearch> {
   const overview = fieldsBySlug.business_overview ?? {};
   const competitors = fieldsBySlug.competitor_landscape ?? {};
   const lines: string[] = [];
-  const sourcesUsed: ChapterResearch["sourcesUsed"] = [];
+  const sourcesUsed: SectionResearch["sourcesUsed"] = [];
 
   // Industry-trends search via Tavily.
   if (isWebSearchAvailable()) {
@@ -145,11 +145,11 @@ async function researchMarketStrategy(
 
 async function researchCompetitorLandscape(
   fieldsBySlug: Partial<Record<MemoryFileSlug, Record<string, unknown>>>,
-): Promise<ChapterResearch> {
+): Promise<SectionResearch> {
   const overview = fieldsBySlug.business_overview ?? {};
   const competitors = fieldsBySlug.competitor_landscape ?? {};
   const lines: string[] = [];
-  const sourcesUsed: ChapterResearch["sourcesUsed"] = [];
+  const sourcesUsed: SectionResearch["sourcesUsed"] = [];
 
   // Trade-area density of direct competitors via Google Places, anchored
   // on the customer's first-location address.
@@ -213,11 +213,11 @@ async function researchCompetitorLandscape(
 
 async function researchTerritoryRealEstate(
   fieldsBySlug: Partial<Record<MemoryFileSlug, Record<string, unknown>>>,
-): Promise<ChapterResearch> {
+): Promise<SectionResearch> {
   const overview = fieldsBySlug.business_overview ?? {};
   const territory = fieldsBySlug.territory_real_estate ?? {};
   const lines: string[] = [];
-  const sourcesUsed: ChapterResearch["sourcesUsed"] = [];
+  const sourcesUsed: SectionResearch["sourcesUsed"] = [];
 
   // Demographics for priority markets via Census (if any are ZIPs).
   if (isCensusAvailable()) {

@@ -15,15 +15,15 @@
  *     fields as the customer edits inputs), the export pipeline (DOCX
  *     templates substitute computed values into FDD Items 7 and 19),
  *     and the agent's draft pipeline (Opus 4.7 reads computed values
- *     when writing chapter prose so the prose stays consistent with
+ *     when writing section prose so the prose stays consistent with
  *     the math).
  *   - It's pure. No DB calls, no LLM calls, no async. Easy to test.
  *
  * The `runCalc` entry point evaluates a single computed-field formula
  * given the current Memory state. Callers pass:
- *   - `chapterFields`: the same-chapter fields jsonb.
- *   - `crossChapter`: a map keyed by chapter slug for fields that
- *     reference fields in other chapters (e.g.
+ *   - `sectionFields`: the same-section fields jsonb.
+ *   - `crossSection`: a map keyed by section slug for fields that
+ *     reference fields in other sections (e.g.
  *     `franchisee_profile.minimum_liquid_capital_dollars` derives from
  *     `unit_economics.initial_investment_high_dollars`).
  *
@@ -37,20 +37,20 @@ import type { MemoryFileSlug } from "@/lib/memory/files";
 /** A field value as stored in customer_memory.fields. */
 type FieldValue = string | number | boolean | string[] | null;
 
-/** Convenience type for a chapter's full field bag. */
-type ChapterFields = Record<string, FieldValue>;
+/** Convenience type for a section's full field bag. */
+type SectionFields = Record<string, FieldValue>;
 
-/** The full Memory state — all chapters' fields keyed by slug. */
-export type MemoryFieldsMap = Partial<Record<MemoryFileSlug, ChapterFields>>;
+/** The full Memory state — all sections' fields keyed by slug. */
+export type MemoryFieldsMap = Partial<Record<MemoryFileSlug, SectionFields>>;
 
 /** Pull a numeric value or return null if missing/non-numeric. */
-function num(fields: ChapterFields, name: string): number | null {
+function num(fields: SectionFields, name: string): number | null {
   const v = fields[name];
   if (typeof v === "number" && Number.isFinite(v)) return v;
   return null;
 }
 
-/** Pull a numeric from a different chapter, or null if missing. */
+/** Pull a numeric from a different section, or null if missing. */
 function crossNum(
   cross: MemoryFieldsMap,
   slug: MemoryFileSlug,
@@ -62,14 +62,14 @@ function crossNum(
 }
 
 // ---------------------------------------------------------------------------
-// Formulas — keyed by `${chapter}.${field}` (matching the schema's namespace
-// for cross-chapter references; same-chapter fields are aliased below).
+// Formulas — keyed by `${section}.${field}` (matching the schema's namespace
+// for cross-section references; same-section fields are aliased below).
 // ---------------------------------------------------------------------------
 
 type CalcCtx = {
-  /** Same-chapter fields (the chapter being computed for). */
-  fields: ChapterFields;
-  /** Cross-chapter access — keyed by slug. */
+  /** Same-section fields (the section being computed for). */
+  fields: SectionFields;
+  /** Cross-section access — keyed by slug. */
   cross: MemoryFieldsMap;
 };
 
@@ -145,7 +145,7 @@ const computeAuvYear2Dollars: CalcFn = ({ fields }) => {
 
 /**
  * Required liquid capital = 30% of high-end initial investment.
- * Cross-chapter — pulls from unit_economics. Suggested default; the
+ * Cross-section — pulls from unit_economics. Suggested default; the
  * franchisor can set a different threshold based on their strategy.
  * Rounded to nearest $5,000 (typical franchise-marketing increment).
  */
@@ -232,7 +232,7 @@ export function hasDerivedDefault(
 export function runCalc(args: {
   slug: MemoryFileSlug;
   fieldName: string;
-  fields: ChapterFields;
+  fields: SectionFields;
   cross: MemoryFieldsMap;
 }): number | null {
   const key = `${args.slug}.${args.fieldName}`;

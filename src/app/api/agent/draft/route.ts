@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
-import { draftChapter } from "@/lib/agent";
+import { draftSection } from "@/lib/agent";
 import {
   hasSufficientMemoryForDraft,
   isValidMemoryFileSlug,
@@ -8,15 +8,15 @@ import {
   upsertMemoryWithProvenance,
   writeMemoryFields,
 } from "@/lib/memory";
-import type { ChapterAttachment, Purchase } from "@/lib/supabase/types";
+import type { SectionAttachment, Purchase } from "@/lib/supabase/types";
 import type { MemoryFileSlug } from "@/lib/memory/files";
 
 export const runtime = "nodejs";
-// Opus chapter drafts run 30-90s typically, but customers with rich
-// Memory + multiple cross-chapter attachments can push toward 2-3 min.
+// Opus section drafts run 30-90s typically, but customers with rich
+// Memory + multiple cross-section attachments can push toward 2-3 min.
 // 300s is the Vercel Pro serverless ceiling — anything longer than that
 // is a 504 regardless. The proper fix is the background-job refactor
-// (chapter_draft_jobs table + worker) — this is the safe ceiling until
+// (section_draft_jobs table + worker) — this is the safe ceiling until
 // that ships.
 export const maxDuration = 300;
 
@@ -25,9 +25,9 @@ export const maxDuration = 300;
  *
  * Body: { slug: MemoryFileSlug, instruction?: string, persist?: boolean }
  *
- * Calls the Opus 4.7 chapter-draft pipeline for the requested chapter,
+ * Calls the Opus 4.7 section-draft pipeline for the requested section,
  * using everything the agent currently knows about the customer (their
- * full Memory snapshot + Jason's per-chapter principles + High Point
+ * full Memory snapshot + Jason's per-section principles + High Point
  * precedent if curated).
  *
  * persist=true (default): writes the result into customer_memory with
@@ -62,10 +62,10 @@ export async function POST(req: NextRequest) {
     /** Extra context the customer typed in the pre-draft modal. Not a
      *  replacement for `instruction` — appended to the default. */
     extraContext?: string;
-    /** IDs of attachments (across any chapter) the customer explicitly
+    /** IDs of attachments (across any section) the customer explicitly
      *  selected in the modal. The route resolves these against the
      *  user's full attachment set and threads them into Opus's prompt
-     *  alongside the chapter's own attachments. */
+     *  alongside the section's own attachments. */
     referencedAttachmentIds?: string[];
   };
   try {
@@ -79,14 +79,14 @@ export async function POST(req: NextRequest) {
   }
   if (!isValidMemoryFileSlug(body.slug)) {
     return NextResponse.json(
-      { error: `Unknown chapter slug: ${body.slug}` },
+      { error: `Unknown section slug: ${body.slug}` },
       { status: 400 },
     );
   }
   const persist = body.persist !== false; // default true
   const baseInstruction =
     (body.instruction ?? "").trim() ||
-    "Draft this chapter from everything we know about the customer so far. Be aggressive — fill in what you can, mark gaps clearly with [NEEDS INPUT: ...].";
+    "Draft this section from everything we know about the customer so far. Be aggressive — fill in what you can, mark gaps clearly with [NEEDS INPUT: ...].";
   const extraContext = (body.extraContext ?? "").trim();
   const instruction = extraContext
     ? `${baseInstruction}\n\nAdditional context the customer wants you to weave in or pay attention to:\n${extraContext}`
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
   // [NEEDS INPUT] placeholders.
   //
   // This check is global (across the whole customer's Memory), not
-  // chapter-local — even an empty chapter is draftable if other chapters
+  // section-local — even an empty section is draftable if other sections
   // have content the agent can reason from. We only refuse when the
   // entire Memory is effectively empty.
   try {
@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
           ok: false,
           reason: "insufficient_context",
           message:
-            "Jason needs at least a little context about your business before drafting a chapter. The chapter would be mostly placeholders right now — let's seed it first.",
+            "Jason needs at least a little context about your business before drafting a section. The section would be mostly placeholders right now — let's seed it first.",
           signals: sufficiency.signals,
         },
         { status: 422 },
@@ -123,20 +123,20 @@ export async function POST(req: NextRequest) {
   }
 
   // Resolve referenced attachment IDs to actual attachment records.
-  // The customer might have selected attachments from chapters other
+  // The customer might have selected attachments from sections other
   // than this one — pull them in via readAllAttachments and tag each
   // with its origin slug so the prompt knows where it came from.
   let additionalAttachments: Array<{
     fromSlug: MemoryFileSlug;
-    attachment: ChapterAttachment;
+    attachment: SectionAttachment;
   }> = [];
   const requestedIds = new Set(body.referencedAttachmentIds ?? []);
   if (requestedIds.size > 0) {
     try {
       const all = await readAllAttachments(user.id);
       for (const { slug, attachments } of all) {
-        // Skip THIS chapter's attachments — draftChapter already loads
-        // them as "native" attachments. Only foreign-chapter pulls
+        // Skip THIS section's attachments — draftSection already loads
+        // them as "native" attachments. Only foreign-section pulls
         // belong in additionalAttachments.
         if (slug === body.slug) continue;
         for (const att of attachments) {
@@ -146,7 +146,7 @@ export async function POST(req: NextRequest) {
         }
       }
     } catch (err) {
-      // Non-fatal: log and proceed with chapter-native attachments only.
+      // Non-fatal: log and proceed with section-native attachments only.
       console.error(
         "[agent/draft] readAllAttachments failed (non-fatal):",
         err instanceof Error ? err.message : err,
@@ -156,7 +156,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const result = await draftChapter({
+    const result = await draftSection({
       userId: user.id,
       slug: body.slug,
       instruction,
@@ -175,7 +175,7 @@ export async function POST(req: NextRequest) {
       });
       // Persist the structured fields Opus extracted from its own
       // draft so "Edit fields" never opens blank when there's a real
-      // chapter on the page. source="agent_inference" so the audit
+      // section on the page. source="agent_inference" so the audit
       // log distinguishes these from values the customer typed.
       if (Object.keys(result.extractedFields).length > 0) {
         try {

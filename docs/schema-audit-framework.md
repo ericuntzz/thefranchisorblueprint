@@ -1,10 +1,10 @@
 # Schema Audit Framework
 
-**Purpose.** The 11 audit-pending chapter schemas in `src/lib/memory/schemas.ts` were designed from FDD requirements + general franchise practice. They have NOT been cross-checked against TFB's existing deliverable templates or the High Point Coffee reference bundle. This document is the tracking artifact for that audit.
+**Purpose.** The 11 audit-pending section schemas in `src/lib/memory/schemas.ts` were designed from FDD requirements + general franchise practice. They have NOT been cross-checked against TFB's existing deliverable templates or the High Point Coffee reference bundle. This document is the tracking artifact for that audit.
 
 **The rule.** From the schema file header: *"If I see a field that doesn't obviously map to an FDD item or a customer-facing deliverable, that's not grounds to cut it — that's grounds to ASK whether the existing TFB framework already covers it."* Default to inclusion. Cuts require Jason's sign-off; adds need a citation in a source document.
 
-**How to use.** For each chapter below, walk the listed source documents section-by-section and fill in the **Add / Cut / Keep** table. Anything cut needs a one-line reason. Anything added needs a target field type + bucket placement note.
+**How to use.** For each section below, walk the listed source documents section-by-section and fill in the **Add / Cut / Keep** table. Anything cut needs a one-line reason. Anything added needs a target field type + bucket placement note.
 
 **Source document locations** (in Google Drive `The Franchisor Blueprint/`):
 - `04_Customer_Deliverables/` — TFB's master templates (the v2 deliverables Jason has refined over multiple engagements)
@@ -62,7 +62,7 @@ These are not in scope for this pass. Listed for completeness:
 
 **Source documents:**
 - `04_Customer_Deliverables/Universal Franchise Operations Manual Master Template.docx` — Marketing Fund section
-- `High Point Coffee/HP_Franchise_Operations_Manual_v3_0.docx` — Marketing Fund chapter
+- `High Point Coffee/HP_Franchise_Operations_Manual_v3_0.docx` — Marketing Fund section
 - `04_Customer_Deliverables/Premium 23-Item Franchise Disclosure Document Guide.docx` — Item 11 guidance
 
 **Cross-check:**
@@ -78,7 +78,7 @@ These are not in scope for this pass. Listed for completeness:
 | Carryover policy | ✅ `carryover_policy` | Keep |
 | Local marketing rules | ✅ `local_marketing_spend_required`, `local_marketing_pre_approval_required` | Keep |
 | Grand-opening campaign | ✅ `grand_opening_marketing_required` | Keep |
-| _Jason: missing from HP Marketing Fund chapter?_ | ⚠️ TBD |  |
+| _Jason: missing from HP Marketing Fund section?_ | ⚠️ TBD |  |
 
 **Adds:**
 -
@@ -206,7 +206,7 @@ These are not in scope for this pass. Listed for completeness:
 | Required software | ✅ `operations_software_required` | Keep |
 | _Jason: shift handoff procedure? Cash-handling procedure? Manager-on-duty rules? Inventory cycle counts?_ | ⚠️ TBD |  |
 
-**Note:** This is a light-hybrid chapter — much of the operational detail lives in the prose `content_md`. Audit should distinguish "needs structured field" from "fine in prose."
+**Note:** This is a light-hybrid section — much of the operational detail lives in the prose `content_md`. Audit should distinguish "needs structured field" from "fine in prose."
 
 **Adds (likely structured):**
 - `cash_handling_procedure_required` (boolean)

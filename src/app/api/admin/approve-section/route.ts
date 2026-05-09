@@ -1,19 +1,19 @@
 /**
- * Admin endpoint to stamp a chapter as Jason-approved.
+ * Admin endpoint to stamp a section as Jason-approved.
  *
- *   POST   /api/admin/approve-chapter
+ *   POST   /api/admin/approve-section
  *     body: { userId, slug }
  *     → sets customer_memory.jason_approved_at = now()
  *
- *   DELETE /api/admin/approve-chapter
+ *   DELETE /api/admin/approve-section
  *     body: { userId, slug }
  *     → clears the approval (e.g. customer made changes that need re-review)
  *
  * Auth: ADMIN_USER_IDS gate. The customer never hits this directly —
- * they see the stamp via the chapter card UI but can't apply it
+ * they see the stamp via the section card UI but can't apply it
  * themselves.
  *
- * Rule: chapters with unresolved blocker-severity redlines can't be
+ * Rule: sections with unresolved blocker-severity redlines can't be
  * approved. UI surfaces this; we re-check server-side.
  */
 
@@ -42,10 +42,10 @@ export async function POST(req: NextRequest) {
   const admin = getSupabaseAdmin();
   // Refuse approval if there are unresolved blocker redlines.
   const { data: blockers } = await admin
-    .from("chapter_redlines")
+    .from("section_redlines")
     .select("id")
     .eq("user_id", body.userId)
-    .eq("chapter_slug", body.slug)
+    .eq("section_slug", body.slug)
     .eq("severity", "blocker")
     .is("resolved_at", null)
     .limit(1);
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error:
-          "Resolve every blocker-severity redline on this chapter before stamping it approved.",
+          "Resolve every blocker-severity redline on this section before stamping it approved.",
       },
       { status: 409 },
     );
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  revalidatePath(`/portal/chapter/${body.slug}`);
+  revalidatePath(`/portal/section/${body.slug}`);
   revalidatePath(`/portal/lab/blueprint`);
   return NextResponse.json({ ok: true });
 }
@@ -102,6 +102,6 @@ export async function DELETE(req: NextRequest) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  revalidatePath(`/portal/chapter/${body.slug}`);
+  revalidatePath(`/portal/section/${body.slug}`);
   return NextResponse.json({ ok: true });
 }

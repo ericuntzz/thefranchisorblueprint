@@ -2,9 +2,9 @@
 
 > Source: HP_Utah_Market_Strategy_Report.docx (current AUV estimates, benchmark table), HP_Franchise_Operations_Manual_v3_0.docx (Section 5.4 Financial Performance Benchmarks), LMF-Franchise Development Strategy and 12-Month Gantt Chart.docx (Investment Overview template — partially filled)
 
-## What a strong Unit Economics chapter looks like
+## What a strong Unit Economics section looks like
 
-A short, sober chapter — typically 2–4 pages — that lays out the cost structure to *open* a unit, the cost structure to *run* a unit, and the historical performance the franchisor can defensibly point to. The job is to give a prospective franchisee enough to do real math, while staying inside FDD Item 7 / Item 19 guardrails. It is *not* a pitch deck. The strongest version names the legal disclaimer up front and sticks to ranges and benchmarks rather than a single forecasted number.
+A short, sober section — typically 2–4 pages — that lays out the cost structure to *open* a unit, the cost structure to *run* a unit, and the historical performance the franchisor can defensibly point to. The job is to give a prospective franchisee enough to do real math, while staying inside FDD Item 7 / Item 19 guardrails. It is *not* a pitch deck. The strongest version names the legal disclaimer up front and sticks to ranges and benchmarks rather than a single forecasted number.
 
 ## Structure observed
 
@@ -24,7 +24,7 @@ A short, sober chapter — typically 2–4 pages — that lays out the cost stru
 - Ongoing fees broken out by both percentage AND collection cadence (weekly ACH, monthly, quarterly).
 - Benchmarks are stated as windows, not point values: "Prime cost below 65% of gross sales," not "prime cost is 60%."
 - Comparable-brand table cites the source (FDD summaries, brand websites) and includes 5–7 direct competitors.
-- AUV figures are flagged as audited or unaudited; if unaudited, the chapter explicitly says these cannot be marketed without Item 19 work.
+- AUV figures are flagged as audited or unaudited; if unaudited, the section explicitly says these cannot be marketed without Item 19 work.
 - Working-capital reserve is sized in months of operating cash (e.g. 3–6 months) rather than a flat dollar figure.
 - 15% contingency line is named and sized.
 - Year-by-year P&L summary distinguishes ramp vs. stabilized — does not assume Year 1 = mature run rate.

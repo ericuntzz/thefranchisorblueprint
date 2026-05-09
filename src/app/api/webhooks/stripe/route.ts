@@ -125,7 +125,7 @@ export async function POST(req: NextRequest) {
         // ─── Intake-snapshot merge ────────────────────────────────
         // If this email previously dropped a URL on the home page and
         // saved their snapshot, copy that snapshot's data into their
-        // customer_memory chapters so the portal opens pre-filled
+        // customer_memory sections so the portal opens pre-filled
         // (concept, brand voice, prototype demographics, expansion
         // markets). Defensive — failure here must never block the
         // purchase fulfillment.

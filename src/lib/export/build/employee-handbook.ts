@@ -8,7 +8,7 @@
  */
 
 import type { BuildContext, DeliverableDoc, DocBlock } from "../types";
-import { chapterFields } from "../context-helpers";
+import { sectionFields } from "../context-helpers";
 import {
   fmtBool,
   fmtCurrency,
@@ -21,8 +21,8 @@ import {
 } from "../format";
 
 export function buildEmployeeHandbook(ctx: BuildContext): DeliverableDoc {
-  const handbook = chapterFields(ctx, "employee_handbook");
-  const overview = chapterFields(ctx, "business_overview");
+  const handbook = sectionFields(ctx, "employee_handbook");
+  const overview = sectionFields(ctx, "business_overview");
 
   const businessName =
     fmtText(overview.concept_summary).split(/[.\n]/)[0]?.trim() || "Your Franchise";
@@ -163,7 +163,7 @@ export function buildEmployeeHandbook(ctx: BuildContext): DeliverableDoc {
             ? ({ kind: "paragraph", text: fmtText(handbook.uniform_requirements) } as DocBlock)
             : ({
                 kind: "callout",
-                text: "Uniform requirements not yet documented in the employee_handbook chapter.",
+                text: "Uniform requirements not yet documented in the employee_handbook section.",
                 tone: "neutral",
               } as DocBlock),
         ],

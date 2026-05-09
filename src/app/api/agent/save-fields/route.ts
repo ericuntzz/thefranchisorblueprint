@@ -1,7 +1,7 @@
 /**
  * POST /api/agent/save-fields
  *
- * Generic per-chapter field-write endpoint. Used by the pre-draft
+ * Generic per-section field-write endpoint. Used by the pre-draft
  * modal to persist inline blocker answers before kicking off a
  * draft. Different from the chat-tool path (which goes through
  * `update_memory_field` so the model can react to confirmations) —

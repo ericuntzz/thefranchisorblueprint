@@ -80,7 +80,7 @@ export type ScrapeArtifacts = {
   title: string | null;
   /** Meta description from the home page. */
   metaDescription: string | null;
-  /** OG image URL on the home page (logo / hero) — we surface this for the brand chapter. */
+  /** OG image URL on the home page (logo / hero) — we surface this for the brand section. */
   ogImage: string | null;
   /** First N words of visible body text from the home page. */
   homeExcerpt: string;
@@ -286,7 +286,7 @@ CRITICAL OUTPUT RULES:
   const brandVoiceSummary = stripScaffolding(parts[0] ?? "");
   const businessOverviewSummary = stripScaffolding(parts[1] ?? "");
 
-  // Provenance: every scraped chapter ties back to either the home or
+  // Provenance: every scraped section ties back to either the home or
   // about page, with the source_excerpt being the snippet we showed the
   // model. This is what the on-hover UI will surface.
   const homeProvenance = {

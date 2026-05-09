@@ -2,8 +2,8 @@
 
 /**
  * SnapshotHistoryButton — small "version history" affordance on the
- * chapter page. Click to open a panel listing recent snapshots; click
- * a row to roll the chapter back to that point. Rollback itself
+ * section page. Click to open a panel listing recent snapshots; click
+ * a row to roll the section back to that point. Rollback itself
  * captures a fresh snapshot first so the operation is reversible.
  */
 
@@ -87,7 +87,7 @@ export function SnapshotHistoryButton({
   }, [open, slug]);
 
   async function rollback(snapshotId: string) {
-    if (!confirm("Roll this chapter back to this version? Your current draft will be saved as a new snapshot first.")) {
+    if (!confirm("Roll this section back to this version? Your current draft will be saved as a new snapshot first.")) {
       return;
     }
     setBusy(snapshotId);

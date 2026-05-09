@@ -2,13 +2,13 @@
 
 /**
  * VoiceIntakeButton — record a 30-second to 30-minute voice intake
- * directly into a chapter.
+ * directly into a section.
  *
  * Click → start recording (MediaRecorder API on the customer's mic).
- * Click again → stop, upload to /api/agent/voice with the chapter slug.
+ * Click again → stop, upload to /api/agent/voice with the section slug.
  * The server saves the audio + (when OPENAI_API_KEY is present)
  * transcribes via Whisper and appends "## Voice intake — {date}"
- * to the chapter's content_md.
+ * to the section's content_md.
  *
  * Browser support: every modern browser ships MediaRecorder; we
  * feature-detect anyway and hide the button on browsers without it

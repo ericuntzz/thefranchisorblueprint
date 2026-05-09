@@ -298,7 +298,7 @@ export default async function IndustryPage({ params }: { params: Params }) {
                 body={
                   <>
                     Build the operations manual that codifies how a franchisee runs
-                    a unit. The 17-chapter framework covered in{" "}
+                    a unit. The 17-section framework covered in{" "}
                     <Link
                       href="/blog/how-to-write-franchise-operations-manual"
                       className="text-navy font-semibold underline decoration-gold/60 underline-offset-4 hover:text-gold"

@@ -4,7 +4,7 @@
  * Tavily is purpose-built for AI agents — it returns a small array of
  * relevant URLs with titles, AI-extracted excerpts, and (optionally)
  * raw page content. We use it to back the `web_search` tool for the
- * research-heavy chapters (market_strategy, competitor_landscape).
+ * research-heavy sections (market_strategy, competitor_landscape).
  *
  * Env-gated on `TAVILY_API_KEY`. When unset, every call returns
  * { ok: false, reason: "no_api_key" } and the caller falls back to

@@ -60,4 +60,4 @@ The point of the playbook-first workflow: the routine itself is allowed to add c
 ## Why both phases
 
 - **Phase 1** catches API contract drift, status-code regressions, and broken SSR very fast (~2 sec for ~20 checks). Doesn't need a browser. Runs reliably in the cloud routine.
-- **Phase 2** catches visual regressions, broken interactive widgets, and post-hydration issues (the redline drawer's slide-in, the chapter toolbar's redline-count badge, layout breaks). Slower but indispensable for "does this LOOK right?" verification — which is the actual customer experience.
+- **Phase 2** catches visual regressions, broken interactive widgets, and post-hydration issues (the redline drawer's slide-in, the section toolbar's redline-count badge, layout breaks). Slower but indispensable for "does this LOOK right?" verification — which is the actual customer experience.

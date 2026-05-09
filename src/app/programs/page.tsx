@@ -52,7 +52,7 @@ const docs = [
   {
     icon: BookMarked,
     title: "Codify Your Operations",
-    body: "A 17-chapter, 100+ page Operations Manual template — the brand bible franchisees will live by every day.",
+    body: "A 17-section, 100+ page Operations Manual template — the brand bible franchisees will live by every day.",
   },
   {
     icon: GraduationCap,

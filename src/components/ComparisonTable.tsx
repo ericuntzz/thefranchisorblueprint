@@ -12,7 +12,7 @@ interface ComparisonRow {
 const rows: ComparisonRow[] = [
   { label: "Complete Franchisor Operating System", diy: "no", consultant: "yes", tfb: "yes" },
   { label: "Decode the FDD (all 23 federal items)", diy: "no", consultant: "partial", tfb: "yes" },
-  { label: "Codify Your Operations (17-chapter manual)", diy: "no", consultant: "yes", tfb: "yes" },
+  { label: "Codify Your Operations (17-section manual)", diy: "no", consultant: "yes", tfb: "yes" },
   { label: "Score Real Estate Like a Franchisor", diy: "no", consultant: "partial", tfb: "yes" },
   { label: "Qualify Every Candidate (scoring matrix)", diy: "no", consultant: "partial", tfb: "yes" },
   { label: "Close Discovery Day (29-slide deck)", diy: "no", consultant: "partial", tfb: "yes" },

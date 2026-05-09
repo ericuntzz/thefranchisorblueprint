@@ -47,8 +47,8 @@ type Props = {
   /** True when the customer has already added a website (and we ran
    *  the scrape). Suppresses the "skip the typing" banner. */
   hasWebsite: boolean;
-  /** Per-chapter attachment count. Drives the inline doc-prompt
-   *  banner — only show when current chapter has zero attachments
+  /** Per-section attachment count. Drives the inline doc-prompt
+   *  banner — only show when current section has zero attachments
    *  (else the customer already gave us material for it). */
   attachmentCountBySlug: Record<string, number>;
   /** Server action — single-field save. */
@@ -141,7 +141,7 @@ export function QuestionQueueClient({
         </h1>
         <p className="text-emerald-900/85 mb-6 max-w-[520px] mx-auto leading-relaxed">
           Jason has everything he needs for a credible first pass on every
-          foundational chapter. Head into the Blueprint to redraft what you
+          foundational section. Head into the Blueprint to redraft what you
           want refreshed, or come back here later — new questions surface as
           earlier answers unlock new sections.
         </p>
@@ -205,7 +205,7 @@ export function QuestionQueueClient({
           hasn't pre-filled from their site yet. Eric: "ensure the
           website ingestion question is asked early on in this flow."
           One click → /portal/lab/intake which scrapes + auto-fills
-          the foundational chapters. Subsequent queue questions then
+          the foundational sections. Subsequent queue questions then
           become reviews rather than blanks. */}
       {!hasWebsite && (
         <div className="rounded-2xl bg-navy text-cream px-5 py-4 flex items-start gap-3">
@@ -216,7 +216,7 @@ export function QuestionQueueClient({
             </div>
             <p className="text-cream/90 text-sm leading-relaxed">
               Add your website and Jason will pre-fill the foundational
-              chapters. The questions in this queue then become
+              sections. The questions in this queue then become
               quick reviews instead of blanks to fill in from scratch.
             </p>
           </div>
@@ -294,9 +294,9 @@ export function QuestionQueueClient({
       )}
 
       {/* Inline doc-prompt — compact variant. Surfaces when the
-          current question's chapter has zero attachments AND we
+          current question's section has zero attachments AND we
           have a prompt configured. The customer can drop a doc and
-          skip a chunk of typing on this whole chapter. Hidden once
+          skip a chunk of typing on this whole section. Hidden once
           they've added something OR dismissed the prompt.
           Suppressed while the phase-transition card is active so
           we don't double-stack two upload affordances. */}
@@ -344,7 +344,7 @@ export function QuestionQueueClient({
 /**
  * PhaseTransitionCard — shown once per session at every phase
  * boundary. Celebrates the phase the customer just finished and
- * surfaces a phase-anchored doc-prompt for the chapter most likely
+ * surfaces a phase-anchored doc-prompt for the section most likely
  * to have a real document attached. Customer hits Continue → we
  * mark the phase id seen → the next question reveals.
  */
@@ -363,7 +363,7 @@ function PhaseTransitionCard({
 }) {
   const anchorPrompt = docPromptFor(anchorSlug);
   // If the customer already attached something to the anchor
-  // chapter, drop the doc-prompt section but still show the
+  // section, drop the doc-prompt section but still show the
   // celebration — they earned the moment of progress.
   const showDocPrompt = anchorAttachmentCount === 0 && !!anchorPrompt;
 
@@ -538,7 +538,7 @@ function QuestionCard({
         }
       `}</style>
       <div className="text-xs uppercase tracking-[0.14em] text-gold-warm font-bold mb-2">
-        {item.chapterTitle}
+        {item.sectionTitle}
       </div>
       <h2 className="text-navy font-extrabold text-xl md:text-2xl leading-tight mb-2">
         {fd.label}

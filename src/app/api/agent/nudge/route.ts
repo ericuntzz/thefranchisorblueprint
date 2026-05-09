@@ -24,9 +24,9 @@
  *      message in 7+ days. Pick-up nudge.
  *
  * Future v2 signals:
- *   - HIGH_READINESS_REVIEW — a chapter just hit 95%+ readiness
- *   - CRITICAL_GAP — a required field for an active chapter is empty
- *   - CHAPTER_MISMATCH — Sonnet-detected inconsistencies across chapters
+ *   - HIGH_READINESS_REVIEW — a section just hit 95%+ readiness
+ *   - CRITICAL_GAP — a required field for an active section is empty
+ *   - SECTION_MISMATCH — Sonnet-detected inconsistencies across sections
  *
  * Client tracks dismissals in localStorage by `nudge.id` so a
  * customer who saw a nudge once doesn't see the same one on the
@@ -38,7 +38,7 @@ import { NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import type {
-  ChapterAttachment,
+  SectionAttachment,
   CustomerMemory,
   Purchase,
 } from "@/lib/supabase/types";
@@ -59,11 +59,11 @@ const STALE_DAYS = 7;
 type Nudge = {
   /** Stable id used by the client for dismissal tracking. Format
    *  encodes the signal type and the contextual key (attachment
-   *  id, chapter slug, etc.) so the same condition recurring on
+   *  id, section slug, etc.) so the same condition recurring on
    *  a different attachment fires a fresh nudge. */
   id: string;
   /** What Jason says when the dock opens with this nudge active.
-   *  Markdown — bold the chapter / file name for scannability. */
+   *  Markdown — bold the section / file name for scannability. */
   greeting: string;
   /** Optional one-click follow-up the customer can send to Jason
    *  without typing. Pre-filled into the textarea or rendered as
@@ -124,17 +124,17 @@ export async function GET() {
   );
 
   // ---- Signal 1: UNREAD_ATTACHMENT ----
-  // Walk every chapter's attachments, find the most recent one
+  // Walk every section's attachments, find the most recent one
   // that has a non-placeholder excerpt and was uploaded after
   // the customer's last user message (or any time if they've
   // never sent a message).
   let candidate: {
-    attachment: ChapterAttachment;
+    attachment: SectionAttachment;
     slug: MemoryFileSlug;
   } | null = null;
   for (const row of memoryRows) {
     if (!isValidMemoryFileSlug(row.file_slug)) continue;
-    const attachments = (row.attachments ?? []) as ChapterAttachment[];
+    const attachments = (row.attachments ?? []) as SectionAttachment[];
     for (const att of attachments) {
       if (!att.created_at || !att.excerpt) continue;
       // Skip placeholder excerpts — those are the "(file attached
@@ -155,10 +155,10 @@ export async function GET() {
 
   if (candidate) {
     const fileLabel = candidate.attachment.label || "your last upload";
-    const chapterTitle = MEMORY_FILE_TITLES[candidate.slug];
+    const sectionTitle = MEMORY_FILE_TITLES[candidate.slug];
     const nudge: Nudge = {
       id: `unread-attachment:${candidate.attachment.id}`,
-      greeting: `I read **${fileLabel}** — pulled it into your **${chapterTitle}** chapter. Want me to walk you through what I found, or just call out the highest-leverage stuff?`,
+      greeting: `I read **${fileLabel}** — pulled it into your **${sectionTitle}** section. Want me to walk you through what I found, or just call out the highest-leverage stuff?`,
       starter: "Walk me through what you found",
       pillTeaser: "I read your doc — got notes",
     };

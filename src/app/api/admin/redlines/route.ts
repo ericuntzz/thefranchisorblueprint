@@ -1,6 +1,6 @@
 /**
  * Admin redline endpoints — Jason (or another admin) leaves notes on
- * a customer's chapter draft.
+ * a customer's section draft.
  *
  *   GET    /api/admin/redlines?userId=...&slug=...  → list redlines
  *   POST   /api/admin/redlines                       → create redline
@@ -8,7 +8,7 @@
  *   DELETE /api/admin/redlines?id=...                → drop redline
  *
  * Auth: ADMIN_USER_IDS gate. Customers don't hit this; they read their
- * own redlines via the chapter UI which goes through a separate
+ * own redlines via the section UI which goes through a separate
  * `/api/agent/redlines` route (TODO if needed) or a server-component
  * read.
  */
@@ -19,7 +19,7 @@ import { getSupabaseServer } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { getAuthenticatedAdminId } from "@/lib/admin";
 import { isValidMemoryFileSlug } from "@/lib/memory/files";
-import type { ChapterRedline } from "@/lib/supabase/types";
+import type { SectionRedline } from "@/lib/supabase/types";
 
 export const runtime = "nodejs";
 
@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
   }
   const admin = getSupabaseAdmin();
   let query = admin
-    .from("chapter_redlines")
+    .from("section_redlines")
     .select("*")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
@@ -63,13 +63,13 @@ export async function GET(req: NextRequest) {
     if (!isValidMemoryFileSlug(slug)) {
       return NextResponse.json({ error: "Invalid slug" }, { status: 400 });
     }
-    query = query.eq("chapter_slug", slug);
+    query = query.eq("section_slug", slug);
   }
   const { data, error } = await query;
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  return NextResponse.json({ redlines: (data ?? []) as ChapterRedline[] });
+  return NextResponse.json({ redlines: (data ?? []) as SectionRedline[] });
 }
 
 export async function POST(req: NextRequest) {
@@ -95,10 +95,10 @@ export async function POST(req: NextRequest) {
   }
   const admin = getSupabaseAdmin();
   const { data, error } = await admin
-    .from("chapter_redlines")
+    .from("section_redlines")
     .insert({
       user_id: body.userId,
-      chapter_slug: body.slug,
+      section_slug: body.slug,
       claim_id: body.claimId ?? null,
       comment: body.comment,
       severity: body.severity ?? "info",
@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  revalidatePath(`/portal/chapter/${body.slug}`);
+  revalidatePath(`/portal/section/${body.slug}`);
   return NextResponse.json({ ok: true, redline: data });
 }
 
@@ -131,7 +131,7 @@ export async function PATCH(req: NextRequest) {
   if (!body.id) {
     return NextResponse.json({ error: "id required" }, { status: 400 });
   }
-  const update: Partial<Omit<ChapterRedline, "id" | "user_id">> = {
+  const update: Partial<Omit<SectionRedline, "id" | "user_id">> = {
     updated_at: new Date().toISOString(),
   };
   if (typeof body.comment === "string") update.comment = body.comment;
@@ -142,7 +142,7 @@ export async function PATCH(req: NextRequest) {
   }
   const admin = getSupabaseAdmin();
   const { error } = await admin
-    .from("chapter_redlines")
+    .from("section_redlines")
     .update(update)
     .eq("id", body.id);
   if (error) {
@@ -159,7 +159,7 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "id required" }, { status: 400 });
   }
   const admin = getSupabaseAdmin();
-  const { error } = await admin.from("chapter_redlines").delete().eq("id", id);
+  const { error } = await admin.from("section_redlines").delete().eq("id", id);
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

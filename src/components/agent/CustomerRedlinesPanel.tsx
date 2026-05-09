@@ -3,14 +3,14 @@
 /**
  * CustomerRedlinesPanel — slide-out drawer the customer opens to see
  * the full thread of redline notes Jason (or another admin reviewer)
- * has left on their chapter.
+ * has left on their section.
  *
  * Mirrors the admin RedlineThread component but read-mostly: the
  * customer can mark redlines resolved/unresolved, but cannot create,
  * edit, or delete them. Reads + writes via /api/agent/redlines, which
  * RLS-scopes to the current customer's own rows.
  *
- * Triggered by clicking the redline badge in ChapterToolbar. Panel
+ * Triggered by clicking the redline badge in SectionToolbar. Panel
  * slides in from the right; backdrop click + Esc dismiss it.
  */
 
@@ -23,7 +23,7 @@ import {
   Stamp,
   X,
 } from "lucide-react";
-import type { ChapterRedline } from "@/lib/supabase/types";
+import type { SectionRedline } from "@/lib/supabase/types";
 import type { MemoryFileSlug } from "@/lib/memory/files";
 
 type Props = {
@@ -36,7 +36,7 @@ type Props = {
 };
 
 export function CustomerRedlinesPanel({ slug, open, onClose, onChange }: Props) {
-  const [redlines, setRedlines] = useState<ChapterRedline[]>([]);
+  const [redlines, setRedlines] = useState<SectionRedline[]>([]);
   const [approvedAt, setApprovedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -55,7 +55,7 @@ export function CustomerRedlinesPanel({ slug, open, onClose, onChange }: Props) 
         );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const j = (await res.json()) as {
-          redlines?: ChapterRedline[];
+          redlines?: SectionRedline[];
           approved?: boolean;
         };
         if (cancelled) return;
@@ -170,7 +170,7 @@ export function CustomerRedlinesPanel({ slug, open, onClose, onChange }: Props) 
                 </span>
               </div>
               <p className="text-sm text-emerald-900 leading-snug">
-                Jason has reviewed this chapter and stamped it ready. The
+                Jason has reviewed this section and stamped it ready. The
                 contents on this page are what the export bundle will produce.
               </p>
             </div>
@@ -189,10 +189,10 @@ export function CustomerRedlinesPanel({ slug, open, onClose, onChange }: Props) 
               <p className="text-sm text-grey-3 leading-snug">
                 {open_.length === 0
                   ? approvedAt
-                    ? "No outstanding notes. Jason has stamped this chapter approved."
-                    : "All reviewer notes have been resolved. Jason can stamp this chapter approved next."
+                    ? "No outstanding notes. Jason has stamped this section approved."
+                    : "All reviewer notes have been resolved. Jason can stamp this section approved next."
                   : blockerCount > 0
-                    ? "Blockers must be resolved before this chapter can be approved for export."
+                    ? "Blockers must be resolved before this section can be approved for export."
                     : "These are suggestions, not blockers — resolve them when you've addressed the feedback."}
               </p>
             </div>
@@ -212,7 +212,7 @@ export function CustomerRedlinesPanel({ slug, open, onClose, onChange }: Props) 
                 No reviewer notes yet
               </h2>
               <p className="text-xs text-grey-3 leading-snug">
-                When Jason reviews this chapter, his notes appear here. You can
+                When Jason reviews this section, his notes appear here. You can
                 resolve them in place once you&apos;ve addressed the feedback.
               </p>
             </div>
@@ -287,7 +287,7 @@ function RedlineCard({
   busy,
   onToggle,
 }: {
-  redline: ChapterRedline;
+  redline: SectionRedline;
   busy: boolean;
   onToggle: () => void;
 }) {

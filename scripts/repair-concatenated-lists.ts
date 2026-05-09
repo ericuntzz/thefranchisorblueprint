@@ -24,7 +24,7 @@
  */
 import { config } from "dotenv";
 import { createClient } from "@supabase/supabase-js";
-import { CHAPTER_SCHEMAS } from "../src/lib/memory/schemas";
+import { SECTION_SCHEMAS } from "../src/lib/memory/schemas";
 import { unconcatenateTitleCase } from "../src/lib/agent/coerce-list";
 import type { MemoryFileSlug } from "../src/lib/memory/files";
 
@@ -49,7 +49,7 @@ interface Repair {
 }
 
 function isListField(slug: string, fieldName: string): boolean {
-  const schema = CHAPTER_SCHEMAS[slug as MemoryFileSlug];
+  const schema = SECTION_SCHEMAS[slug as MemoryFileSlug];
   if (!schema) return false;
   const fd = schema.fields.find((f) => f.name === fieldName);
   if (!fd) return false;

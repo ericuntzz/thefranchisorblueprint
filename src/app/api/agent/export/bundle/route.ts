@@ -197,7 +197,7 @@ function buildBundleReadme(args: {
   lines.push("---");
   lines.push("");
   lines.push(
-    "This bundle contains the deliverables selected by the customer at export time. Each file's cover page restates its individual readiness percentage; weak chapters are flagged inside.",
+    "This bundle contains the deliverables selected by the customer at export time. Each file's cover page restates its individual readiness percentage; weak sections are flagged inside.",
   );
   lines.push("");
   lines.push("## Files in this bundle");

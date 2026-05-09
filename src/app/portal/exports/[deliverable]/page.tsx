@@ -2,7 +2,7 @@
  * /portal/exports/[deliverable] — preserved as a redirect.
  *
  * The pre-export review surface (document readiness bar, source
- * chapters with state, required gaps list, live markdown preview,
+ * sections with state, required gaps list, live markdown preview,
  * .docx + .md downloads) was merged into the deliverable cards on
  * the dashboard. The customer no longer needs to navigate to a
  * separate page to review and ship; everything happens inline.

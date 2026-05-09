@@ -3,7 +3,7 @@
  *
  * Compiles operating_model + recipes_and_menu + vendor_supply_chain +
  * employee_handbook + reimbursement_policy + training_program into a
- * single Operations Manual scaffold. Each chapter contributes its own
+ * single Operations Manual scaffold. Each section contributes its own
  * top-level section. Where the customer wrote prose in `content_md`,
  * we surface it; structured fields drive the bullet/table sections.
  *
@@ -13,7 +13,7 @@
  */
 
 import type { BuildContext, DeliverableDoc, DocBlock, DocSection } from "../types";
-import { chapterFields } from "../context-helpers";
+import { sectionFields } from "../context-helpers";
 import {
   fmtBool,
   fmtCurrency,
@@ -25,14 +25,14 @@ import {
 } from "../format";
 
 export function buildOperationsManual(ctx: BuildContext): DeliverableDoc {
-  const businessOverview = chapterFields(ctx, "business_overview");
-  const operating = chapterFields(ctx, "operating_model");
+  const businessOverview = sectionFields(ctx, "business_overview");
+  const operating = sectionFields(ctx, "operating_model");
   const operatingProse = ctx.memory.operating_model?.contentMd ?? "";
-  const recipes = chapterFields(ctx, "recipes_and_menu");
-  const vendor = chapterFields(ctx, "vendor_supply_chain");
-  const handbook = chapterFields(ctx, "employee_handbook");
-  const reimburse = chapterFields(ctx, "reimbursement_policy");
-  const training = chapterFields(ctx, "training_program");
+  const recipes = sectionFields(ctx, "recipes_and_menu");
+  const vendor = sectionFields(ctx, "vendor_supply_chain");
+  const handbook = sectionFields(ctx, "employee_handbook");
+  const reimburse = sectionFields(ctx, "reimbursement_policy");
+  const training = sectionFields(ctx, "training_program");
   const trainingProse = ctx.memory.training_program?.contentMd ?? "";
 
   const businessName = fmtText(businessOverview.concept_summary).split(".")[0]?.trim() || "Your Franchise";

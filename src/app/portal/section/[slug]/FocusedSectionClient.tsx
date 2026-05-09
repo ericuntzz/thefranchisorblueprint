@@ -1,16 +1,16 @@
 "use client";
 
 /**
- * Focused single-chapter workspace.
+ * Focused single-section workspace.
  *
- * The customer's primary editing surface for ONE chapter. Lifts the
+ * The customer's primary editing surface for ONE section. Lifts the
  * field editor out of the long Blueprint canvas and gives it its own
  * page with full breathing room. The Blueprint canvas remains
  * available as the assembled-document view; this is where the actual
  * structured-data work happens.
  *
  * Layout (top → bottom):
- *   1. Hero: chapter title, slug eyebrow, ReadinessPill, schema
+ *   1. Hero: section title, slug eyebrow, ReadinessPill, schema
  *      description.
  *   2. Field editor (primary) — full width, sticky save bar.
  *   3. Drafted-prose preview (read-only, collapsible) with a deep
@@ -18,7 +18,7 @@
  *      the prose itself.
  *   4. Attachments panel (existing component, no changes).
  *   5. Action row: Approve as verified + Redraft with Jason +
- *      previous/next chapter navigation.
+ *      previous/next section navigation.
  */
 
 import { useState } from "react";
@@ -34,15 +34,15 @@ import {
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type {
-  ChapterAttachment,
+  SectionAttachment,
   CustomerMemoryProvenance,
 } from "@/lib/supabase/types";
-import type { ChapterSchema } from "@/lib/memory/schemas";
+import type { SectionSchema } from "@/lib/memory/schemas";
 import type { MemoryFileSlug } from "@/lib/memory/files";
 import type { MemoryFieldsMap } from "@/lib/calc";
 import type { ReadinessState } from "@/lib/memory/readiness";
-import { ChapterFieldEditor } from "@/components/agent/ChapterFieldEditor";
-import { ChapterAttachments } from "@/components/agent/ChapterAttachments";
+import { SectionFieldEditor } from "@/components/agent/SectionFieldEditor";
+import { SectionAttachments } from "@/components/agent/SectionAttachments";
 import { DocPromptCard } from "@/components/agent/DocPromptCard";
 import { DraftWithJasonModal } from "@/components/agent/DraftWithJasonModal";
 import { docPromptFor } from "@/lib/memory/doc-prompts";
@@ -52,7 +52,7 @@ type FieldValue = string | number | boolean | string[] | null;
 type Props = {
   slug: MemoryFileSlug;
   title: string;
-  schema: ChapterSchema | null;
+  schema: SectionSchema | null;
   schemaDescription: string;
   readinessState: ReadinessState;
   confidence: "verified" | "inferred" | "draft" | "empty";
@@ -73,12 +73,12 @@ type Props = {
       note?: string;
     }
   >;
-  otherChaptersFields: MemoryFieldsMap;
+  otherSectionsFields: MemoryFieldsMap;
   contentMd: string;
-  attachments: ChapterAttachment[];
-  allAttachmentsByChapter: Array<{
+  attachments: SectionAttachment[];
+  allAttachmentsBySection: Array<{
     slug: MemoryFileSlug;
-    attachments: ChapterAttachment[];
+    attachments: SectionAttachment[];
   }>;
   provenance: CustomerMemoryProvenance[];
   lastUpdatedBy: "agent" | "user" | "jason" | "scraper" | null;
@@ -103,7 +103,7 @@ type Props = {
   }) => Promise<void>;
 };
 
-export function FocusedChapterClient(props: Props) {
+export function FocusedSectionClient(props: Props) {
   const {
     slug,
     title,
@@ -113,10 +113,10 @@ export function FocusedChapterClient(props: Props) {
     confidence,
     fields,
     fieldStatus,
-    otherChaptersFields,
+    otherSectionsFields,
     contentMd,
     attachments,
-    allAttachmentsByChapter,
+    allAttachmentsBySection,
     lastUpdatedBy,
     updatedAt,
     previousSlug,
@@ -201,7 +201,7 @@ export function FocusedChapterClient(props: Props) {
   }
 
   // Derived completion: every required field is filled. Surfaced as
-  // a small green checkmark next to the chapter title — replaces the
+  // a small green checkmark next to the section title — replaces the
   // manual "Approve as verified" button.
   const completion = (() => {
     if (!schema) return { filled: 0, total: 0 };
@@ -257,12 +257,12 @@ export function FocusedChapterClient(props: Props) {
             </p>
           )}
           {/* "Compiles into: ..." chip removed 2026-05-09 per Eric — see
-              ChapterFieldsCard for matching rationale on the dashboard. */}
+              SectionFieldsCard for matching rationale on the dashboard. */}
         </div>
       </header>
 
       {/* Doc-prompt banner — Eric's "skip the typing" affordance.
-          Surfaces above the field editor when this chapter has zero
+          Surfaces above the field editor when this section has zero
           attachments AND we have a prompt configured for it. Once
           the customer uploads OR dismisses, it disappears. */}
       {attachments.length === 0 && docPromptFor(slug) && (
@@ -275,18 +275,18 @@ export function FocusedChapterClient(props: Props) {
       {/* Field editor — primary surface. */}
       {schema ? (
         <section className="rounded-2xl border border-card-border bg-white p-5 sm:p-6 md:p-8 shadow-[0_8px_24px_rgba(30,58,95,0.06)]">
-          <ChapterFieldEditor
+          <SectionFieldEditor
             schema={schema}
             initialFields={fields}
             fieldStatus={fieldStatus}
-            otherChaptersFields={otherChaptersFields}
+            otherSectionsFields={otherSectionsFields}
             onSave={handleSaveFields}
           />
         </section>
       ) : (
         <section className="rounded-2xl border border-amber-300 bg-amber-50 p-5 sm:p-6 md:p-8">
           <div className="text-amber-900 font-bold text-sm mb-1">
-            This chapter has no structured fields yet.
+            This section has no structured fields yet.
           </div>
           <p className="text-amber-900/85 text-sm leading-relaxed">
             It&apos;s edited as freeform prose in the Blueprint canvas. Use
@@ -331,10 +331,10 @@ export function FocusedChapterClient(props: Props) {
                   To edit prose section-by-section, attach uploaded
                   references, or redraft with locked-span preservation,{" "}
                   <Link
-                    href={`/portal/lab/blueprint#chapter-${slug}`}
+                    href={`/portal/lab/blueprint#section-${slug}`}
                     className="text-gold-text hover:text-navy font-semibold underline transition-colors"
                   >
-                    open this chapter in the Blueprint canvas →
+                    open this section in the Blueprint canvas →
                   </Link>
                 </div>
                 <style jsx>{`
@@ -378,10 +378,10 @@ export function FocusedChapterClient(props: Props) {
       )}
 
       {/* Attachments — same component as the Blueprint canvas. */}
-      <ChapterAttachments slug={slug} attachments={attachments} />
+      <SectionAttachments slug={slug} attachments={attachments} />
 
       {/* Action row — Approve + Redraft + Last-updated. Sits below
-          everything as the "I'm done with this chapter, what now"
+          everything as the "I'm done with this section, what now"
           surface. */}
       <section className="rounded-2xl border border-card-border bg-white p-5 sm:p-6 flex flex-wrap items-center justify-between gap-3">
         <div className="text-sm text-grey-3">
@@ -409,7 +409,7 @@ export function FocusedChapterClient(props: Props) {
           </button>
           {/* MOCK: "Approve as verified" / "Verified · re-open" buttons
               removed. Completion is now derived from filled-field count
-              and rendered as a checkmark next to the chapter title. */}
+              and rendered as a checkmark next to the section title. */}
         </div>
       </section>
 
@@ -424,13 +424,13 @@ export function FocusedChapterClient(props: Props) {
         </div>
       )}
 
-      {/* Adjacent chapter navigation — TurboTax-style "prev / next"
-          so the customer can keep working through chapters without
+      {/* Adjacent section navigation — TurboTax-style "prev / next"
+          so the customer can keep working through sections without
           bouncing back to the dashboard between each one. */}
       <nav className="flex flex-wrap items-stretch justify-between gap-3 pt-2">
         {previousSlug && previousTitle ? (
           <Link
-            href={`/portal/chapter/${previousSlug}`}
+            href={`/portal/section/${previousSlug}`}
             className="flex-1 min-w-[260px] flex items-center gap-3 rounded-2xl border border-card-border bg-white hover:bg-cream-soft hover:border-navy/30 px-5 py-4 transition-colors group"
           >
             <ArrowLeft
@@ -449,7 +449,7 @@ export function FocusedChapterClient(props: Props) {
         )}
         {nextSlug && nextTitle ? (
           <Link
-            href={`/portal/chapter/${nextSlug}`}
+            href={`/portal/section/${nextSlug}`}
             className="flex-1 min-w-[260px] flex items-center gap-3 rounded-2xl border border-card-border bg-white hover:bg-cream-soft hover:border-navy/30 px-5 py-4 transition-colors group text-right"
           >
             <div className="min-w-0 flex-1">
@@ -473,9 +473,9 @@ export function FocusedChapterClient(props: Props) {
       {draftModalOpen && (
         <DraftWithJasonModal
           slug={slug}
-          chapterTitle={title}
-          thisChapterAttachments={attachments}
-          allAttachmentsByChapter={allAttachmentsByChapter}
+          sectionTitle={title}
+          thisSectionAttachments={attachments}
+          allAttachmentsBySection={allAttachmentsBySection}
           isRedraft={hasProse}
           onClose={() => {
             if (!drafting) setDraftModalOpen(false);
@@ -487,7 +487,7 @@ export function FocusedChapterClient(props: Props) {
   );
 }
 
-/** Same relative-time helper used in ChapterCard — small enough to
+/** Same relative-time helper used in SectionCard — small enough to
  *  duplicate rather than wire up an import dance. */
 function formatRelative(iso: string): string {
   const ms = Date.now() - new Date(iso).getTime();

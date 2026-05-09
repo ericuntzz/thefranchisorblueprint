@@ -42,7 +42,7 @@ const includes = [
   "Audit Your Business — 150+ point readiness checklist",
   "Build Your 12-Month Roadmap — full development Gantt chart",
   "Model Your Unit Economics — pro forma templates for FDD Items 7 & 19",
-  "Codify Your Operations — 17-chapter, 100+ page Operations Manual template",
+  "Codify Your Operations — 17-section, 100+ page Operations Manual template",
   "Train Your Team to Replicate — staff training and certification modules",
   "Decode the FDD — all 23 federal disclosure items in plain English",
   "Score Real Estate Like a Franchisor — proprietary site selection scoring",
@@ -78,7 +78,7 @@ export default async function BlueprintProductPage() {
           id: "the-blueprint",
           name: "The Blueprint — DIY Franchise Kit",
           description:
-            "The complete 9-framework franchisor operating system: 150-point readiness checklist, 12-month development roadmap, 17-chapter Operations Manual template, FDD Explainer (all 23 federal items), site selection scoring, franchisee scoring matrix, Discovery Day presentation deck, and more. Includes 60-min onboarding call, 30 days email support, and lifetime access to system updates. Save 5% when you pay in full, or pay $1,100/month for 3 months.",
+            "The complete 9-framework franchisor operating system: 150-point readiness checklist, 12-month development roadmap, 17-section Operations Manual template, FDD Explainer (all 23 federal items), site selection scoring, franchisee scoring matrix, Discovery Day presentation deck, and more. Includes 60-min onboarding call, 30 days email support, and lifetime access to system updates. Save 5% when you pay in full, or pay $1,100/month for 3 months.",
           price: 2997,
           url: "/programs/blueprint",
         })}

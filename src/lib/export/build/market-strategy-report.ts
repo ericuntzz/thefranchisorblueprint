@@ -9,13 +9,13 @@
  */
 
 import type { BuildContext, DeliverableDoc, DocBlock } from "../types";
-import { chapterFields } from "../context-helpers";
+import { sectionFields } from "../context-helpers";
 import { fmtInt, fmtList, fmtText, isFilled } from "../format";
 
 export function buildMarketStrategyReport(ctx: BuildContext): DeliverableDoc {
-  const market = chapterFields(ctx, "market_strategy");
-  const competitors = chapterFields(ctx, "competitor_landscape");
-  const overview = chapterFields(ctx, "business_overview");
+  const market = sectionFields(ctx, "market_strategy");
+  const competitors = sectionFields(ctx, "competitor_landscape");
+  const overview = sectionFields(ctx, "business_overview");
 
   const businessName =
     fmtText(overview.concept_summary).split(/[.\n]/)[0]?.trim() || "Your Franchise";
@@ -52,7 +52,7 @@ export function buildMarketStrategyReport(ctx: BuildContext): DeliverableDoc {
             : ({
                 kind: "callout",
                 text:
-                  "Competitive positioning hasn't been captured. Add it to the market_strategy chapter — this is the one paragraph every candidate, banker, and journalist wants.",
+                  "Competitive positioning hasn't been captured. Add it to the market_strategy section — this is the one paragraph every candidate, banker, and journalist wants.",
                 tone: "warning",
               } as DocBlock),
         ],
@@ -104,7 +104,7 @@ export function buildMarketStrategyReport(ctx: BuildContext): DeliverableDoc {
             : ({
                 kind: "paragraph",
                 text:
-                  "Competitive advantages not yet documented in the competitor_landscape chapter.",
+                  "Competitive advantages not yet documented in the competitor_landscape section.",
               } as DocBlock),
         ],
       },

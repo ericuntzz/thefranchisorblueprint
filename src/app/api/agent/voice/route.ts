@@ -4,13 +4,13 @@
  *   POST /api/agent/voice
  *     body: multipart/form-data
  *       audio: File (the recording — webm/mp3/m4a/wav)
- *       slug?: MemoryFileSlug — chapter to attach the transcript to
+ *       slug?: MemoryFileSlug — section to attach the transcript to
  *
  *   Behavior:
  *     1. Auth + paid gate.
  *     2. Upload audio to customer-uploads/{user_id}/voice/{ts}.webm
  *     3. If OPENAI_API_KEY is set: call Whisper, save .transcript.json,
- *        and append the transcript to the chapter's content_md as a
+ *        and append the transcript to the section's content_md as a
  *        `## Voice intake — {date}` section.
  *     4. If unset: return { ok: true, transcribed: false } so the
  *        client can show "audio saved, transcription will run when
@@ -152,8 +152,8 @@ export async function POST(req: NextRequest) {
     console.warn("[voice] transcript upload failed:", tErr.message);
   }
 
-  // If a chapter slug was provided, append the transcript to that
-  // chapter's content_md so the customer can see the words they spoke
+  // If a section slug was provided, append the transcript to that
+  // section's content_md so the customer can see the words they spoke
   // already showing up in their Blueprint. This is the "watch your
   // Blueprint draft live" moment from the planning doc.
   if (slug) {
@@ -182,7 +182,7 @@ export async function POST(req: NextRequest) {
     if (upsertErr) {
       console.warn("[voice] memory append failed:", upsertErr.message);
     }
-    revalidatePath(`/portal/chapter/${slug}`);
+    revalidatePath(`/portal/section/${slug}`);
     revalidatePath(`/portal/lab/blueprint`);
   }
 

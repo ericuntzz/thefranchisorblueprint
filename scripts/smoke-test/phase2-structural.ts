@@ -113,13 +113,13 @@ async function main() {
     };
   }));
 
-  // 2. Chapter page (business_overview) — verify SSR-rendered chapter shell.
+  // 2. Section page (business_overview) — verify SSR-rendered section shell.
   // Toolbar simplified in commit 0d7e10b — the only SSR-visible items now
-  // are the chapter title + form fields + back link. Redline badge + Jason
+  // are the section title + form fields + back link. Redline badge + Jason
   // dock are client-rendered post-hydration, so they don't appear in
   // initial HTML; we cover the redline data layer in flow #3.
-  flows.push(flow("chapter-with-redlines", "Chapter page (business_overview)", () => {
-    const { status, body } = fetchHtml(jar, "/portal/chapter/business_overview");
+  flows.push(flow("section-with-redlines", "Section page (business_overview)", () => {
+    const { status, body } = fetchHtml(jar, "/portal/section/business_overview");
     if (status !== 200) return { pass: false, evidence: `status=${status}` };
     const $ = cheerio.load(body);
     const text = $.text();
@@ -134,7 +134,7 @@ async function main() {
 
   // 3. Redline drawer — note: drawer is client-rendered. SSR HTML won't show
   // the seeded redline cards. We assert the API endpoint is healthy + the
-  // chapter page contains the toolbar widget that triggers it (we verified
+  // section page contains the toolbar widget that triggers it (we verified
   // (2) above for the page-level wiring; here we hit the API directly).
   flows.push(flow("redline-data", "Redline drawer data layer", () => {
     const r = spawnSync(
@@ -166,13 +166,13 @@ async function main() {
   }));
 
   // 5. Lab Blueprint canvas — the big 213KB page. Verify it renders + has
-  // the 16 chapter slugs structurally.
+  // the 16 section slugs structurally.
   flows.push(flow("lab-blueprint-canvas", "Lab Blueprint canvas", () => {
     const { status, body } = fetchHtml(jar, "/portal/lab/blueprint");
     if (status !== 200) return { pass: false, evidence: `status=${status}` };
     const $ = cheerio.load(body);
-    // Canvas renders all 16 chapters; do a relaxed check (≥10 chapter mentions).
-    const chapterTitles = [
+    // Canvas renders all 16 sections; do a relaxed check (≥10 section mentions).
+    const sectionTitles = [
       "Concept & Story",
       "Unit Economics",
       "Royalty",
@@ -190,10 +190,10 @@ async function main() {
       "Competit",
       "Brand Standards",
     ];
-    const found = chapterTitles.filter((t) => body.includes(t)).length;
+    const found = sectionTitles.filter((t) => body.includes(t)).length;
     return {
       pass: found >= 10 && body.length > 100_000,
-      evidence: `chapters=${found}/16 size=${body.length}`,
+      evidence: `sections=${found}/16 size=${body.length}`,
     };
   }));
 

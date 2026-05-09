@@ -2,9 +2,9 @@
 
 > Source: HP_Franchise_Operations_Manual_v3_0.docx (Section 12 Menu Standards & Recipe Compliance), HP_Barista_Certification_Program_v2_1.docx (Modules 6, 9, 13, 14 — drink menus, flavor system, cold brew, blended drinks)
 
-## What a strong Product & Service Specs chapter looks like
+## What a strong Product & Service Specs section looks like
 
-A precise, recipe-card chapter — typically 20–40 pages, often the second-longest after Operations — that defines exactly what the franchisee is licensed to sell, how each item is prepared to spec, and what tolerance is allowed in the recipe. The strongest version pairs *what's on the menu* (Core Menu definition) with *how to make it* (recipe spec sheets) and *when corporate will change it* (LTO and pricing-change processes). The reader should be able to make every drink to brand standard from this chapter alone.
+A precise, recipe-card section — typically 20–40 pages, often the second-longest after Operations — that defines exactly what the franchisee is licensed to sell, how each item is prepared to spec, and what tolerance is allowed in the recipe. The strongest version pairs *what's on the menu* (Core Menu definition) with *how to make it* (recipe spec sheets) and *when corporate will change it* (LTO and pricing-change processes). The reader should be able to make every drink to brand standard from this section alone.
 
 ## Structure observed
 
@@ -48,5 +48,5 @@ Recipe-card register. Compact, imperative, tolerance-aware. Heavy use of tables.
 - Recipes without cup-size variants — every drink lives in 4–5 sizes, each with different ratios.
 - Open-ended pricing freedom — leads to system-wide menu inflation/deflation.
 - Skipping the LTO compliance language — without it, franchisees opt out of seasonal pushes and dilute brand campaigns.
-- Recipe specs that ignore the *workflow* (sequencing milk before shots, drying baskets, immediate use) — the chapter should encode timing, not just ingredients.
-- Naming individual products by full proprietary recipe in chapter prose — those belong in versioned recipe spec sheets pushed via the Portal so they can be updated without re-issuing the chapter.
+- Recipe specs that ignore the *workflow* (sequencing milk before shots, drying baskets, immediate use) — the section should encode timing, not just ingredients.
+- Naming individual products by full proprietary recipe in section prose — those belong in versioned recipe spec sheets pushed via the Portal so they can be updated without re-issuing the section.

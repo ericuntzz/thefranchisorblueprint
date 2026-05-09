@@ -1,11 +1,11 @@
 /**
- * Per-chapter redline detail.
+ * Per-section redline detail.
  *
  *   /portal/admin/redline/[userId]/[slug]
  *
- * Renders the customer's current chapter draft + structured fields and
+ * Renders the customer's current section draft + structured fields and
  * surfaces every redline thread so the admin reviewer can leave new
- * notes, resolve old ones, and stamp the chapter approved.
+ * notes, resolve old ones, and stamp the section approved.
  *
  * Auth: ADMIN_USER_IDS gate.
  */
@@ -21,14 +21,14 @@ import {
   MEMORY_FILE_TITLES,
 } from "@/lib/memory/files";
 import type {
-  ChapterRedline,
+  SectionRedline,
   CustomerMemory,
   Profile,
 } from "@/lib/supabase/types";
 import { RedlineThread } from "./RedlineThread";
 
 export const metadata: Metadata = {
-  title: "Admin · Chapter redline | The Franchisor Blueprint",
+  title: "Admin · Section redline | The Franchisor Blueprint",
   robots: { index: false, follow: false },
 };
 
@@ -38,7 +38,7 @@ type Props = {
   params: Promise<{ userId: string; slug: string }>;
 };
 
-export default async function AdminRedlineChapterPage({ params }: Props) {
+export default async function AdminRedlineSectionPage({ params }: Props) {
   const { userId, slug } = await params;
   if (!isValidMemoryFileSlug(slug)) notFound();
 
@@ -60,10 +60,10 @@ export default async function AdminRedlineChapterPage({ params }: Props) {
         .eq("file_slug", slug)
         .maybeSingle(),
       admin
-        .from("chapter_redlines")
+        .from("section_redlines")
         .select("*")
         .eq("user_id", userId)
-        .eq("chapter_slug", slug)
+        .eq("section_slug", slug)
         .order("created_at", { ascending: false }),
     ]);
 
@@ -71,7 +71,7 @@ export default async function AdminRedlineChapterPage({ params }: Props) {
 
   const customer = profile as Pick<Profile, "id" | "full_name" | "email">;
   const memoryRow = (row ?? null) as CustomerMemory | null;
-  const initialRedlines = (redlines ?? []) as ChapterRedline[];
+  const initialRedlines = (redlines ?? []) as SectionRedline[];
 
   return (
     <main className="min-h-[calc(100vh-200px)] bg-cream-soft">
