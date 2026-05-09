@@ -22,12 +22,17 @@ export const PER_DOMAIN_CACHE_DAYS = 7;
  * will replace them. Acts as a manual cache-busting key.
  *
  * Last bumped:
- *   2026-05-09  saturation-aware scoring + geographic diversity +
- *               plain-English narratives + page-title fallback for
- *               business name. (Pre-fix snapshots still claim
- *               "Crowded — 20 within 1 mile" on every market.)
+ *   2026-05-09  Round 2: top-5 candidate selection now dedupes by
+ *               metro before taking the top 5, so the downstream
+ *               diversity picker always has 5 different metros to
+ *               choose from. Was previously letting same-metro
+ *               clusters (e.g., 2 Atlanta + 1 Austin) reach the
+ *               final top 3 — fixed.
+ *   2026-05-09  Round 1: saturation-aware scoring + geographic
+ *               diversity + plain-English narratives + page-title
+ *               fallback for business name.
  */
-export const CACHE_FRESHNESS_FLOOR_ISO = "2026-05-09T15:00:00Z";
+export const CACHE_FRESHNESS_FLOOR_ISO = "2026-05-09T16:00:00Z";
 
 /**
  * Per-IP rate limit — N distinct intake starts per hour. Stops

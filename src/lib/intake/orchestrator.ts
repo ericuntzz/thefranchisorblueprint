@@ -314,11 +314,31 @@ export async function* runIntake(args: {
     };
   });
 
-  // Step 2: Take top 5 by demographic similarity.
-  const top5 = scored
+  // Step 2: Take the best 5 candidates, ENFORCING METRO DIVERSITY.
+  //
+  // Naive "top 5 by similarity" lets clusters of same-metro candidates
+  // dominate (e.g., for a UT business that matches high-income urban
+  // cores, the top 5 might be Atlanta-Midtown, Atlanta-Buckhead,
+  // Austin-South-Congress, Atlanta-Sandy-Springs, Austin-Northwest —
+  // really 2 metros pretending to be 5 markets). The diversity-aware
+  // top-3 picker downstream can't fix that if its inputs aren't diverse.
+  //
+  // Fix: dedupe by metro at the top-5 selection step. Keep only the
+  // single best-similarity candidate per metro, then take the top 5
+  // metros. This gives the downstream picker 5 truly different markets
+  // to choose from, which is exactly what an owner skimming the
+  // snapshot wants to see.
+  const sortedBySimilarity = scored
     .filter((s) => s.demographics !== null)
-    .sort((a, b) => b.similarity - a.similarity)
-    .slice(0, 5);
+    .sort((a, b) => b.similarity - a.similarity);
+  const seenMetros = new Set<string>();
+  const top5: typeof sortedBySimilarity = [];
+  for (const s of sortedBySimilarity) {
+    if (seenMetros.has(s.candidate.metro)) continue;
+    seenMetros.add(s.candidate.metro);
+    top5.push(s);
+    if (top5.length >= 5) break;
+  }
 
   // Step 3: Live Places competitor-density check on top 5.
   yield {
