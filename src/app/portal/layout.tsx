@@ -46,7 +46,9 @@ export default async function PortalLayout({ children }: { children: ReactNode }
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Unauthenticated routes (login page) bring their own chrome (SiteNav + SiteFooter).
+  // Unauthenticated routes (login page) bring their own chrome
+  // (SiteNav at top, no footer per Eric 2026-05-09 — see
+  // /portal/login/page.tsx for rationale).
   if (!user) {
     return <>{children}</>;
   }

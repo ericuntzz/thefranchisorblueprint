@@ -101,11 +101,56 @@ export function QuestionQueueClient({
   // questions instead of one — race-prone because the Back handler
   // read `visited` from the closure while React batched updates from
   // the immediately-prior advance. Single setNav() pop avoids it.
-  const [nav, setNav] = useState<{ index: number; visited: number[] }>({
-    index: 0,
-    visited: [],
-  });
+  //
+  // Initial index is recovered from `?at=<itemId>` if the URL has
+  // it — that's how we keep refreshes anchored to the current
+  // question instead of snapping back to "first unanswered." Eric
+  // 2026-05-09: "when I refresh the portal/lab/next page it brings
+  // me back to the last question that I haven't answered rather
+  // than staying on the same page I was currently viewing."
+  const [nav, setNav] = useState<{ index: number; visited: number[] }>(
+    () => {
+      // Lazy initializer runs once per mount. SSR returns a stable
+      // index 0 (no `window`); client hydration may bump it via the
+      // useLayoutEffect below before paint to avoid a flash. We can't
+      // read the URL during SSR or we'd cause hydration mismatches
+      // when the initial `?at=` and the queue first-index disagree.
+      return { index: 0, visited: [] };
+    },
+  );
   const index = nav.index;
+
+  // Sync URL `?at=<itemId>` ↔ current index. On mount, if the URL
+  // has an `at` for an item still in the queue, jump to it.
+  // Subsequent navigations push the new id back into the URL via
+  // replaceState (no full Next.js navigation, no data refetch).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const at = new URL(window.location.href).searchParams.get("at");
+    if (!at) return;
+    const target = queue.findIndex((q) => q.id === at);
+    if (target >= 0 && target !== nav.index) {
+      setNav((n) => ({ ...n, index: target }));
+    }
+    // Run once on mount only — subsequent URL changes come FROM us,
+    // not the browser address bar.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const cur = queue[index];
+    if (!cur) return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("at") !== cur.id) {
+      url.searchParams.set("at", cur.id);
+      // replaceState avoids polluting the browser back-stack with
+      // every keystroke; the user's browser Back already maps to
+      // their previous PAGE, not the previous question. In-app Back
+      // is the proper question-by-question control.
+      window.history.replaceState({}, "", url);
+    }
+  }, [index, queue]);
   // Slide direction for the question-card transition. "forward" =
   // Save/Skip (new card slides in from the right). "back" = Back
   // (new card slides in from the left). Initial render = "forward".
@@ -343,28 +388,6 @@ export function QuestionQueueClient({
         />
       )}
 
-      {/* Inline doc-prompt — compact variant. Surfaces when the
-          current question's section has zero attachments AND we
-          have a prompt configured. The customer can drop a doc and
-          skip a chunk of typing on this whole section. Hidden once
-          they've added something OR dismissed the prompt.
-          Suppressed while the phase-transition card is active so
-          we don't double-stack two upload affordances. */}
-      {!showTransition &&
-        (attachmentCountBySlug[current.slug] ?? 0) === 0 &&
-        docPromptFor(current.slug as MemoryFileSlug) && (
-          <DocPromptCard
-            key={`prompt-${current.slug}`}
-            slug={current.slug}
-            prompt={
-              docPromptFor(
-                current.slug as MemoryFileSlug,
-              ) as NonNullable<ReturnType<typeof docPromptFor>>
-            }
-            compact
-          />
-        )}
-
       {/* Section-crossed banner — fires when the user used Back and
           landed in a different section than they were just in.
           Auto-dismisses after 3.5s. Eric flagged that without this
@@ -418,6 +441,32 @@ export function QuestionQueueClient({
           />
         </div>
       )}
+
+      {/* Bottom-anchored upload affordance. Eric 2026-05-09:
+          "anchor the file upload container to the bottom of the
+          containers where the user is answering questions once they
+          hit continue, just in case they decide later on that they
+          want to upload a doc." The compact-above version was a
+          one-shot hint; this is the persistent action. Renders the
+          FULL drop zone (drag area + click-to-choose + example
+          chips) so the customer can attach mid-flow without first
+          having to click an "expand" affordance. Surfaces only when
+          the section has zero attachments AND a doc-prompt is
+          configured AND we're not on the phase-transition card
+          (which already carries its own anchor doc-prompt). */}
+      {!showTransition &&
+        (attachmentCountBySlug[current.slug] ?? 0) === 0 &&
+        docPromptFor(current.slug as MemoryFileSlug) && (
+          <DocPromptCard
+            key={`prompt-bottom-${current.slug}`}
+            slug={current.slug}
+            prompt={
+              docPromptFor(
+                current.slug as MemoryFileSlug,
+              ) as NonNullable<ReturnType<typeof docPromptFor>>
+            }
+          />
+        )}
     </div>
   );
 }

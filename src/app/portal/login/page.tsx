@@ -2,7 +2,10 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Mail, Lock } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
-import { SiteFooter } from "@/components/SiteFooter";
+// SiteFooter removed 2026-05-09 per Eric — no marketing footer
+// (EXPLORE / RESOURCES / CONNECT columns) inside the portal
+// experience, even on the unauthenticated login surface. SiteNav
+// stays so visitors can get back to the public site.
 import { SignInForm } from "./SignInForm";
 
 export const metadata: Metadata = {
@@ -108,8 +111,6 @@ export default async function PortalLoginPage({ searchParams }: PageProps) {
           </p>
         </div>
       </section>
-
-      <SiteFooter />
     </>
   );
 }
