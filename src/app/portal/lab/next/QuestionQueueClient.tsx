@@ -131,6 +131,20 @@ export function QuestionQueueClient({
     const target = queue.findIndex((q) => q.id === at);
     if (target >= 0 && target !== nav.index) {
       setNav((n) => ({ ...n, index: target }));
+      // The customer landed at `target` via URL restore — they must
+      // have already crossed every phase boundary up to and
+      // including this one in a previous session. Mark those
+      // phases "seen" so we don't replay the celebration card for
+      // a transition the customer already saw before refreshing.
+      // Eric 2026-05-09: "the page refresh state isn't quite
+      // working properly" (refreshing on first Economics question
+      // re-rendered the Discover→Economics transition card).
+      const phasesSeen = new Set<PhaseId>();
+      for (let i = 0; i <= target; i++) {
+        const item = queue[i];
+        if (item) phasesSeen.add(item.phase.id);
+      }
+      setSeenTransitions(phasesSeen);
     }
     // Run once on mount only — subsequent URL changes come FROM us,
     // not the browser address bar.
