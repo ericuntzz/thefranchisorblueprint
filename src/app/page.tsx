@@ -24,6 +24,7 @@ import { HowItWorks } from "@/components/HowItWorks";
 import { JsonLd } from "@/components/JsonLd";
 import { faqPageSchema, serviceSchema } from "@/lib/schema";
 import { AnalyticsLink } from "@/components/AnalyticsLink";
+import { IntakeHeroCTA } from "@/components/intake/IntakeHeroCTA";
 
 export const metadata: Metadata = {
   title: "Franchise Your Business | The Franchisor Blueprint",
@@ -148,20 +149,7 @@ export default function Home() {
           <p className="text-white/85 text-lg md:text-xl leading-relaxed max-w-[680px] mb-10 font-light">
             A complete franchise system plus 6 months of 1:1 coaching, for a fraction of what the big firms charge. Built so you actually launch — not just file paperwork.
           </p>
-          <div className="flex flex-wrap gap-4">
-            <Link
-              href="/assessment"
-              className="bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-9 py-4 rounded-full hover:bg-gold-dark hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(212,175,55,0.35)] transition-all"
-            >
-              Take the Free Assessment
-            </Link>
-            <Link
-              href="/strategy-call"
-              className="bg-transparent text-white border-2 border-white/80 font-bold text-sm uppercase tracking-[0.1em] px-9 py-4 rounded-full hover:bg-white hover:text-navy transition-colors"
-            >
-              Book a Strategy Call
-            </Link>
-          </div>
+          <IntakeHeroCTA />
         </div>
       </section>
 
