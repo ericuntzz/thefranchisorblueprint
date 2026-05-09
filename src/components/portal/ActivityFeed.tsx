@@ -5,29 +5,47 @@
  * the recent past. Lightweight: each row is one icon + one line + a
  * relative timestamp + a chapter link. Empty state hides the whole
  * card so a brand-new customer doesn't see a vacant feed.
+ *
+ * Disclosure: ActivityFeedList (client) shows the 5 most recent rows
+ * by default, with a "Show more" button that expands to ~10 visible
+ * + scroll. This server-component shell pre-formats the relative
+ * timestamps so the client island doesn't have to import anything
+ * from the server-only `@/lib/activity/feed` module.
  */
 
-import Link from "next/link";
-import {
-  CloudDownload,
-  FileText,
-  Globe,
-  Paperclip,
-  PenLine,
-  Sparkles,
-} from "lucide-react";
 import {
   formatRelative,
   type ActivityEvent,
   type ActivityKind,
 } from "@/lib/activity/feed";
+import { ActivityFeedList } from "./ActivityFeedList";
 
 type Props = {
   events: ActivityEvent[];
 };
 
+export type ActivityFeedRow = {
+  id: string;
+  kind: ActivityKind;
+  summary: string;
+  detail: string | null | undefined;
+  chapterSlug: string;
+  relative: string;
+};
+
 export function ActivityFeed({ events }: Props) {
   if (events.length === 0) return null;
+
+  // Pre-format every event server-side so the client list component
+  // can stay lean (no date-formatting helpers, no server-only imports).
+  const rows: ActivityFeedRow[] = events.map((e) => ({
+    id: e.id,
+    kind: e.kind,
+    summary: e.summary,
+    detail: e.detail,
+    chapterSlug: e.chapterSlug,
+    relative: formatRelative(e.at),
+  }));
 
   return (
     <section className="bg-white rounded-2xl border border-card-border p-5 sm:p-6">
@@ -39,50 +57,7 @@ export function ActivityFeed({ events }: Props) {
           Last {events.length}
         </span>
       </div>
-      {/* About 4 rows tall (each row ~56px). Anything beyond scrolls
-          inside the card so the feed never dominates the dashboard. */}
-      <ul className="space-y-3 max-h-[240px] overflow-y-auto pr-1">
-        {events.map((e) => (
-          <li key={e.id} className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-cream/80 border border-navy/5 flex items-center justify-center text-navy">
-              <ActivityIcon kind={e.kind} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <Link
-                href={`/portal/chapter/${e.chapterSlug}`}
-                className="text-navy text-sm font-semibold hover:underline block leading-snug"
-              >
-                {e.summary}
-              </Link>
-              <div className="flex items-baseline gap-2 mt-0.5">
-                {e.detail && (
-                  <span className="text-grey-3 text-xs truncate">{e.detail}</span>
-                )}
-                <span className="text-grey-3 text-xs flex-shrink-0 ml-auto">
-                  {formatRelative(e.at)}
-                </span>
-              </div>
-            </div>
-          </li>
-        ))}
-      </ul>
+      <ActivityFeedList rows={rows} />
     </section>
   );
-}
-
-function ActivityIcon({ kind }: { kind: ActivityKind }) {
-  switch (kind) {
-    case "chapter_updated":
-      return <FileText size={14} />;
-    case "fields_extracted_from_upload":
-      return <CloudDownload size={14} />;
-    case "fields_filled_by_scrape":
-      return <Globe size={14} />;
-    case "fields_filled_by_user":
-      return <PenLine size={14} />;
-    case "fields_filled_by_agent":
-      return <Sparkles size={14} />;
-    case "attachment_uploaded":
-      return <Paperclip size={14} />;
-  }
 }
