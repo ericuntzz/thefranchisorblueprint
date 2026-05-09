@@ -338,15 +338,17 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
         <div className="max-w-[1200px] mx-auto px-6 md:px-8 py-10 md:py-14">
           <div className="flex flex-wrap items-end justify-between gap-6 mb-8">
             <div>
-              <div className="flex items-center gap-3 mb-3">
+              {/* Eyebrow consolidated 2026-05-09 per Eric: was a gold
+                  "Welcome to your portal" + a gray "Day X of your
+                  journey" secondary tag — two welcomes felt redundant
+                  with the H1 below. Now a single gold underlined
+                  eyebrow with the day count, which is the more useful
+                  signal anyway. Falls back to "Day 1" when joinedAt is
+                  null so the eyebrow always renders. */}
+              <div className="mb-3">
                 <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase border-b-2 border-gold pb-1">
-                  {isFirstRun ? "Day 1" : "Welcome to your portal"}
+                  Day {daysSinceJoined ?? 1} of your journey
                 </span>
-                {daysSinceJoined !== null && !isFirstRun && (
-                  <span className="text-[11px] text-grey-3 font-semibold tracking-wider uppercase">
-                    Day {daysSinceJoined} of your journey
-                  </span>
-                )}
               </div>
               <h1 className="text-3xl md:text-4xl font-bold text-navy">
                 {isFirstRun
@@ -360,7 +362,7 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
               <p className="text-grey-3 text-base md:text-lg mt-2 max-w-[640px]">
                 {isFirstRun
                   ? "Your franchisor operating system. Pre-fill from your website and answer your first questions — most customers are 25% complete after their first session."
-                  : "Your franchisor operating system."}
+                  : "Your franchisor operating system. Every chapter you fill compiles into the deliverables your attorney needs."}
               </p>
             </div>
             {/* Coaching-credits chip removed 2026-05-09 per Eric — the
