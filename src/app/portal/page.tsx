@@ -363,6 +363,12 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
                   : "Your franchisor operating system."}
               </p>
             </div>
+            {/* Coaching-credits chip removed 2026-05-09 per Eric — the
+                /portal/coaching surface (and the sidebar Coaching link)
+                already covers credits + booking; the dashboard hero
+                doesn't need to surface it. Kept the wrapper around the
+                tier card so the layout slot stays consistent if we
+                ever add a second hero chip. */}
             <div className="flex items-stretch gap-3">
               <div className="bg-cream rounded-xl px-5 py-4 border border-gold/30">
                 <div className="text-[10px] font-bold tracking-[0.16em] uppercase text-gold-warm mb-1">
@@ -370,7 +376,6 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
                 </div>
                 <div className="text-navy font-bold text-base">{TIER_LABELS[tier]}</div>
               </div>
-              <CoachingCreditsChip credits={profile?.coaching_credits ?? 0} tier={tier} />
             </div>
           </div>
 
