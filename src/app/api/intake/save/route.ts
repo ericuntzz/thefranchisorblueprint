@@ -99,13 +99,20 @@ export async function POST(req: NextRequest) {
   const overall = score?.overall ?? null;
   const suggestedTier = score?.suggestedTier ?? null;
 
+  // Tier labels for the email body. "not-yet" gets special handling
+  // below — the email skips the recommended-path line entirely and
+  // pivots to a "let's talk" framing instead of awkwardly inserting
+  // a parenthetical like "Recommended path: (not quite ready)".
   const tierLabelMap: Record<string, string> = {
     blueprint: "The Blueprint (DIY, $2,997)",
     navigator: "Navigator (6-month coached, $8,500)",
     builder: "Builder (12-month done-with-you, $29,500)",
-    "not-yet": "(not quite ready to franchise yet — let's talk)",
   };
-  const tierLabel = suggestedTier ? tierLabelMap[suggestedTier] ?? "" : "";
+  const tierLabel =
+    suggestedTier && suggestedTier !== "not-yet"
+      ? tierLabelMap[suggestedTier] ?? ""
+      : "";
+  const isNotYetTier = suggestedTier === "not-yet";
 
   const resumeUrl = `${SITE_URL}/?intake=${session.id}`;
 
@@ -114,7 +121,9 @@ export async function POST(req: NextRequest) {
     `Thanks for trying the Franchise Readiness Snapshot.`,
     ``,
     overall != null
-      ? `Your preliminary score: ${overall}/100${tierLabel ? ` — recommended tier: ${tierLabel}` : ""}.`
+      ? isNotYetTier
+        ? `Your preliminary score: ${overall}/100. Honest read: it's not quite the right time to franchise yet. Hit reply and let's talk about what to fix first — sometimes 6 months of operational tightening makes the next conversation a lot more productive.`
+        : `Your preliminary score: ${overall}/100${tierLabel ? ` — recommended tier: ${tierLabel}` : ""}.`
       : `We've saved your snapshot.`,
     ``,
     `Open your snapshot anytime: ${resumeUrl}`,
@@ -131,7 +140,9 @@ export async function POST(req: NextRequest) {
       <h1 style="font-size: 24px; line-height: 1.3; margin: 0 0 16px; color: #1e3a5f;">Your snapshot for ${escapeHtml(businessName)} is saved.</h1>
       ${
         overall != null
-          ? `<p style="font-size: 16px; line-height: 1.6; color: #4F5562; margin: 0 0 8px;">Preliminary score: <strong style="color: #1e3a5f;">${overall}/100</strong>${tierLabel ? `</p><p style="font-size: 16px; line-height: 1.6; color: #4F5562; margin: 0 0 24px;">Recommended path: <strong style="color: #1e3a5f;">${escapeHtml(tierLabel)}</strong>.` : ""}</p>`
+          ? isNotYetTier
+            ? `<p style="font-size: 16px; line-height: 1.6; color: #4F5562; margin: 0 0 24px;">Preliminary score: <strong style="color: #1e3a5f;">${overall}/100</strong>. Honest read: it's not quite the right time to franchise yet. Hit reply and let's talk about what to fix first.</p>`
+            : `<p style="font-size: 16px; line-height: 1.6; color: #4F5562; margin: 0 0 8px;">Preliminary score: <strong style="color: #1e3a5f;">${overall}/100</strong>${tierLabel ? `</p><p style="font-size: 16px; line-height: 1.6; color: #4F5562; margin: 0 0 24px;">Recommended path: <strong style="color: #1e3a5f;">${escapeHtml(tierLabel)}</strong>.` : ""}</p>`
           : ""
       }
       <p style="font-size: 16px; line-height: 1.6; color: #4F5562; margin: 0 0 24px;">When you're ready to build out the full Blueprint, we'll pre-fill what we already know about your business so you start at ~15-20% complete instead of zero.</p>

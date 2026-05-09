@@ -631,6 +631,18 @@ function SnapshotView({
           </p>
           <p className="text-navy font-bold text-base">{tierLabel[tier]}</p>
         </div>
+
+        {/* Diagnostic footer — reinforces "30-year expert with software"
+            framing rather than "AI startup with APIs". The 4-pillar /
+            100-point structure mirrors how real FDD Item 11 site-criteria
+            sheets are written. */}
+        <div className="mt-4 pt-4 border-t border-navy/10">
+          <p className="text-grey-4 text-[11px] italic leading-relaxed">
+            Built on Jason&apos;s 4-pillar / 100-point site-readiness diagnostic — the same
+            rubric we&apos;ll codify into your FDD Item 11 site-criteria sheet inside The
+            Blueprint.
+          </p>
+        </div>
       </div>
 
       {/* Save form — primary CTA */}
