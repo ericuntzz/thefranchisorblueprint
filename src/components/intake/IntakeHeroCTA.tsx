@@ -416,9 +416,10 @@ function UrlInputForm({
 }) {
   return (
     <div className="max-w-[640px]">
-      <p className="text-white/85 text-base md:text-lg mb-4 font-light">
-        In 60 seconds, see if your business is ready to franchise — and your three best expansion markets.
-      </p>
+      {/* Lead-in copy was here; now lives in the home page hero <p>
+          ("In less than 60 seconds, see if your business is ready...")
+          since Eric wanted it as the primary subhead-replacement, sized
+          to match the original eyebrow paragraph styling. */}
       <form onSubmit={onSubmit} className="bg-white rounded-2xl p-2 flex flex-col sm:flex-row gap-2 shadow-[0_12px_40px_rgba(0,0,0,0.3)]">
         <input
           ref={inputRef}
@@ -436,27 +437,30 @@ function UrlInputForm({
         <button
           type="submit"
           disabled={urlInput.trim().length < 4}
-          className="bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-7 py-3 rounded-xl hover:bg-gold-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+          // No `disabled:opacity-50` — visual fade was confusing visitors
+          // who already understand the input is required. The native
+          // disabled state still prevents an empty submit; we just don't
+          // visually broadcast it. cursor-not-allowed kept on disabled
+          // so hover communicates "fill the field first."
+          className="bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-7 py-3 rounded-xl hover:bg-gold-dark transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
         >
           Analyze
           <ArrowRight size={15} />
         </button>
       </form>
-      <div className="mt-4 flex flex-col sm:flex-row gap-3 sm:gap-6 text-white/70 text-sm">
-        <span>
-          Don&apos;t have a website?{" "}
-          <Link href="/assessment" className="text-white font-semibold underline-offset-4 hover:underline">
-            Take the 15-question Readiness Assessment →
-          </Link>
-        </span>
-        <span className="hidden sm:inline opacity-40">·</span>
-        <span>
-          Just want to talk?{" "}
-          <Link href="/strategy-call" className="text-white font-semibold underline-offset-4 hover:underline">
-            Book a strategy call →
-          </Link>
-        </span>
-      </div>
+      {/* "Just want to talk? Book a strategy call" link removed —
+          duplicates the strategy-call CTAs already in the SiteNav and on
+          /pricing, and stretched the alt-path row to two lines on mobile.
+          The /strategy-call page is still discoverable from the nav. */}
+      <p className="mt-4 text-white/85 text-base md:text-lg whitespace-normal sm:whitespace-nowrap">
+        Don&apos;t have a website?{" "}
+        <Link
+          href="/assessment"
+          className="text-gold font-bold underline-offset-4 hover:underline"
+        >
+          Take the 15-question Franchise Readiness Assessment →
+        </Link>
+      </p>
     </div>
   );
 }

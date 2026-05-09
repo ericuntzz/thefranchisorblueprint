@@ -147,7 +147,7 @@ export default function Home() {
             The Smartest, Most Affordable Path to Becoming a Franchisor
           </h1>
           <p className="text-white/85 text-lg md:text-xl leading-relaxed max-w-[680px] mb-10 font-light">
-            A complete franchise system plus 6 months of 1:1 coaching, for a fraction of what the big firms charge. Built so you actually launch — not just file paperwork.
+            In less than 60 seconds, see if your business is ready to franchise — and your three best expansion markets.
           </p>
           <IntakeHeroCTA />
         </div>
