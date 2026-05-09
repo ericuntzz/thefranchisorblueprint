@@ -114,6 +114,7 @@ export default function PricingPage() {
       {/* ===== Pricing Cards ===== */}
       <section className="bg-white py-24 md:py-28">
         <div className="max-w-[1200px] mx-auto px-8">
+          <h2 className="sr-only">Pricing Tiers</h2>
           <div className="grid md:grid-cols-3 gap-7 items-stretch">
             {/* Tier 1 */}
             <SectionViewTracker
