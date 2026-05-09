@@ -61,22 +61,34 @@ export function ChapterAttachments({ slug, attachments }: Props) {
 
   return (
     <div className="mt-4 pt-3 border-t border-navy/5">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-1.5 text-xs uppercase tracking-[0.12em] font-bold text-grey-3">
-          <Paperclip size={10} />
-          References
-          {attachments.length > 0 && (
-            <span className="text-grey-3">({attachments.length})</span>
-          )}
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 text-sm font-bold text-navy mb-0.5">
+            <Paperclip size={12} className="text-gold-warm" />
+            Upload docs to auto-fill answers
+            {attachments.length > 0 && (
+              <span className="text-grey-3 font-semibold">({attachments.length})</span>
+            )}
+          </div>
+          {/* The empty-state benefit copy used to render only when
+              there were no attachments, but the value prop applies
+              both ways — uploading more always speeds up the
+              draft. Keeping it persistent saves the customer from
+              having to remember why they'd want to attach. */}
+          <p className="text-xs text-grey-3 leading-relaxed">
+            Drop a P&amp;L, brand guide, ops manual, or anything else you
+            already have. Jason AI reads each one and pre-fills the
+            fields below — no re-typing what&apos;s in your existing docs.
+          </p>
         </div>
         {!composerOpen && (
           <button
             type="button"
             onClick={() => setComposerOpen(true)}
             disabled={busy}
-            className="inline-flex items-center gap-1 text-xs text-grey-3 hover:text-navy font-semibold transition-colors disabled:opacity-50"
+            className="flex-shrink-0 inline-flex items-center gap-1.5 bg-gold text-navy hover:bg-gold-dark font-bold text-xs uppercase tracking-[0.1em] px-4 py-2 rounded-full transition-colors disabled:opacity-50"
           >
-            <Plus size={11} /> Attach
+            <Plus size={12} /> Attach
           </button>
         )}
       </div>
@@ -92,17 +104,6 @@ export function ChapterAttachments({ slug, attachments }: Props) {
             />
           ))}
         </ul>
-      )}
-
-      {/* Empty-state value-prop. The big DocPromptCard is the
-          primary surface above this; this is the persistent
-          fallback once the prompt is dismissed or for chapters
-          where it's already been seen. */}
-      {attachments.length === 0 && !composerOpen && (
-        <p className="text-xs text-grey-3 italic mb-2">
-          Drop docs here so Jason can pull from them. Most chapters
-          benefit from at least one reference.
-        </p>
       )}
 
       {composerOpen && (

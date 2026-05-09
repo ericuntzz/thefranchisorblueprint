@@ -402,9 +402,10 @@ function DeliverableEntry({
   if (!def) return null;
   const review = deliverable.review;
   const isSlides = deliverable.kind === "slides";
-  const previewLabel = isSlides
-    ? "Preview & download .pptx"
-    : "Preview & download";
+  // Compact label so the corner button doesn't crowd the readiness
+  // badge / .pptx pill. The modal it opens still has prominent
+  // download actions inside.
+  const previewLabel = isSlides ? "Preview .pptx" : "Preview";
 
   return (
     <article
@@ -415,8 +416,12 @@ function DeliverableEntry({
           : "border-card-border bg-cream/30"
       }`}
     >
-      {/* Header row — click anywhere except the checkbox to expand. */}
-      <div className="flex flex-wrap items-start gap-4 p-4 sm:p-5">
+      {/* Header row — click anywhere except the checkbox or
+          preview button to expand. Preview & Download lives in
+          the top-right corner so it stays put when the card
+          expands and doesn't add to the visual stack at the
+          bottom. */}
+      <div className="flex flex-wrap items-start gap-3 sm:gap-4 p-4 sm:p-5">
         {/* Checkbox column — opt-in for the bundle. */}
         <label
           className="flex-shrink-0 cursor-pointer pt-1"
@@ -456,11 +461,23 @@ function DeliverableEntry({
             </span>
           </span>
         </button>
+        {/* Preview & download — top-right corner, sticks here in
+            both collapsed and expanded states. Stops propagation
+            so clicking it doesn't also expand the card. */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onPreview(deliverable);
+          }}
+          className="flex-shrink-0 inline-flex items-center gap-1.5 text-navy hover:bg-cream-soft border border-card-border hover:border-navy/30 font-bold text-[11px] uppercase tracking-[0.1em] px-3 py-2 rounded-full transition-colors"
+        >
+          <Download size={12} />
+          {previewLabel}
+        </button>
       </div>
 
-      {/* Expanded content: readiness card + chapter rows. Sits
-          between the header and the footer actions so the editing
-          flow reads top-to-bottom. */}
+      {/* Expanded content: readiness card + chapter rows. */}
       {expanded && (
         <div className="border-t border-card-border bg-white px-4 sm:px-5 py-4 space-y-4">
           <ReadinessBar
@@ -487,22 +504,6 @@ function DeliverableEntry({
           </div>
         </div>
       )}
-
-      {/* Preview & download — always at the bottom of the card,
-          before the show-more toggle. When the card is collapsed
-          this gives a one-click path to the deliverable; when
-          expanded it reads as the "ship it" final step after
-          editing the chapters. */}
-      <div className="border-t border-card-border px-4 sm:px-5 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-        <button
-          type="button"
-          onClick={() => onPreview(deliverable)}
-          className="inline-flex items-center gap-1.5 text-navy hover:text-navy-light font-bold uppercase tracking-[0.1em] py-1 transition-colors"
-        >
-          <Download size={12} />
-          {previewLabel}
-        </button>
-      </div>
 
       {/* SHOW MORE / SHOW LESS toggle — centered at the very
           bottom. Same disclosure idiom as ActivityFeed. */}
