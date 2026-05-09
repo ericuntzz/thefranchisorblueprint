@@ -256,10 +256,6 @@ export function ChapterFieldEditor({
                     computedValue={computedNumber}
                     industrySuggestion={industrySuggestion}
                     onChange={(v) => update(fd.name, v)}
-                    sourceLabel={sourceLabelFor(
-                      fieldStatus?.[fd.name]?.source,
-                      values[fd.name] ?? null,
-                    )}
                   />
                 );
               })}
@@ -283,7 +279,6 @@ function FieldInput({
   computedValue,
   industrySuggestion,
   onChange,
-  sourceLabel,
 }: {
   fieldDef: FieldDef;
   slug: MemoryFileSlug;
@@ -294,9 +289,6 @@ function FieldInput({
    *  the customer hasn't set their industry yet. */
   industrySuggestion: string | number | null;
   onChange: (v: FieldValue) => void;
-  /** "From your website" / "Jason inferred" / etc. — null when the
-   *  field has no source recorded (typically: empty fields). */
-  sourceLabel: string | null;
 }) {
   const isComputed = hasCalc(slug, fieldDef.name);
   // Derived-default: editable, but if the customer hasn't typed
@@ -365,52 +357,13 @@ function FieldInput({
             </span>
           </button>
         )}
-      {sourceLabel && !isComputed && (
-        <p className="text-xs uppercase tracking-[0.1em] text-grey-3 font-bold">
-          {sourceLabel}
-        </p>
-      )}
+      {/* Per-field source label ("From your website" / "Jason inferred"
+          / etc.) removed 2026-05-09 per Eric — the chip stacked under
+          every prefilled field added more visual noise than trust value.
+          The fieldStatus.source is still recorded server-side for
+          provenance + activity feed; we just don't surface it inline. */}
     </div>
   );
-}
-
-/**
- * Map a field's source enum + value-presence to a customer-facing
- * one-line trust label. Returns null when there's nothing meaningful
- * to show (empty field, unrecognized source).
- *
- * The label is intentionally short — it sits below the input as a
- * passive trust signal, not a feature. IBM's AI explainability
- * guidance: explanations should help, not overwhelm the task.
- */
-function sourceLabelFor(
-  source: string | undefined,
-  value: FieldValue,
-): string | null {
-  if (value == null) return null;
-  if (typeof value === "string" && value.trim() === "") return null;
-  if (Array.isArray(value) && value.length === 0) return null;
-  if (!source) return null;
-  switch (source) {
-    case "scraper":
-      return "From your website";
-    case "agent_inference":
-      return "Jason inferred this";
-    case "voice_session":
-      return "From your voice intake";
-    case "upload":
-      return "From an upload";
-    case "research":
-      return "From research";
-    // User-originated values: don't add a label — the user knows
-    // they typed it. The trust signal only earns its place when
-    // the source is non-obvious (AI inference, scrape, upload).
-    case "user_correction":
-    case "user_typed":
-    case "form":
-    default:
-      return null;
-  }
 }
 
 function FieldLabel({

@@ -203,7 +203,6 @@ export default async function FocusedChapterPage({ params }: Props) {
               title={MEMORY_FILE_TITLES[slug]}
               schema={schema}
               schemaDescription={schema?.description ?? ""}
-              schemaCompilesInto={schema?.compilesInto ?? ""}
               readinessState={myReadiness?.state ?? "gray"}
               confidence={
                 !content.trim() && Object.keys(fields).length === 0

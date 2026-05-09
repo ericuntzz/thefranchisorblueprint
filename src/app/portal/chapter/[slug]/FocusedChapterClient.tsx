@@ -54,7 +54,6 @@ type Props = {
   title: string;
   schema: ChapterSchema | null;
   schemaDescription: string;
-  schemaCompilesInto: string;
   readinessState: ReadinessState;
   confidence: "verified" | "inferred" | "draft" | "empty";
   fields: Record<string, FieldValue>;
@@ -110,7 +109,6 @@ export function FocusedChapterClient(props: Props) {
     title,
     schema,
     schemaDescription,
-    schemaCompilesInto,
     readinessState,
     confidence,
     fields,
@@ -258,11 +256,8 @@ export function FocusedChapterClient(props: Props) {
               {schemaDescription}
             </p>
           )}
-          {schemaCompilesInto && (
-            <p className="text-xs uppercase tracking-[0.12em] text-grey-3 font-bold">
-              Compiles into: {schemaCompilesInto}
-            </p>
-          )}
+          {/* "Compiles into: ..." chip removed 2026-05-09 per Eric — see
+              ChapterFieldsCard for matching rationale on the dashboard. */}
         </div>
       </header>
 

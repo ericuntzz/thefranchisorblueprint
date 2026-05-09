@@ -130,11 +130,11 @@ export function ChapterFieldsCard({
           {schema.description}
         </p>
       )}
-      {schema.compilesInto && (
-        <p className="text-[11px] uppercase tracking-[0.12em] text-grey-3 font-bold">
-          Compiles into: {schema.compilesInto}
-        </p>
-      )}
+
+      {/* "Compiles into: ..." chip removed 2026-05-09 per Eric — it's
+          a metadata line that didn't earn its dashboard real estate.
+          Schema field still exists in lib/memory/schemas.ts in case a
+          future surface (export preview, audit page) wants to show it. */}
 
       {/* The actual field editor. Autosaves; no explicit Save/Cancel
           (the row's Close toggle ends the session). */}
