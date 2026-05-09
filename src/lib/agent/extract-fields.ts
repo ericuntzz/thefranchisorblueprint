@@ -39,6 +39,7 @@ import {
 } from "@/lib/memory/schemas";
 import type { MemoryFileSlug } from "@/lib/memory/files";
 import { hasCalc } from "@/lib/calc";
+import { coerceListValue, LIST_INSTRUCTIONS_BLOCK } from "./coerce-list";
 
 type FieldValue = string | number | boolean | string[] | null;
 
@@ -81,7 +82,8 @@ export async function extractFieldsFromContent(args: {
 
 GROUND RULES:
 - Only fill fields you can derive with HIGH confidence from the source content. If you'd have to guess, OMIT the field.
-- Match the field's type exactly: numbers as JSON numbers (no "$" or commas), booleans as true/false, lists as JSON arrays of strings, dates as ISO "YYYY-MM-DD".
+- Match the field's type exactly: numbers as JSON numbers (no "$" or commas), booleans as true/false, dates as ISO "YYYY-MM-DD".
+- ${LIST_INSTRUCTIONS_BLOCK}
 - For "select" fields, the value MUST be one of the listed option values (not the labels).
 - For currency fields, use the dollar amount as a plain number (e.g. 250000, not "$250,000").
 - For percentage fields, use the percentage as a number (e.g. 18 for "18%", not 0.18).
@@ -226,24 +228,11 @@ function coerceFieldValue(
       }
       return undefined;
     case "list_short":
-    case "list_long": {
-      if (Array.isArray(raw)) {
-        const items = raw
-          .filter((x): x is string => typeof x === "string")
-          .map((s) => s.trim())
-          .filter(Boolean);
-        return items.length > 0 ? items : null;
-      }
-      // Tolerant: model may return a comma- or newline-separated string.
-      if (typeof raw === "string") {
-        const items = raw
-          .split(/\n|,/)
-          .map((s) => s.trim())
-          .filter(Boolean);
-        return items.length > 0 ? items : null;
-      }
-      return undefined;
-    }
+    case "list_long":
+      // Centralized list parsing — see coerce-list.ts. Handles arrays,
+      // separator-having strings, and the concatenated-TitleCase
+      // regression Eric hit 2026-05-09.
+      return coerceListValue(raw);
   }
 }
 

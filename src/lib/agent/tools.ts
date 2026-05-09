@@ -38,6 +38,7 @@ import {
   CHAPTER_SCHEMAS,
 } from "@/lib/memory/schemas";
 import { hasCalc } from "@/lib/calc";
+import { coerceListValue, LIST_INSTRUCTIONS_BLOCK } from "./coerce-list";
 import { isWebSearchAvailable, tavilySearch } from "./research/tavily";
 import { isPlacesAvailable, nearbyPlaces } from "./research/places";
 import { isCensusAvailable, zipDemographics } from "./research/census";
@@ -59,7 +60,7 @@ CRITICAL RULES:
 - Only call this when the customer's statement is unambiguous AND maps cleanly to one field. If you have to guess, ask first.
 - Use the field's exact technical name (e.g. "locations_count", not "locations" or "stores"). The schemas in your context show the canonical names.
 - Currency = plain dollar number (250000, not "$250k"). Percentage = number 0–100 (6 for "6%", not 0.06).
-- For lists, pass an array of strings.
+- ${LIST_INSTRUCTIONS_BLOCK}
 - Never call this on a "computed" field — those are calculated automatically and would overwrite themselves.
 - After calling, briefly acknowledge what you updated in your text response (e.g. "Got it — set locations to 3.") so the customer sees the change reflected in your reply, not just in the chip below your message.
 
@@ -355,23 +356,11 @@ function coerceFieldValue(
       }
       return undefined;
     case "list_short":
-    case "list_long": {
-      if (Array.isArray(raw)) {
-        const items = raw
-          .filter((x): x is string => typeof x === "string")
-          .map((s) => s.trim())
-          .filter(Boolean);
-        return items.length > 0 ? items : null;
-      }
-      if (typeof raw === "string") {
-        const items = raw
-          .split(/\n|,/)
-          .map((s) => s.trim())
-          .filter(Boolean);
-        return items.length > 0 ? items : null;
-      }
-      return undefined;
-    }
+    case "list_long":
+      // Centralized list parsing — see coerce-list.ts. Handles arrays,
+      // separator-having strings, and the concatenated-TitleCase
+      // regression Eric hit 2026-05-09.
+      return coerceListValue(raw);
   }
 }
 
