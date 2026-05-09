@@ -69,12 +69,7 @@ export function CommandCenter({
       {allCaughtUp || !next ? (
         <CaughtUpPanel />
       ) : (
-        <NextStepPanel
-          next={next}
-          totalLeft={queue.total}
-          requiredLeft={queue.totalRequired}
-          estimateMin={estimateMin}
-        />
+        <NextStepPanel next={next} />
       )}
 
       {/* Secondary "View full Blueprint" / "Pre-fill from your website"
@@ -87,14 +82,8 @@ export function CommandCenter({
 
 function NextStepPanel({
   next,
-  totalLeft,
-  requiredLeft,
-  estimateMin,
 }: {
   next: NonNullable<QueueSummary["next"]>;
-  totalLeft: number;
-  requiredLeft: number;
-  estimateMin: number;
 }) {
   const phase = phaseForSlug(next.slug);
   return (
@@ -105,19 +94,22 @@ function NextStepPanel({
           <span className="text-cream/70">· {phase.title} phase</span>
         )}
       </div>
-      <div className="text-cream font-bold text-lg md:text-xl leading-tight mb-1.5">
+      {/* Title + description bumped a step up (text-lg → text-xl,
+          text-sm → text-base) per Eric 2026-05-09 — at the dashboard's
+          ~1100px content width these read too small at the prior size.
+          The "X questions left · Y required · ~Z min total" stat row
+          that used to sit between description and button was also
+          removed; readiness % at the top of the card already conveys
+          progress without the extra noise. */}
+      <div className="text-cream font-bold text-xl md:text-2xl leading-tight mb-2">
         {next.fieldDef.label}
       </div>
       {next.fieldDef.helpText && (
-        <p className="text-cream/70 text-sm leading-relaxed mb-3 max-w-[600px]">
+        <p className="text-cream/70 text-base leading-relaxed mb-4 max-w-[600px]">
           {next.fieldDef.helpText}
         </p>
       )}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="text-xs text-cream/60 leading-relaxed">
-          {totalLeft} {totalLeft === 1 ? "question" : "questions"} left ·{" "}
-          {requiredLeft} required · ~{estimateMin} min total
-        </div>
+      <div className="flex justify-end">
         <Link
           href="/portal/lab/next"
           className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-xs uppercase tracking-[0.1em] px-5 py-3 rounded-full hover:bg-gold-dark transition-colors"
