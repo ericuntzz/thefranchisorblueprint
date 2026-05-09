@@ -28,6 +28,7 @@ import {
   summarizeQueue,
 } from "@/lib/memory/queue";
 import { CommandCenter } from "@/components/portal/CommandCenter";
+import { IntakeWelcomeBanner } from "@/components/portal/IntakeWelcomeBanner";
 import {
   DeliverableExplorer,
   type ChapterDataBundle,
@@ -97,13 +98,24 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
   } = await supabase.auth.getUser();
   if (!user) redirect("/portal/login");
 
-  const [{ data: profileData }, { data: purchasesData }] = await Promise.all([
+  const [{ data: profileData }, { data: purchasesData }, { data: intakeData }] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
     supabase
       .from("purchases")
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
+    // Most recent merged intake — drives the "Picking up where we left off"
+    // welcome banner. Show whenever it exists; the data flowed into the
+    // chapters at merge time and is persistent context worth surfacing.
+    supabase
+      .from("intake_sessions")
+      .select("domain, score_data, expansion_data, merged_at")
+      .eq("user_id", user.id)
+      .not("merged_at", "is", null)
+      .order("merged_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   const profile = profileData as Profile | null;
@@ -198,8 +210,11 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
   );
 
   // Recent activity feed — read-only summary of what's happened to the
-  // customer's Memory. Hidden when empty (brand-new customer).
-  const recentActivity = await getRecentActivity(user.id, 6);
+  // customer's Memory. Hidden when empty (brand-new customer). The
+  // card shows 5 by default and expands to 10 (with internal scroll
+  // beyond that), so we fetch a generous 25 to make the disclosure
+  // meaningful for active accounts.
+  const recentActivity = await getRecentActivity(user.id, 25);
 
   // Regulatory milestones moved to /portal/checklist — no need to
   // load them here.
@@ -288,8 +303,36 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
     },
   );
 
+  // ─── Intake-merge banner data ────────────────────────────────────
+  // If this user signed up after dropping their URL on the home page,
+  // surface a "you're already X% Franchise Ready" banner so the work
+  // they did pre-signup feels preserved.
+  const intakeBanner = (() => {
+    if (!intakeData) return null;
+    const scoreData = intakeData.score_data as
+      | { snapshot?: { readiness?: { overall?: number }; expansion?: unknown[] } }
+      | null;
+    const readinessPct = scoreData?.snapshot?.readiness?.overall ?? null;
+    const expansionMarketCount = Array.isArray(scoreData?.snapshot?.expansion)
+      ? scoreData!.snapshot!.expansion!.length
+      : 0;
+    if (readinessPct === null) return null;
+    return {
+      domain: intakeData.domain as string,
+      readinessPct,
+      expansionMarketCount,
+    };
+  })();
+
   return (
     <>
+      {intakeBanner && (
+        <IntakeWelcomeBanner
+          domain={intakeBanner.domain}
+          readinessPct={intakeBanner.readinessPct}
+          expansionMarketCount={intakeBanner.expansionMarketCount}
+        />
+      )}
       {/* ===== Welcome ===== */}
       <section className="bg-white border-b border-navy/5">
         <div className="max-w-[1200px] mx-auto px-6 md:px-8 py-10 md:py-14">

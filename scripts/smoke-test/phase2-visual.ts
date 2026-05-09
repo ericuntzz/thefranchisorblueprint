@@ -338,9 +338,11 @@ async function main() {
         );
         const visualEvidence = !compared
           ? "no prior baseline"
-          : diffPixels === -1
-            ? "viewport size changed"
-            : `diff=${diffPixels}px${diffPixels > VISUAL_DIFF_THRESHOLD_PX ? " (over threshold)" : ""}`;
+          : diffPixels === null
+            ? "no diff data"
+            : diffPixels === -1
+              ? "viewport size changed"
+              : `diff=${diffPixels}px${diffPixels > VISUAL_DIFF_THRESHOLD_PX ? " (over threshold)" : ""}`;
 
         const visualOk =
           !compared || diffPixels === null || diffPixels <= VISUAL_DIFF_THRESHOLD_PX;

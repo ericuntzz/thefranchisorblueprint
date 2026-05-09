@@ -121,6 +121,26 @@ export async function POST(req: NextRequest) {
         } catch (err) {
           console.error("[stripe] post-purchase lifecycle failed:", err);
         }
+
+        // ─── Intake-snapshot merge ────────────────────────────────
+        // If this email previously dropped a URL on the home page and
+        // saved their snapshot, copy that snapshot's data into their
+        // customer_memory chapters so the portal opens pre-filled
+        // (concept, brand voice, prototype demographics, expansion
+        // markets). Defensive — failure here must never block the
+        // purchase fulfillment.
+        try {
+          const { mergeIntakeForUser } = await import("@/lib/intake/merge");
+          const merged = await mergeIntakeForUser({ userId, email });
+          if (merged.merged) {
+            console.log(
+              `[stripe] intake snapshot merged for ${email} ` +
+                `(intake=${merged.intakeSessionId} score=${merged.readinessPct})`,
+            );
+          }
+        } catch (err) {
+          console.error("[stripe] intake merge failed:", err);
+        }
       }
 
       // ─── Defensive: handle out-of-order events ───────────────────────
