@@ -12,7 +12,7 @@ import { SITE_URL } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Franchise Decision Comparisons | The Franchisor Blueprint",
   description:
-    "Side-by-side comparisons of the franchise decisions that actually matter — consultant vs attorney, coached program vs traditional firm, buying a franchise vs starting your own. Honest verdicts from 30 years in the industry.",
+    "Franchise decisions compared: consultant vs attorney, coached program vs DIY, buying vs building your own. Honest verdicts from 30 years in franchise.",
   alternates: { canonical: "/compare" },
   openGraph: {
     title: "Franchise Comparisons (Side-by-Side Decision Guides)",
@@ -200,8 +200,8 @@ export default function CompareHubPage() {
               Get the honest answer for your specific situation
             </h2>
             <p className="text-white/80 mb-6 max-w-2xl mx-auto leading-relaxed">
-              Thirty minutes with someone who's built franchise systems for 30 years.
-              We'll look at your business and tell you which path actually fits — without
+              Thirty minutes with someone who&apos;s built franchise systems for 30 years.
+              We&apos;ll look at your business and tell you which path actually fits — without
               the sales pitch.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">

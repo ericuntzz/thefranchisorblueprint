@@ -13,7 +13,7 @@ const CALENDLY_URL = "https://calendly.com/team-thefranchisorblueprint/30-minute
 export const metadata: Metadata = {
   title: "Book a Strategy Call | The Franchisor Blueprint",
   description:
-    "Book a free 30-minute strategy call with Jason. We'll evaluate your business, recommend a path forward, and answer every question — no pressure, no sales tactics.",
+    "Book a free 30-minute strategy call with Jason. We'll evaluate your business and recommend a path forward — no pressure, no sales tactics.",
   openGraph: {
     title: "Book a Strategy Call | The Franchisor Blueprint",
     description:
@@ -55,7 +55,7 @@ export default function StrategyCallPage() {
                 {[
                   { Icon: MessageCircle, t: "First 10 min: We listen", d: "You walk us through the business — where it is now, where you want to take it, and what's in the way." },
                   { Icon: Shield, t: "Next 10 min: We diagnose", d: "We hold your model up against the same criteria a franchise attorney and your first franchisees will run. Strengths, gaps, what attorneys ask first." },
-                  { Icon: Calendar, t: "Last 10 min: A clear next step", d: "Which tier fits, what to fix before franchising makes sense, or a straight “wait six months.” Whichever’s true." },
+                  { Icon: Calendar, t: "Last 10 min: A clear next step", d: "Which tier fits, what to fix before franchising makes sense, or a straight \"wait six months.\" Whichever's true." },
                 ].map(({ Icon, t, d }) => (
                   <li key={t} className="flex gap-4">
                     <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-navy to-navy-light flex items-center justify-center text-gold">

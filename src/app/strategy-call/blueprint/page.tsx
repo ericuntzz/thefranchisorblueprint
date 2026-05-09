@@ -18,11 +18,11 @@ const CALENDLY_URL =
   "https://calendly.com/team-thefranchisorblueprint/15-minute-discovery-call";
 
 export const metadata: Metadata = {
-  title: "Book Your Blueprint Onboarding Call | The Franchisor Blueprint",
+  title: "Book a Blueprint Onboarding Call | The Franchisor Blueprint",
   description:
-    "Every Blueprint engagement starts with a 15-minute onboarding call. We confirm fit, walk you through the system, and send you a custom invoice — credit card or ACH.",
+    "Every Blueprint engagement starts with a 15-minute onboarding call — confirm fit, walk through the system, and get a custom invoice.",
   openGraph: {
-    title: "Book Your Blueprint Onboarding Call | The Franchisor Blueprint",
+    title: "Book a Blueprint Onboarding Call | The Franchisor Blueprint",
     description:
       "Every Blueprint engagement starts with a 15-minute onboarding call. Confirm fit, walk through the system, get a custom invoice.",
     url: "/strategy-call/blueprint",
@@ -57,17 +57,17 @@ export default function BlueprintStrategyCallPage() {
                   {
                     Icon: MessageCircle,
                     t: "First 5 min: Quick fit check",
-                    d: "You walk us through where the business is and where you want to take it. We confirm The Blueprint is the right tier (or steer you to Navigator/Builder if it’s not).",
+                    d: "You walk us through where the business is and where you want to take it. We confirm The Blueprint is the right tier (or steer you to Navigator/Builder if it's not).",
                   },
                   {
                     Icon: Sparkles,
                     t: "Next 5 min: Walk through the system",
-                    d: "We show you exactly what’s inside The Blueprint — the 9 frameworks, the 17-chapter operations manual, the 150-point readiness checklist — so you know what you’re getting before you buy.",
+                    d: "We show you exactly what's inside The Blueprint — the 9 frameworks, the 17-chapter operations manual, the 150-point readiness checklist — so you know what you're getting before you buy.",
                   },
                   {
                     Icon: Calendar,
                     t: "Last 5 min: Pricing + next steps",
-                    d: "If The Blueprint is a fit, we send you a custom invoice (credit card or ACH) and you get instant access to the system. If it’s not, we tell you straight — and refer you to whatever does fit.",
+                    d: "If The Blueprint is a fit, we send you a custom invoice (credit card or ACH) and you get instant access to the system. If it's not, we tell you straight — and refer you to whatever does fit.",
                   },
                 ].map(({ Icon, t, d }) => (
                   <li key={t} className="flex gap-4">
