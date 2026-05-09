@@ -29,7 +29,6 @@ import {
   CheckCircle2,
   ChevronDown,
   Download,
-  FileText,
   Loader2,
   PackageOpen,
 } from "lucide-react";
@@ -251,32 +250,34 @@ export function DeliverableExplorer({
       ) : (
         <>
           <h2 className="text-navy font-extrabold text-xl md:text-2xl mb-1">
-            Build, edit, and download what you&apos;re shipping
+            Edit and Download Your Franchisor Blueprint Documents
           </h2>
           <p className="text-grey-3 text-sm md:text-base leading-relaxed mb-5 max-w-[680px]">
-            Each card is a document in your franchise package. Click
-            to edit it. Tick boxes and hit &ldquo;Preview docs&rdquo;
-            to grab several at once.
+            This is where every document for your franchise lives.
+            Click a card to edit what&apos;s inside, preview the
+            finished doc before you send it out, or tick a few boxes
+            and grab them all as a bundle.
           </p>
         </>
       )}
 
-      {/* Bundle action bar */}
-      <div className="rounded-xl border border-card-border bg-cream/40 p-3 mb-4 flex flex-wrap items-center gap-3">
+      {/* Bundle action bar — navy so it stands out from the cream
+          deliverable cards below it instead of blending in. */}
+      <div className="rounded-xl bg-navy text-cream p-3 mb-4 flex flex-wrap items-center gap-3 shadow-[0_2px_8px_rgba(30,58,95,0.12)]">
         <button
           type="button"
           onClick={allSelected ? clearAll : selectAll}
-          className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-navy hover:text-gold-warm transition-colors"
+          className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-cream hover:text-gold transition-colors"
         >
           <input
             type="checkbox"
             checked={allSelected}
             readOnly
-            className="w-4 h-4 accent-gold-warm cursor-pointer"
+            className="w-4 h-4 accent-gold cursor-pointer"
           />
           {allSelected ? "Clear all" : "Select all"}
         </button>
-        <span className="text-[11px] text-grey-3">
+        <span className="text-[11px] text-cream/65">
           {selected.size > 0
             ? `${selected.size} selected`
             : "Pick the docs you want"}
@@ -291,7 +292,7 @@ export function DeliverableExplorer({
             })
           }
           disabled={noneSelected || bundling}
-          className="inline-flex items-center gap-2 bg-navy text-cream hover:bg-navy-light disabled:opacity-40 disabled:cursor-not-allowed font-bold text-xs uppercase tracking-[0.1em] px-4 py-2.5 rounded-full transition-colors"
+          className="inline-flex items-center gap-2 bg-gold text-navy hover:bg-gold-dark disabled:opacity-40 disabled:cursor-not-allowed font-bold text-xs uppercase tracking-[0.1em] px-4 py-2.5 rounded-full transition-colors"
         >
           {bundling ? (
             <>
@@ -441,9 +442,9 @@ function DeliverableEntry({
           aria-expanded={expanded}
           className="flex-1 min-w-[260px] flex items-start gap-3 text-left"
         >
-          <span className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-navy to-navy-light flex items-center justify-center text-gold">
-            <FileText size={18} />
-          </span>
+          {/* Navy document icon removed — the card title + description
+              already make the "this is a document" point; the icon
+              was visual chrome that didn't earn its place. */}
           <span className="flex-1 min-w-0">
             <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-1">
               <span className="text-navy font-bold text-base">
