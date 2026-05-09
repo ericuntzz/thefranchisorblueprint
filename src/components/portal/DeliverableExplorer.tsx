@@ -517,7 +517,16 @@ function DeliverableEntry({
           dashboard to ship. */}
       {expanded && (
         <div className="border-t border-card-border bg-white px-4 sm:px-5 py-4 space-y-4">
-          <ReadinessBar review={review} />
+          {/* Document readiness — progress bar + inline gaps list.
+              Merged from the old ReadinessBar + GapsList pair so the
+              customer sees the score and what's still missing in
+              one card. Each gap is a button that jumps to its
+              source chapter editor. */}
+          <ReadinessBar
+            review={review}
+            onJumpToChapter={(slug) => onToggleChapter(slug)}
+            openChapterSlug={openChapterSlug}
+          />
 
           <div>
             <div className="text-[11px] uppercase tracking-[0.1em] text-grey-3 font-bold mb-2">
@@ -541,14 +550,6 @@ function DeliverableEntry({
             </div>
           </div>
 
-          {review.totalGaps > 0 && (
-            <GapsList
-              review={review}
-              onJumpToChapter={(slug) => onToggleChapter(slug)}
-              openChapterSlug={openChapterSlug}
-            />
-          )}
-
           {/* Inline markdown LivePreview was removed in favor of the
               richer DeliverablePreviewModal (PDF iframe). The customer
               clicks "Preview & download" in the footer to open the
@@ -560,8 +561,18 @@ function DeliverableEntry({
   );
 }
 
-function ReadinessBar({ review }: { review: DeliverableReview }) {
+function ReadinessBar({
+  review,
+  onJumpToChapter,
+  openChapterSlug,
+}: {
+  review: DeliverableReview;
+  onJumpToChapter: (slug: MemoryFileSlug) => void;
+  openChapterSlug: MemoryFileSlug | null;
+}) {
   const pct = review.overallPct;
+  const allGaps = review.chapters.flatMap((c) => c.gaps);
+  const visibleGaps = allGaps.slice(0, 12);
   return (
     <div className="rounded-xl border border-card-border bg-cream/30 p-4">
       <div className="flex items-baseline justify-between gap-3 mb-2">
@@ -570,7 +581,7 @@ function ReadinessBar({ review }: { review: DeliverableReview }) {
           {pct}%
         </span>
       </div>
-      <div className="h-2 rounded-full bg-grey-1 overflow-hidden mb-2">
+      <div className="h-2 rounded-full bg-grey-1 overflow-hidden mb-3">
         <div
           className={`h-full transition-all duration-500 ${
             pct >= 95
@@ -582,80 +593,58 @@ function ReadinessBar({ review }: { review: DeliverableReview }) {
           style={{ width: `${Math.max(pct, 2)}%` }}
         />
       </div>
-      <div className="text-grey-3 text-xs">
-        {review.totalGaps === 0 ? (
-          <span className="inline-flex items-center gap-1.5 text-emerald-700 font-semibold">
-            <CheckCircle2 size={13} /> Every required field is filled. Safe
-            to download.
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1.5 text-amber-700">
-            <AlertCircle size={13} />
-            {`${review.totalGaps} required ${review.totalGaps === 1 ? "field" : "fields"} still empty — downloading now will leave them as "—".`}
-          </span>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function GapsList({
-  review,
-  onJumpToChapter,
-  openChapterSlug,
-}: {
-  review: DeliverableReview;
-  onJumpToChapter: (slug: MemoryFileSlug) => void;
-  openChapterSlug: MemoryFileSlug | null;
-}) {
-  const allGaps = review.chapters.flatMap((c) => c.gaps);
-  const visibleGaps = allGaps.slice(0, 12);
-  return (
-    <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-      <div className="flex items-center gap-2 mb-2 text-[11px] uppercase tracking-[0.1em] text-amber-700 font-bold">
-        <AlertCircle size={12} /> Required gaps to fill
-      </div>
-      <ul className="space-y-1.5">
-        {visibleGaps.map((g) => (
-          <li
-            key={`${g.chapterSlug}.${g.fieldName}`}
-            className="text-sm text-amber-900"
-          >
-            <button
-              type="button"
-              onClick={() => {
-                if (openChapterSlug !== g.chapterSlug) {
-                  onJumpToChapter(g.chapterSlug);
-                }
-                // Scroll the chapter row into view after the editor opens.
-                window.setTimeout(() => {
-                  const target = document.getElementById(
-                    `chapter-row-${g.chapterSlug}`,
-                  );
-                  if (target) {
-                    target.scrollIntoView({
-                      behavior: "smooth",
-                      block: "start",
-                    });
-                  }
-                }, 50);
-              }}
-              className="text-left hover:underline"
-            >
-              <span className="font-semibold">{g.fieldLabel}</span>
-              <span className="text-amber-700 text-xs">
-                {" "}
-                · {g.chapterTitle}
-              </span>
-            </button>
-          </li>
-        ))}
-        {allGaps.length > visibleGaps.length && (
-          <li className="text-xs text-amber-700 italic pt-1">
-            + {allGaps.length - visibleGaps.length} more
-          </li>
-        )}
-      </ul>
+      {review.totalGaps === 0 ? (
+        <div className="inline-flex items-center gap-1.5 text-emerald-700 text-xs font-semibold">
+          <CheckCircle2 size={13} /> Every required field is filled. Safe
+          to download.
+        </div>
+      ) : (
+        <>
+          <div className="text-navy text-xs font-bold mb-1.5">
+            Gaps to fill:
+          </div>
+          <ul className="space-y-1 list-disc pl-5 marker:text-amber-600">
+            {visibleGaps.map((g) => (
+              <li
+                key={`${g.chapterSlug}.${g.fieldName}`}
+                className="text-sm text-navy"
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (openChapterSlug !== g.chapterSlug) {
+                      onJumpToChapter(g.chapterSlug);
+                    }
+                    window.setTimeout(() => {
+                      const target = document.getElementById(
+                        `chapter-row-${g.chapterSlug}`,
+                      );
+                      if (target) {
+                        target.scrollIntoView({
+                          behavior: "smooth",
+                          block: "start",
+                        });
+                      }
+                    }, 50);
+                  }}
+                  className="text-left hover:underline"
+                >
+                  <span className="font-semibold">{g.fieldLabel}</span>
+                  <span className="text-grey-3 text-xs">
+                    {" "}
+                    · {g.chapterTitle}
+                  </span>
+                </button>
+              </li>
+            ))}
+            {allGaps.length > visibleGaps.length && (
+              <li className="text-xs text-grey-3 italic list-none pl-0">
+                + {allGaps.length - visibleGaps.length} more
+              </li>
+            )}
+          </ul>
+        </>
+      )}
     </div>
   );
 }
