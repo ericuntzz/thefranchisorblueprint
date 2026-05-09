@@ -24,9 +24,8 @@
  */
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import {
-  ArrowRight,
+  AlertCircle,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
@@ -45,6 +44,7 @@ import type { DeliverableReview } from "@/lib/export/deliverable-readiness";
 import type { DeliverableId } from "@/lib/export/types";
 import type { ChapterReadiness } from "@/lib/memory/readiness";
 import { ChapterCard } from "@/components/agent/ChapterCard";
+import { DeliverablePreviewModal } from "@/components/portal/DeliverablePreviewModal";
 import type {
   ChapterAttachment,
   CustomerMemoryProvenance,
@@ -100,6 +100,11 @@ export type DeliverableViewModel = {
   kind: "doc" | "slides";
   review: DeliverableReview;
   sourceChapters: ChapterDataBundle[];
+  /** Pre-rendered markdown preview for "doc"-kind deliverables. The
+   *  expanded card surfaces this in a collapsible "Live preview"
+   *  block — same content the customer would see on the (now-merged)
+   *  /portal/exports/[id] page. Null for slides or when build fails. */
+  previewMd?: string | null;
 };
 
 type SaveFieldsArgs = {
@@ -122,6 +127,12 @@ type Props = {
   saveFields: (args: SaveFieldsArgs) => Promise<void>;
   saveSection: (args: SaveSectionArgs) => Promise<void>;
   setConfidence: (args: SetConfidenceArgs) => Promise<void>;
+  /** True when the customer has filled exactly nothing yet. Drives a
+   *  warmer first-run hero in place of the standard "17 deliverables"
+   *  pitch, and auto-expands the first deliverable so they have one
+   *  obvious place to start. */
+  isFirstRun?: boolean;
+  firstName?: string | null;
 };
 
 export function DeliverableExplorer({
@@ -129,6 +140,8 @@ export function DeliverableExplorer({
   saveFields,
   saveSection,
   setConfidence,
+  isFirstRun = false,
+  firstName = null,
 }: Props) {
   // Multi-select for bundle download — independent of expansion state
   // so a customer can tick boxes across the grid without having to
@@ -137,13 +150,24 @@ export function DeliverableExplorer({
   const [bundling, setBundling] = useState(false);
   const [bundleErr, setBundleErr] = useState<string | null>(null);
   // Two-level expansion: only one deliverable open, only one chapter
-  // editor open inside that deliverable.
+  // editor open inside that deliverable. First-run accounts get the
+  // first deliverable expanded automatically so they have one obvious
+  // place to start; otherwise everything stays collapsed and the
+  // customer drives expansion themselves.
   const [expandedDeliverableId, setExpandedDeliverableId] = useState<
     DeliverableId | null
-  >(null);
+  >(isFirstRun && deliverables.length > 0 ? deliverables[0].id : null);
   const [openChapterSlug, setOpenChapterSlug] = useState<MemoryFileSlug | null>(
     null,
   );
+  // Preview-before-download modal state. Either previewing a single
+  // deliverable (clicked from a card's "Preview" button) or the whole
+  // selected bundle (clicked from the bundle action bar). null = closed.
+  const [preview, setPreview] = useState<
+    | { mode: "single"; deliverable: DeliverableViewModel }
+    | { mode: "bundle"; deliverables: DeliverableViewModel[] }
+    | null
+  >(null);
 
   const allIds = useMemo(
     () =>
@@ -223,14 +247,31 @@ export function DeliverableExplorer({
           {allIds.length} deliverables
         </span>
       </div>
-      <h2 className="text-navy font-extrabold text-xl md:text-2xl mb-1">
-        Build, edit, and download what you&apos;re shipping
-      </h2>
-      <p className="text-grey-3 text-sm md:text-base leading-relaxed mb-5 max-w-[680px]">
-        Each card is a deliverable in your franchise package. Click to
-        see and edit the chapters that feed into it. Tick the boxes
-        across the grid and hit &ldquo;Download bundle&rdquo; for a single ZIP.
-      </p>
+      {isFirstRun ? (
+        <>
+          <h2 className="text-navy font-extrabold text-xl md:text-2xl mb-1">
+            {firstName ? `${firstName}, here's where it all assembles.` : "Here's where it all assembles."}
+          </h2>
+          <p className="text-grey-3 text-sm md:text-base leading-relaxed mb-5 max-w-[680px]">
+            Every deliverable is built from the chapters below. We
+            opened the first one for you — fill in a few fields and
+            watch the readiness number climb. You can move at your
+            own pace; nothing has to be done in one sitting.
+          </p>
+        </>
+      ) : (
+        <>
+          <h2 className="text-navy font-extrabold text-xl md:text-2xl mb-1">
+            Build, edit, and download what you&apos;re shipping
+          </h2>
+          <p className="text-grey-3 text-sm md:text-base leading-relaxed mb-5 max-w-[680px]">
+            Each card is a deliverable in your franchise package. Click
+            to see and edit the chapters that feed into it. Tick the
+            boxes across the grid and hit &ldquo;Download bundle&rdquo;
+            for a single ZIP.
+          </p>
+        </>
+      )}
 
       {/* Bundle action bar */}
       <div className="rounded-xl border border-card-border bg-cream/40 p-3 mb-4 flex flex-wrap items-center gap-3">
@@ -255,7 +296,12 @@ export function DeliverableExplorer({
         <div className="flex-1" />
         <button
           type="button"
-          onClick={() => void downloadBundle()}
+          onClick={() =>
+            setPreview({
+              mode: "bundle",
+              deliverables: deliverables.filter((d) => selected.has(d.id)),
+            })
+          }
           disabled={noneSelected || bundling}
           className="inline-flex items-center gap-2 bg-navy text-cream hover:bg-navy-light disabled:opacity-40 disabled:cursor-not-allowed font-bold text-xs uppercase tracking-[0.1em] px-4 py-2.5 rounded-full transition-colors"
         >
@@ -268,8 +314,8 @@ export function DeliverableExplorer({
             <>
               <PackageOpen size={14} />
               {selected.size > 0
-                ? `Download ${selected.size} as bundle`
-                : "Download bundle"}
+                ? `Preview ${selected.size} as bundle`
+                : "Preview bundle"}
             </>
           )}
         </button>
@@ -298,9 +344,43 @@ export function DeliverableExplorer({
             saveFields={saveFields}
             saveSection={saveSection}
             setConfidence={setConfidence}
+            onPreview={(d) => setPreview({ mode: "single", deliverable: d })}
           />
         ))}
       </div>
+
+      {/* Preview-before-download modal. Renders only when `preview` is
+          non-null; iframe inside loads /api/agent/export/<id>?format=pdf
+          &inline=1 so the customer sees what they're about to save. */}
+      {preview && preview.mode === "single" && (
+        <DeliverablePreviewModal
+          open
+          onClose={() => setPreview(null)}
+          mode="single"
+          deliverable={{
+            id: preview.deliverable.id,
+            name: preview.deliverable.name,
+            kind: preview.deliverable.kind,
+          }}
+        />
+      )}
+      {preview && preview.mode === "bundle" && (
+        <DeliverablePreviewModal
+          open
+          onClose={() => setPreview(null)}
+          mode="bundle"
+          deliverables={preview.deliverables.map((d) => ({
+            id: d.id,
+            name: d.name,
+            kind: d.kind,
+            readinessPct: d.review.overallPct,
+          }))}
+          onDownloadBundle={async () => {
+            await downloadBundle();
+            setPreview(null);
+          }}
+        />
+      )}
     </section>
   );
 }
@@ -316,6 +396,7 @@ function DeliverableEntry({
   saveFields,
   saveSection,
   setConfidence,
+  onPreview,
 }: {
   deliverable: DeliverableViewModel;
   expanded: boolean;
@@ -327,21 +408,20 @@ function DeliverableEntry({
   saveFields: (args: SaveFieldsArgs) => Promise<void>;
   saveSection: (args: SaveSectionArgs) => Promise<void>;
   setConfidence: (args: SetConfidenceArgs) => Promise<void>;
+  onPreview: (deliverable: DeliverableViewModel) => void;
 }) {
   const def = DELIVERABLES[deliverable.id];
   if (!def) return null;
   const review = deliverable.review;
   const isSlides = deliverable.kind === "slides";
-  const directDownloadHref = isSlides
-    ? `/api/agent/export/${deliverable.id}?format=pptx`
-    : `/api/agent/export/${deliverable.id}?format=docx`;
-  const directDownloadLabel = isSlides
-    ? "Download .pptx"
-    : "Download .docx";
+  const previewLabel = isSlides
+    ? "Preview & download .pptx"
+    : "Preview & download";
 
   return (
     <article
-      className={`rounded-xl border transition-colors ${
+      id={`deliverable-${deliverable.id}`}
+      className={`rounded-xl border transition-colors scroll-mt-4 ${
         isSelected
           ? "border-gold bg-gold/5"
           : "border-card-border bg-cream/30"
@@ -397,48 +477,176 @@ function DeliverableEntry({
         </button>
       </div>
 
-      {/* Footer action bar — review + direct download. Always visible
-          even when collapsed so the customer doesn't need to expand
-          to grab a single deliverable. */}
+      {/* Footer action bar — direct downloads. Always visible even
+          when collapsed so the customer doesn't need to expand to
+          grab a single deliverable. */}
       <div className="border-t border-card-border px-4 sm:px-5 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-        <Link
-          href={`/portal/exports/${deliverable.id}`}
+        <button
+          type="button"
+          onClick={() => onPreview(deliverable)}
           className="inline-flex items-center gap-1.5 text-navy hover:text-navy-light font-bold uppercase tracking-[0.1em] py-1 transition-colors"
         >
-          Review before export <ArrowRight size={12} />
-        </Link>
-        <a
-          href={directDownloadHref}
-          className="inline-flex items-center gap-1.5 text-grey-3 hover:text-navy font-semibold py-1 transition-colors"
-        >
           <Download size={12} />
-          {directDownloadLabel}
-        </a>
+          {previewLabel}
+        </button>
+        {!isSlides && (
+          <a
+            href={`/api/agent/export/${deliverable.id}?format=md`}
+            className="inline-flex items-center gap-1.5 text-grey-3 hover:text-navy font-semibold py-1 transition-colors"
+          >
+            <FileText size={12} />
+            Plain text (.md)
+          </a>
+        )}
       </div>
 
-      {/* Expanded content: contributing chapter rows */}
+      {/* Expanded content: readiness bar, contributing chapter rows,
+          gaps list, optional live-preview drawer. Pulls everything
+          the old /portal/exports/[id] page used to host into this
+          one inline surface so the customer never jumps off the
+          dashboard to ship. */}
       {expanded && (
-        <div className="border-t border-card-border bg-white px-4 sm:px-5 py-4 space-y-3">
-          <div className="text-[11px] uppercase tracking-[0.1em] text-grey-3 font-bold mb-2">
-            Edit the chapters that feed this deliverable
+        <div className="border-t border-card-border bg-white px-4 sm:px-5 py-4 space-y-4">
+          <ReadinessBar review={review} />
+
+          <div>
+            <div className="text-[11px] uppercase tracking-[0.1em] text-grey-3 font-bold mb-2">
+              Edit the chapters that feed this deliverable
+            </div>
+            <div className="space-y-3">
+              {deliverable.sourceChapters.map((chapter) => {
+                const isOpen = openChapterSlug === chapter.slug;
+                return (
+                  <ChapterRow
+                    key={chapter.slug}
+                    chapter={chapter}
+                    isOpen={isOpen}
+                    onToggle={() => onToggleChapter(chapter.slug)}
+                    saveFields={saveFields}
+                    saveSection={saveSection}
+                    setConfidence={setConfidence}
+                  />
+                );
+              })}
+            </div>
           </div>
-          {deliverable.sourceChapters.map((chapter) => {
-            const isOpen = openChapterSlug === chapter.slug;
-            return (
-              <ChapterRow
-                key={chapter.slug}
-                chapter={chapter}
-                isOpen={isOpen}
-                onToggle={() => onToggleChapter(chapter.slug)}
-                saveFields={saveFields}
-                saveSection={saveSection}
-                setConfidence={setConfidence}
-              />
-            );
-          })}
+
+          {review.totalGaps > 0 && (
+            <GapsList
+              review={review}
+              onJumpToChapter={(slug) => onToggleChapter(slug)}
+              openChapterSlug={openChapterSlug}
+            />
+          )}
+
+          {/* Inline markdown LivePreview was removed in favor of the
+              richer DeliverablePreviewModal (PDF iframe). The customer
+              clicks "Preview & download" in the footer to open the
+              modal — same content, native PDF rendering, single
+              source of truth. */}
         </div>
       )}
     </article>
+  );
+}
+
+function ReadinessBar({ review }: { review: DeliverableReview }) {
+  const pct = review.overallPct;
+  return (
+    <div className="rounded-xl border border-card-border bg-cream/30 p-4">
+      <div className="flex items-baseline justify-between gap-3 mb-2">
+        <span className="text-navy font-bold text-sm">Document readiness</span>
+        <span className="text-navy font-bold tabular-nums text-sm">
+          {pct}%
+        </span>
+      </div>
+      <div className="h-2 rounded-full bg-grey-1 overflow-hidden mb-2">
+        <div
+          className={`h-full transition-all duration-500 ${
+            pct >= 95
+              ? "bg-emerald-500"
+              : pct >= 50
+                ? "bg-amber-500"
+                : "bg-grey-3"
+          }`}
+          style={{ width: `${Math.max(pct, 2)}%` }}
+        />
+      </div>
+      <div className="text-grey-3 text-xs">
+        {review.totalGaps === 0 ? (
+          <span className="inline-flex items-center gap-1.5 text-emerald-700 font-semibold">
+            <CheckCircle2 size={13} /> Every required field is filled. Safe
+            to download.
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 text-amber-700">
+            <AlertCircle size={13} />
+            {`${review.totalGaps} required ${review.totalGaps === 1 ? "field" : "fields"} still empty — downloading now will leave them as "—".`}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function GapsList({
+  review,
+  onJumpToChapter,
+  openChapterSlug,
+}: {
+  review: DeliverableReview;
+  onJumpToChapter: (slug: MemoryFileSlug) => void;
+  openChapterSlug: MemoryFileSlug | null;
+}) {
+  const allGaps = review.chapters.flatMap((c) => c.gaps);
+  const visibleGaps = allGaps.slice(0, 12);
+  return (
+    <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+      <div className="flex items-center gap-2 mb-2 text-[11px] uppercase tracking-[0.1em] text-amber-700 font-bold">
+        <AlertCircle size={12} /> Required gaps to fill
+      </div>
+      <ul className="space-y-1.5">
+        {visibleGaps.map((g) => (
+          <li
+            key={`${g.chapterSlug}.${g.fieldName}`}
+            className="text-sm text-amber-900"
+          >
+            <button
+              type="button"
+              onClick={() => {
+                if (openChapterSlug !== g.chapterSlug) {
+                  onJumpToChapter(g.chapterSlug);
+                }
+                // Scroll the chapter row into view after the editor opens.
+                window.setTimeout(() => {
+                  const target = document.getElementById(
+                    `chapter-row-${g.chapterSlug}`,
+                  );
+                  if (target) {
+                    target.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    });
+                  }
+                }, 50);
+              }}
+              className="text-left hover:underline"
+            >
+              <span className="font-semibold">{g.fieldLabel}</span>
+              <span className="text-amber-700 text-xs">
+                {" "}
+                · {g.chapterTitle}
+              </span>
+            </button>
+          </li>
+        ))}
+        {allGaps.length > visibleGaps.length && (
+          <li className="text-xs text-amber-700 italic pt-1">
+            + {allGaps.length - visibleGaps.length} more
+          </li>
+        )}
+      </ul>
+    </div>
   );
 }
 
@@ -460,7 +668,10 @@ function ChapterRow({
   const filled = countFilled(chapter);
   const stateColor = STATE_DOT_COLOR[chapter.readinessState];
   return (
-    <div className="rounded-lg border border-card-border bg-cream/30 overflow-hidden">
+    <div
+      id={`chapter-row-${chapter.slug}`}
+      className="rounded-lg border border-card-border bg-cream/30 overflow-hidden scroll-mt-4"
+    >
       <button
         type="button"
         onClick={onToggle}

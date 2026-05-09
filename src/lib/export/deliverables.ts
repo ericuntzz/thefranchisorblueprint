@@ -43,7 +43,7 @@ export const DELIVERABLES: Record<DeliverableId, DeliverableDef> = {
       "territory_real_estate",
       "compliance_legal",
     ],
-    formats: ["docx", "md"],
+    formats: ["docx", "md", "pdf"],
     build: buildFddDraft,
     filenameStem: "FDD-Draft",
   },
@@ -62,7 +62,7 @@ export const DELIVERABLES: Record<DeliverableId, DeliverableDef> = {
       "employee_handbook",
       "reimbursement_policy",
     ],
-    formats: ["docx", "md"],
+    formats: ["docx", "md", "pdf"],
     build: buildOperationsManual,
     filenameStem: "Operations-Manual",
   },
@@ -73,7 +73,7 @@ export const DELIVERABLES: Record<DeliverableId, DeliverableDef> = {
     description:
       "Headline unit economics + franchisor revenue per franchisee. The numbers a banker, investor, or candidate franchisee asks for in the first conversation.",
     sourceChapters: ["business_overview", "unit_economics", "franchise_economics"],
-    formats: ["docx", "md"],
+    formats: ["docx", "md", "pdf"],
     build: buildFinancialModel,
     filenameStem: "Financial-Model-Summary",
   },
@@ -84,7 +84,7 @@ export const DELIVERABLES: Record<DeliverableId, DeliverableDef> = {
     description:
       "Discovery Day pre-qualification + ideal-candidate definition. Use to screen candidates before scheduling Discovery Day.",
     sourceChapters: ["business_overview", "franchisee_profile"],
-    formats: ["docx", "md"],
+    formats: ["docx", "md", "pdf"],
     build: buildFranchiseeScoringMatrix,
     filenameStem: "Franchisee-Scoring-Matrix",
   },
@@ -115,7 +115,7 @@ export const DELIVERABLES: Record<DeliverableId, DeliverableDef> = {
     description:
       "Brand fund governance — contribution rates, board structure, approved uses, audits.",
     sourceChapters: ["marketing_fund", "business_overview", "franchise_economics"],
-    formats: ["docx", "md"],
+    formats: ["docx", "md", "pdf"],
     build: buildMarketingFundManual,
     filenameStem: "Marketing-Fund-Manual",
   },
@@ -126,7 +126,7 @@ export const DELIVERABLES: Record<DeliverableId, DeliverableDef> = {
     description:
       "HR policies — code of conduct, scheduling, compensation, time off, and termination. State-level adaptation required before adoption.",
     sourceChapters: ["employee_handbook", "business_overview"],
-    formats: ["docx", "md"],
+    formats: ["docx", "md", "pdf"],
     build: buildEmployeeHandbook,
     filenameStem: "Employee-Handbook",
   },
@@ -137,7 +137,7 @@ export const DELIVERABLES: Record<DeliverableId, DeliverableDef> = {
     description:
       "Approved expenses, mileage / per diem rates, thresholds, and submission process.",
     sourceChapters: ["reimbursement_policy", "business_overview"],
-    formats: ["docx", "md"],
+    formats: ["docx", "md", "pdf"],
     build: buildReimbursementPolicy,
     filenameStem: "Reimbursement-Policy",
   },
@@ -148,7 +148,7 @@ export const DELIVERABLES: Record<DeliverableId, DeliverableDef> = {
     description:
       "Demographic targets, footprint criteria, geographic focus, exclusion zones, and approval process.",
     sourceChapters: ["territory_real_estate", "franchise_economics", "business_overview"],
-    formats: ["docx", "md"],
+    formats: ["docx", "md", "pdf"],
     build: buildSiteSelectionGuide,
     filenameStem: "Site-Selection-Guide",
   },
@@ -159,7 +159,7 @@ export const DELIVERABLES: Record<DeliverableId, DeliverableDef> = {
     description:
       "Voice, visual identity, typography, color, things to avoid, and the approval process for new customer-facing material.",
     sourceChapters: ["brand_voice", "business_overview"],
-    formats: ["docx", "md"],
+    formats: ["docx", "md", "pdf"],
     build: buildBrandStandards,
     filenameStem: "Brand-Standards",
   },
@@ -170,7 +170,7 @@ export const DELIVERABLES: Record<DeliverableId, DeliverableDef> = {
     description:
       "Pre-Discovery Day candidate filter — financial floors, experience requirements, and pass/fail decision rubric.",
     sourceChapters: ["franchisee_profile", "business_overview"],
-    formats: ["docx", "md"],
+    formats: ["docx", "md", "pdf"],
     build: buildQualifyMatrix,
     filenameStem: "Qualification-Matrix",
   },
@@ -181,7 +181,7 @@ export const DELIVERABLES: Record<DeliverableId, DeliverableDef> = {
     description:
       "Founder origin, concept, brand voice, and what makes this different. The narrative anchor for every other deliverable.",
     sourceChapters: ["business_overview", "brand_voice"],
-    formats: ["docx", "md"],
+    formats: ["docx", "md", "pdf"],
     build: buildConceptAndStory,
     filenameStem: "Concept-And-Story",
   },
@@ -192,7 +192,7 @@ export const DELIVERABLES: Record<DeliverableId, DeliverableDef> = {
     description:
       "Initial certification curriculum, opening support, and ongoing training requirements for franchisees and their teams.",
     sourceChapters: ["training_program", "operating_model", "business_overview"],
-    formats: ["docx", "md"],
+    formats: ["docx", "md", "pdf"],
     build: buildTrainingProgram,
     filenameStem: "Training-Program",
   },
@@ -203,7 +203,7 @@ export const DELIVERABLES: Record<DeliverableId, DeliverableDef> = {
     description:
       "Structural scaffold for an attorney to finalize. Every clause marked [NEEDS ATTORNEY REVIEW]; saves your attorney 4–8 hours of boilerplate work per agreement.",
     sourceChapters: ["business_overview", "franchise_economics", "compliance_legal"],
-    formats: ["docx", "md"],
+    formats: ["docx", "md", "pdf"],
     build: buildFranchiseAgreement,
     filenameStem: "Franchise-Agreement-Template",
   },
@@ -214,7 +214,7 @@ export const DELIVERABLES: Record<DeliverableId, DeliverableDef> = {
     description:
       "Registration / filing-only / non-registration states with current fees + your filing status. The single most-asked-for document at launch.",
     sourceChapters: ["compliance_legal", "business_overview"],
-    formats: ["docx", "md"],
+    formats: ["docx", "md", "pdf"],
     build: buildStateRegistrationMatrix,
     filenameStem: "State-Registration-Matrix",
   },
@@ -225,7 +225,7 @@ export const DELIVERABLES: Record<DeliverableId, DeliverableDef> = {
     description:
       "Positioning, growth horizon, expansion sequencing, and competitive analysis. Higher tiers add Census + competitor research.",
     sourceChapters: ["market_strategy", "competitor_landscape", "business_overview"],
-    formats: ["docx", "md"],
+    formats: ["docx", "md", "pdf"],
     build: buildMarketStrategyReport,
     filenameStem: "Market-Strategy-Report",
   },
@@ -236,7 +236,7 @@ export const DELIVERABLES: Record<DeliverableId, DeliverableDef> = {
     description:
       "Direct + indirect competitors with comparative analysis. Higher tiers layer on Google Places density and live pricing intel.",
     sourceChapters: ["competitor_landscape", "business_overview"],
-    formats: ["docx", "md"],
+    formats: ["docx", "md", "pdf"],
     build: buildCompetitorLandscape,
     filenameStem: "Competitor-Landscape",
   },

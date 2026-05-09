@@ -41,17 +41,20 @@ echo "[smoke-test] === seed ==="
 npm run smoke-test:seed || { echo "[smoke-test] seed failed; aborting"; exit 1; }
 
 # 3. Phase 1.
+# tsx prints a dotenv-loaded banner to stdout BEFORE the script runs;
+# pipe through awk to strip everything before the first '{' so the
+# captured file is parseable JSON.
 echo "[smoke-test] === phase 1 ==="
 PHASE1_JSON="/tmp/tfb-phase1-${DATE}.json"
 PHASE1_EXIT=0
-npm run smoke-test:phase1 --silent > "$PHASE1_JSON" || PHASE1_EXIT=$?
+( npm run smoke-test:phase1 --silent || PHASE1_EXIT=$? ) | awk '/^\{/{p=1} p' > "$PHASE1_JSON"
 echo "[smoke-test] phase1 exit=$PHASE1_EXIT"
 
 # 4. Phase 2 (structural).
 echo "[smoke-test] === phase 2 ==="
 PHASE2_JSON="/tmp/tfb-phase2-${DATE}.json"
 PHASE2_EXIT=0
-npx tsx scripts/smoke-test/phase2-structural.ts > "$PHASE2_JSON" || PHASE2_EXIT=$?
+( npm run smoke-test:phase2 --silent || PHASE2_EXIT=$? ) | awk '/^\{/{p=1} p' > "$PHASE2_JSON"
 echo "[smoke-test] phase2 exit=$PHASE2_EXIT"
 
 # 5. Compose orchestration JSON for reporter.

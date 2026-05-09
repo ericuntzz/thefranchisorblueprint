@@ -26,6 +26,7 @@ import {
 import { loadBuildContext } from "@/lib/export/load";
 import { renderDocx } from "@/lib/export/render-docx";
 import { renderMarkdown } from "@/lib/export/render-md";
+import { renderPdf } from "@/lib/export/render-pdf";
 import { renderPptx } from "@/lib/export/render-pptx";
 import type { Purchase } from "@/lib/supabase/types";
 
@@ -70,9 +71,19 @@ export async function GET(
   // Default format: pptx for slide deliverables, docx for everything else.
   const defaultFormat = def.kind === "slides" ? "pptx" : "docx";
   const formatRaw = url.searchParams.get("format") ?? defaultFormat;
-  if (formatRaw !== "docx" && formatRaw !== "md" && formatRaw !== "pptx") {
+  if (
+    formatRaw !== "docx" &&
+    formatRaw !== "md" &&
+    formatRaw !== "pptx" &&
+    formatRaw !== "pdf"
+  ) {
     return NextResponse.json({ error: "Unsupported format" }, { status: 400 });
   }
+  // `inline=1` flips the Content-Disposition from `attachment` to `inline` so
+  // the response can be embedded in an <iframe> for the preview modal.
+  // Used by DeliverablePreviewModal; download links omit it so the browser
+  // saves the file as before.
+  const inline = url.searchParams.get("inline") === "1";
   if (!(def.formats as readonly string[]).includes(formatRaw)) {
     return NextResponse.json(
       { error: `Format ${formatRaw} not available for this deliverable` },
@@ -99,6 +110,10 @@ export async function GET(
         contentType =
           "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
         extension = "docx";
+      } else if (formatRaw === "pdf") {
+        buffer = await renderPdf(doc);
+        contentType = "application/pdf";
+        extension = "pdf";
       } else {
         const md = renderMarkdown(doc);
         buffer = Buffer.from(md, "utf-8");
@@ -121,12 +136,15 @@ export async function GET(
 
   const today = new Date().toISOString().slice(0, 10);
   const filename = `${def.filenameStem}-${today}.${extension}`;
+  const disposition = inline
+    ? `inline; filename="${filename}"`
+    : `attachment; filename="${filename}"`;
 
   return new NextResponse(new Uint8Array(buffer), {
     status: 200,
     headers: {
       "Content-Type": contentType,
-      "Content-Disposition": `attachment; filename="${filename}"`,
+      "Content-Disposition": disposition,
       "Content-Length": String(buffer.byteLength),
       "Cache-Control": "private, no-store",
     },

@@ -96,3 +96,21 @@ Seed complete. Test account ready for smoke test.
 ◇ injected env (54) from .env.local // tip: ◈ secrets for agents [www.dotenvx.com]
 Email sent: 09e75efe-6051-40d1-8b30-21e60d050f88. Report: /Users/fin/Documents/The Franchisor Blueprint Website/scripts/smoke-test/runs/2026-05-07.md
 [smoke-test] === commit ===
+[main 1c7597c] smoke-test: 2026-05-07 · 23/23 pass · 0 blocker(s)
+ Committer: Fin <fin@Fins-Mac-mini.local>
+Your name and email address were configured automatically based
+on your username and hostname. Please check that they are accurate.
+You can suppress this message by setting them explicitly. Run the
+following command and follow the instructions in your editor to edit
+your configuration file:
+
+    git config --global --edit
+
+After doing this, you may fix the identity used for this commit with:
+
+    git commit --amend --reset-author
+
+ 2 files changed, 65 insertions(+), 24 deletions(-)
+To https://github.com/ericuntzz/thefranchisorblueprint.git
+   6bcd54f..1c7597c  main -> main
+[smoke-test] === done 2026-05-07T21:43:55Z ===

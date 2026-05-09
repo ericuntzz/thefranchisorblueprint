@@ -222,7 +222,7 @@ export type DocDeliverableDef = {
   name: string;
   description: string;
   sourceChapters: MemoryFileSlug[];
-  formats: Array<"docx" | "md">;
+  formats: Array<"docx" | "md" | "pdf">;
   build: (ctx: BuildContext) => DeliverableDoc;
   filenameStem: string;
 };
