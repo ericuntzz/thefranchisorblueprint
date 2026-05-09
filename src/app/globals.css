@@ -77,6 +77,34 @@ html {
   }
 }
 
+/* ─── Intake snapshot paced reveal ─────────────────────────────────────
+ * Used by the URL-prefill snapshot view to stagger-reveal sections so
+ * the user has time to orient instead of having all 4 sections appear
+ * simultaneously. Sections set animation-delay inline so the cascade
+ * is configurable per-section. Same fade-up motif as the assessment
+ * flow but slower (520ms) and softer to read as deliberate, not flashy.
+ */
+@keyframes intake-fade-in {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+.intake-fade-in {
+  animation: intake-fade-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intake-fade-in {
+    animation: none;
+  }
+}
+
 @layer base {
   body {
     background: #ffffff;

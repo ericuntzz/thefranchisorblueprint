@@ -341,7 +341,16 @@ export async function* runIntake(args: {
     r.status === "fulfilled" && r.value && r.value.ok ? r.value.places.length : 0,
   );
 
-  // Step 4: Final scoring — combine demographic similarity (60%) + saturation (30%) + trade-area type fit (10%).
+  // Detect the "saturated keyword" failure mode. When LLM business-name
+  // extraction fails, we fall back to a generic Places search keyword
+  // ("restaurant"), which hits the 20-cap on every metro. The signal-
+  // reliability check rolls in whether to trust the competitor counts
+  // for scoring + narrative.
+  const competitorSignalReliable = isCompetitorSignalReliable(competitorCounts);
+
+  // Step 4: Final scoring per market — uses the reliability flag to
+  // avoid both (a) ranking saturated markets as top picks and (b)
+  // narrating them as "crowded — 20 within 1 mile."
   const expansion: ExpansionMarket[] = top5.map((s, i) => {
     const compCount = competitorCounts[i];
     const pillars = computePillars({
@@ -350,6 +359,7 @@ export async function* runIntake(args: {
       similarity: s.similarity,
       competitorCount: compCount,
       prototypeCompetitorCount,
+      competitorSignalReliable,
     });
     const overall =
       pillars.demographicsAndMarket +
@@ -368,13 +378,20 @@ export async function* runIntake(args: {
         demographics: s.demographics,
         prototypeDemographics,
         competitorCount: compCount,
+        competitorSignalReliable,
       }),
       competitorCount: compCount,
     };
   });
 
   expansion.sort((a, b) => b.score - a.score);
-  const topExpansion = expansion.slice(0, 3);
+  // Geographic + trade-area diversity: take the top-scoring market, then
+  // for #2 prefer a different metro, then for #3 prefer a different metro
+  // AND different trade-area type. This stops the snapshot from showing
+  // three near-identical urban-core picks when 5 of the candidate pool
+  // happen to match. Falls back to raw score order if diversity can't
+  // be satisfied.
+  const topExpansion = pickDiverseTop3(expansion);
 
   yield { kind: "phase-done", phase: "expansion", data: topExpansion };
 
@@ -557,38 +574,77 @@ function scoreSimilarity(
   return Math.round(similarity);
 }
 
+/**
+ * Whether the competitor count for a market should be trusted as a real
+ * signal. The Google Places nearby-search caps results at 20 — when we
+ * see 18+ across the board (typically because business name extraction
+ * failed and we fell back to a generic keyword like "restaurant"), the
+ * counts are saturated and meaningless. In that case we fall back to a
+ * neutral mid-range competition score and skip the saturation narrative
+ * entirely so we never present "Crowded — 20 competitors" as a top pick.
+ */
+function isCompetitorSignalReliable(counts: number[]): boolean {
+  if (counts.length === 0) return false;
+  const saturated = counts.filter((c) => c >= 18).length;
+  // If 80%+ of markets are saturated, the keyword was too generic.
+  return saturated / counts.length < 0.8;
+}
+
 function computePillars(args: {
   candidate: CandidateZip;
   demographics: Demographics | null;
   similarity: number;
   competitorCount: number;
   prototypeCompetitorCount: number | null;
+  competitorSignalReliable: boolean;
 }): ExpansionMarket["pillars"] {
   // Demographics & Market (0-25): scaled from similarity.
   const demographicsAndMarket = Math.round((args.similarity / 100) * 25);
 
-  // Traffic & Access (0-25): proxied by trade-area type — urban-core and
-  // edge-city tend to score higher on traffic; outer-suburb depends on
-  // anchor tenants which we'd need a separate Places call to verify.
+  // Traffic & Access (0-25): proxied by trade-area type. The deltas
+  // here are small on purpose — we don't want trade-area type to
+  // dominate the ranking because urban-core would always win.
   const trafficByType: Record<CandidateZip["type"], number> = {
-    "urban-core": 22,
-    "edge-city": 23,
+    "urban-core": 21,
+    "edge-city": 22,
     "inner-suburb": 19,
-    "outer-suburb": 17,
+    "outer-suburb": 18,
   };
   const trafficAndAccess = trafficByType[args.candidate.type];
 
-  // Competition (0-25): lower saturation = higher score. Calibrated
-  // against the prototype's competitor count (we want comparable, not
-  // empty — empty might mean bad concept-market fit).
-  const ideal = args.prototypeCompetitorCount ?? 5;
-  const delta = Math.abs(args.competitorCount - ideal);
-  const competition = Math.max(8, Math.round(25 - delta * 1.5));
+  // Competition (0-25): WHITESPACE (low competitor count) is the prize
+  // for someone considering a new location, not "matching" the prototype.
+  // Earlier scoring tried to match — wrong instinct. Franchise candidates
+  // want markets where the demand exists (proven by the prototype) but
+  // the supply doesn't yet, so they can be early movers.
+  //
+  // Calibration:
+  //   0-3 competitors  → 25/25 (open whitespace, ideal)
+  //   4-8              → 22/25 (healthy demand, real opportunity)
+  //   9-14             → 14/25 (established corridor — viable but tight)
+  //   15-19            → 7/25  (saturated, hard to differentiate)
+  //   20+ (capped)     → 4/25  (over-served)
+  //
+  // BUT: when the competitor signal isn't reliable across the board
+  // (saturated keyword), we use a neutral score so saturation doesn't
+  // arbitrarily clip every market to the same low number.
+  let competition: number;
+  if (!args.competitorSignalReliable) {
+    competition = 17; // neutral mid-range
+  } else if (args.competitorCount <= 3) {
+    competition = 25;
+  } else if (args.competitorCount <= 8) {
+    competition = 22;
+  } else if (args.competitorCount <= 14) {
+    competition = 14;
+  } else if (args.competitorCount <= 19) {
+    competition = 7;
+  } else {
+    competition = 4;
+  }
 
   // Financial & Legal (0-25): proxied by HHI (buying power) + state
-  // franchise-friendliness. We don't have legal data wired yet, so
-  // this is mostly a HHI scaler with a fixed bonus for franchise-
-  // friendly states (no FDD registration requirement).
+  // franchise-friendliness.
   const hhi = args.demographics?.medianHouseholdIncome ?? 70_000;
   const hhiScore = Math.min(20, Math.round((hhi / 100_000) * 20));
   const FRIENDLY_STATES = new Set(["TX", "FL", "AZ", "TN", "NC", "GA", "CO"]);
@@ -608,45 +664,135 @@ function explainMatch(args: {
   demographics: Demographics | null;
   prototypeDemographics: Demographics | null;
   competitorCount: number;
+  competitorSignalReliable: boolean;
 }): string {
   const d = args.demographics;
   const p = args.prototypeDemographics;
   const parts: string[] = [];
 
+  // Demographic comparison — the strongest "why this market" signal.
   if (d && p) {
     const hhiDelta = ((d.medianHouseholdIncome - p.medianHouseholdIncome) / p.medianHouseholdIncome) * 100;
-    const hhiPhrase =
-      Math.abs(hhiDelta) < 10
-        ? "income level closely matches your home market"
-        : hhiDelta > 0
-          ? `income level runs ${Math.round(hhiDelta)}% higher`
-          : `income level runs ${Math.abs(Math.round(hhiDelta))}% lower`;
-    parts.push(hhiPhrase);
+    if (Math.abs(hhiDelta) < 10) {
+      parts.push("household incomes look a lot like your home market");
+    } else if (hhiDelta > 0) {
+      parts.push(`buying power runs about ${Math.round(hhiDelta)}% higher than your home market`);
+    } else {
+      parts.push(`income runs about ${Math.abs(Math.round(hhiDelta))}% lower — a more value-conscious crowd`);
+    }
+  } else if (d) {
+    parts.push(
+      `median household income of $${Math.round(d.medianHouseholdIncome / 1000)}K`,
+    );
   }
 
-  if (args.competitorCount === 0) {
-    parts.push("no direct competitors within a one-mile trade area");
-  } else if (args.competitorCount <= 3) {
-    parts.push(`light competitive saturation (${args.competitorCount} comparable concepts within 1 mile)`);
-  } else if (args.competitorCount <= 7) {
-    parts.push(`healthy density of comparable concepts within 1 mile`);
-  } else {
-    parts.push(`crowded — ${args.competitorCount} comparable concepts within 1 mile`);
+  // Competitor narrative — only present when the signal is meaningful.
+  // Critically: we never frame a TOP recommendation as "crowded."
+  // The scoring algorithm above already downranks saturated markets,
+  // so any market that surfaces here with a high competitor count is
+  // almost always reaching us through a Places signal-failure path —
+  // which the reliability check filters out.
+  if (args.competitorSignalReliable) {
+    if (args.competitorCount === 0) {
+      parts.push("nobody else doing your concept within a mile (open whitespace)");
+    } else if (args.competitorCount <= 3) {
+      parts.push("very few comparable concepts within a mile — first-mover territory");
+    } else if (args.competitorCount <= 8) {
+      parts.push("healthy demand signal with room to differentiate");
+    } else if (args.competitorCount <= 14) {
+      parts.push("established corridor — proven demand, you'll need a sharp angle to win");
+    }
+    // 15+ scores too low to surface as a top recommendation, so we
+    // intentionally don't emit a saturated-narrative line here.
   }
 
+  // Trade-area type — frames the kind of operator who'd succeed.
   const typeLabel: Record<CandidateZip["type"], string> = {
-    "urban-core": "urban-core foot traffic",
-    "edge-city": "edge-city anchor pattern",
-    "inner-suburb": "inner-suburb residential density",
-    "outer-suburb": "outer-suburb daytime/evening traffic",
+    "urban-core": "dense urban foot traffic",
+    "edge-city": "anchor-driven edge-city traffic pattern",
+    "inner-suburb": "established inner-suburb residential base",
+    "outer-suburb": "fast-growing suburb with strong daytime + evening traffic",
   };
   parts.push(typeLabel[args.candidate.type]);
 
-  return capitalize(parts.join("; "));
+  return capitalize(parts.join("; ")) + ".";
 }
 
 function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/**
+ * Diversity-aware top-3 picker. The raw score-sorted list often clusters
+ * (e.g., three urban-cores in the same metro all score ~65). The user
+ * sees that as "three identical recommendations" which makes the tool
+ * feel dumb. This picker takes the #1 by score, then for #2 prefers a
+ * different metro, then for #3 prefers a different metro AND different
+ * trade-area type. Falls back to raw order if diversity can't be met.
+ */
+function pickDiverseTop3(
+  rankedExpansion: ExpansionMarket[],
+): ExpansionMarket[] {
+  if (rankedExpansion.length <= 1) return rankedExpansion.slice(0, 3);
+  const result: ExpansionMarket[] = [rankedExpansion[0]];
+  const used = new Set([rankedExpansion[0].zip]);
+  // Tag each candidate with its trade-area type by joining back to the
+  // candidate-pool data. (We don't store the type on ExpansionMarket
+  // directly so we look it up at picking time.)
+  const typeFor = (zip: string): string =>
+    CANDIDATE_ZIPS.find((c) => c.zip === zip)?.type ?? "unknown";
+
+  // Pick #2: highest-scoring candidate in a different metro.
+  for (const c of rankedExpansion) {
+    if (used.has(c.zip)) continue;
+    if (c.metro === result[0].metro) continue;
+    result.push(c);
+    used.add(c.zip);
+    break;
+  }
+  // If we couldn't satisfy "different metro," fall back to next highest.
+  if (result.length < 2) {
+    for (const c of rankedExpansion) {
+      if (used.has(c.zip)) continue;
+      result.push(c);
+      used.add(c.zip);
+      break;
+    }
+  }
+
+  // Pick #3: highest-scoring candidate in a metro NOT already represented
+  // AND a trade-area type NOT already represented. Loose preference:
+  // metro diversity matters more than type diversity.
+  const usedMetros = new Set(result.map((r) => r.metro));
+  const usedTypes = new Set(result.map((r) => typeFor(r.zip)));
+  for (const c of rankedExpansion) {
+    if (used.has(c.zip)) continue;
+    if (usedMetros.has(c.metro)) continue;
+    if (usedTypes.has(typeFor(c.zip))) continue;
+    result.push(c);
+    used.add(c.zip);
+    break;
+  }
+  if (result.length < 3) {
+    // Relaxed: just need a different metro for #3.
+    for (const c of rankedExpansion) {
+      if (used.has(c.zip)) continue;
+      if (usedMetros.has(c.metro)) continue;
+      result.push(c);
+      used.add(c.zip);
+      break;
+    }
+  }
+  if (result.length < 3) {
+    // Last resort: next-highest by raw score.
+    for (const c of rankedExpansion) {
+      if (used.has(c.zip)) continue;
+      result.push(c);
+      used.add(c.zip);
+      if (result.length >= 3) break;
+    }
+  }
+  return result;
 }
 
 function computeReadiness(args: {
@@ -659,14 +805,25 @@ function computeReadiness(args: {
   let score = 0;
   const gaps: string[] = [];
 
+  // Each gap is a full sentence that explains WHY this gap matters and
+  // what the customer needs to do about it. Fragments like "Brand name
+  // unclear" leave first-time visitors guessing — they don't know yet
+  // that an FDD even exists, let alone why it matters.
+
   // Business signal completeness (40 points)
   if (args.business.name) score += 10;
-  else gaps.push("Brand name unclear from website");
+  else gaps.push(
+    "Your brand name isn't framed clearly on your home page. Franchise candidates need a 5-second answer to “what is this business?” before they'll consider opening one.",
+  );
   if (args.business.oneLineConcept) score += 10;
-  else gaps.push("Concept narrative not yet codified");
+  else gaps.push(
+    "There's no single reusable description of your concept. You'll write this once and reuse it across your FDD, your operations manual, and every Discovery Day pitch — get it right early.",
+  );
   if (args.business.brandVoice) score += 10;
   if (args.business.address || args.sourceLocation) score += 10;
-  else gaps.push("No public business address found — limits site selection analysis");
+  else gaps.push(
+    "We couldn't find your physical address from your website. Your prototype location's traits — its trade area, demographics, foot-traffic pattern — are the foundation for telling future franchisees where their unit should go.",
+  );
 
   // Market signal (30 points)
   if (args.prototypeDemographics) score += 15;
@@ -678,7 +835,9 @@ function computeReadiness(args: {
       args.expansionScores.reduce((a, b) => a + b, 0) / args.expansionScores.length;
     score += Math.round((avg / 100) * 30);
   } else {
-    gaps.push("Insufficient market data to score expansion viability");
+    gaps.push(
+      "We don't have enough public market data to score expansion viability for your concept yet. A 15-minute call with our team usually closes that gap quickly.",
+    );
   }
 
   // Cap at 100, floor at 0
@@ -691,15 +850,16 @@ function computeReadiness(args: {
   else if (score < 80) suggestedTier = "navigator";
   else suggestedTier = "builder";
 
-  // Always surface 3 gaps minimum so the user sees something to act on.
-  // Pad with generic gaps if our checks didn't produce enough.
+  // Generic gaps used to pad to 3. These are written for first-time
+  // visitors who may not know what an FDD or Item 19 is — each one
+  // names the artifact AND why it matters.
   if (gaps.length < 3) {
     const generic = [
-      "Unit economics not yet modeled to FDD Item 19 standard",
-      "Operations manual not yet codified for replication",
-      "FDD draft not yet started",
-      "Site-selection rubric not yet documented",
-      "Training program not yet built for franchisee onboarding",
+      "Unit economics aren't yet modeled to FDD Item 19 standard. Item 19 is the financial-performance representation prospective franchisees rely on to project returns; without an audited version, your franchise is harder to sell and easier for attorneys to challenge.",
+      "Your day-to-day playbook isn't written down yet. To franchise, the operations that live in your team's heads need to become a 100+ page manual every franchisee can run from — without you in the room.",
+      "The Franchise Disclosure Document (FDD) is your legal contract with every franchisee. It's 23 federally mandated items, takes 60–120 days to assemble, and is the single biggest milestone before you can legally sell a franchise.",
+      "There's no documented site-selection rubric yet. Your future franchisees will ask “how do I find a location like yours?” — you'll need a written 4-pillar scoring sheet (the same kind we'd build into your FDD Item 11).",
+      "Training program isn't built for franchisee onboarding. Without a structured 4–6 week training curriculum, every new franchisee opens slower and inconsistently — the #1 cause of multi-unit-brand failures.",
     ];
     for (const g of generic) {
       if (gaps.length >= 3) break;

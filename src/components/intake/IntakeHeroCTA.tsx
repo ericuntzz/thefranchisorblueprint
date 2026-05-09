@@ -7,6 +7,7 @@ import {
   Check,
   CheckCircle2,
   Loader2,
+  Lock,
   Mail,
   Sparkles,
 } from "lucide-react";
@@ -98,6 +99,11 @@ export function IntakeHeroCTA() {
   const [emailError, setEmailError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  // Refs hold the snapshot data through the saving → saved transition so
+  // the saved-state SnapshotView can show the same snapshot unblurred
+  // even though the View union narrows at "saved" to only { email }.
+  const savedSnapshotRef = useRef<IntakeSnapshot | null>(null);
+  const savedSessionIdRef = useRef<string | null>(null);
 
   // ─── On mount: check cap status + look for ?intake=<id> resume ──
   useEffect(() => {
@@ -295,6 +301,11 @@ export function IntakeHeroCTA() {
     setEmailError(null);
     const snapshot = view.snapshot;
     const sessionId = view.sessionId;
+    // Stash snapshot + sessionId so the saved-state view can render
+    // the same snapshot unblurred (the saved view's union narrows to
+    // just { email } so we lose the snapshot from `view`).
+    savedSnapshotRef.current = snapshot;
+    savedSessionIdRef.current = sessionId;
     setView({ kind: "saving", snapshot, sessionId });
 
     try {
@@ -347,12 +358,29 @@ export function IntakeHeroCTA() {
         emailError={emailError}
         onSubmit={handleSaveEmail}
         saving={view.kind === "saving"}
+        revealAll={false}
       />
     );
   }
 
   if (view.kind === "saved") {
-    return <SavedConfirmation email={view.email} />;
+    // Same SnapshotView component, but unblurred (revealAll=true) and
+    // with a green confirmation banner above replacing the save form.
+    // Keeps the user in their context — they get the reveal AS the
+    // confirmation rather than navigating to a separate "saved" screen.
+    return (
+      <SnapshotView
+        snapshot={savedSnapshotRef.current ?? undefined}
+        sessionId={savedSessionIdRef.current ?? ""}
+        emailInput={emailInput}
+        setEmailInput={setEmailInput}
+        emailError={null}
+        onSubmit={() => {}}
+        saving={false}
+        revealAll={true}
+        savedEmail={view.email}
+      />
+    );
   }
 
   if (view.kind === "error") {
@@ -506,6 +534,39 @@ function StreamingProgress({
   );
 }
 
+/**
+ * Tier-fit copy. Each tier suggestion gets a 3-4 sentence explainer
+ * that names the artifact AND why it matters — written for first-time
+ * visitors who've never heard of TFB before. Replaces the previous
+ * single-line tier labels (e.g. "Not yet — let's talk first") that
+ * Eric's QA flagged as too short and AI-speak-y.
+ */
+const TIER_COPY: Record<
+  IntakeSnapshot["readiness"]["suggestedTier"],
+  { headline: string; body: string }
+> = {
+  "not-yet": {
+    headline: "Let's slow down for a minute",
+    body:
+      "Your business has real potential, but a few foundational pieces aren't quite in place for franchising to make financial sense yet. That's actually good news — most candidates who try to franchise too early end up burning $40K–$80K on legal fees for a system that won't scale. We'd recommend a free 30-minute strategy call where we'll walk through exactly what to fix and roughly how long it'll take. Most owners come away with a clear 12-month plan.",
+  },
+  blueprint: {
+    headline: "Start with The Blueprint — $2,997",
+    body:
+      "You're closer than most. The Blueprint gives you the complete 9-framework franchisor system to do it yourself: a 17-chapter Operations Manual template, an FDD explainer covering all 23 federal items, the site-selection rubric we'd codify into your Item 11, training program scaffolding, and a Discovery Day pitch deck. Plus a 60-minute kickoff call with our team. Most DIY-ready operators launch their first franchisee in about 6 months.",
+  },
+  navigator: {
+    headline: "Navigator is your match — $8,500",
+    body:
+      "You're ready to franchise, but the legal and operational handoffs are where most first-timers stumble. Navigator pairs the full Blueprint system with 24 weekly 1:1 coaching calls over 6 months, document review, monthly milestone gates, and Franchise Ready certification on completion. The structured cadence gets you to launch faster than going it alone — and gives you Jason on speed-dial when something gets weird.",
+  },
+  builder: {
+    headline: "Builder is your match — $29,500",
+    body:
+      "Your business is ready for full done-with-you franchise development. We project-manage the entire 12-month build, coordinate vendors and your franchise attorney, generate the FDD, and assist with your first franchisee recruitment. You stay in the captain's chair on brand and operations; we do the heavy lifting on legal, real estate, and process. Built for operators who'd rather buy time than learn franchise development from scratch.",
+  },
+};
+
 function SnapshotView({
   snapshot,
   sessionId: _sessionId,
@@ -514,37 +575,89 @@ function SnapshotView({
   emailError,
   onSubmit,
   saving,
+  revealAll,
+  savedEmail,
 }: {
-  snapshot: IntakeSnapshot;
+  snapshot: IntakeSnapshot | undefined;
   sessionId: string;
   emailInput: string;
   setEmailInput: (v: string) => void;
   emailError: string | null;
   onSubmit: (e: React.FormEvent) => void;
   saving: boolean;
+  /** When true, all 3 markets render unblurred and the save form
+   *  is replaced with a green "snapshot saved" confirmation banner. */
+  revealAll: boolean;
+  /** Set in the saved view to render in the confirmation banner. */
+  savedEmail?: string;
 }) {
+  // Defensive: the saved view falls back to refs that should always be
+  // populated, but if they're not for any reason, render nothing rather
+  // than crashing.
+  if (!snapshot) return null;
+
   const score = snapshot.readiness.overall;
   const tier = snapshot.readiness.suggestedTier;
-  const tierLabel: Record<typeof tier, string> = {
-    blueprint: "The Blueprint (DIY)",
-    navigator: "Navigator (6-month coached)",
-    builder: "Builder (12-month done-with-you)",
-    "not-yet": "Not yet — let's talk first",
-  };
+  const tierCopy = TIER_COPY[tier];
+
+  // Display name: prefer the LLM-extracted business name; if extraction
+  // failed entirely, fall back to a friendly humanized version of the
+  // domain rather than the placeholder "Your Business" Eric flagged.
+  const displayName = (() => {
+    if (snapshot.business.name) return snapshot.business.name;
+    return "Your business";
+  })();
+
+  // The reveal animation uses incremental delays. Each section gets a
+  // class with a different transitionDelay value via inline style so
+  // they fade-in staggered after the snapshot mounts. ~140ms gap reads
+  // as deliberate without being slow.
+  const fadeIn = "intake-fade-in";
+
+  // Markets layout: #1 always visible. #2 + #3 blurred until revealAll.
+  const markets = snapshot.expansion;
+  const primaryMarket = markets[0];
+  const lockedMarkets = markets.slice(1);
 
   return (
     <div className="max-w-[820px]">
-      {/* Snapshot card — designed to read as an FDD Item 11 site-criteria sheet,
-          not a tech dashboard. Hand-set headers, plain English, four pillars. */}
-      <div className="bg-cream rounded-2xl border border-gold/30 shadow-[0_24px_60px_rgba(0,0,0,0.32)] p-6 md:p-8 text-navy">
-        {/* Header — stacks on mobile, side-by-side on sm+ to keep score visible */}
+      {/* Saved banner — replaces the save form when revealAll is true */}
+      {revealAll && savedEmail && (
+        <div
+          className={`${fadeIn} mb-4 bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-5 flex items-start gap-3 shadow-[0_12px_40px_rgba(0,0,0,0.2)]`}
+        >
+          <CheckCircle2
+            size={24}
+            className="text-emerald-600 flex-shrink-0 mt-0.5"
+            aria-hidden
+          />
+          <div className="min-w-0">
+            <p className="text-emerald-900 font-bold text-base mb-0.5">
+              All three markets unlocked. Check your inbox.
+            </p>
+            <p className="text-emerald-800/85 text-sm leading-relaxed">
+              We sent the full snapshot to{" "}
+              <span className="font-semibold break-all">{savedEmail}</span>. You
+              can scroll down to see all three expansion markets, your gaps,
+              and what we'd recommend for your next move.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Snapshot card */}
+      <div
+        className={`${fadeIn} bg-cream rounded-2xl border border-gold/30 shadow-[0_24px_60px_rgba(0,0,0,0.32)] p-6 md:p-8 text-navy`}
+        style={{ animationDelay: "0ms" }}
+      >
+        {/* Header — eyebrow + business + score */}
         <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-3 sm:gap-4 pb-4 border-b border-navy/15">
           <div className="min-w-0">
             <p className="text-[11px] font-bold tracking-[0.18em] uppercase text-gold-warm">
               Franchise Readiness Snapshot
             </p>
             <p className="text-navy font-bold text-lg md:text-xl mt-1 break-words">
-              {snapshot.business.name ?? "Your Business"}
+              {displayName}
             </p>
             {snapshot.business.oneLineConcept && (
               <p className="text-grey-3 text-sm italic mt-0.5">
@@ -563,80 +676,108 @@ function SnapshotView({
           </div>
         </div>
 
-        {/* Prototype profile */}
-        <div className="mt-5">
+        {/* "Where Your Business Operates Today" — replaces "Prototype profile" */}
+        <div
+          className={`${fadeIn} mt-5`}
+          style={{ animationDelay: "140ms" }}
+        >
           <p className="text-[11px] font-bold tracking-[0.18em] uppercase text-gold-warm mb-2">
-            Prototype profile
+            Where your business operates today
           </p>
           <p className="text-navy/85 text-[15px] leading-relaxed">
             {snapshot.prototype.narrative}
           </p>
         </div>
 
-        {/* Top expansion markets */}
-        {snapshot.expansion.length > 0 && (
-          <div className="mt-6">
-            <p className="text-[11px] font-bold tracking-[0.18em] uppercase text-gold-warm mb-3">
-              Top expansion markets
+        {/* "Markets where we'd open next" — replaces "Top expansion markets" */}
+        {markets.length > 0 && (
+          <div
+            className={`${fadeIn} mt-6`}
+            style={{ animationDelay: "280ms" }}
+          >
+            <p className="text-[11px] font-bold tracking-[0.18em] uppercase text-gold-warm mb-1">
+              Markets where we'd open next
             </p>
-            <ol className="space-y-3">
-              {snapshot.expansion.map((m, i) => (
-                <li key={m.zip} className="bg-white rounded-xl border border-navy/10 p-4">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <div>
-                      <span className="text-grey-4 text-sm font-bold tabular-nums mr-2">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      <span className="text-navy font-bold text-base">{m.label}</span>
-                      <span className="text-grey-4 text-xs ml-2 tabular-nums">
-                        {m.zip}, {m.state}
+            <p className="text-grey-3 text-[13px] leading-relaxed mb-3">
+              Each market is scored on the same 4-pillar / 100-point rubric
+              real franchisors use to approve their franchisees' site choices.
+            </p>
+
+            {/* Primary market — always visible, full detail */}
+            {primaryMarket && (
+              <MarketCard market={primaryMarket} index={0} blurred={false} />
+            )}
+
+            {/* Locked markets — blurred until revealAll, with a gating overlay */}
+            {lockedMarkets.length > 0 && (
+              <div className="relative mt-3 space-y-3">
+                {lockedMarkets.map((m, i) => (
+                  <MarketCard
+                    key={m.zip}
+                    market={m}
+                    index={i + 1}
+                    blurred={!revealAll}
+                  />
+                ))}
+                {!revealAll && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="bg-navy/95 text-white rounded-xl px-5 py-3 shadow-2xl border border-gold/40 flex items-center gap-2.5 pointer-events-auto">
+                      <Lock size={16} className="text-gold flex-shrink-0" aria-hidden />
+                      <span className="text-sm font-semibold">
+                        Two more markets unlock when you save below
                       </span>
                     </div>
-                    <div className="text-navy font-extrabold text-xl tabular-nums">{m.score}</div>
                   </div>
-                  <p className="text-grey-3 text-[13px] leading-relaxed mt-1.5">{m.why}.</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 text-[10px] font-semibold uppercase tracking-wider">
-                    <PillarCell label="Demographics" score={m.pillars.demographicsAndMarket} max={25} />
-                    <PillarCell label="Traffic" score={m.pillars.trafficAndAccess} max={25} />
-                    <PillarCell label="Competition" score={m.pillars.competition} max={25} />
-                    <PillarCell label="Financial" score={m.pillars.financialAndLegal} max={25} />
-                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* "What's standing between you and your first franchise" — gaps */}
+        {snapshot.readiness.gaps.length > 0 && (
+          <div
+            className={`${fadeIn} mt-7 pt-6 border-t border-navy/10`}
+            style={{ animationDelay: "420ms" }}
+          >
+            <p className="text-[11px] font-bold tracking-[0.18em] uppercase text-gold-warm mb-1">
+              What's standing between you and your first franchise
+            </p>
+            <p className="text-grey-3 text-[13px] leading-relaxed mb-3">
+              The three biggest gaps we'd close before you sell franchise #1.
+            </p>
+            <ol className="space-y-3 text-navy/85 text-[14px] leading-relaxed">
+              {snapshot.readiness.gaps.map((g, i) => (
+                <li key={i} className="flex gap-3">
+                  <span className="text-gold-warm font-bold flex-shrink-0 tabular-nums">
+                    {String(i + 1).padStart(2, "0")}.
+                  </span>
+                  <span>{g}</span>
                 </li>
               ))}
             </ol>
           </div>
         )}
 
-        {/* Named gaps */}
-        {snapshot.readiness.gaps.length > 0 && (
-          <div className="mt-6">
-            <p className="text-[11px] font-bold tracking-[0.18em] uppercase text-gold-warm mb-2">
-              Top gaps to close
-            </p>
-            <ul className="space-y-1.5 text-navy/85 text-[14px]">
-              {snapshot.readiness.gaps.map((g, i) => (
-                <li key={i} className="flex gap-2.5">
-                  <span className="text-gold-warm font-bold">{String(i + 1).padStart(2, "0")}.</span>
-                  <span>{g}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Tier suggestion */}
-        <div className="mt-5 pt-5 border-t border-navy/15">
-          <p className="text-[11px] font-bold tracking-[0.18em] uppercase text-gold-warm mb-1">
-            Suggested path
+        {/* "What we'd recommend next" — replaces "Suggested path" */}
+        <div
+          className={`${fadeIn} mt-7 pt-6 border-t border-navy/15`}
+          style={{ animationDelay: "560ms" }}
+        >
+          <p className="text-[11px] font-bold tracking-[0.18em] uppercase text-gold-warm mb-2">
+            What we'd recommend next
           </p>
-          <p className="text-navy font-bold text-base">{tierLabel[tier]}</p>
+          <p className="text-navy font-bold text-base mb-2">
+            {tierCopy.headline}
+          </p>
+          <p className="text-navy/85 text-[14px] leading-relaxed">
+            {tierCopy.body}
+          </p>
         </div>
 
-        {/* Diagnostic footer — reinforces "30-year expert with software"
-            framing rather than "AI startup with APIs". The 4-pillar /
-            100-point structure mirrors how real FDD Item 11 site-criteria
-            sheets are written. */}
-        <div className="mt-4 pt-4 border-t border-navy/10">
+        {/* Diagnostic footer — preserves the "30-year operator with software"
+            framing. Eric flagged this language as good. */}
+        <div className="mt-5 pt-4 border-t border-navy/10">
           <p className="text-grey-4 text-[11px] italic leading-relaxed">
             Built on Jason&apos;s 4-pillar / 100-point site-readiness diagnostic — the same
             rubric we&apos;ll codify into your FDD Item 11 site-criteria sheet inside The
@@ -645,51 +786,144 @@ function SnapshotView({
         </div>
       </div>
 
-      {/* Save form — primary CTA */}
-      <form
-        onSubmit={onSubmit}
-        className="mt-5 bg-white/95 backdrop-blur rounded-2xl p-5 md:p-6 shadow-[0_12px_40px_rgba(0,0,0,0.25)]"
-      >
-        <p className="text-navy font-bold text-base mb-1">Save your snapshot.</p>
-        <p className="text-grey-3 text-sm mb-4">
-          We&apos;ll email you the snapshot, and pre-fill <strong>~15-20% of your full Blueprint</strong> with this data when you sign up to build it out.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <div className="flex-1 relative">
-            <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-grey-4" aria-hidden />
-            <input
-              type="email"
-              required
-              autoComplete="email"
-              value={emailInput}
-              onChange={(e) => setEmailInput(e.target.value)}
-              placeholder="you@yourcompany.com"
-              className="w-full rounded-xl border border-navy/15 pl-10 pr-3 py-3 text-[15px] text-navy placeholder-grey-4 focus:border-gold focus:ring-2 focus:ring-gold/20 outline-none transition"
-              disabled={saving}
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={saving}
-            className="bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-7 py-3 rounded-xl hover:bg-gold-dark transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
-          >
-            {saving ? <Loader2 size={15} className="animate-spin" /> : <ArrowRight size={15} />}
-            {saving ? "Saving…" : "Save snapshot"}
-          </button>
-        </div>
-        {emailError && <p className="text-red-600 text-xs font-semibold mt-2">{emailError}</p>}
-      </form>
-
-      {/* Additive deeper assessment CTA */}
-      <div className="mt-3 text-center">
-        <Link
-          href="/assessment"
-          className="inline-flex items-center gap-1.5 text-white/80 hover:text-white text-sm underline-offset-4 hover:underline"
+      {/* Save form — replaced with confirmation banner once saved */}
+      {!revealAll && (
+        <form
+          onSubmit={onSubmit}
+          className={`${fadeIn} mt-5 bg-white/95 backdrop-blur rounded-2xl p-5 md:p-6 shadow-[0_12px_40px_rgba(0,0,0,0.25)]`}
+          style={{ animationDelay: "700ms" }}
         >
-          <Sparkles size={14} />
-          Want a sharper score? Add the 15-question Readiness Assessment (~5 min)
-          <ArrowRight size={13} />
-        </Link>
+          <p className="text-navy font-bold text-lg mb-1">
+            Want all three markets — and the full report?
+          </p>
+          <p className="text-grey-3 text-sm leading-relaxed mb-3">
+            Enter your email and we'll do three things:
+          </p>
+          <ul className="text-grey-3 text-sm leading-relaxed mb-4 space-y-1 ml-4">
+            <li className="flex gap-2"><span className="text-gold-warm font-bold flex-shrink-0">•</span><span>The other two expansion markets unlock right here, with full pillar scoring and the trade-area narrative for each.</span></li>
+            <li className="flex gap-2"><span className="text-gold-warm font-bold flex-shrink-0">•</span><span>We send you the full snapshot as an email you can share with your team.</span></li>
+            <li className="flex gap-2"><span className="text-gold-warm font-bold flex-shrink-0">•</span><span>If you ever build out your full franchise system with us, we already have a 15–20% head start on your data — pre-filled into your portal automatically.</span></li>
+          </ul>
+          <p className="text-grey-4 text-[12px] italic leading-relaxed mb-4">
+            We&apos;re The Franchisor Blueprint — we help operators franchise their business
+            without paying $40K–$80K to a big firm. Built on 30 years of franchise
+            development by Jason Stowe.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex-1 relative">
+              <Mail
+                size={16}
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-grey-4"
+                aria-hidden
+              />
+              <input
+                type="email"
+                required
+                autoComplete="email"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                placeholder="you@yourcompany.com"
+                className="w-full rounded-xl border border-navy/15 pl-10 pr-3 py-3 text-[15px] text-navy placeholder-grey-4 focus:border-gold focus:ring-2 focus:ring-gold/20 outline-none transition"
+                disabled={saving}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={saving}
+              className="bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-7 py-3 rounded-xl hover:bg-gold-dark transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+            >
+              {saving ? <Loader2 size={15} className="animate-spin" /> : <ArrowRight size={15} />}
+              {saving ? "Saving…" : "Unlock all three markets"}
+            </button>
+          </div>
+          {emailError && <p className="text-red-600 text-xs font-semibold mt-2">{emailError}</p>}
+        </form>
+      )}
+
+      {/* Reveal-state CTAs — replace the assessment alt-link in the saved state */}
+      {revealAll && (
+        <div className="mt-5 flex flex-col sm:flex-row gap-3">
+          <Link
+            href="/programs/blueprint"
+            className="flex-1 bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-7 py-4 rounded-full hover:bg-gold-dark transition-colors text-center"
+          >
+            See The Blueprint →
+          </Link>
+          <Link
+            href="/strategy-call/blueprint"
+            className="flex-1 bg-white text-navy border-2 border-navy/15 font-bold text-sm uppercase tracking-[0.1em] px-7 py-4 rounded-full hover:bg-navy hover:text-white transition-colors text-center"
+          >
+            Book your kickoff call →
+          </Link>
+        </div>
+      )}
+
+      {/* Additive deeper assessment CTA — only in the unsaved state */}
+      {!revealAll && (
+        <div className="mt-3 text-center">
+          <Link
+            href="/assessment"
+            className="inline-flex items-center gap-1.5 text-white/80 hover:text-white text-sm underline-offset-4 hover:underline"
+          >
+            <Sparkles size={14} />
+            Want a sharper score? Add the 15-question Readiness Assessment (~5 min)
+            <ArrowRight size={13} />
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Single market card — used for the unblurred primary recommendation
+ * AND the blurred locked recommendations. The `blurred` prop wraps
+ * the content in a CSS filter so users can see SHAPES of what's
+ * coming, but not the specific market names or scores.
+ */
+function MarketCard({
+  market,
+  index,
+  blurred,
+}: {
+  market: IntakeSnapshot["expansion"][number];
+  index: number;
+  blurred: boolean;
+}) {
+  return (
+    <div
+      className={`bg-white rounded-xl border border-navy/10 p-4 ${
+        blurred ? "select-none" : ""
+      }`}
+      style={
+        blurred
+          ? { filter: "blur(6px)", opacity: 0.7 }
+          : undefined
+      }
+      aria-hidden={blurred}
+    >
+      <div className="flex items-baseline justify-between gap-3">
+        <div className="min-w-0">
+          <span className="text-grey-4 text-sm font-bold tabular-nums mr-2">
+            {String(index + 1).padStart(2, "0")}
+          </span>
+          <span className="text-navy font-bold text-base">{market.label}</span>
+          <span className="text-grey-4 text-xs ml-2 tabular-nums">
+            {market.zip}, {market.state}
+          </span>
+        </div>
+        <div className="text-navy font-extrabold text-xl tabular-nums">
+          {market.score}
+        </div>
+      </div>
+      <p className="text-grey-3 text-[13px] leading-relaxed mt-1.5">
+        {market.why}
+      </p>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 text-[10px] font-semibold uppercase tracking-wider">
+        <PillarCell label="Demographics" score={market.pillars.demographicsAndMarket} max={25} />
+        <PillarCell label="Traffic" score={market.pillars.trafficAndAccess} max={25} />
+        <PillarCell label="Competition" score={market.pillars.competition} max={25} />
+        <PillarCell label="Financial" score={market.pillars.financialAndLegal} max={25} />
       </div>
     </div>
   );
@@ -706,35 +940,10 @@ function PillarCell({ label, score, max }: { label: string; score: number; max: 
   );
 }
 
-function SavedConfirmation({ email }: { email: string }) {
-  return (
-    <div className="max-w-[640px] bg-white rounded-2xl p-6 md:p-7 shadow-[0_12px_40px_rgba(0,0,0,0.3)] text-navy">
-      <div className="flex items-start gap-3 mb-3">
-        <CheckCircle2 size={28} className="text-emerald-600 flex-shrink-0" />
-        <div>
-          <p className="font-bold text-lg">Saved.</p>
-          <p className="text-grey-3 text-sm leading-relaxed">
-            We sent your snapshot to <span className="font-semibold text-navy break-all">{email}</span>. When you&apos;re ready to build out the full Blueprint, we&apos;ll pre-fill what we already know about your business so you start at ~15-20% complete instead of zero.
-          </p>
-        </div>
-      </div>
-      <div className="mt-5 pt-5 border-t border-navy/10 flex flex-col sm:flex-row gap-3">
-        <Link
-          href="/programs/blueprint"
-          className="bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-7 py-3 rounded-full hover:bg-gold-dark transition-colors text-center"
-        >
-          See The Blueprint →
-        </Link>
-        <Link
-          href="/strategy-call/blueprint"
-          className="bg-transparent text-navy border-2 border-navy/15 font-bold text-sm uppercase tracking-[0.1em] px-7 py-3 rounded-full hover:bg-navy hover:text-white transition-colors text-center"
-        >
-          Book your kickoff call →
-        </Link>
-      </div>
-    </div>
-  );
-}
+// SavedConfirmation removed: the saved state now renders SnapshotView with
+// revealAll=true, which shows an emerald confirmation banner above the
+// (now-unblurred) snapshot. Keeps the user in their context — the reveal
+// IS the confirmation rather than a separate "saved" screen.
 
 function ErrorState({ message }: { message: string }) {
   return (
