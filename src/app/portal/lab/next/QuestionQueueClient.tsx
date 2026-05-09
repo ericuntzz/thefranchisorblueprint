@@ -446,14 +446,11 @@ export function QuestionQueueClient({
           "anchor the file upload container to the bottom of the
           containers where the user is answering questions once they
           hit continue, just in case they decide later on that they
-          want to upload a doc." The compact-above version was a
-          one-shot hint; this is the persistent action. Renders the
-          FULL drop zone (drag area + click-to-choose + example
-          chips) so the customer can attach mid-flow without first
-          having to click an "expand" affordance. Surfaces only when
-          the section has zero attachments AND a doc-prompt is
-          configured AND we're not on the phase-transition card
-          (which already carries its own anchor doc-prompt). */}
+          want to upload a doc."
+          Uses the MINIMAL variant — drop zone + X dismiss only — so
+          we don't repeat the prompt + example chips that the phase-
+          transition card just showed. The customer's already in the
+          phase context; the bottom anchor is pure action. */}
       {!showTransition &&
         (attachmentCountBySlug[current.slug] ?? 0) === 0 &&
         docPromptFor(current.slug as MemoryFileSlug) && (
@@ -465,6 +462,7 @@ export function QuestionQueueClient({
                 current.slug as MemoryFileSlug,
               ) as NonNullable<ReturnType<typeof docPromptFor>>
             }
+            minimal
           />
         )}
     </div>

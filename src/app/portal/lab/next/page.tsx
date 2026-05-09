@@ -126,20 +126,21 @@ export default async function GuidedNextPage({
 
   return (
     <>
-      {/* Vertically center the question card within the viewport-minus-
-          footer area. Without `flex items-center` the form collapses to
-          the top of `<main>` and looks stranded on tall screens (1080p
-          desktop, ultrawides). The `min-h` accounts for the SiteFooter
-          rendered just below; py-10/16 stays so on short viewports the
-          card has breathing room above + below instead of butting up
-          against the rails. */}
-      <main className="min-h-screen bg-cream-soft flex items-center">
+      {/* Layout 2026-05-09 per Eric: "this entire section should be
+          a little bigger and longer to fill the screen a bit more."
+          Dropped `flex items-center` (the strict vertical centering
+          pinned content to the middle of tall viewports with empty
+          space above and below). Now top-anchored with generous
+          padding so the stack reads as a substantial workspace and
+          bg-cream-soft fills the rest naturally. Container widened
+          to ~1080px so cards aren't squeezed into a narrow column. */}
+      <main className="min-h-screen bg-cream-soft">
         {/* Top nav lives INSIDE the queue client (above the progress
             bar) so the buttons sit in the question flow rather than
             a separate header band. Per Eric's feedback. */}
 
-        <section className="w-full py-10 md:py-16">
-          <div className="max-w-[900px] mx-auto px-4 sm:px-6 md:px-8">
+        <section className="w-full py-12 md:py-16 lg:py-20">
+          <div className="max-w-[1080px] mx-auto px-4 sm:px-6 md:px-8">
             {queue.length === 0 ? (
               <AllCaughtUpPanel firstName={firstName} />
             ) : (

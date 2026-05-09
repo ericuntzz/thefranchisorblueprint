@@ -1583,7 +1583,12 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
             : "Open chat with Jason AI"
         }
         onClick={() => setOpen(true)}
-        className={`fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-full px-4 py-3 transition-all ${
+        // Sit higher than `bottom-6` so the pill doesn't feel
+        // marooned at the very bottom of tall portal viewports
+        // (Eric 2026-05-09). bottom-12 = 48px keeps it visually
+        // anchored to the corner without pinning to the literal
+        // edge of the screen.
+        className={`fixed bottom-12 right-6 z-50 flex items-center gap-2.5 rounded-full px-4 py-3 transition-all ${
           hasNudge
             ? // Nudge-active: gold ring, gold accent dot, slightly
               // brighter shadow so the pill catches the eye.

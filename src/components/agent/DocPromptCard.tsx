@@ -29,9 +29,16 @@ type Props = {
   /** Compact variant — used inside the Question Queue's question
    *  card where vertical space is limited. */
   compact?: boolean;
+  /** Minimal variant — drop zone + X only, no eyebrow / prompt /
+   *  example chips. Used for the bottom-anchored upload below the
+   *  question card after the phase-transition card has already
+   *  given the customer the full context. Eric 2026-05-09: "the
+   *  user knows once they select continue what this section is
+   *  for." */
+  minimal?: boolean;
 };
 
-export function DocPromptCard({ slug, prompt, compact }: Props) {
+export function DocPromptCard({ slug, prompt, compact, minimal }: Props) {
   const [uploading, setUploading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
@@ -148,6 +155,64 @@ export function DocPromptCard({ slug, prompt, compact }: Props) {
         {err && (
           <p className="text-xs text-red-700 mt-1.5 ml-6">{err}</p>
         )}
+      </div>
+    );
+  }
+
+  // Minimal variant — bottom-anchored upload below the question
+  // card. The phase-transition card already explained the prompt,
+  // so we render only the X + drop zone here (Eric 2026-05-09).
+  if (minimal) {
+    return (
+      <div className="rounded-2xl border-2 border-amber-400 bg-amber-50 p-5 sm:p-6 relative shadow-sm">
+        <button
+          type="button"
+          onClick={() => setDismissed(true)}
+          aria-label="Dismiss prompt"
+          className="absolute top-3 right-3 p-1.5 text-amber-800 hover:text-amber-950 hover:bg-amber-200 rounded-full transition-colors z-10"
+          title="Dismiss — I'll add docs later"
+        >
+          <X size={14} />
+        </button>
+        <label
+          onDragEnter={onDragEnter}
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
+          className={`flex items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-5 text-sm transition-colors cursor-pointer ${
+            dragActive
+              ? "border-amber-500 bg-amber-100"
+              : "border-amber-300 bg-white hover:border-amber-500 hover:bg-amber-50"
+          } ${uploading ? "opacity-60 cursor-not-allowed" : ""}`}
+        >
+          {uploading ? (
+            <>
+              <Loader2 size={16} className="animate-spin text-amber-700" />
+              <span className="text-amber-900 font-semibold">Uploading…</span>
+            </>
+          ) : (
+            <>
+              <Upload size={16} className="text-amber-700" />
+              <span className="text-amber-900 font-semibold">
+                Drop a file or click to choose
+              </span>
+              <span className="text-amber-700/70 text-xs">
+                · PDF, DOC, XLSX, CSV, or images
+              </span>
+            </>
+          )}
+          <input
+            type="file"
+            className="sr-only"
+            accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.txt,.png,.jpg,.jpeg,.heic,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,text/plain,image/*"
+            disabled={uploading}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void uploadFile(f);
+            }}
+          />
+        </label>
+        {err && <p className="mt-2 text-xs text-red-700">{err}</p>}
       </div>
     );
   }
