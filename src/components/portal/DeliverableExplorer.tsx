@@ -44,7 +44,7 @@ import type { MemoryFileSlug } from "@/lib/memory/files";
 import type { DeliverableReview } from "@/lib/export/deliverable-readiness";
 import type { DeliverableId } from "@/lib/export/types";
 import type { ChapterReadiness } from "@/lib/memory/readiness";
-import { ChapterCard } from "@/components/agent/ChapterCard";
+import { ChapterFieldsCard } from "@/components/portal/ChapterFieldsCard";
 import { DeliverablePreviewModal } from "@/components/portal/DeliverablePreviewModal";
 import { AnimatedDisclosure } from "@/components/ui/AnimatedDisclosure";
 import type {
@@ -280,11 +280,11 @@ export function DeliverableExplorer({
           />
           {allSelected ? "Clear all" : "Select all"}
         </button>
-        <span className="text-[11px] text-cream/65">
-          {selected.size > 0
-            ? `${selected.size} selected`
-            : "Pick the docs you want"}
-        </span>
+        {selected.size > 0 && (
+          <span className="text-[11px] text-cream/65">
+            {selected.size} selected
+          </span>
+        )}
         <div className="flex-1" />
         <button
           type="button"
@@ -702,33 +702,28 @@ function ChapterRow({
           />
         </span>
       </button>
-      {/* Chapter editor expand uses AnimatedDisclosure with
-          unmountWhenClosed so the heavy ChapterCard tree (autosave
-          state, computed values, attachment composer, etc.) only
-          mounts when the customer actually opens the row. Avoids
-          rendering 16 chapter editors at once just to keep them
-          ready to animate. */}
+      {/* Data-entry view (ChapterFieldsCard) — fields editor +
+          attachments + bridge to the Blueprint page for prose
+          review. Prose lives on /portal/lab/blueprint where the
+          customer can read what's been drafted and polish it
+          inline. unmountWhenClosed so we don't keep 16 editor
+          trees mounted just to animate. */}
       <AnimatedDisclosure open={isOpen} duration={320} unmountWhenClosed>
         <div className="border-t border-card-border bg-white p-4 sm:p-5">
-          <ChapterCard
+          <ChapterFieldsCard
             slug={chapter.slug}
             title={chapter.title}
-            contentMd={chapter.contentMd}
-            confidence={chapter.confidence}
-            readinessState={chapter.readinessState}
-            lastUpdatedBy={chapter.lastUpdatedBy}
-            updatedAt={chapter.updatedAt}
-            provenance={chapter.provenance}
+            schema={chapter.schema}
             attachments={chapter.attachments}
-            allAttachmentsByChapter={chapter.allAttachmentsByChapter}
             fields={chapter.fields}
             fieldStatus={chapter.fieldStatus}
             otherChaptersFields={chapter.otherChaptersFields}
-            schema={chapter.schema}
+            lastUpdatedBy={chapter.lastUpdatedBy}
+            updatedAt={chapter.updatedAt}
+            provenance={chapter.provenance}
             saveFields={saveFields}
             saveSection={saveSection}
             setConfidence={setConfidence}
-            embedded
           />
         </div>
       </AnimatedDisclosure>
