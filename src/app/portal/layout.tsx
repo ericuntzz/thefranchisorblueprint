@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { PortalNav } from "@/components/PortalNav";
 import { PortalSidebar } from "@/components/PortalSidebar";
+import { PortalSidebarMobile } from "@/components/PortalSidebarMobile";
 import { JasonChatDock } from "@/components/agent/JasonChatDock";
 import {
   computeChapterReadiness,
@@ -96,8 +96,7 @@ export default async function PortalLayout({ children }: { children: ReactNode }
 
   return (
     <div className="min-h-screen bg-grey-1/40">
-      {/* Desktop: persistent left sidebar (md+). Mobile: keep the top
-          nav with hamburger. The sidebar component is hidden below md. */}
+      {/* Desktop: persistent left sidebar (md+). Hidden on mobile. */}
       <PortalSidebar
         displayName={profile?.full_name ?? null}
         email={user.email ?? null}
@@ -105,15 +104,15 @@ export default async function PortalLayout({ children }: { children: ReactNode }
         blueprintPct={blueprintPct}
         checklistPct={checklistPct}
       />
-      {/* Top nav stays for mobile; on desktop it'd be redundant with
-          the sidebar, so hide it at md+. */}
-      <div className="md:hidden">
-        <PortalNav
-          displayName={profile?.full_name ?? null}
-          email={user.email ?? null}
-          tier={tier}
-        />
-      </div>
+      {/* Mobile: top bar + slide-out drawer mirroring the desktop
+          sidebar. Hidden on md+ where the desktop rail takes over. */}
+      <PortalSidebarMobile
+        displayName={profile?.full_name ?? null}
+        email={user.email ?? null}
+        tier={tier}
+        blueprintPct={blueprintPct}
+        checklistPct={checklistPct}
+      />
       {/* Main content offset by the sidebar width on desktop. The
           sidebar exposes its current width via the --portal-sidebar-w
           CSS variable (240px expanded, 64px collapsed); we read it

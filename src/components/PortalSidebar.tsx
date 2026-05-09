@@ -28,20 +28,20 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   ArrowRight,
-  BookOpen,
-  Calendar,
   ChevronsLeft,
   ChevronsRight,
   CircleUser,
-  GraduationCap,
   HelpCircle,
-  LayoutDashboard,
-  Library,
-  ListChecks,
   Mail,
   Sparkles,
 } from "lucide-react";
 import type { Tier } from "@/lib/supabase/types";
+import {
+  getPortalNavItems,
+  isPortalNavItemActive,
+  PORTAL_SUPPORT_EMAIL,
+  type PortalNavItem,
+} from "@/lib/portal/nav";
 
 type Props = {
   displayName: string | null;
@@ -54,17 +54,6 @@ type Props = {
    *  Launch Checklist entry. */
   checklistPct?: number;
 };
-
-type NavItem = {
-  href: string;
-  label: string;
-  icon: typeof LayoutDashboard;
-  matchPrefixes?: string[];
-  /** Optional progress ring — 0..100. */
-  progressPct?: number;
-};
-
-const SUPPORT_EMAIL = "team@thefranchisorblueprint.com";
 
 export function PortalSidebar({
   displayName,
@@ -106,53 +95,13 @@ export function PortalSidebar({
     return () => window.removeEventListener("tfb-jason-dock-state", onDockState);
   }, []);
 
-  const primary: NavItem = {
-    href: "/portal/lab/next",
-    label: "Continue Building",
-    icon: ArrowRight,
-    progressPct: blueprintPct,
-  };
+  const { primary, secondary } = getPortalNavItems({
+    blueprintPct,
+    checklistPct,
+  });
 
-  const secondary: NavItem[] = [
-    {
-      href: "/portal",
-      label: "Dashboard",
-      icon: LayoutDashboard,
-    },
-    {
-      href: "/portal/lab/blueprint",
-      label: "Blueprint",
-      icon: BookOpen,
-      matchPrefixes: ["/portal/lab/blueprint", "/portal/chapter/"],
-    },
-    {
-      href: "/portal/checklist",
-      label: "Launch Checklist",
-      icon: ListChecks,
-      progressPct: checklistPct,
-    },
-    {
-      href: "/portal/library",
-      label: "Library",
-      icon: Library,
-    },
-    {
-      href: "/portal/coaching",
-      label: "Coaching",
-      icon: GraduationCap,
-    },
-    {
-      href: "/portal/coaching/schedule",
-      label: "Schedule a Call",
-      icon: Calendar,
-    },
-  ];
-
-  const isActive = (item: NavItem) => {
-    if (pathname === item.href) return true;
-    if (item.matchPrefixes?.some((p) => pathname.startsWith(p))) return true;
-    return false;
-  };
+  const isActive = (item: PortalNavItem) =>
+    isPortalNavItemActive(item, pathname);
 
   const widthClass = collapsed ? "w-[64px]" : "w-[240px]";
   const showLabels = !collapsed;
@@ -288,7 +237,7 @@ function SidebarItem({
   collapsed,
   variant = "default",
 }: {
-  item: NavItem;
+  item: PortalNavItem;
   active: boolean;
   collapsed: boolean;
   variant?: "default" | "primary";
@@ -478,13 +427,13 @@ function NeedAHandButton({ collapsed }: { collapsed: boolean }) {
 
   async function handleClick() {
     try {
-      await navigator.clipboard.writeText(SUPPORT_EMAIL);
+      await navigator.clipboard.writeText(PORTAL_SUPPORT_EMAIL);
       setPhase("visible");
       // Stay fully visible for 4.5s, then fade for 1.2s, then unmount.
       window.setTimeout(() => setPhase("fading"), 4500);
       window.setTimeout(() => setPhase("idle"), 5700);
     } catch {
-      window.location.href = `mailto:${SUPPORT_EMAIL}`;
+      window.location.href = `mailto:${PORTAL_SUPPORT_EMAIL}`;
     }
   }
 
@@ -493,7 +442,7 @@ function NeedAHandButton({ collapsed }: { collapsed: boolean }) {
       <button
         type="button"
         onClick={handleClick}
-        title={showLabels ? `Copy ${SUPPORT_EMAIL}` : "Need a hand?"}
+        title={showLabels ? `Copy ${PORTAL_SUPPORT_EMAIL}` : "Need a hand?"}
         className={`w-full flex items-center gap-3 ${
           collapsed ? "justify-center px-2" : "px-3"
         } py-2.5 rounded-lg text-sm font-semibold text-cream/80 hover:bg-cream/10 hover:text-cream transition-colors`}
@@ -503,7 +452,7 @@ function NeedAHandButton({ collapsed }: { collapsed: boolean }) {
           <span className="flex flex-col items-start leading-tight overflow-hidden text-left">
             <span className="truncate">Need a hand?</span>
             <span className="text-[10px] text-cream/55 font-normal truncate">
-              {SUPPORT_EMAIL}
+              {PORTAL_SUPPORT_EMAIL}
             </span>
           </span>
         )}
