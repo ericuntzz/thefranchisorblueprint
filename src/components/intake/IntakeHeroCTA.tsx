@@ -458,7 +458,7 @@ function UrlInputForm({
           href="/assessment"
           className="text-gold font-bold underline-offset-4 hover:underline"
         >
-          Take the 15-question Franchise Readiness Assessment →
+          Take the Franchise Readiness Assessment →
         </Link>
       </p>
     </div>
