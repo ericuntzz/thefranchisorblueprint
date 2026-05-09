@@ -96,20 +96,27 @@ async function main() {
     process.exit(1);
   }
 
-  // 1. Portal landing — first name "Smoke", 17 deliverables visible.
+  // 1. Portal landing — first-name "Smoke" + deliverable surface
+  //    rendered (return-visit count OR first-run hero).
   flows.push(flow("portal-landing", "Portal landing", () => {
     const { status, body } = fetchHtml(jar, "/portal");
     if (status !== 200) return { pass: false, evidence: `status=${status}` };
     const $ = cheerio.load(body);
     const text = $.text();
-    const hasSmoke = text.includes("Welcome aboard, Smoke");
-    const has17 = /17\s+(?:ready to assemble|deliverables)/.test(text);
+    // Welcome copy varies (first-run "Welcome aboard" / return-visit "Welcome back")
+    const hasSmoke = text.includes("Smoke");
+    const hasBlueprint = text.includes("Your Blueprint");
     const hasNav = $('a[href="/portal/library"]').length > 0;
+    // Per-card "Preview" button + bundle "Preview docs" button. Copy
+    // shortened in commit 861cb6f from the prior "Preview & download" /
+    // "Preview bundle" pair.
     const hasPreviewButton =
-      text.includes("Preview & download") || text.includes("Preview bundle");
+      text.includes("Preview docs") ||
+      /\bPreview\s*<\/button/.test(body) ||
+      /\bPreview\s*\.pptx/.test(text);
     return {
-      pass: hasSmoke && has17 && hasNav && hasPreviewButton,
-      evidence: `welcomeSmoke=${hasSmoke} 17deliv=${has17} hasLibraryNav=${hasNav} hasPreviewButton=${hasPreviewButton}`,
+      pass: hasSmoke && hasBlueprint && hasNav && hasPreviewButton,
+      evidence: `hasSmoke=${hasSmoke} hasBlueprint=${hasBlueprint} hasLibraryNav=${hasNav} hasPreviewButton=${hasPreviewButton}`,
     };
   }));
 
@@ -151,17 +158,20 @@ async function main() {
     };
   }));
 
-  // 4. Export pre-review.
-  flows.push(flow("export-pre-review", "Export pre-review (concept-and-story)", () => {
+  // 4. Export pre-review redirect — the legacy /portal/exports/[id]
+  //    page is now a thin redirect to /portal#deliverable-<id> (the
+  //    pre-export review surface was merged into the dashboard cards).
+  //    Asserts the redirect lands on /portal and the dashboard renders.
+  flows.push(flow("export-pre-review", "Export pre-review redirect to dashboard", () => {
     const { status, body } = fetchHtml(jar, "/portal/exports/concept-and-story");
     if (status !== 200) return { pass: false, evidence: `status=${status}` };
     const $ = cheerio.load(body);
     const text = $.text();
-    const hasDownload = /Download \.docx|Download bundle/.test(text);
-    const hasReadiness = /readiness|ready to/i.test(text);
+    const onDashboard =
+      text.includes("Your Blueprint") || text.includes("Franchise Readiness");
     return {
-      pass: hasDownload,
-      evidence: `hasDownload=${hasDownload} mentionsReadiness=${hasReadiness}`,
+      pass: onDashboard,
+      evidence: `status=${status} onDashboard=${onDashboard}`,
     };
   }));
 

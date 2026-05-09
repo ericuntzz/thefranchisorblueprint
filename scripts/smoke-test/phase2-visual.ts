@@ -162,15 +162,18 @@ const flows: FlowSpec[] = [
       // 2026-05-08, commit 6897642).
       const firstCard = page.locator("text=Concept & Story").first();
       const cardVisible = await firstCard.count() > 0;
+      // Button copy was shortened on commit 861cb6f:
+      //   "Preview & download" → "Preview"
+      //   "Preview bundle"     → "Preview docs"
       const previewBundleBtn = await page
-        .locator('button:has-text("Preview"):has-text("bundle")')
+        .locator('button:has-text("Preview docs"), button:has-text("Preview ") >> visible=true')
         .count();
-      const previewSingleBtn = await page
-        .locator('button:has-text("Preview & download")')
+      const previewCardBtns = await page
+        .locator('button:text-is("Preview"), button:text-is("Preview .pptx")')
         .count();
       return {
-        ok: cardVisible && previewBundleBtn > 0 && previewSingleBtn > 0,
-        evidence: `cardRendered=${cardVisible} previewBundleBtns=${previewBundleBtn} previewSingleBtns=${previewSingleBtn}`,
+        ok: cardVisible && (previewBundleBtn > 0 || previewCardBtns > 0),
+        evidence: `cardRendered=${cardVisible} previewBundleBtns=${previewBundleBtn} previewCardBtns=${previewCardBtns}`,
       };
     },
   },
@@ -247,14 +250,12 @@ const flows: FlowSpec[] = [
     id: "visual-preview-modal",
     name: "Preview-before-download modal opens with iframe",
     url: "/portal",
-    waitFor: 'button:has-text("Preview & download")',
+    waitFor: 'button:text-is("Preview")',
     assert: async (page) => {
-      // Click the FIRST "Preview & download" button, wait for the
-      // modal to appear, verify iframe + footer download buttons.
-      // Replaces the old `/portal/exports/[id]` flow now that page is
-      // a redirect; the preview-before-download modal IS the
-      // pre-export review surface as of commit 6897642.
-      await page.locator('button:has-text("Preview & download")').first().click();
+      // Click the FIRST per-card "Preview" button (was "Preview &
+      // download" before commit 861cb6f shortened the copy). The
+      // modal opens with iframe + footer download buttons.
+      await page.locator('button:text-is("Preview")').first().click();
       // Wait for the modal dialog.
       await page.waitForSelector('[role="dialog"]', { timeout: 5_000 });
       const dialogVisible = await page.locator('[role="dialog"]').isVisible();

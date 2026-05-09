@@ -202,10 +202,21 @@ async function main() {
   await runCheck("portal-landing", "Portal landing renders entitled state", "blocker", async () => {
     const { status, body } = await curlGet(jar, "/portal");
     const hasFirstName = body.includes("Smoke");
-    const hasDeliverables = body.includes("17 ready to assemble") || body.includes("17 deliverables");
+    // Page renders different copy depending on whether the account is
+    // first-run (readinessPct === 0) or return-visit. Smoke account has
+    // no customer_memory yet and is first-run today; tomorrow once the
+    // routine fills fields it'll switch. Accept either:
+    //   - return-visit deliverable-count copy ("17 ready to assemble" or "17 deliverables")
+    //   - first-run hero ("here's where it all assembles" / "Your Blueprint")
+    const hasDeliverables =
+      body.includes("17 ready to assemble") ||
+      body.includes("17 deliverables") ||
+      body.includes("here&#x27;s where it all assembles") ||
+      body.includes("here's where it all assembles");
+    const hasBlueprint = body.includes("Your Blueprint");
     return {
-      pass: status === 200 && hasFirstName && hasDeliverables,
-      evidence: `status=${status} hasSmoke=${hasFirstName} has17deliv=${hasDeliverables}`,
+      pass: status === 200 && hasFirstName && hasDeliverables && hasBlueprint,
+      evidence: `status=${status} hasSmoke=${hasFirstName} hasDeliverables=${hasDeliverables} hasBlueprint=${hasBlueprint}`,
     };
   });
 
