@@ -28,7 +28,6 @@ import {
   AlertCircle,
   CheckCircle2,
   ChevronDown,
-  ChevronUp,
   Download,
   FileText,
   Loader2,
@@ -45,6 +44,7 @@ import type { DeliverableId } from "@/lib/export/types";
 import type { ChapterReadiness } from "@/lib/memory/readiness";
 import { ChapterCard } from "@/components/agent/ChapterCard";
 import { DeliverablePreviewModal } from "@/components/portal/DeliverablePreviewModal";
+import { AnimatedDisclosure } from "@/components/ui/AnimatedDisclosure";
 import type {
   ChapterAttachment,
   CustomerMemoryProvenance,
@@ -410,10 +410,10 @@ function DeliverableEntry({
   return (
     <article
       id={`deliverable-${deliverable.id}`}
-      className={`rounded-xl border transition-colors scroll-mt-4 ${
+      className={`rounded-xl border transition-[border-color,background-color,box-shadow,transform] duration-200 ease-out scroll-mt-4 ${
         isSelected
-          ? "border-gold bg-gold/5"
-          : "border-card-border bg-cream/30"
+          ? "border-gold bg-gold/5 shadow-[0_4px_12px_rgba(212,162,76,0.12)]"
+          : "border-card-border bg-cream/30 hover:border-navy/15 hover:bg-cream/50 hover:shadow-[0_4px_14px_rgba(30,58,95,0.06)] motion-safe:hover:-translate-y-0.5"
       }`}
     >
       {/* Header row — click anywhere except the checkbox or
@@ -477,8 +477,13 @@ function DeliverableEntry({
         </button>
       </div>
 
-      {/* Expanded content: readiness card + chapter rows. */}
-      {expanded && (
+      {/* Expanded content: readiness card + chapter rows. Wrapped
+          in AnimatedDisclosure so the card opens with a smooth
+          height transition instead of snapping. The 320ms duration
+          + ease-out feels intentional without being slow — Linear /
+          Notion / Stripe Dashboard all use a similar timing for
+          expand-in-place. */}
+      <AnimatedDisclosure open={expanded} duration={320}>
         <div className="border-t border-card-border bg-white px-4 sm:px-5 py-4 space-y-4">
           <ReadinessBar
             review={review}
@@ -503,27 +508,27 @@ function DeliverableEntry({
             })}
           </div>
         </div>
-      )}
+      </AnimatedDisclosure>
 
       {/* SHOW MORE / SHOW LESS toggle — centered at the very
-          bottom. Same disclosure idiom as ActivityFeed. */}
+          bottom. Chevron rotates 180° in lockstep with the
+          disclosure transition (same 320ms duration + ease-out
+          curve) so the whole interaction reads as one motion. */}
       <button
         type="button"
         onClick={onToggleExpand}
         aria-expanded={expanded}
-        className="w-full flex items-center justify-center gap-1.5 border-t border-card-border py-2.5 text-xs uppercase tracking-[0.1em] font-bold text-grey-3 hover:text-navy hover:bg-cream-soft transition-colors"
+        className="w-full flex items-center justify-center gap-1.5 border-t border-card-border py-2.5 text-xs uppercase tracking-[0.1em] font-bold text-grey-3 hover:text-navy hover:bg-cream-soft transition-colors duration-200"
       >
-        {expanded ? (
-          <>
-            Show less
-            <ChevronUp size={13} />
-          </>
-        ) : (
-          <>
-            Show more
-            <ChevronDown size={13} />
-          </>
-        )}
+        {expanded ? "Show less" : "Show more"}
+        <ChevronDown
+          size={13}
+          className="transition-transform duration-[320ms] motion-reduce:transition-none"
+          style={{
+            transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
+            transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
+          }}
+        />
       </button>
     </article>
   );
@@ -637,13 +642,17 @@ function ChapterRow({
   return (
     <div
       id={`chapter-row-${chapter.slug}`}
-      className="rounded-lg border border-card-border bg-cream/30 overflow-hidden scroll-mt-4"
+      className={`rounded-lg border bg-cream/30 overflow-hidden scroll-mt-4 transition-[border-color,background-color,box-shadow] duration-200 ease-out ${
+        isOpen
+          ? "border-navy/20 bg-white shadow-[0_2px_8px_rgba(30,58,95,0.05)]"
+          : "border-card-border hover:border-navy/15 hover:bg-cream/50"
+      }`}
     >
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={isOpen}
-        className="w-full flex flex-wrap items-center gap-3 px-4 py-3 text-left hover:bg-cream/60 transition-colors"
+        className="w-full flex flex-wrap items-center gap-3 px-4 py-3 text-left transition-colors duration-200"
       >
         <span
           className={`flex-shrink-0 w-2 h-2 rounded-full ${stateColor}`}
@@ -658,22 +667,24 @@ function ChapterRow({
           </span>
         )}
         <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.1em] text-navy font-bold whitespace-nowrap">
-          {isOpen ? (
-            <>
-              Close <ChevronUp size={12} />
-            </>
-          ) : (
-            <>
-              Edit <ChevronDown size={12} />
-            </>
-          )}
+          {isOpen ? "Close" : "Edit"}
+          <ChevronDown
+            size={12}
+            className="transition-transform duration-[320ms] motion-reduce:transition-none"
+            style={{
+              transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+              transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
+            }}
+          />
         </span>
       </button>
-      {isOpen && (
-        // No nested card. The chapter row already provides the
-        // border + background; ChapterCard renders embedded so its
-        // content flows flush with the row's edges (no card-inside-
-        // a-card visual nesting).
+      {/* Chapter editor expand uses AnimatedDisclosure with
+          unmountWhenClosed so the heavy ChapterCard tree (autosave
+          state, computed values, attachment composer, etc.) only
+          mounts when the customer actually opens the row. Avoids
+          rendering 16 chapter editors at once just to keep them
+          ready to animate. */}
+      <AnimatedDisclosure open={isOpen} duration={320} unmountWhenClosed>
         <div className="border-t border-card-border bg-white p-4 sm:p-5">
           <ChapterCard
             slug={chapter.slug}
@@ -696,7 +707,7 @@ function ChapterRow({
             embedded
           />
         </div>
-      )}
+      </AnimatedDisclosure>
     </div>
   );
 }

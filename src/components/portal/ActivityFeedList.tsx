@@ -20,7 +20,6 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   ChevronDown,
-  ChevronUp,
   CloudDownload,
   FileText,
   Globe,
@@ -33,6 +32,7 @@ import type { ActivityFeedRow } from "./ActivityFeed";
 // feed.ts only triggers for value imports. Types are erased at
 // compile time and never end up in the client bundle.
 import type { ActivityKind } from "@/lib/activity/feed";
+import { AnimatedDisclosure } from "@/components/ui/AnimatedDisclosure";
 
 const COLLAPSED_COUNT = 5;
 const EXPANDED_VISIBLE_COUNT = 10;
@@ -41,71 +41,90 @@ export function ActivityFeedList({ rows }: { rows: ActivityFeedRow[] }) {
   const [expanded, setExpanded] = useState(false);
 
   const showToggle = rows.length > COLLAPSED_COUNT;
-  const visibleRows = expanded ? rows : rows.slice(0, COLLAPSED_COUNT);
+  const alwaysVisible = rows.slice(0, COLLAPSED_COUNT);
+  const extraRows = rows.slice(COLLAPSED_COUNT);
   // Cap height to ~10 rows when expanded so a long feed scrolls in
   // place instead of pushing the rest of the dashboard down.
-  const ulClass =
-    expanded && rows.length > EXPANDED_VISIBLE_COUNT
-      ? "space-y-3 max-h-[600px] overflow-y-auto pr-1"
-      : "space-y-3";
+  const extraScrolls = rows.length > EXPANDED_VISIBLE_COUNT;
 
   return (
     <>
-      <ul className={ulClass}>
-        {visibleRows.map((r) => (
-          <li key={r.id} className="flex items-center gap-3">
-            <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-cream/80 border border-navy/5 flex items-center justify-center text-navy">
-              <ActivityIcon kind={r.kind} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <Link
-                href={`/portal/chapter/${r.chapterSlug}`}
-                className="text-navy text-sm font-semibold hover:underline block leading-snug"
-              >
-                {r.summary}
-              </Link>
-              <div className="flex items-baseline gap-2 mt-0.5">
-                {r.detail && (
-                  <span className="text-grey-3 text-xs truncate">
-                    {r.detail}
-                  </span>
-                )}
-                <span className="text-grey-3 text-xs flex-shrink-0 ml-auto">
-                  {r.relative}
-                </span>
-              </div>
-            </div>
-          </li>
+      <ul className="space-y-3">
+        {alwaysVisible.map((r) => (
+          <ActivityRow key={r.id} row={r} />
         ))}
       </ul>
+      {/* Extra rows live in an AnimatedDisclosure so the feed grows
+          smoothly when the user expands. Long feeds (>10 events)
+          fall back to internal scroll inside the disclosure so the
+          dashboard doesn't grow unbounded. */}
+      {extraRows.length > 0 && (
+        <AnimatedDisclosure open={expanded} duration={320}>
+          <ul
+            className={
+              extraScrolls
+                ? "space-y-3 pt-3 max-h-[600px] overflow-y-auto pr-1"
+                : "space-y-3 pt-3"
+            }
+          >
+            {extraRows.map((r) => (
+              <ActivityRow key={r.id} row={r} />
+            ))}
+          </ul>
+        </AnimatedDisclosure>
+      )}
       {showToggle && (
         <div className="mt-4 pt-3 border-t border-card-border flex justify-center">
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
             aria-expanded={expanded}
-            className="inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.1em] font-bold text-grey-3 hover:text-navy transition-colors py-1.5 px-3"
+            className="inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.1em] font-bold text-grey-3 hover:text-navy transition-colors duration-200 py-1.5 px-3"
           >
-            {expanded ? (
-              <>
-                Show fewer
-                <ChevronUp size={13} />
-              </>
-            ) : (
-              <>
-                Show{" "}
-                {Math.min(
+            {expanded
+              ? "Show fewer"
+              : `Show ${Math.min(
                   rows.length - COLLAPSED_COUNT,
                   EXPANDED_VISIBLE_COUNT - COLLAPSED_COUNT,
-                )}{" "}
-                more
-                <ChevronDown size={13} />
-              </>
-            )}
+                )} more`}
+            <ChevronDown
+              size={13}
+              className="transition-transform duration-[320ms] motion-reduce:transition-none"
+              style={{
+                transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
+                transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
+              }}
+            />
           </button>
         </div>
       )}
     </>
+  );
+}
+
+function ActivityRow({ row }: { row: ActivityFeedRow }) {
+  return (
+    <li className="flex items-center gap-3">
+      <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-cream/80 border border-navy/5 flex items-center justify-center text-navy">
+        <ActivityIcon kind={row.kind} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <Link
+          href={`/portal/chapter/${row.chapterSlug}`}
+          className="text-navy text-sm font-semibold hover:underline block leading-snug transition-colors"
+        >
+          {row.summary}
+        </Link>
+        <div className="flex items-baseline gap-2 mt-0.5">
+          {row.detail && (
+            <span className="text-grey-3 text-xs truncate">{row.detail}</span>
+          )}
+          <span className="text-grey-3 text-xs flex-shrink-0 ml-auto">
+            {row.relative}
+          </span>
+        </div>
+      </div>
+    </li>
   );
 }
 

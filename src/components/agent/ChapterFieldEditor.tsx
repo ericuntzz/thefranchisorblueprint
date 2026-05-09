@@ -182,30 +182,34 @@ export function ChapterFieldEditor({
     <div className="space-y-7">
       {/* Autosave status — pinned to the right edge of the form,
           inline at the top so it's always visible while the user is
-          typing and doesn't compete with the Jason chat dock at the
-          bottom-right corner. Empty (no row at all) when idle. */}
-      {saveStatus !== "idle" && (
-        <div className="-mt-2 flex justify-end" aria-live="polite" aria-atomic="true">
-          {saveStatus === "saving" && (
-            <span className="inline-flex items-center gap-1.5 text-grey-3 text-xs font-semibold">
-              <Loader2 size={12} className="animate-spin" />
-              Saving…
-            </span>
-          )}
-          {saveStatus === "saved" && (
-            <span className="inline-flex items-center gap-1.5 text-emerald-700 text-xs font-semibold">
-              <Check size={12} />
-              Saved
-            </span>
-          )}
-          {saveStatus === "error" && (
-            <span className="inline-flex items-center gap-1.5 text-red-700 text-xs font-semibold" title={error ?? undefined}>
-              <X size={12} />
-              Couldn&apos;t save — your last edit isn&apos;t persisted
-            </span>
-          )}
-        </div>
-      )}
+          typing. The pill fades in/out smoothly with a small slide
+          rather than appearing instantly. */}
+      <div
+        className="-mt-2 flex justify-end transition-opacity duration-300 ease-out motion-reduce:transition-none"
+        style={{ opacity: saveStatus === "idle" ? 0 : 1 }}
+        aria-live="polite"
+        aria-atomic="true"
+        aria-hidden={saveStatus === "idle"}
+      >
+        {saveStatus === "saving" && (
+          <span className="inline-flex items-center gap-1.5 text-grey-3 text-xs font-semibold">
+            <Loader2 size={12} className="animate-spin" />
+            Saving…
+          </span>
+        )}
+        {saveStatus === "saved" && (
+          <span className="inline-flex items-center gap-1.5 text-emerald-700 text-xs font-semibold">
+            <Check size={12} />
+            Saved
+          </span>
+        )}
+        {saveStatus === "error" && (
+          <span className="inline-flex items-center gap-1.5 text-red-700 text-xs font-semibold" title={error ?? undefined}>
+            <X size={12} />
+            Couldn&apos;t save — your last edit isn&apos;t persisted
+          </span>
+        )}
+      </div>
       {grouped.map((group) => {
         const visibleFields = group.fields.filter(
           (f) => showAdvanced || !f.advanced,
