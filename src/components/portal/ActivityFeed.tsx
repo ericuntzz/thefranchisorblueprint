@@ -39,7 +39,9 @@ export function ActivityFeed({ events }: Props) {
           Last {events.length}
         </span>
       </div>
-      <ul className="space-y-3">
+      {/* About 4 rows tall (each row ~56px). Anything beyond scrolls
+          inside the card so the feed never dominates the dashboard. */}
+      <ul className="space-y-3 max-h-[240px] overflow-y-auto pr-1">
         {events.map((e) => (
           <li key={e.id} className="flex items-start gap-3">
             <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-cream/80 border border-navy/5 flex items-center justify-center text-navy">

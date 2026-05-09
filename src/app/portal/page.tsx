@@ -353,6 +353,12 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
             queue={queueSummary}
             estimateMin={queueEstimateMin}
           />
+          {/* Recent activity sits between the next-question hero and
+              the deliverable explorer. Reads as: "here's what's
+              happened recently" before the larger "here's everything
+              left to build" grid below. Card scrolls internally
+              after ~4 rows so it never dominates the dashboard. */}
+          <ActivityFeed events={recentActivity} />
           {/* DeliverableExplorer replaces both the prior
               DeliverableChecklist (per-phase chapter grid) and
               ExportsSection ("Download what you've built"). Each
@@ -364,8 +370,9 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
             saveFields={saveMemoryFields}
             saveSection={saveChapterSection}
             setConfidence={setChapterConfidence}
+            isFirstRun={isFirstRun}
+            firstName={firstName}
           />
-          <ActivityFeed events={recentActivity} />
           {/* RegulatoryMilestones moved to /portal/checklist — that's the
               "what has to happen before launch" surface, distinct from
               the per-chapter readiness grid above. */}

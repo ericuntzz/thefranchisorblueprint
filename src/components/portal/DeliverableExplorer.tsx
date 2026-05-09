@@ -100,11 +100,6 @@ export type DeliverableViewModel = {
   kind: "doc" | "slides";
   review: DeliverableReview;
   sourceChapters: ChapterDataBundle[];
-  /** Pre-rendered markdown preview for "doc"-kind deliverables. The
-   *  expanded card surfaces this in a collapsible "Live preview"
-   *  block — same content the customer would see on the (now-merged)
-   *  /portal/exports/[id] page. Null for slides or when build fails. */
-  previewMd?: string | null;
 };
 
 type SaveFieldsArgs = {
