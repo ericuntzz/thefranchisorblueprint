@@ -12,7 +12,7 @@ import { getSupabaseServer } from "@/lib/supabase/server";
 export const metadata: Metadata = {
   title: "The Blueprint DIY Kit ($2,997) | The Franchisor Blueprint",
   description:
-    "The complete franchisor operating system for the self-starter — nine production-ready frameworks. $2,997 one-time (save 5% pay-in-full or pay $1,100/mo × 3). Lifetime access to system updates.",
+    "Nine production-ready franchisor frameworks for $2,997 one-time. Pay in full (save 5%) or split into 3 monthly payments. Lifetime access to system updates.",
   openGraph: {
     title: "The Blueprint DIY Kit ($2,997) | The Franchisor Blueprint",
     description:
