@@ -16,7 +16,8 @@ import { getSectionSchema } from "@/lib/memory/schemas";
 import type { MemoryFieldsMap } from "@/lib/calc";
 import { SectionCard } from "@/components/agent/SectionCard";
 import { BlueprintTOC } from "@/components/portal/BlueprintTOC";
-import { SiteFooter } from "@/components/SiteFooter";
+// SiteFooter intentionally not rendered here — see /portal/lab/next/page.tsx
+// for the rationale (Eric 2026-05-09: marketing footer leaks felt off-brand).
 import { saveSectionSection, saveMemoryFields, setSectionConfidence } from "./actions";
 import {
   computeSectionReadiness,
@@ -245,7 +246,6 @@ export default async function BlueprintLabPage() {
           </div>
         </section>
       </main>
-      <SiteFooter />
     </>
   );
 }

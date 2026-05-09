@@ -21,7 +21,7 @@ import {
   indexMemoryRows,
 } from "@/lib/memory/readiness";
 import type { MemoryFieldsMap } from "@/lib/calc";
-import { SiteFooter } from "@/components/SiteFooter";
+// SiteFooter intentionally not rendered — see /portal/lab/next/page.tsx.
 import {
   saveSectionSection,
   saveMemoryFields,
@@ -231,7 +231,6 @@ export default async function FocusedSectionPage({ params }: Props) {
           </div>
         </section>
       </main>
-      <SiteFooter />
     </>
   );
 }

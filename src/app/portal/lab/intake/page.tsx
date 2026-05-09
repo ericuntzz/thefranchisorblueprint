@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import type { Profile, Purchase } from "@/lib/supabase/types";
 import { IntakeClient } from "./IntakeClient";
-import { SiteFooter } from "@/components/SiteFooter";
+// SiteFooter intentionally not rendered — see /portal/lab/next/page.tsx.
 
 export const metadata: Metadata = {
   title: "Day 1 · Pre-fill your Blueprint | The Franchisor Blueprint",
@@ -55,12 +55,10 @@ export default async function IntakeLabPage() {
   return (
     <>
       {/* No SiteNav — this is a focused single-task page; SiteNav would
-          dilute attention from the one CTA. We re-enable footer for the
-          legal & contact links. */}
+          dilute attention from the one CTA. */}
       <main className="min-h-[calc(100vh-200px)] bg-cream-soft">
         <IntakeClient firstName={firstName} initialWebsiteUrl={initialUrl} />
       </main>
-      <SiteFooter />
     </>
   );
 }

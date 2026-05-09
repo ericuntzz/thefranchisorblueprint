@@ -17,7 +17,13 @@ import {
 import type { MemoryFieldsMap } from "@/lib/calc";
 import { DELIVERABLES } from "@/lib/export/deliverables";
 import type { DeliverableId } from "@/lib/export/types";
-import { SiteFooter } from "@/components/SiteFooter";
+// SiteFooter intentionally not rendered on this surface — Eric flagged
+// 2026-05-09 that the marketing footer (EXPLORE / RESOURCES / CONNECT
+// columns) leaking into a guided question flow felt off-brand.
+// TurboTax, Plaid Link, Stripe Connect, etc. keep guided onboarding
+// chrome-free; the left sidebar already carries portal nav. Same
+// removal applied to /portal/lab/blueprint, /portal/lab/intake,
+// /portal/section/[slug] for consistency.
 import { QuestionQueueClient } from "./QuestionQueueClient";
 import { saveQueueAnswer } from "./actions";
 
@@ -148,7 +154,6 @@ export default async function GuidedNextPage({
           </div>
         </section>
       </main>
-      <SiteFooter />
     </>
   );
 }

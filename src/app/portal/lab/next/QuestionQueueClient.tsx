@@ -22,7 +22,7 @@
  *     "I'll come back to this" affordance every TurboTax screen has.
  */
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -71,7 +71,18 @@ export function QuestionQueueClient({
   // items so the UI can show progress without a server round-trip.
   // A page refresh recomputes the canonical queue.
   const queue = initialQueue;
-  const [draft, setDraft] = useState<FieldValue>(null);
+  // Per-item value map. Keyed by queue item id (which embeds slug +
+  // field name), so navigating Back / Skip-and-return restores the
+  // value the customer had typed or saved. The previous flat `draft`
+  // state was reset to null on every navigation — Eric 2026-05-09
+  // flagged that the back button felt broken because revisiting a
+  // question showed an empty input. Best-practice wizards (TurboTax,
+  // Plaid, Typeform, NN/g guidance) all preserve previously-entered
+  // data on backward navigation. The current question's value is a
+  // derived view (`draft`) over this map.
+  const [valuesByItem, setValuesByItem] = useState<
+    Record<string, FieldValue>
+  >({});
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [completed, setCompleted] = useState<Set<string>>(new Set());
@@ -157,6 +168,32 @@ export function QuestionQueueClient({
     );
   }
 
+  // Derived view of the current question's value. Reads/writes go
+  // through valuesByItem so navigation preserves state.
+  const draft: FieldValue = current ? valuesByItem[current.id] ?? null : null;
+  const setDraft = (v: FieldValue) => {
+    if (!current) return;
+    setValuesByItem((m) => ({ ...m, [current.id]: v }));
+  };
+
+  // When the user navigated backward AND the previous question was
+  // in a different section than the current one, surface a small
+  // "Back to {section}" banner so the section change is announced
+  // explicitly. Without this cue, repeatedly tapping Back across
+  // section boundaries felt unanchored — Eric: "I can just keep
+  // pressing the back button forever without it stopping between
+  // sections." The banner auto-dismisses after a few seconds so
+  // it doesn't get in the way of answering.
+  const [backCrossedSection, setBackCrossedSection] = useState<{
+    sectionTitle: string;
+    forItemId: string;
+  } | null>(null);
+  useEffect(() => {
+    if (!backCrossedSection) return;
+    const t = setTimeout(() => setBackCrossedSection(null), 3500);
+    return () => clearTimeout(t);
+  }, [backCrossedSection]);
+
   async function onSave() {
     if (!current) return;
     setSaving(true);
@@ -184,18 +221,27 @@ export function QuestionQueueClient({
   function advance() {
     setLastDirection("forward");
     setNav((n) => ({ index: n.index + 1, visited: [...n.visited, n.index] }));
-    setDraft(null);
+    setBackCrossedSection(null);
     setErr(null);
   }
 
   function back() {
+    if (nav.visited.length === 0) return;
+    const previousIdx = nav.visited[nav.visited.length - 1];
+    const previousItem = queue[previousIdx];
+    // Detect cross-section navigation so we can announce it.
+    if (previousItem && current && previousItem.slug !== current.slug) {
+      setBackCrossedSection({
+        sectionTitle: previousItem.sectionTitle,
+        forItemId: previousItem.id,
+      });
+    }
     setLastDirection("back");
     setNav((n) => {
       if (n.visited.length === 0) return n;
       const previous = n.visited[n.visited.length - 1];
       return { index: previous, visited: n.visited.slice(0, -1) };
     });
-    setDraft(null);
     setErr(null);
   }
 
@@ -319,6 +365,36 @@ export function QuestionQueueClient({
           />
         )}
 
+      {/* Section-crossed banner — fires when the user used Back and
+          landed in a different section than they were just in.
+          Auto-dismisses after 3.5s. Eric flagged that without this
+          the back button felt unanchored across section boundaries. */}
+      {!showTransition &&
+        backCrossedSection &&
+        current &&
+        backCrossedSection.forItemId === current.id && (
+          <div className="rounded-lg bg-cream border border-gold/40 px-4 py-2.5 flex items-center gap-2 text-sm text-navy">
+            <ArrowLeft size={13} className="text-gold-warm flex-shrink-0" />
+            <span>
+              Back to{" "}
+              <strong className="font-bold">
+                {backCrossedSection.sectionTitle}
+              </strong>
+              .{" "}
+              {valuesByItem[current.id] != null &&
+              !valueIsEmpty(valuesByItem[current.id]) ? (
+                <span className="text-grey-3">
+                  Your answer is restored — edit and save again, or skip ahead.
+                </span>
+              ) : (
+                <span className="text-grey-3">
+                  Pick up where you left off.
+                </span>
+              )}
+            </span>
+          </div>
+        )}
+
       {/* Slide-in transition — re-keyed on each question so React
           unmounts + remounts the QuestionCard, triggering the CSS
           animation. Direction reflects forward (Save / Skip) vs
@@ -337,7 +413,8 @@ export function QuestionQueueClient({
             direction={lastDirection}
             onSave={onSave}
             onSkip={onSkip}
-            onBack={nav.visited.length > 0 ? back : null}
+            onBack={back}
+            canGoBack={nav.visited.length > 0}
           />
         </div>
       )}
@@ -522,18 +599,37 @@ function PhaseIntroBlock({
 }) {
   return (
     <div className="rounded-xl bg-navy text-cream px-6 py-5 sm:px-7 sm:py-6">
-      <div className="flex items-baseline justify-between gap-3 mb-1.5">
-        <div className="text-xs uppercase tracking-[0.14em] text-gold font-bold">
-          {id} phase
+      {/* Two-column layout: phase context on the left, big scoreboard
+          counter on the right. Eric 2026-05-09: "the user will like
+          seeing it, so maybe make it a different font and size." Big
+          gold tabular-nums digit makes per-question progress feel
+          like a real win, not a tiny corner stat. */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="text-xs uppercase tracking-[0.14em] text-gold font-bold mb-1.5">
+            {id} phase
+          </div>
+          <div className="font-extrabold text-2xl mb-1">{title}</div>
+          <div className="text-base text-cream/80 leading-relaxed">
+            {subtitle}
+          </div>
         </div>
         {progress && (
-          <div className="text-[11px] text-cream/70 font-semibold tabular-nums">
-            {progress.done} of {progress.total}
+          <div className="flex-shrink-0 text-right tabular-nums">
+            <div className="text-[10px] uppercase tracking-[0.16em] text-cream/60 font-bold mb-1">
+              Answered
+            </div>
+            <div className="flex items-baseline justify-end gap-1.5 leading-none">
+              <span className="font-extrabold text-4xl md:text-5xl text-gold">
+                {progress.done}
+              </span>
+              <span className="text-base font-semibold text-cream/55">
+                / {progress.total}
+              </span>
+            </div>
           </div>
         )}
       </div>
-      <div className="font-extrabold text-2xl mb-1">{title}</div>
-      <div className="text-base text-cream/80 leading-relaxed">{subtitle}</div>
     </div>
   );
 }
@@ -551,6 +647,7 @@ function QuestionCard({
   onSave,
   onSkip,
   onBack,
+  canGoBack,
 }: {
   item: QueueItem;
   value: FieldValue;
@@ -560,7 +657,12 @@ function QuestionCard({
   direction: "forward" | "back";
   onSave: () => void;
   onSkip: () => void;
-  onBack: (() => void) | null;
+  onBack: () => void;
+  /** True when there's a previous question to go back to. False on
+   *  the very first question of the session — the Back button stays
+   *  visible (for spatial predictability, per Apple HIG / Material)
+   *  but is disabled. */
+  canGoBack: boolean;
 }) {
   const fd = item.fieldDef;
   const canSave = !saving && value !== null && !valueIsEmpty(value);
@@ -681,22 +783,33 @@ function QuestionCard({
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-navy/5">
-        <div className="flex items-center gap-2">
-          {onBack && (
-            <button
-              type="button"
-              onClick={onBack}
-              disabled={saving}
-              className="inline-flex items-center gap-1.5 text-grey-3 hover:text-navy text-xs font-semibold py-2 px-2 transition-colors disabled:opacity-50"
-            >
-              <ArrowLeft size={11} /> Back
-            </button>
-          )}
+        <div className="flex items-center gap-1">
+          {/* Back is ALWAYS rendered — disabled at session start so
+              the customer has a stable spatial expectation of where
+              the button lives. Apple HIG / Material guidance:
+              hiding controls based on state breaks predictability.
+              aria-disabled + a tooltip explain the bound. */}
+          <button
+            type="button"
+            onClick={onBack}
+            disabled={!canGoBack || saving}
+            aria-disabled={!canGoBack || saving}
+            title={
+              canGoBack
+                ? "Back to the previous question"
+                : "You're at the start of this session"
+            }
+            className="inline-flex items-center gap-1.5 text-grey-3 hover:text-navy text-xs font-semibold py-2 px-2.5 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-grey-3"
+          >
+            <ArrowLeft size={11} /> Back
+          </button>
+          <span className="text-grey-3/40 text-xs select-none">·</span>
           <button
             type="button"
             onClick={onSkip}
             disabled={saving}
-            className="text-grey-3 hover:text-navy text-xs font-semibold py-2 px-2 transition-colors disabled:opacity-50"
+            title="Skip this question — your typed answer (if any) is kept; you can come back to it"
+            className="text-grey-3 hover:text-navy text-xs font-semibold py-2 px-2.5 rounded-md transition-colors disabled:opacity-50"
           >
             Skip for now
           </button>
