@@ -11,7 +11,7 @@
  * Design language matches the customer portal pages — cream / navy / gold
  * palette, 2xl rounded cards, gold-warm eyebrow with underline, gold
  * action buttons with `tracking-[0.1em] uppercase` styling, subtle navy
- * shadows. See src/app/portal/[capability]/page.tsx for the reference.
+ * shadows.
  */
 
 import { useEffect, useMemo, useState } from "react";

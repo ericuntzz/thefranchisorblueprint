@@ -60,9 +60,10 @@ export const dynamic = "force-dynamic";
  *   - Not a queue (that's /portal/lab/next).
  *   - Not the assembled document (that's /portal/lab/blueprint).
  *
- * It's the per-chapter equivalent of the old /portal/[capability]
- * detail pages — same depth-of-focus, but driven by Memory + the
- * structured-fields schema instead of a static .pdf iframe.
+ * It's the per-chapter equivalent of the old (now-removed)
+ * /portal/[capability] detail pages — same depth-of-focus, but driven
+ * by Memory + the structured-fields schema instead of a static .pdf
+ * iframe.
  */
 export default async function FocusedChapterPage({ params }: Props) {
   const { slug } = await params;

@@ -407,8 +407,9 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
           dashboard cleanup. Progress is now tracked against the
           16-chapter Memory system; the Command Center + Deliverable
           Checklist above are the canonical "what's next" surface.
-          The /portal/[capability] detail pages remain reachable as
-          deep links for customers who arrive at them directly. */}
+          The legacy /portal/[capability] detail pages were removed
+          entirely — /portal/chapter/[slug] is the per-item deep link
+          surface. */}
 
       {/* ===== Tier-specific sections (Tier 2/3 scaffolding) ===== */}
       {tier >= 2 && <CoachingPanel tier={tier} />}
