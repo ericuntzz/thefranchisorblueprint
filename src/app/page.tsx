@@ -169,18 +169,27 @@ export default function Home() {
       {/* ===== 3. PROBLEM (yellow) ===== */}
       <section className="text-center py-24 md:py-28" style={{ backgroundColor: "#d8a936" }}>
         <div className="max-w-[1100px] mx-auto px-8">
-          <h2 className="text-navy text-3xl md:text-5xl font-bold mb-8 max-w-[800px] mx-auto">
-            You&apos;ve Built Something Great. Now What?
+          {/* "Now What?" stays together via non-breaking space so the
+              line never breaks between "Now" and "What?" — looked
+              cramped on the original screenshot Eric flagged. The
+              first part of the headline still wraps naturally on
+              narrow viewports. */}
+          <h2 className="text-navy text-3xl md:text-5xl font-bold mb-8 max-w-[820px] mx-auto">
+            You&apos;ve Built Something Great. Now&nbsp;What?
           </h2>
 
-          <p className="text-navy/85 text-lg md:text-xl leading-relaxed max-w-[760px] mx-auto mb-12">
+          <p className="text-navy/85 text-lg md:text-xl leading-relaxed max-w-[760px] mx-auto">
             You&apos;ve got a profitable concept and customers who love your brand. You know franchising is the next move — but you&apos;re stuck between paying <strong>$80,000 to a big firm</strong> who hands you a binder and disappears, or trying to <strong>DIY a process you&apos;ve never done before</strong>.
           </p>
 
           {/* Intro video — hidden until Jason's real explainer is recorded.
               The placeholder/stock-photo poster was confusing real visitors. */}
 
-          <div className="text-navy text-xs font-bold tracking-[0.2em] uppercase mb-7 opacity-70 mt-4">
+          {/* Bigger gap between the problem statement and the trust strip
+              (mb-12 → mt-20/24), and bumped the eyebrow from text-xs to
+              text-sm so it reads as a real proof line instead of a fine-
+              print disclaimer. Eric's QA flagged both. */}
+          <div className="text-navy text-sm font-bold tracking-[0.2em] uppercase mb-8 opacity-70 mt-20 md:mt-24">
             Trusted by Founders Who Build Brands That Last
           </div>
           <ClientLogos />
