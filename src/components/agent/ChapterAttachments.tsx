@@ -14,7 +14,7 @@
  * attachment lands incorporate the new material.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ExternalLink,
   FileText,
@@ -31,12 +31,32 @@ import type { ChapterAttachment } from "@/lib/supabase/types";
 type Props = {
   slug: string;
   attachments: ChapterAttachment[];
+  /** Counter that bumps every time an external trigger (e.g. the
+   *  chapter-row Attach button) wants to pop the composer. Each new
+   *  value > 0 opens the composer; the increment-on-click pattern
+   *  means re-clicks after the user dismisses still re-open it. */
+  openComposerSignal?: number;
 };
 
-export function ChapterAttachments({ slug, attachments }: Props) {
+export function ChapterAttachments({
+  slug,
+  attachments,
+  openComposerSignal,
+}: Props) {
   const [composerOpen, setComposerOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  // Pop the composer when an external trigger fires. The first render
+  // with a defined signal > 0 also fires — that's the path used when
+  // the customer clicks Attach on a collapsed row: ChapterAttachments
+  // mounts fresh inside the newly-expanded row with the signal
+  // already at its post-click value.
+  useEffect(() => {
+    if (openComposerSignal != null && openComposerSignal > 0) {
+      setComposerOpen(true);
+    }
+  }, [openComposerSignal]);
 
   async function deleteOne(id: string) {
     if (busy) return;
@@ -60,7 +80,12 @@ export function ChapterAttachments({ slug, attachments }: Props) {
   }
 
   return (
-    <div className="mt-4 pt-3 border-t border-navy/5">
+    // Visually distinct sub-card per Eric 2026-05-09 — the previous
+    // hairline border-top didn't separate this section enough from
+    // the field grid above. A subtle cream panel with rounded corners
+    // reads as its own zone (uploads / references) without competing
+    // with the parent chapter card's white surface.
+    <div className="mt-5 rounded-xl border border-card-border bg-cream/40 p-4 sm:p-5">
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 text-sm font-bold text-navy mb-0.5">

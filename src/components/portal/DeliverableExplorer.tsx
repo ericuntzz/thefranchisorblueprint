@@ -33,6 +33,7 @@ import {
   Download,
   Loader2,
   PackageOpen,
+  Paperclip,
   Sparkles,
 } from "lucide-react";
 import {
@@ -661,8 +662,20 @@ function ChapterRow({
   saveSection: (args: SaveSectionArgs) => Promise<void>;
   setConfidence: (args: SetConfidenceArgs) => Promise<void>;
 }) {
-  const filled = countFilled(chapter);
   const stateColor = STATE_DOT_COLOR[chapter.readinessState];
+  // Increment-on-click signal — every Attach press bumps this. The
+  // attachments panel inside ChapterFieldsCard listens for changes
+  // and pops its composer open. Initial 0 = "no intent yet"; any
+  // value > 0 means "open the composer." Using an incrementing
+  // counter (instead of a boolean) means a second click after the
+  // user dismissed the composer still re-opens it cleanly.
+  const [attachSignal, setAttachSignal] = useState(0);
+
+  const handleAttach = () => {
+    setAttachSignal((n) => n + 1);
+    if (!isOpen) onToggle();
+  };
+
   return (
     <div
       id={`chapter-row-${chapter.slug}`}
@@ -672,26 +685,53 @@ function ChapterRow({
           : "border-card-border hover:border-navy/15 hover:bg-cream/50"
       }`}
     >
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={isOpen}
-        className="w-full flex flex-wrap items-center gap-3 px-4 py-3 text-left transition-colors duration-200"
-      >
-        <span
-          className={`flex-shrink-0 w-2 h-2 rounded-full ${stateColor}`}
-          aria-hidden="true"
-        />
-        <span className="flex-1 min-w-0 text-navy font-semibold text-sm truncate">
-          {MEMORY_FILE_TITLES[chapter.slug]}
-        </span>
-        {filled.total > 0 && (
-          <span className="text-xs uppercase tracking-[0.1em] text-grey-3 font-bold tabular-nums whitespace-nowrap">
-            {filled.filled} / {filled.total}
+      {/* Header is a flex row, not a single button — we need the
+          Attach button to be its own click target alongside Open
+          (which toggles), and nesting buttons is invalid. The
+          title region is its own button so clicking the chapter
+          name still toggles the row. */}
+      <div className="flex items-center gap-2 px-4 py-3">
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={isOpen}
+          className="flex flex-1 items-center gap-3 min-w-0 text-left rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+        >
+          <span
+            className={`flex-shrink-0 w-2 h-2 rounded-full ${stateColor}`}
+            aria-hidden="true"
+          />
+          <span className="flex-1 min-w-0 text-navy font-semibold text-sm truncate">
+            {MEMORY_FILE_TITLES[chapter.slug]}
           </span>
-        )}
-        <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.1em] text-navy font-bold whitespace-nowrap">
-          {isOpen ? "Close" : "Edit"}
+        </button>
+
+        {/* Attach + Open share the same compact pill shape (small
+            border, white bg, navy uppercase label) so they read as
+            a paired action set. Distinctions per Eric:
+              - Attach has a gold paperclip icon (the brand's
+                "uploaded thing" cue from the activity feed)
+              - Open has the directional chevron that flips on
+                expand
+            Clicking Attach when the row is collapsed expands it
+            AND signals the composer to open — see attachSignal. */}
+        <button
+          type="button"
+          onClick={handleAttach}
+          aria-label="Attach a file or link to this chapter"
+          className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.1em] text-navy font-bold whitespace-nowrap px-2.5 py-1 rounded-md border border-navy/15 bg-white hover:bg-cream hover:border-gold/40 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+        >
+          <Paperclip size={11} className="text-gold-warm" />
+          Attach
+        </button>
+
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={isOpen}
+          className="inline-flex items-center gap-1 text-[11px] uppercase tracking-[0.1em] text-navy font-bold whitespace-nowrap px-2.5 py-1 rounded-md border border-navy/15 bg-white hover:bg-cream hover:border-navy/30 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+        >
+          {isOpen ? "Close" : "Open"}
           <ChevronDown
             size={12}
             className="transition-transform duration-[320ms] motion-reduce:transition-none"
@@ -700,8 +740,9 @@ function ChapterRow({
               transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
             }}
           />
-        </span>
-      </button>
+        </button>
+      </div>
+
       {/* Data-entry view (ChapterFieldsCard) — fields editor +
           attachments + bridge to the Blueprint page for prose
           review. Prose lives on /portal/lab/blueprint where the
@@ -721,6 +762,7 @@ function ChapterRow({
             lastUpdatedBy={chapter.lastUpdatedBy}
             updatedAt={chapter.updatedAt}
             provenance={chapter.provenance}
+            attachOpenSignal={attachSignal}
             saveFields={saveFields}
             saveSection={saveSection}
             setConfidence={setConfidence}
@@ -731,21 +773,10 @@ function ChapterRow({
   );
 }
 
-function countFilled(chapter: ChapterDataBundle): { filled: number; total: number } {
-  if (!chapter.schema) return { filled: 0, total: 0 };
-  let filled = 0;
-  let total = 0;
-  for (const fd of chapter.schema.fields) {
-    if (fd.advanced) continue;
-    total += 1;
-    const v = chapter.fields[fd.name];
-    if (v == null) continue;
-    if (typeof v === "string" && v.trim() === "") continue;
-    if (Array.isArray(v) && v.length === 0) continue;
-    filled += 1;
-  }
-  return { filled, total };
-}
+// countFilled() helper removed 2026-05-09 — its only consumer was the
+// "11 / 11" text on the chapter row header, which Eric removed as
+// fluff. The same data is conveyed by the readiness dot + the
+// dashboard's overall progress bar.
 
 const STATE_DOT_COLOR: Record<ChapterReadiness["state"], string> = {
   green: "bg-emerald-500",

@@ -67,6 +67,11 @@ type Props = {
    *  surfaced by default but kept in props so future trust-signal UI
    *  has it on hand. */
   provenance?: CustomerMemoryProvenance[];
+  /** Increments every time the user clicks the row's Attach button.
+   *  Forwarded to ChapterAttachments which pops its composer open
+   *  whenever this changes. Optional — undefined just means "no
+   *  Attach shortcut wired up here." */
+  attachOpenSignal?: number;
   saveFields: (args: {
     slug: string;
     changes: Record<string, FieldValue>;
@@ -93,6 +98,7 @@ export function ChapterFieldsCard({
   otherChaptersFields,
   lastUpdatedBy,
   updatedAt,
+  attachOpenSignal,
   saveFields,
 }: Props) {
   // No-schema fallback. Most chapters will have one; brand_voice and
@@ -150,8 +156,13 @@ export function ChapterFieldsCard({
 
       {/* Attachments — same component used in the prose-mode card.
           Inputs that influence drafting belong with the data-entry
-          surface, not the prose-review one. */}
-      <ChapterAttachments slug={slug} attachments={attachments} />
+          surface, not the prose-review one. attachOpenSignal lets
+          the row-header Attach button shortcut into the composer. */}
+      <ChapterAttachments
+        slug={slug}
+        attachments={attachments}
+        openComposerSignal={attachOpenSignal}
+      />
 
       {/* Footer: when the chapter was last touched + a bridge to the
           Blueprint page where the customer can read what got drafted
