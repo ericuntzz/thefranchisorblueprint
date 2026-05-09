@@ -108,22 +108,19 @@ function ActivityRow({ row }: { row: ActivityFeedRow }) {
       <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-cream/80 border border-navy/5 flex items-center justify-center text-navy">
         <ActivityIcon kind={row.kind} />
       </div>
-      <div className="flex-1 min-w-0">
-        <Link
-          href={`/portal/chapter/${row.chapterSlug}`}
-          className="text-navy text-sm font-semibold hover:underline block leading-snug transition-colors"
-        >
-          {row.summary}
-        </Link>
-        <div className="flex items-baseline gap-2 mt-0.5">
-          {row.detail && (
-            <span className="text-grey-3 text-xs truncate">{row.detail}</span>
-          )}
-          <span className="text-grey-3 text-xs flex-shrink-0 ml-auto">
-            {row.relative}
-          </span>
-        </div>
-      </div>
+      {/* Single-row layout: summary on the left, relative timestamp
+          right-aligned. The previous two-row layout existed to host a
+          `detail` sub-line (filename, "Inferred — needs review",
+          etc.) but Eric removed it 2026-05-09 — the dashboard reads
+          cleaner without the secondary text, and the chapter link is
+          one click away if the customer wants the specifics. */}
+      <Link
+        href={`/portal/chapter/${row.chapterSlug}`}
+        className="flex-1 min-w-0 text-navy text-sm font-semibold hover:underline leading-snug transition-colors"
+      >
+        {row.summary}
+      </Link>
+      <span className="text-grey-3 text-xs flex-shrink-0">{row.relative}</span>
     </li>
   );
 }

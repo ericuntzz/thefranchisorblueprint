@@ -28,7 +28,6 @@ export type ActivityFeedRow = {
   id: string;
   kind: ActivityKind;
   summary: string;
-  detail: string | null | undefined;
   chapterSlug: string;
   relative: string;
 };
@@ -38,11 +37,13 @@ export function ActivityFeed({ events }: Props) {
 
   // Pre-format every event server-side so the client list component
   // can stay lean (no date-formatting helpers, no server-only imports).
+  // `detail` from the upstream ActivityEvent is intentionally dropped —
+  // see ActivityFeedList comment for the why. The field still gets
+  // computed in @/lib/activity/feed in case a future surface wants it.
   const rows: ActivityFeedRow[] = events.map((e) => ({
     id: e.id,
     kind: e.kind,
     summary: e.summary,
-    detail: e.detail,
     chapterSlug: e.chapterSlug,
     relative: formatRelative(e.at),
   }));
