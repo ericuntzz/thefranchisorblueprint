@@ -466,15 +466,17 @@ function DeliverableEntry({
               {deliverable.sourceChapters.length === 1 ? "" : "s"}
             </span>
           </span>
-          <span className="flex-shrink-0 text-grey-3">
-            {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-          </span>
+          {/* Chevron moved out of the header — see the SHOW MORE
+              row below the action bar. The header stays visually
+              clean, with the disclosure affordance where the user
+              already learned it lives (matching ActivityFeed). */}
         </button>
       </div>
 
-      {/* Footer action bar — direct downloads. Always visible even
+      {/* Footer action bar — direct download. Always visible even
           when collapsed so the customer doesn't need to expand to
-          grab a single deliverable. */}
+          grab a single deliverable. The plain-text (.md) export was
+          removed; nobody is shipping markdown to an attorney. */}
       <div className="border-t border-card-border px-4 sm:px-5 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
         <button
           type="button"
@@ -484,16 +486,29 @@ function DeliverableEntry({
           <Download size={12} />
           {previewLabel}
         </button>
-        {!isSlides && (
-          <a
-            href={`/api/agent/export/${deliverable.id}?format=md`}
-            className="inline-flex items-center gap-1.5 text-grey-3 hover:text-navy font-semibold py-1 transition-colors"
-          >
-            <FileText size={12} />
-            Plain text (.md)
-          </a>
-        )}
       </div>
+
+      {/* SHOW MORE / SHOW LESS toggle, centered at the bottom. Same
+          pattern as ActivityFeed so users only need to learn one
+          disclosure idiom. */}
+      <button
+        type="button"
+        onClick={onToggleExpand}
+        aria-expanded={expanded}
+        className="w-full flex items-center justify-center gap-1.5 border-t border-card-border py-2.5 text-xs uppercase tracking-[0.1em] font-bold text-grey-3 hover:text-navy hover:bg-cream-soft transition-colors"
+      >
+        {expanded ? (
+          <>
+            Show less
+            <ChevronUp size={13} />
+          </>
+        ) : (
+          <>
+            Show more
+            <ChevronDown size={13} />
+          </>
+        )}
+      </button>
 
       {/* Expanded content: readiness bar, contributing chapter rows,
           gaps list, optional live-preview drawer. Pulls everything
