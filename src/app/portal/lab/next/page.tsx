@@ -133,7 +133,7 @@ export default async function GuidedNextPage({
           rendered just below; py-10/16 stays so on short viewports the
           card has breathing room above + below instead of butting up
           against the rails. */}
-      <main className="min-h-[calc(100vh-200px)] bg-cream-soft flex items-center">
+      <main className="min-h-screen bg-cream-soft flex items-center">
         {/* Top nav lives INSIDE the queue client (above the progress
             bar) so the buttons sit in the question flow rather than
             a separate header band. Per Eric's feedback. */}

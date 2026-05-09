@@ -85,7 +85,7 @@ export default async function AdminRedlinePage() {
   }
 
   return (
-    <main className="min-h-[calc(100vh-200px)] bg-cream-soft">
+    <main className="min-h-screen bg-cream-soft">
       <div className="border-b border-navy/10 bg-white">
         <div className="max-w-[1200px] mx-auto px-6 md:px-8 py-3 flex items-center gap-3">
           <Link

@@ -56,7 +56,7 @@ export default async function IntakeLabPage() {
     <>
       {/* No SiteNav — this is a focused single-task page; SiteNav would
           dilute attention from the one CTA. */}
-      <main className="min-h-[calc(100vh-200px)] bg-cream-soft">
+      <main className="min-h-screen bg-cream-soft">
         <IntakeClient firstName={firstName} initialWebsiteUrl={initialUrl} />
       </main>
     </>

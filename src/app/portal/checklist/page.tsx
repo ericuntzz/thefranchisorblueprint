@@ -30,7 +30,7 @@ export default async function ChecklistPage() {
   const milestoneSummary = computeMilestoneSummary(milestoneStates);
 
   return (
-    <main className="bg-cream-soft min-h-[calc(100vh-200px)] py-10 md:py-14">
+    <main className="bg-cream-soft min-h-screen py-10 md:py-14">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 space-y-6">
         <header>
           <div className="text-xs uppercase tracking-[0.18em] text-gold-text font-bold mb-2">

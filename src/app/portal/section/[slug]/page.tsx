@@ -176,7 +176,7 @@ export default async function FocusedSectionPage({ params }: Props) {
 
   return (
     <>
-      <main className="min-h-[calc(100vh-200px)] bg-cream-soft">
+      <main className="min-h-screen bg-cream-soft">
         {/* Top nav — back arrow icon + status pills + voice + overflow.
             The "View in Blueprint" link and "Version history" pill that
             used to crowd this row now live inside the overflow menu in
