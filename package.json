@@ -10,6 +10,7 @@
     "smoke-test:seed": "tsx scripts/smoke-test/seed.ts",
     "smoke-test:phase1": "tsx scripts/smoke-test/run-phase1.ts",
     "smoke-test:phase2": "tsx scripts/smoke-test/phase2-structural.ts",
+    "smoke-test:phase2-visual": "tsx scripts/smoke-test/phase2-visual.ts",
     "smoke-test:report": "tsx scripts/smoke-test/reporter.ts",
     "smoke-test:daily": "bash scripts/smoke-test/run-daily.sh"
   },
@@ -48,9 +49,13 @@
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/pdf-parse": "^1.1.5",
+    "@types/pngjs": "^6.0.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "dotenv": "^17.4.2",
+    "pixelmatch": "^7.2.0",
+    "playwright": "^1.59.1",
+    "pngjs": "^7.0.0",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5"

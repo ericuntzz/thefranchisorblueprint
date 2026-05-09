@@ -50,27 +50,42 @@ PHASE1_EXIT=0
 ( npm run smoke-test:phase1 --silent || PHASE1_EXIT=$? ) | awk '/^\{/{p=1} p' > "$PHASE1_JSON"
 echo "[smoke-test] phase1 exit=$PHASE1_EXIT"
 
-# 4. Phase 2 (structural).
-echo "[smoke-test] === phase 2 ==="
+# 4. Phase 2 (structural — fast cheerio HTML parse).
+echo "[smoke-test] === phase 2 (structural) ==="
 PHASE2_JSON="/tmp/tfb-phase2-${DATE}.json"
 PHASE2_EXIT=0
 ( npm run smoke-test:phase2 --silent || PHASE2_EXIT=$? ) | awk '/^\{/{p=1} p' > "$PHASE2_JSON"
-echo "[smoke-test] phase2 exit=$PHASE2_EXIT"
+echo "[smoke-test] phase2 (structural) exit=$PHASE2_EXIT"
 
-# 5. Compose orchestration JSON for reporter.
+# 4b. Phase 2 (visual — Playwright headless: computed-style asserts +
+# screenshot diff vs prior day). Slower (~20s) but catches CSS/layout
+# regressions structural can't see. Failure here doesn't abort — we
+# merge whatever flows it produced into the report.
+echo "[smoke-test] === phase 2 (visual) ==="
+PHASE2_VISUAL_JSON="/tmp/tfb-phase2-visual-${DATE}.json"
+PHASE2_VISUAL_EXIT=0
+( npm run smoke-test:phase2-visual --silent || PHASE2_VISUAL_EXIT=$? ) | awk '/^\{/{p=1} p' > "$PHASE2_VISUAL_JSON"
+echo "[smoke-test] phase2 (visual) exit=$PHASE2_VISUAL_EXIT"
+# Empty fallback so the compose step doesn't blow up on a missing file.
+[[ -s "$PHASE2_VISUAL_JSON" ]] || echo '{"flows":[]}' > "$PHASE2_VISUAL_JSON"
+
+# 5. Compose orchestration JSON for reporter — merges structural + visual
+# flows into a single phase2 array.
 PAYLOAD="/tmp/tfb-payload-${DATE}.json"
 node -e "
 const fs = require('fs');
 const phase1 = JSON.parse(fs.readFileSync('$PHASE1_JSON', 'utf8'));
-const phase2 = JSON.parse(fs.readFileSync('$PHASE2_JSON', 'utf8'));
-const reflection = phase1.summary.blockers === 0 && (phase2.flows || []).every(f => f.status === 'pass')
+const phase2s = JSON.parse(fs.readFileSync('$PHASE2_JSON', 'utf8'));
+const phase2v = JSON.parse(fs.readFileSync('$PHASE2_VISUAL_JSON', 'utf8'));
+const allFlows = [...(phase2s.flows || []), ...(phase2v.flows || [])];
+const reflection = phase1.summary.blockers === 0 && allFlows.every(f => f.status === 'pass')
   ? 'All checks green today. No new patterns observed; no checks added or retired.'
   : 'Findings present today — review the report file for specifics.';
 const out = {
   date: '$DATE',
   runAt: '$RUN_AT',
   phase1: { results: phase1.results, summary: phase1.summary },
-  phase2: { flows: phase2.flows || [] },
+  phase2: { flows: allFlows },
   fixesApplied: [],
   flagged: [],
   reflection,
@@ -87,6 +102,11 @@ echo "[smoke-test] === commit ==="
 REPORT="scripts/smoke-test/runs/${DATE}.md"
 if [[ -f "$REPORT" ]]; then
   git add "$REPORT" "$LOG"
+  # Phase 2 visual screenshots, if produced by Playwright. Committed so
+  # tomorrow's run can pixel-diff against today's baseline. ~500KB/day.
+  if [[ -d "scripts/smoke-test/runs/${DATE}" ]]; then
+    git add "scripts/smoke-test/runs/${DATE}/"
+  fi
   # Playbook may have been edited by Claude during reflection (future).
   if git status --porcelain scripts/smoke-test/playbook.md scripts/smoke-test/baseline.json | grep -q '^.M'; then
     git add scripts/smoke-test/playbook.md scripts/smoke-test/baseline.json

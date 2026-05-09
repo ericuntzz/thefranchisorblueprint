@@ -58,31 +58,47 @@ Current check set (the script encodes this — keep this table in sync):
 | `bundle-zip` | POST `/api/agent/export/bundle` with 3 ids returns valid ZIP w/ `_README.md` + 3 DOCX | warn |
 | `admin-gate` | `/api/admin/diagnostics` returns 403 for the test account (NOT in ADMIN_USER_IDS) | blocker |
 
-## Phase 2 — Visual + interactive (Claude Preview)
+## Phase 2 — Visual + interactive
 
-Use the Claude Preview MCP tools (`mcp__Claude_Preview__*`). Never use the Chrome extension — it crashes chats with oversized screenshots (see `feedback_no_chrome_screenshots`).
+Two layers:
 
-Workflow each run:
-1. `preview_start tfb-dev` — boots `npm run dev` on port 3000
-2. Inject the test-account session cookie via `preview_eval` (cookie value comes from Phase 1's auth check)
-3. Visit each of the 5 key flows below; for each:
-   - `preview_snapshot` for DOM + content (text-first, no image)
-   - `preview_screenshot` ONLY at the end of each flow, scoped to the relevant region
-   - Save screenshot bytes to `scripts/smoke-test/runs/<date>/<flow>.jpg`
-4. Compare against the prior day's screenshot (in `runs/<prior-date>/`); flag anything that visually drifted
-5. `preview_stop` when done
+### Phase 2a — Structural HTML (cheerio, fast)
 
-The 5 flows:
+Run via: `npx tsx scripts/smoke-test/phase2-structural.ts`
 
-| Flow | URL | What to verify |
+Fetches each flow URL with the test-account cookie, parses the HTML with cheerio, asserts documented elements/text exist. ~5s for 5 flows. Catches DOM-level regressions (page renders, key text present, expected structure).
+
+### Phase 2b — Visual (Playwright headless, ~20s)
+
+Run via: `npx tsx scripts/smoke-test/phase2-visual.ts` (npm script: `smoke-test:phase2-visual`).
+
+Headless Chromium — same Playwright that powers the existing TFB QA routines. Each flow:
+
+1. Authenticates the same way Phase 1 does (admin-issued magic link → `/auth/confirm`)
+2. Navigates to the flow URL with viewport 1440×900
+3. Waits for the documented `waitFor` selector + 400ms settle
+4. Runs a layout-intent assertion (computed styles, computed positions, element existence post-hydration)
+5. Takes a screenshot to `scripts/smoke-test/runs/<date>/<flow>.png`
+6. Pixel-diffs against the most recent prior day's screenshot via pixelmatch (threshold: 0.5% of viewport pixels = 6480px)
+7. Flags `fail` if assertion failed OR diff exceeds threshold
+
+Flow IDs are `visual-*` so they don't collide with structural Phase 2 IDs in the merged report.
+
+Current flows:
+
+| ID | URL | Assertion |
 |---|---|---|
-| `portal-landing` | `/portal` | "Smoke" first name, 17 deliverables, "0% complete" progress, navy/gold/cream brand consistency, "Preview & download" / "Preview bundle" buttons present (added in commit 6897642) |
-| `chapter-with-redlines` | `/portal/chapter/business_overview` | Chapter title "Concept & Story", form fields (Concept summary / Founder / Audience), back link to /portal. Toolbar was simplified in commit 0d7e10b — only status pills + back arrow remain in SSR; redline badge + Jason dock are client-rendered. |
-| `redline-drawer` | (click the redline badge) | Drawer slides in, shows 3 cards (1 blocker, 1 warning, 1 info-resolved), severity pills correct color, "Mark resolved" button per open card |
-| `export-pre-review` | `/portal/exports/concept-and-story` | "Download .docx now" button, readiness % rendered, [NEEDS ATTORNEY REVIEW] markers visible if applicable |
-| `lab-blueprint-canvas` | `/portal/lab/blueprint` | The 213KB Blueprint canvas renders without overflow / clipping at 1280×800 |
+| `visual-portal-landing` | `/portal` | First deliverable card renders; "Preview bundle" + "Preview & download" buttons present (catches regression on commit 6897642) |
+| `visual-chapter-business-overview` | `/portal/chapter/business_overview` | "Concept summary" form label visible; back-to-/portal link present |
+| `visual-lab-next-centering` | `/portal/lab/next` | `<main>` has `display:flex` + `align-items:center`; question card top/bottom space symmetric within 5% tolerance (catches regression on commit ced8a53) |
+| `visual-preview-modal` | `/portal` (then click "Preview & download") | Modal `[role="dialog"]` opens, contains `<iframe>` for the PDF, footer has both Download buttons (catches regression on the morning-2026-05-08 feature ship) |
+| `visual-lab-blueprint-canvas` | `/portal/lab/blueprint` | No horizontal overflow at 1440×900; multiple chapter cards visible |
 
-If any flow fails Claude-Preview rendering, that's a `blocker`. If the visual diff vs yesterday is ambiguous, flag it as `warn` for Eric.
+Daily orchestrator runs both 2a and 2b; results merged into a single `phase2.flows` array in the morning report.
+
+Screenshots are committed (~500KB/day across 5 flows) so the next morning's run can diff against them. After ~30 days that's ~15MB of binary blobs — acceptable for the test signal.
+
+If Playwright crashes or Chromium isn't installed, Phase 2b returns an empty `flows` array; the orchestrator continues with whatever Phase 2a produced. The daily email always goes out.
 
 ---
 
