@@ -395,6 +395,48 @@ export type InboxReview = {
 
 // MemorySnapshot type defined above near ChatHistory.
 
+/**
+ * Anonymous URL-prefill lead-magnet session. The visitor drops their
+ * URL on the home page; the orchestrator runs scrape + Census + Places
+ * + LLM in eight phases and writes incremental data into the JSONB
+ * columns. On save (email gate) and later sign-up, the snapshot
+ * merges into customer_memory so the portal opens pre-filled.
+ *
+ * Schema mirrors assessment_sessions: anonymous-first, HttpOnly cookie
+ * identity, optional email + user_id linkage on conversion.
+ */
+export type IntakeSession = {
+  id: string;
+  cookie_token: string;
+  ip_hash: string | null;
+  user_agent: string | null;
+  created_at: string;
+  expires_at: string;
+  status: "pending" | "analyzing" | "complete" | "failed" | "capped";
+  error: string | null;
+  url: string;
+  domain: string;
+  scrape_data: Record<string, unknown> | null;
+  business_data: Record<string, unknown> | null;
+  market_data: Record<string, unknown> | null;
+  expansion_data: Record<string, unknown> | null;
+  /** On completion, score_data.snapshot holds the full IntakeSnapshot. */
+  score_data: Record<string, unknown> | null;
+  email: string | null;
+  saved_at: string | null;
+  user_id: string | null;
+  merged_at: string | null;
+  cost_cents: number;
+};
+
+export type IntakeDailySpend = {
+  date: string;
+  total_cents: number;
+  request_count: number;
+  capped_count: number;
+  updated_at: string;
+};
+
 // Supabase JS v2 type inference requires this exact shape — including the
 // __InternalSupabase marker and the `{ [_ in never]: never }` empty-record
 // idiom for Views/Functions/Enums/CompositeTypes. Deviations cause every
@@ -679,6 +721,44 @@ export type Database = {
           claimed_at?: string | null;
         };
         Update: Partial<Omit<ScheduledEmail, "id">>;
+        Relationships: [];
+      };
+      intake_sessions: {
+        Row: IntakeSession;
+        // id, created_at, expires_at all default at the DB level. status
+        // defaults to 'pending'. cost_cents defaults to 0. JSONB columns
+        // default to null. cookie_token + url + domain are required.
+        Insert: Pick<IntakeSession, "cookie_token" | "url" | "domain"> & {
+          id?: string;
+          created_at?: string;
+          expires_at?: string;
+          status?: IntakeSession["status"];
+          error?: string | null;
+          ip_hash?: string | null;
+          user_agent?: string | null;
+          scrape_data?: Record<string, unknown> | null;
+          business_data?: Record<string, unknown> | null;
+          market_data?: Record<string, unknown> | null;
+          expansion_data?: Record<string, unknown> | null;
+          score_data?: Record<string, unknown> | null;
+          email?: string | null;
+          saved_at?: string | null;
+          user_id?: string | null;
+          merged_at?: string | null;
+          cost_cents?: number;
+        };
+        Update: Partial<Omit<IntakeSession, "id" | "created_at">>;
+        Relationships: [];
+      };
+      intake_daily_spend: {
+        Row: IntakeDailySpend;
+        Insert: Pick<IntakeDailySpend, "date"> & {
+          total_cents?: number;
+          request_count?: number;
+          capped_count?: number;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<IntakeDailySpend, "date">>;
         Relationships: [];
       };
     };
