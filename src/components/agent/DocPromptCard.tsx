@@ -103,7 +103,7 @@ export function DocPromptCard({ slug, prompt, compact }: Props) {
         <Sparkles size={14} className="text-emerald-600 flex-shrink-0" />
         <span className="text-sm text-emerald-900">
           <strong className="font-bold">{uploaded}</strong> uploaded — refreshing
-          so Jason can pull from it…
+          so Jason AI can pull from it…
         </span>
       </div>
     );
@@ -142,7 +142,7 @@ export function DocPromptCard({ slug, prompt, compact }: Props) {
                 }}
               />
             </label>{" "}
-            and Jason answers most of this for you.
+            and Jason AI answers most of this for you.
           </div>
         </div>
         {err && (
