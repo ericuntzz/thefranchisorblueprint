@@ -103,7 +103,7 @@ export default async function BlueprintLabPage() {
     return att.length > 0 ? [{ slug: s, attachments: att }] : [];
   });
 
-  // Per-section readiness state — drives the unified ReadinessPill on
+  // Per-section readiness state — drives the inline status pill on
   // each card and keeps the visual language consistent with the
   // Command Center checklist on /portal.
   const sectionReadiness = computeSectionReadiness(

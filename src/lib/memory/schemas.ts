@@ -194,12 +194,6 @@
  *        market_strategy        (agent-research, 5 fields)
  *        competitor_landscape   (agent-research, 5 fields)
  *
- * 🅿️ Deferred to Phase 1.5b (lighter footprint when designed):
- *      brand_voice — light hybrid, ~6-8 fields. The v1 was scoped too
- *      heavily (20 fields) anchored on a marketing-agency mental
- *      model. Operators don't need 20 brand fields; they need logo,
- *      2-3 colors, 1 sentence on voice — done. Coming back to this.
- *
  * ⏳ Audit-pending: the 11 new schemas have NOT been cross-checked
  *    against the High Point Coffee bundle or original capability
  *    documents Jason wrote. Audit pass should add anything in those
@@ -2896,9 +2890,7 @@ const COMPETITOR_LANDSCAPE: SectionSchema = {
 // ---------------------------------------------------------------------------
 
 /**
- * Per-section schema registry. Now covers 15 of 16 sections; only
- * `brand_voice` remains deferred (planned for Phase 1.5b at ~6-8
- * fields, lighter footprint than the v1 we cut).
+ * Per-section schema registry. Covers all 16 sections.
  *
  * BUCKET LAYOUT:
  *
@@ -2914,6 +2906,7 @@ const COMPETITOR_LANDSCAPE: SectionSchema = {
  *
  *   Light hybrid (anchor fields + content_md prose):
  *     - business_overview
+ *     - brand_voice
  *     - operating_model
  *     - recipes_and_menu
  *     - training_program
@@ -2923,17 +2916,13 @@ const COMPETITOR_LANDSCAPE: SectionSchema = {
  *     - market_strategy
  *     - competitor_landscape
  *
- *   Deferred to Phase 1.5b:
- *     - brand_voice (no schema; the section exists in Memory but
- *       renders prose-only until 1.5b)
- *
  * AUDIT STATUS: the 11 newly-added schemas have NOT been cross-checked
  * against the High Point Coffee bundle or original capability documents.
  * Each schema's comment header notes the audit gap. Jason should review
  * for fields specific to TFB's framework that I missed.
  */
 // ---------------------------------------------------------------------------
-// brand_voice — the deferred Phase 1.5b section, now landing.
+// brand_voice
 //
 // Light hybrid. Cypress Lane example values shown in placeholders
 // follow the operator-voice rule: no marketing-speak ("brand

@@ -23,7 +23,6 @@ import {
 import type { MemoryFieldsMap } from "@/lib/calc";
 // SiteFooter intentionally not rendered — see /portal/blueprint-builder/page.tsx.
 import {
-  saveSectionSection,
   saveMemoryFields,
   setSectionConfidence,
 } from "@/app/portal/lab/blueprint/actions";
@@ -127,10 +126,9 @@ export default async function FocusedSectionPage({ params }: Props) {
     }
   }
 
-  // Per-section readiness — used to render the ReadinessPill in the
-  // hero so the customer sees the same status they saw on the
-  // dashboard checklist (same green/amber/red/gray state computed
-  // from the same readiness lib).
+  // Per-section readiness — same green/amber/red/gray state the
+  // dashboard checklist uses, computed from the same readiness lib so
+  // the customer sees a consistent status across surfaces.
   const indexedRows = indexMemoryRows(
     Array.from(memoryBySlug.values()).map((r) => ({
       file_slug: r.file_slug,
@@ -177,11 +175,9 @@ export default async function FocusedSectionPage({ params }: Props) {
   return (
     <>
       <main className="min-h-screen bg-cream-soft">
-        {/* Top nav — back arrow icon + status pills + voice + overflow.
-            The "View in Blueprint" link and "Version history" pill that
-            used to crowd this row now live inside the overflow menu in
-            SectionToolbar, leaving room for the page title to do the
-            heavy lifting. */}
+        {/* Top nav — back arrow + section toolbar (status pills only).
+            Older "View in Blueprint" / "Version history" / voice
+            buttons were removed; see SectionToolbar for context. */}
         <div className="border-b border-navy/10 bg-white">
           <div className="max-w-[1000px] mx-auto px-4 sm:px-6 md:px-8 py-3 flex items-center gap-2 flex-wrap">
             <Link
@@ -225,7 +221,6 @@ export default async function FocusedSectionPage({ params }: Props) {
               }
               nextTitle={nextSlug ? MEMORY_FILE_TITLES[nextSlug] : null}
               saveFields={saveMemoryFields}
-              saveSection={saveSectionSection}
               setConfidence={setSectionConfidence}
             />
           </div>

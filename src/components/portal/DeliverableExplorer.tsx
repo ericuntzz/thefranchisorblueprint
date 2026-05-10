@@ -3,24 +3,20 @@
 /**
  * DeliverableExplorer — primary "build + ship" surface on the dashboard.
  *
- * Replaces the prior pair of components:
- *   - DeliverableChecklist (per-phase section readiness grid — flat)
- *   - ExportsSection ("Download what you've built" — flat)
+ * Nested two-level explorer: deliverable cards expand to reveal the
+ * contributing section rows; each section row expands again to show
+ * the full editor inline. Same surface for working AND shipping —
+ * no jumping to /portal/lab/blueprint or /portal/section/[slug] to
+ * edit.
  *
- * with a single nested structure: deliverable cards expand to reveal
- * the contributing section rows; each section row expands again to
- * show the full editor inline. Same surface, deliverable-aware
- * grouping, no jumping to /portal/lab/blueprint or /portal/section/[slug]
- * to edit.
+ * Expansion model:
+ *   Level 1: one deliverable expanded at a time (others stay collapsed)
+ *   Level 2: inside an expanded deliverable, one section editor open at
+ *            a time (others show their summary row)
  *
- * Two-level expansion model:
- *   Level 1: One deliverable expanded at a time (others stay collapsed)
- *   Level 2: Inside an expanded deliverable, one section editor open
- *            at a time (others show their summary row)
- *
- * Bundle download UI (multi-select + ZIP) preserved at the top of
- * the section. Users still tick boxes across collapsed cards and
- * hit "Download bundle" without ever expanding anything.
+ * Bundle download UI (multi-select + ZIP) lives at the top of the
+ * grid. Users tick boxes across collapsed cards and hit "Download
+ * bundle" without ever expanding anything.
  */
 
 import { useMemo, useState } from "react";
@@ -109,22 +105,10 @@ type SaveFieldsArgs = {
   slug: string;
   changes: Record<string, FieldValue>;
 };
-type SaveSectionArgs = {
-  slug: string;
-  sectionIndex: number;
-  body: string;
-  heading?: string | null;
-};
-type SetConfidenceArgs = {
-  slug: string;
-  confidence: "verified" | "inferred" | "draft";
-};
 
 type Props = {
   deliverables: DeliverableViewModel[];
   saveFields: (args: SaveFieldsArgs) => Promise<void>;
-  saveSection: (args: SaveSectionArgs) => Promise<void>;
-  setConfidence: (args: SetConfidenceArgs) => Promise<void>;
   /** True when the customer has filled exactly nothing yet. Drives a
    *  warmer first-run hero in place of the standard "17 deliverables"
    *  pitch, and auto-expands the first deliverable so they have one
@@ -136,8 +120,6 @@ type Props = {
 export function DeliverableExplorer({
   deliverables,
   saveFields,
-  saveSection,
-  setConfidence,
   isFirstRun = false,
   firstName = null,
 }: Props) {
@@ -335,8 +317,6 @@ export function DeliverableExplorer({
             }
             onToggleSection={toggleSection}
             saveFields={saveFields}
-            saveSection={saveSection}
-            setConfidence={setConfidence}
             onPreview={(d) => setPreview({ mode: "single", deliverable: d })}
           />
         ))}
@@ -387,8 +367,6 @@ function DeliverableEntry({
   openSectionSlug,
   onToggleSection,
   saveFields,
-  saveSection,
-  setConfidence,
   onPreview,
 }: {
   deliverable: DeliverableViewModel;
@@ -399,8 +377,6 @@ function DeliverableEntry({
   openSectionSlug: MemoryFileSlug | null;
   onToggleSection: (slug: MemoryFileSlug) => void;
   saveFields: (args: SaveFieldsArgs) => Promise<void>;
-  saveSection: (args: SaveSectionArgs) => Promise<void>;
-  setConfidence: (args: SetConfidenceArgs) => Promise<void>;
   onPreview: (deliverable: DeliverableViewModel) => void;
 }) {
   const def = DELIVERABLES[deliverable.id];
@@ -518,8 +494,6 @@ function DeliverableEntry({
                   isOpen={isOpen}
                   onToggle={() => onToggleSection(section.slug)}
                   saveFields={saveFields}
-                  saveSection={saveSection}
-                  setConfidence={setConfidence}
                 />
               );
             })}
@@ -652,15 +626,11 @@ function SectionRow({
   isOpen,
   onToggle,
   saveFields,
-  saveSection,
-  setConfidence,
 }: {
   section: SectionDataBundle;
   isOpen: boolean;
   onToggle: () => void;
   saveFields: (args: SaveFieldsArgs) => Promise<void>;
-  saveSection: (args: SaveSectionArgs) => Promise<void>;
-  setConfidence: (args: SetConfidenceArgs) => Promise<void>;
 }) {
   const stateColor = STATE_DOT_COLOR[section.readinessState];
   // Increment-on-click signal — every Attach press bumps this. The
@@ -764,8 +734,6 @@ function SectionRow({
             provenance={section.provenance}
             attachOpenSignal={attachSignal}
             saveFields={saveFields}
-            saveSection={saveSection}
-            setConfidence={setConfidence}
           />
         </div>
       </AnimatedDisclosure>

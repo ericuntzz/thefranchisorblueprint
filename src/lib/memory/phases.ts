@@ -25,7 +25,6 @@
  */
 
 import type { MemoryFileSlug } from "./files";
-import { MEMORY_FILE_TITLES } from "./files";
 
 export type PhaseId =
   | "discover"
@@ -106,12 +105,6 @@ for (const phase of PHASES) {
 /** Phase containing this section, or null if the section is unphased. */
 export function phaseForSlug(slug: MemoryFileSlug): PhaseDef | null {
   return PHASE_BY_SLUG.get(slug) ?? null;
-}
-
-/** Pretty title for one section — re-export for convenience so phase
- *  callers don't need to import MEMORY_FILE_TITLES separately. */
-export function sectionTitle(slug: MemoryFileSlug): string {
-  return MEMORY_FILE_TITLES[slug];
 }
 
 /**

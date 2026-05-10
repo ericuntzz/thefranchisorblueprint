@@ -49,16 +49,6 @@ export type SnapshotPayload = {
   attachments: CustomerMemory["attachments"];
 };
 
-export type SnapshotRow = {
-  id: string;
-  userId: string;
-  sectionSlug: MemoryFileSlug;
-  payload: SnapshotPayload;
-  reason: string | null;
-  source: SnapshotSource;
-  createdAt: string;
-};
-
 /**
  * Capture a snapshot of a section's current state. Reads the current
  * `customer_memory` row and stores its contents as a snapshot. Skips
@@ -116,85 +106,12 @@ export async function captureSnapshot(args: {
   });
 }
 
-/** Return snapshot history for one section, newest first. */
-export async function listSnapshots(args: {
-  userId: string;
-  slug: MemoryFileSlug;
-}): Promise<SnapshotRow[]> {
-  if (!isValidMemoryFileSlug(args.slug)) return [];
-  const admin = getSupabaseAdmin();
-  const { data, error } = await admin
-    .from("memory_snapshots")
-    .select("id, user_id, section_slug, payload, reason, source, created_at")
-    .eq("user_id", args.userId)
-    .eq("section_slug", args.slug)
-    .order("created_at", { ascending: false });
-  if (error) {
-    console.warn("[snapshots] list failed:", error.message);
-    return [];
-  }
-  return (data ?? []).map((r) => ({
-    id: r.id,
-    userId: r.user_id,
-    sectionSlug: r.section_slug as MemoryFileSlug,
-    payload: r.payload as SnapshotPayload,
-    reason: r.reason ?? null,
-    source: r.source as SnapshotSource,
-    createdAt: r.created_at,
-  }));
-}
-
-/**
- * Restore a snapshot's payload back into customer_memory. Captures a
- * fresh snapshot of the current state first so the rollback itself
- * can be reverted.
- */
-export async function rollbackToSnapshot(args: {
-  userId: string;
-  slug: MemoryFileSlug;
-  snapshotId: string;
-}): Promise<{ ok: boolean; error?: string }> {
-  if (!isValidMemoryFileSlug(args.slug)) {
-    return { ok: false, error: `Invalid slug: ${args.slug}` };
-  }
-  const admin = getSupabaseAdmin();
-
-  // Read target snapshot.
-  const { data: snapData, error: snapErr } = await admin
-    .from("memory_snapshots")
-    .select("payload")
-    .eq("id", args.snapshotId)
-    .eq("user_id", args.userId)
-    .eq("section_slug", args.slug)
-    .maybeSingle();
-  if (snapErr) return { ok: false, error: snapErr.message };
-  if (!snapData) return { ok: false, error: "Snapshot not found" };
-  const payload = snapData.payload as SnapshotPayload;
-
-  // Capture current state under "manual" source so the rollback can be undone.
-  await captureSnapshot({
-    userId: args.userId,
-    slug: args.slug,
-    source: "manual",
-    reason: "Before rollback",
-  });
-
-  // Restore.
-  const { error: upsertErr } = await admin.from("customer_memory").upsert(
-    {
-      user_id: args.userId,
-      file_slug: args.slug,
-      content_md: payload.contentMd,
-      fields: payload.fields,
-      field_status: payload.fieldStatus,
-      confidence: payload.confidence,
-      attachments: payload.attachments,
-    },
-    { onConflict: "user_id,file_slug" },
-  );
-  if (upsertErr) return { ok: false, error: upsertErr.message };
-  return { ok: true };
-}
+// listSnapshots + rollbackToSnapshot removed 2026-05-10 — the
+// /api/agent/snapshots route + its UI (SnapshotHistoryButton) were
+// retired. The capture path (captureSnapshot / pruneOldSnapshots)
+// still runs inside upsertMemoryWithProvenance, so the
+// memory_snapshots table keeps a record; the public read/restore
+// API can be reintroduced when there's a UI consumer again.
 
 /** Trim snapshots beyond MAX_SNAPSHOTS_PER_SECTION, oldest first. */
 export async function pruneOldSnapshots(

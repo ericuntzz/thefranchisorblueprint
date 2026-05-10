@@ -76,13 +76,9 @@ export function BlueprintTOC({ items }: BlueprintTOCProps) {
       },
     );
 
-    const elements: Element[] = [];
     for (const { slug } of items) {
       const el = document.getElementById(`section-${slug}`);
-      if (el) {
-        observer.observe(el);
-        elements.push(el);
-      }
+      if (el) observer.observe(el);
     }
 
     return () => observer.disconnect();

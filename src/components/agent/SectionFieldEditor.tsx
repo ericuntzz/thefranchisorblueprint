@@ -99,10 +99,11 @@ export function SectionFieldEditor({
   const lastSavedRef = useRef<Record<string, FieldValue>>(initialFields);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savedToastRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Eric: "concerned a user won't see the [advanced] button and won't
-  // complete the section." Drop the toggle — render every field
-  // up-front so nothing is hidden behind a press.
-  const showAdvanced = true;
+  // Note: there used to be an "Advanced" toggle here. Eric was
+  // concerned customers wouldn't notice it and skip required-but-
+  // hidden fields, so every field renders up-front. The `advanced`
+  // schema flag is still used elsewhere (readiness scoring, queue
+  // priority) but it no longer gates UI visibility on this surface.
 
   // Compute all formula values from current state. Recomputed on every
   // edit so live computed fields (EBITDA margin, payback period, etc.)
@@ -223,17 +224,14 @@ export function SectionFieldEditor({
           ))}
       </div>
       {grouped.map((group) => {
-        const visibleFields = group.fields.filter(
-          (f) => showAdvanced || !f.advanced,
-        );
-        if (visibleFields.length === 0) return null;
+        if (group.fields.length === 0) return null;
         return (
           <fieldset key={group.category} className="space-y-4">
             <legend className="text-xs uppercase tracking-[0.12em] text-gold-text font-bold">
               {group.category}
             </legend>
             <div className="space-y-4">
-              {visibleFields.map((fd) => {
+              {group.fields.map((fd) => {
                 // The same registry holds COMPUTED (read-only) and
                 // DERIVED_DEFAULT (suggested-but-editable) values; the
                 // UI distinguishes them via hasCalc / hasDerivedDefault.

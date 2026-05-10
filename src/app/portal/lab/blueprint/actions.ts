@@ -219,11 +219,12 @@ export async function saveSectionSection(args: {
 /**
  * Promote a section's confidence to a new value (typically "verified"
  * via the customer hitting Approve, or back to "draft" if they want
- * to re-open for edits). The Command Center + ReadinessPill pick this
- * up on next render to flip the section from amber → green.
+ * to re-open for edits). The Command Center and inline readiness
+ * pills pick this up on next render to flip the section from amber
+ * to green.
  *
- * v1 model is per-section, not per-section. Section-level approval is
- * a future enhancement once we see how customers actually use this.
+ * v1 is per-section. Per-prose-block approval is a future enhancement
+ * once we see how customers actually use this.
  */
 export async function setSectionConfidence(args: {
   slug: string;

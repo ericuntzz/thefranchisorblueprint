@@ -3,10 +3,8 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import {
   ArrowRight,
-  Calendar,
   CheckCircle2,
   Clock,
-  FileText,
   Globe,
   ShieldOff,
   Sparkles,
@@ -24,7 +22,6 @@ import {
 } from "@/lib/memory/readiness";
 import {
   computeQuestionQueue,
-  estimateMinutes,
   summarizeQueue,
 } from "@/lib/memory/queue";
 import { CommandCenter } from "@/components/portal/CommandCenter";
@@ -46,11 +43,7 @@ import { MEMORY_FILES, MEMORY_FILE_TITLES } from "@/lib/memory/files";
 import type { MemoryFileSlug } from "@/lib/memory/files";
 import { getSectionSchema } from "@/lib/memory/schemas";
 import type { MemoryFieldsMap } from "@/lib/calc";
-import {
-  saveMemoryFields,
-  saveSectionSection,
-  setSectionConfidence,
-} from "@/app/portal/lab/blueprint/actions";
+import { saveMemoryFields } from "@/app/portal/lab/blueprint/actions";
 import type { DeliverableReview } from "@/lib/export/deliverable-readiness";
 import type { DeliverableId } from "@/lib/export/types";
 import type {
@@ -175,30 +168,22 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
   const readinessPct = overallReadinessPct(sectionReadiness);
   const queueItems = computeQuestionQueue(memoryFieldsFromRows(memoryIndexed));
   const queueSummary = summarizeQueue(queueItems);
-  const queueEstimateMin = estimateMinutes(queueItems);
 
   // ---- Milestone fire conditions ----
-  // Originally these were keyed on the 9-capability system (started/
-  // completed_capability rows). Phase 2A migrated the canonical
-  // progress signal to the 16-section Memory readiness percentage,
-  // so the celebratory moments (Day 1 hero, halfway-upgrade-pitch,
-  // final-readiness review) are now keyed on readinessPct thresholds:
-  //
-  //   isFirstRun        readinessPct === 0   no Memory data yet
-  //   midwayThere       >= 50               halfway, upgrade pitch lands
-  //   isAllComplete     >= 95               close enough to call done
-  //
+  // Keyed on overall readiness percent across the 16 sections:
+  //   isFirstRun     readinessPct === 0    no Memory data yet
+  //   midwayThere    >= 50                 halfway, upgrade pitch lands
+  //   isAllComplete  >= 95                 close enough to call done
   // Tweak thresholds here if the feel of those moments shifts; the
   // underlying scoring is in lib/memory/readiness.
   const isFirstRun = readinessPct === 0;
   const midwayThere = readinessPct >= 50;
   const isAllComplete = readinessPct >= 95;
 
-  // ---- Per-deliverable readiness for the ExportsSection ----
+  // ---- Per-deliverable readiness ----
   // Reuses loadBuildContext (same pipeline the API endpoint uses) so
-  // the readiness number on the export card matches what the customer
-  // sees on the pre-export review screen — no inconsistency between
-  // the two surfaces.
+  // the readiness number on each deliverable card matches what the
+  // customer sees on the pre-export review screen.
   const buildCtx = await loadBuildContext(user.id);
   const exportReadiness = DELIVERABLE_DISPLAY_ORDER.reduce(
     (acc, id) => {
@@ -401,7 +386,6 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
             firstName={firstName}
             readinessPct={readinessPct}
             queue={queueSummary}
-            estimateMin={queueEstimateMin}
           />
           {/* Recent activity sits between the next-question hero and
               the deliverable explorer. Reads as: "here's what's
@@ -409,17 +393,14 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
               left to build" grid below. Card scrolls internally
               after ~4 rows so it never dominates the dashboard. */}
           <ActivityFeed events={recentActivity} />
-          {/* DeliverableExplorer replaces both the prior
-              DeliverableChecklist (per-phase section grid) and
-              ExportsSection ("Download what you've built"). Each
+          {/* DeliverableExplorer — the dashboard's canonical
+              "what's left to build + download" grid. Each
               deliverable card expands to show its contributing
               sections; each section row expands to a full inline
-              editor. Bundle download UI preserved at the top. */}
+              editor. Bundle download UI lives at the top of the grid. */}
           <DeliverableExplorer
             deliverables={deliverableViewModels}
             saveFields={saveMemoryFields}
-            saveSection={saveSectionSection}
-            setConfidence={setSectionConfidence}
             isFirstRun={isFirstRun}
             firstName={firstName}
           />
@@ -460,13 +441,10 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
         <Day1OnboardingHero firstName={firstName} />
       )}
 
-      {/* The 9-capability Phases section was removed in the Phase 2A
-          dashboard cleanup. Progress is now tracked against the
-          16-section Memory system; the Command Center + Deliverable
-          Checklist above are the canonical "what's next" surface.
-          The legacy /portal/[capability] detail pages were removed
-          entirely — /portal/section/[slug] is the per-item deep link
-          surface. */}
+      {/* Progress is tracked against the 16-section Memory system.
+          The Command Center + Deliverable Explorer above are the
+          canonical "what's next" surface; /portal/section/[slug] is
+          the per-section deep-link. */}
 
       {/* ===== Tier-specific sections (Tier 2/3 scaffolding) ===== */}
       {tier >= 2 && <CoachingPanel tier={tier} />}

@@ -51,9 +51,9 @@ export const dynamic = "force-dynamic";
  * the queue empties for a phase, we surface a "Ready to draft <section>"
  * affordance pointing into the Blueprint canvas.
  *
- * This is the TurboTax-style guided flow that Phase 2A introduces. The
- * existing /portal/lab/blueprint stays as the "View full draft" mode
- * for power users; this is what most DIY buyers should live in.
+ * This is the TurboTax-style guided flow. /portal/lab/blueprint is
+ * the "View full draft" mode for power users; this is where most
+ * DIY buyers live.
  */
 export default async function GuidedNextPage({
   searchParams,

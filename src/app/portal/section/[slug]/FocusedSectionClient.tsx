@@ -10,8 +10,8 @@
  * structured-data work happens.
  *
  * Layout (top → bottom):
- *   1. Hero: section title, slug eyebrow, ReadinessPill, schema
- *      description.
+ *   1. Hero: section title, slug eyebrow, inline readiness status,
+ *      schema description.
  *   2. Field editor (primary) — full width, sticky save bar.
  *   3. Drafted-prose preview (read-only, collapsible) with a deep
  *      link into the Blueprint canvas if the customer wants to edit
@@ -90,12 +90,6 @@ type Props = {
   saveFields: (args: {
     slug: string;
     changes: Record<string, FieldValue>;
-  }) => Promise<void>;
-  saveSection: (args: {
-    slug: string;
-    sectionIndex: number;
-    body: string;
-    heading?: string | null;
   }) => Promise<void>;
   setConfidence: (args: {
     slug: string;
@@ -407,9 +401,9 @@ export function FocusedSectionClient(props: Props) {
                 ? "Redraft with Jason"
                 : "Draft with Jason"}
           </button>
-          {/* MOCK: "Approve as verified" / "Verified · re-open" buttons
-              removed. Completion is now derived from filled-field count
-              and rendered as a checkmark next to the section title. */}
+          {/* "Approve as verified" / "Verified · re-open" buttons removed
+              — completion is derived from filled-field count and rendered
+              as a checkmark next to the section title. */}
         </div>
       </section>
 

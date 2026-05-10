@@ -4,17 +4,11 @@
  * Section toolbar — renders next to the page-level back arrow at the
  * top of /portal/section/[slug].
  *
- * MOCK (Pass E preview): the only thing this component now surfaces is
- * status pills (open redlines, Jason approved). Talk to Jason was
- * removed — voice intake is already available inside the Jason chat
- * dock at the bottom-right. Version history was removed — it lived in
- * an overflow menu that essentially nobody used. View in Blueprint
- * was removed — the new left sidebar's "Blueprint" entry is the
- * primary way to reach the assembled view.
- *
- * Result: top of the section page goes from 4 ghost-pill buttons +
- * an overflow menu down to a back arrow + the section title. Status
- * pills appear inline if and only if there's something to surface.
+ * Surfaces only status pills (open redlines, Jason approved). The
+ * older "Talk to Jason" / "Version history" / "View in Blueprint"
+ * affordances were removed: voice intake lives in the Jason chat
+ * dock now, version history was unused, and the assembled-view link
+ * lives in the left sidebar.
  */
 
 import { useCallback, useEffect, useState } from "react";

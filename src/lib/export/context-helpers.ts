@@ -1,10 +1,10 @@
 /**
  * Pure helpers for reading from a BuildContext.
  *
- * Extracted from load.ts so that deliverable builders (which get
- * bundled into the client-side ExportsSection component via the
- * DELIVERABLES registry) don't transitively pull in "server-only".
- * These functions do zero I/O — just property lookups.
+ * Extracted from load.ts so deliverable builders (which get bundled
+ * into client components via the DELIVERABLES registry) don't
+ * transitively pull in "server-only". These functions do zero I/O —
+ * just property lookups.
  */
 
 import type { MemoryFileSlug } from "@/lib/memory/files";

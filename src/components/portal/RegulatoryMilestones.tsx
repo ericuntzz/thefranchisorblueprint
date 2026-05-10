@@ -9,7 +9,7 @@
  * shows a faint "Saving…" state during the round-trip and the page
  * revalidates afterward.
  *
- * Different from the DeliverableChecklist (which tracks WORK the
+ * Different from the DeliverableExplorer (which tracks WORK the
  * franchisor is doing) — these are EXTERNAL events with regulators,
  * law firms, audit firms, and insurance carriers.
  */

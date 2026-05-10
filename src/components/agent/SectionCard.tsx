@@ -37,7 +37,7 @@ import { SectionAttachments } from "./SectionAttachments";
 import { DraftWithJasonModal } from "./DraftWithJasonModal";
 import type { MemoryFileSlug } from "@/lib/memory/files";
 import type { ReadinessState } from "@/lib/memory/readiness";
-import { type SectionSchema, type FieldDef } from "@/lib/memory/schemas";
+import { type SectionSchema } from "@/lib/memory/schemas";
 import { isValidMemoryFileSlug } from "@/lib/memory/files";
 import {
   computeAllFormulas,
@@ -54,9 +54,9 @@ type Props = {
   title: string;
   contentMd: string;
   confidence: "verified" | "inferred" | "draft" | "empty";
-  /** Pre-computed readiness state — drives the unified ReadinessPill
-   *  + the Approve button visibility. Computed in the page from the
-   *  same readiness lib that powers the Command Center. */
+  /** Pre-computed readiness state — drives the inline status pill
+   *  and the Approve button visibility. Computed in the page from
+   *  the same readiness lib that powers the Command Center. */
   readinessState: ReadinessState;
   lastUpdatedBy: "agent" | "user" | "jason" | "scraper" | null;
   updatedAt: string | null;
@@ -98,8 +98,9 @@ type Props = {
   otherSectionsFields: MemoryFieldsMap;
   /**
    * The section's field schema (from src/lib/memory/schemas.ts). Null
-   * when the section has no schema yet (e.g. brand_voice — deferred to
-   * Phase 1.5b). Null = render prose only, no field editor.
+   * = render prose only, no field editor. (All 16 sections currently
+   * have schemas; the prop stays nullable so future prose-only
+   * sections drop in without a contract change.)
    */
   schema: SectionSchema | null;
   /**
@@ -138,13 +139,6 @@ type Props = {
    * dashboard's deliverable explorer.
    */
   readOnly?: boolean;
-  /**
-   * "Embedded" mode — strips the outer card chrome (rounded border,
-   * background, padding) so the section content flows flush inside
-   * a parent container. Used by DeliverableExplorer's section rows
-   * so the editor doesn't render as a card-inside-a-card.
-   */
-  embedded?: boolean;
 };
 
 export function SectionCard({
@@ -166,7 +160,6 @@ export function SectionCard({
   saveSection,
   setConfidence,
   readOnly = false,
-  embedded = false,
 }: Props) {
   const [drafting, setDrafting] = useState(false);
   const [draftError, setDraftError] = useState<string | null>(null);
@@ -176,8 +169,8 @@ export function SectionCard({
   const [approving, setApproving] = useState(false);
 
   // Approve / re-open handler. Flips confidence on the server and
-  // hard-reloads so the ReadinessPill reflects the new state. (Soft
-  // reload would also work — using window.reload to match the
+  // hard-reloads so the inline readiness pill reflects the new state.
+  // (Soft reload would also work; using window.reload to match the
   // existing pattern across this file.)
   async function flipConfidence(next: "verified" | "draft") {
     if (approving) return;
@@ -271,11 +264,7 @@ export function SectionCard({
   return (
     <article
       id={`section-${slug}`}
-      className={
-        embedded
-          ? "scroll-mt-20"
-          : "rounded-2xl border border-card-border bg-white p-5 sm:p-6 md:p-8 scroll-mt-20"
-      }
+      className="rounded-2xl border border-card-border bg-white p-5 sm:p-6 md:p-8 scroll-mt-20"
     >
       <header className="mb-4 flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
@@ -1277,6 +1266,3 @@ function stripBodyForEditing(body: string): string {
     .replace(/<!--\s*\/user-locked:[a-z0-9]+\s*-->\n?/gi, "")
     .trim();
 }
-
-// Re-export for parents that don't already import these.
-export type { FieldDef } from "@/lib/memory/schemas";

@@ -76,16 +76,6 @@ type Props = {
     slug: string;
     changes: Record<string, FieldValue>;
   }) => Promise<void>;
-  saveSection: (args: {
-    slug: string;
-    sectionIndex: number;
-    body: string;
-    heading?: string | null;
-  }) => Promise<void>;
-  setConfidence: (args: {
-    slug: string;
-    confidence: "verified" | "inferred" | "draft";
-  }) => Promise<void>;
 };
 
 export function SectionFieldsCard({

@@ -19,7 +19,7 @@
  */
 
 import Link from "next/link";
-import { ArrowRight, Globe, ListChecks, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import type { QueueSummary } from "@/lib/memory/queue";
 import { phaseForSlug } from "@/lib/memory/phases";
 
@@ -29,15 +29,12 @@ type Props = {
   readinessPct: number;
   /** Queue summary used to surface the "next question" hero CTA. */
   queue: QueueSummary;
-  /** How many minutes the queue is likely to take, end-to-end. */
-  estimateMin: number;
 };
 
 export function CommandCenter({
   firstName,
   readinessPct,
   queue,
-  estimateMin,
 }: Props) {
   const next = queue.next;
   const allCaughtUp = queue.total === 0;

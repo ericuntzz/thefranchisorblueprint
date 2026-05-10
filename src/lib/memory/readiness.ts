@@ -214,10 +214,3 @@ export function memoryFieldsFromRows(
   return out;
 }
 
-/** Read attachments out of a row. Returns []. */
-export function attachmentsFor(
-  rowsBySlug: Map<MemoryFileSlug, MemoryRow>,
-  slug: MemoryFileSlug,
-): SectionAttachment[] {
-  return (rowsBySlug.get(slug)?.attachments ?? []) as SectionAttachment[];
-}
