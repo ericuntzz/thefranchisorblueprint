@@ -1,0 +1,40 @@
+[smoke-test] === 2026-05-10T13:00:01Z ===
+[smoke-test] === seed ===
+
+> tfb-site@0.1.0 smoke-test:seed
+> tsx scripts/smoke-test/seed.ts
+
+◇ injected env (54) from .env.local // tip: ◈ secrets for agents [www.dotenvx.com]
+Seeding eric.j.unterberger+smoketest@gmail.com (f6c99e67-2bf0-4159-a486-b0e9fbeb8cd2)...
+✓ test auth user exists
+✓ profile upserted
+✓ paid purchase exists
+seed failed: Error: redline insert: Could not find the table 'public.section_redlines' in the schema cache
+    at ensureRedlines (/Users/fin/Documents/The Franchisor Blueprint Website/scripts/smoke-test/seed.ts:133:20)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async main (/Users/fin/Documents/The Franchisor Blueprint Website/scripts/smoke-test/seed.ts:152:3)
+[smoke-test] seed failed; aborting
+[smoke-test] === 2026-05-10T16:31:28Z ===
+[smoke-test] === seed ===
+
+> tfb-site@0.1.0 smoke-test:seed
+> tsx scripts/smoke-test/seed.ts
+
+◇ injected env (53) from .env.local // tip: ⌘ enable debugging { debug: true }
+Seeding eric.j.unterberger+smoketest@gmail.com (f6c99e67-2bf0-4159-a486-b0e9fbeb8cd2)...
+✓ test auth user exists
+✓ profile upserted
+✓ paid purchase exists
+⚠ section_redlines table missing (likely DB migration pending); skipping redline seed
+
+Seed complete. Test account ready for smoke test.
+[smoke-test] === phase 1 ===
+[smoke-test] phase1 exit=0
+[smoke-test] === phase 2 (structural) ===
+[smoke-test] phase2 (structural) exit=0
+[smoke-test] === phase 2 (visual) ===
+[smoke-test] phase2 (visual) exit=0
+[smoke-test] === reporter ===
+◇ injected env (53) from .env.local // tip: ◈ secrets for agents [www.dotenvx.com]
+Email sent: ef329952-ab7b-4466-b792-c0be8d94c986. Report: /Users/fin/Documents/The Franchisor Blueprint Website/scripts/smoke-test/runs/2026-05-10.md
+[smoke-test] === commit ===
