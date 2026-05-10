@@ -19,7 +19,7 @@
  * bundle" without ever expanding anything.
  */
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
   AlertCircle,
@@ -32,10 +32,7 @@ import {
   Paperclip,
   Sparkles,
 } from "lucide-react";
-import {
-  DELIVERABLES,
-  DELIVERABLE_DISPLAY_ORDER,
-} from "@/lib/export/deliverables";
+import { DELIVERABLES } from "@/lib/export/deliverables";
 import { MEMORY_FILE_TITLES } from "@/lib/memory/files";
 import type { MemoryFileSlug } from "@/lib/memory/files";
 import type { DeliverableReview } from "@/lib/export/deliverable-readiness";
@@ -127,6 +124,12 @@ export function DeliverableExplorer({
   // so a customer can tick boxes across the grid without having to
   // expand every card.
   const [selected, setSelected] = useState<Set<DeliverableId>>(new Set());
+  // Bundle selection is an explicit mode the customer opts into via
+  // the "Select Section" toggle in the navy action bar. While off,
+  // the per-card checkboxes stay hidden so the grid reads as a clean
+  // list of cards; flipping the toggle reveals every card's checkbox
+  // and lets them pick which to bundle.
+  const [selectMode, setSelectMode] = useState(false);
   const [bundling, setBundling] = useState(false);
   const [bundleErr, setBundleErr] = useState<string | null>(null);
   // Two-level expansion: only one deliverable open, only one section
@@ -149,15 +152,6 @@ export function DeliverableExplorer({
     | null
   >(null);
 
-  const allIds = useMemo(
-    () =>
-      DELIVERABLE_DISPLAY_ORDER.filter((id) =>
-        deliverables.some((d) => d.id === id),
-      ),
-    [deliverables],
-  );
-  const allSelected =
-    allIds.length > 0 && allIds.every((id) => selected.has(id));
   const noneSelected = selected.size === 0;
 
   function toggleSelect(id: DeliverableId) {
@@ -168,11 +162,16 @@ export function DeliverableExplorer({
       return next;
     });
   }
-  function selectAll() {
-    setSelected(new Set(allIds));
-  }
-  function clearAll() {
-    setSelected(new Set());
+  function toggleSelectMode() {
+    if (selectMode) {
+      // Exiting selection mode also drops anything the customer had
+      // ticked — they entered mode, didn't ship, and turned it back
+      // off. Stale selections shouldn't survive across mode toggles.
+      setSelectMode(false);
+      setSelected(new Set());
+    } else {
+      setSelectMode(true);
+    }
   }
   function toggleDeliverable(id: DeliverableId) {
     setExpandedDeliverableId((prev) => (prev === id ? null : id));
@@ -252,16 +251,17 @@ export function DeliverableExplorer({
       <div className="rounded-xl bg-navy text-cream p-3 mb-4 flex flex-wrap items-center gap-3 shadow-[0_2px_8px_rgba(30,58,95,0.12)]">
         <button
           type="button"
-          onClick={allSelected ? clearAll : selectAll}
+          onClick={toggleSelectMode}
+          aria-pressed={selectMode}
           className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-cream hover:text-gold transition-colors"
         >
           <input
             type="checkbox"
-            checked={allSelected}
+            checked={selectMode}
             readOnly
             className="w-4 h-4 accent-gold cursor-pointer"
           />
-          {allSelected ? "Clear all" : "Select all"}
+          Select Section
         </button>
         {selected.size > 0 && (
           <span className="text-[11px] text-cream/65">
@@ -310,6 +310,7 @@ export function DeliverableExplorer({
             deliverable={d}
             expanded={expandedDeliverableId === d.id}
             onToggleExpand={() => toggleDeliverable(d.id)}
+            selectMode={selectMode}
             isSelected={selected.has(d.id)}
             onToggleSelect={() => toggleSelect(d.id)}
             openSectionSlug={
@@ -362,6 +363,7 @@ function DeliverableEntry({
   deliverable,
   expanded,
   onToggleExpand,
+  selectMode,
   isSelected,
   onToggleSelect,
   openSectionSlug,
@@ -372,6 +374,7 @@ function DeliverableEntry({
   deliverable: DeliverableViewModel;
   expanded: boolean;
   onToggleExpand: () => void;
+  selectMode: boolean;
   isSelected: boolean;
   onToggleSelect: () => void;
   openSectionSlug: MemoryFileSlug | null;
@@ -403,19 +406,24 @@ function DeliverableEntry({
           expands and doesn't add to the visual stack at the
           bottom. */}
       <div className="flex flex-wrap items-start gap-3 sm:gap-4 p-4 sm:p-5">
-        {/* Checkbox column — opt-in for the bundle. */}
-        <label
-          className="flex-shrink-0 cursor-pointer pt-1"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={onToggleSelect}
-            className="w-5 h-5 accent-gold-warm cursor-pointer"
-            aria-label={`Add ${deliverable.name} to bundle`}
-          />
-        </label>
+        {/* Checkbox column — opt-in for the bundle. Hidden until the
+            customer enters bundle-select mode via "Select Section" in
+            the action bar above, since most visits to the dashboard
+            are read/edit, not download. */}
+        {selectMode && (
+          <label
+            className="flex-shrink-0 cursor-pointer pt-1"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={onToggleSelect}
+              className="w-5 h-5 accent-gold-warm cursor-pointer"
+              aria-label={`Add ${deliverable.name} to bundle`}
+            />
+          </label>
+        )}
         <button
           type="button"
           onClick={onToggleExpand}
