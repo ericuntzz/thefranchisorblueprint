@@ -22,6 +22,13 @@ export const PER_DOMAIN_CACHE_DAYS = 7;
  * will replace them. Acts as a manual cache-busting key.
  *
  * Last bumped:
+ *   2026-05-10  Round 11: slotted layout. snapshot.expansion now has
+ *               up to 4 entries with `slot` field (local-primary /
+ *               national-primary / locked-runner-up). UI shows 2
+ *               visible + 2 blurred. sameStateBonus zeroed out
+ *               (the slot does that work). Old cached rows lack the
+ *               slot field; UI falls back gracefully but re-run
+ *               surfaces proper local/national split.
  *   2026-05-10  Round 10: per-market bullets (LLM-generated, plain
  *               English) replace the algorithmic "why" sentence as
  *               primary copy. Markets now show "Denver, LoDo" (was
@@ -81,7 +88,7 @@ export const PER_DOMAIN_CACHE_DAYS = 7;
  *               diversity + plain-English narratives + page-title
  *               fallback for business name.
  */
-export const CACHE_FRESHNESS_FLOOR_ISO = "2026-05-11T03:30:00Z";
+export const CACHE_FRESHNESS_FLOOR_ISO = "2026-05-11T05:00:00Z";
 
 /**
  * Per-IP rate limit — N distinct intake starts per hour. Stops

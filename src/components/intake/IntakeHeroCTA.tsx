@@ -836,23 +836,20 @@ function SnapshotView({
   // as deliberate without being slow.
   const fadeIn = "intake-fade-in";
 
-  // Tranche 6: geographic preference toggle. Default = "near home"
-  // (proximity-weighted ranking). Alt = "anywhere" (pure 4-pillar
-  // ranking). Only shown when the two rankings actually differ —
-  // server returns empty expansionAnywhere when they collide.
-  const [marketPreference, setMarketPreference] = useState<"near" | "anywhere">(
-    "near",
-  );
-  const hasAnywhereOption =
-    Array.isArray(snapshot.expansionAnywhere) &&
-    snapshot.expansionAnywhere.length > 0;
-  // Markets layout: #1 always visible. #2 + #3 blurred until revealAll.
-  const markets =
-    marketPreference === "anywhere" && hasAnywhereOption
-      ? snapshot.expansionAnywhere
-      : snapshot.expansion;
-  const primaryMarket = markets[0];
-  const lockedMarkets = markets.slice(1);
+  // Tranche 11 (2026-05-10) — slotted layout. The snapshot's
+  // expansion[] array carries slot identity per market:
+  //   [0] local-primary (or national-primary if no in-state pick)
+  //   [1] national-primary
+  //   [2] locked-runner-up (blurred until email save)
+  //   [3] locked-runner-up (blurred until email save)
+  //
+  // The previous "near home / open to anywhere" toggle is retired —
+  // explicit slots are clearer than a hidden segmented control.
+  // expansionAnywhere is still on the snapshot type for backward
+  // compat with cached rows but no longer rendered.
+  const markets = snapshot.expansion;
+  const visibleMarkets = markets.slice(0, 2);
+  const lockedMarkets = markets.slice(2);
 
   return (
     <div className="max-w-[820px]">
@@ -961,66 +958,42 @@ function SnapshotView({
               We compare markets against your business&apos; unique
               footprint, demographics, and competition so you can
               make a more informed decision on where to franchise
-              next. The full 4-pillar breakdown unlocks when you
-              save your snapshot below.
+              next. You&apos;re seeing two — your best local pick
+              and your best expansion pick. Two more unlock when
+              you create your free account below.
             </p>
 
-            {/* Tranche 6: geographic-preference toggle. Eric's
-                ask was a TurboTax-style "expand within driving
-                distance, or are you open to anywhere?" guided choice.
-                Two segmented buttons; clicking re-renders the markets
-                list against the alternate ranking. Hidden when the
-                server determined both rankings would surface the same
-                top 3 (no toggle = no decision to make). */}
-            {hasAnywhereOption && (
-              <div className="mb-5 flex items-center gap-2">
-                <span className="text-xs font-bold tracking-[0.12em] uppercase text-grey-3 mr-1">
-                  Show:
-                </span>
-                <div className="inline-flex p-0.5 bg-navy/5 border border-navy/10 rounded-full">
-                  <button
-                    type="button"
-                    onClick={() => setMarketPreference("near")}
-                    aria-pressed={marketPreference === "near"}
-                    className={
-                      "px-3.5 py-1.5 rounded-full text-sm font-bold transition-colors " +
-                      (marketPreference === "near"
-                        ? "bg-navy text-white"
-                        : "text-navy/70 hover:text-navy cursor-pointer")
-                    }
-                  >
-                    Near home
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMarketPreference("anywhere")}
-                    aria-pressed={marketPreference === "anywhere"}
-                    className={
-                      "px-3.5 py-1.5 rounded-full text-sm font-bold transition-colors " +
-                      (marketPreference === "anywhere"
-                        ? "bg-navy text-white"
-                        : "text-navy/70 hover:text-navy cursor-pointer")
-                    }
-                  >
-                    Open to anywhere
-                  </button>
-                </div>
-              </div>
-            )}
+            {/* Tranche 11 (2026-05-10) — slotted layout. Two
+                visible market cards (local + national), two locked
+                runner-ups with a gating overlay. Each visible card
+                gets a slot eyebrow ("BEST LOCAL OPPORTUNITY" /
+                "BEST EXPANSION OPPORTUNITY") so the visitor knows
+                why each pick is in front of them. The previous
+                near/anywhere toggle is retired — explicit slots are
+                clearer than a hidden segmented control. */}
 
-            {/* Primary market — always visible, full detail */}
-            {primaryMarket && (
-              <MarketCard market={primaryMarket} index={0} blurred={false} showPillars={revealAll} />
-            )}
+            {/* Visible market cards — always shown, full detail. */}
+            <div className="space-y-3">
+              {visibleMarkets.map((m, i) => (
+                <MarketCard
+                  key={m.zip}
+                  market={m}
+                  index={i}
+                  blurred={false}
+                  showPillars={revealAll}
+                />
+              ))}
+            </div>
 
-            {/* Locked markets — blurred until revealAll, with a gating overlay */}
+            {/* Locked markets — blurred until revealAll, with a
+                gating overlay that scrolls visitor to the save form. */}
             {lockedMarkets.length > 0 && (
               <div className="relative mt-3 space-y-3">
                 {lockedMarkets.map((m, i) => (
                   <MarketCard
                     key={m.zip}
                     market={m}
-                    index={i + 1}
+                    index={visibleMarkets.length + i}
                     blurred={!revealAll}
                     showPillars={revealAll}
                   />
@@ -1046,7 +1019,7 @@ function SnapshotView({
                     >
                       <Lock size={20} className="text-gold flex-shrink-0" aria-hidden />
                       <span className="text-base font-semibold">
-                        Unlock Two More Markets
+                        Unlock {lockedMarkets.length} More {lockedMarkets.length === 1 ? "Market" : "Markets"}
                       </span>
                       <ArrowRight size={18} className="text-gold flex-shrink-0" aria-hidden />
                     </button>
@@ -1277,6 +1250,22 @@ function MarketCard({
   // Bullets are the primary copy (LLM-generated). Fall back to the
   // algorithmic `why` line if bullets came back empty.
   const hasBullets = Array.isArray(market.bullets) && market.bullets.length > 0;
+  // Tranche 11: slot eyebrow. Per-slot label sits above the card so
+  // the visitor knows why each pick is in front of them (local vs.
+  // national vs. runner-up). Falls back to no eyebrow on pre-tranche-11
+  // cached rows that don't carry a slot field.
+  const slotEyebrow = (() => {
+    switch (market.slot) {
+      case "local-primary":
+        return "Your best local opportunity";
+      case "national-primary":
+        return "Your best expansion opportunity";
+      case "locked-runner-up":
+        return "Strong alternate";
+      default:
+        return null;
+    }
+  })();
   return (
     <div
       className={`bg-white rounded-xl border border-navy/10 p-5 md:p-6 ${
@@ -1289,6 +1278,11 @@ function MarketCard({
       }
       aria-hidden={blurred}
     >
+      {slotEyebrow && (
+        <p className="text-[11px] font-bold tracking-[0.18em] uppercase text-gold-warm mb-2">
+          {slotEyebrow}
+        </p>
+      )}
       <div className="flex items-baseline justify-between gap-3 mb-2">
         <div className="min-w-0">
           <span className="text-navy font-bold text-lg md:text-xl">

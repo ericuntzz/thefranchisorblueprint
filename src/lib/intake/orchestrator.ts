@@ -93,18 +93,33 @@ export type IntakeSnapshot = {
    */
   homeMarket: HomeMarketProfile;
   /**
-   * Default top 3: scored with full geo-bias (proximity + drive-time
-   * + cost-parity). Surfaces home-region markets first because
-   * that's how most operators expand. UI shows this by default.
+   * Top expansion markets to show the visitor. Up to 4 entries.
+   * Tranche 11 (2026-05-10) — restructured into a slotted layout:
+   *
+   *   expansion[0] : "BEST LOCAL OPPORTUNITY" — top-scoring market
+   *                  in the same state as business.state. Null-slot
+   *                  if business state is unknown OR no candidate
+   *                  ZIPs are in that state — in which case
+   *                  expansion[0] is just the #2 by score.
+   *   expansion[1] : "BEST EXPANSION OPPORTUNITY" — top-scoring
+   *                  market NOT in the home state. Always populated.
+   *   expansion[2] : runner-up (national), shown blurred until
+   *                  visitor saves email + creates an account.
+   *   expansion[3] : second runner-up (local if available, else
+   *                  national), shown blurred.
+   *
+   * Slot identity is carried by ExpansionMarket.slot. UI keys off
+   * that field to show the right eyebrow ("local" vs "national") and
+   * to decide which cards to blur.
    */
   expansion: ExpansionMarket[];
   /**
-   * Tranche 6: alternate ranking with NO proximity bias applied —
-   * pure 4-pillar score across all candidates. Powers the "Open to
-   * anywhere?" toggle on the snapshot card. Same candidate pool
-   * (existing-footprint exclusion still applies) but the geographic
-   * tailwind is removed so high-pillar coastal/distant metros can
-   * surface. Empty array if it would just duplicate `expansion`.
+   * Retained for backward compat — still computed and returned but
+   * the UI no longer toggles to it as a separate ranking. Slot
+   * structure above renders both proximity and pure picks in one
+   * view. Will likely be deprecated once the new slotted layout
+   * stabilizes; keeping for one or two cache cycles in case we want
+   * to revert.
    */
   expansionAnywhere: ExpansionMarket[];
   readiness: ReadinessScore;
@@ -162,6 +177,14 @@ export type ExpansionMarket = {
     competition: number;             // 0-25 (lower competitor density → higher score)
     financialAndLegal: number;       // 0-25 (proxied by HHI as a buying-power signal)
   };
+  /**
+   * Tranche 11 slot identity — which "kind" of recommendation this
+   * card is. UI keys off this to render the eyebrow ("local" vs
+   * "national") and choose blur state. "local" = same state as the
+   * business; "national" = different state; null = pre-tranche-11
+   * row that hasn't been re-classified yet (UI falls back to index).
+   */
+  slot?: "local-primary" | "national-primary" | "locked-runner-up" | null;
   /** One-sentence "why it matches" narrative. Plain English, no jargon. */
   why: string;
   /**
@@ -498,6 +521,32 @@ export async function* runIntake(args: {
     if (top5.length >= 5) break;
   }
 
+  // Tranche 11 (2026-05-10): guaranteed-local inclusion. The new
+  // snapshot layout slots a "BEST LOCAL OPPORTUNITY" card alongside
+  // the national pick, so we need to make sure the top-5 candidate
+  // pool ALWAYS includes the best in-state market (when one exists)
+  // — otherwise the local slot has nothing to render. If the best
+  // local is already in top5, this is a no-op; otherwise we swap it
+  // in for the 5th-place candidate.
+  if (sourceState) {
+    const bestLocalAnywhere = sortedBySimilarity.find(
+      (s) => s.candidate.state.toUpperCase() === sourceState.toUpperCase(),
+    );
+    const localAlreadyInTop5 =
+      bestLocalAnywhere &&
+      top5.some((t) => t.candidate.zip === bestLocalAnywhere.candidate.zip);
+    if (bestLocalAnywhere && !localAlreadyInTop5) {
+      // Replace the weakest-similarity entry in top5 with the
+      // guaranteed local. Drop the metro of the displaced entry from
+      // seenMetros so future logic (if any) doesn't think it's still
+      // claimed.
+      const displaced = top5.pop();
+      if (displaced) seenMetros.delete(displaced.candidate.metro);
+      top5.push(bestLocalAnywhere);
+      seenMetros.add(bestLocalAnywhere.candidate.metro);
+    }
+  }
+
   // Step 3: Live Places competitor-density check on top 5.
   yield {
     kind: "progress",
@@ -599,13 +648,12 @@ export async function* runIntake(args: {
   });
 
   expansion.sort((a, b) => b.score - a.score);
-  // Geographic + trade-area diversity: take the top-scoring market, then
-  // for #2 prefer a different metro, then for #3 prefer a different metro
-  // AND different trade-area type. This stops the snapshot from showing
-  // three near-identical urban-core picks when 5 of the candidate pool
-  // happen to match. Falls back to raw score order if diversity can't
-  // be satisfied.
-  const topExpansion = pickDiverseTop3(expansion);
+  // Tranche 11 (2026-05-10): slot-aware top-4 picker. UI renders
+  // a 2-up-visible / 2-blurred layout that explicitly slots a "best
+  // local opportunity" alongside a "best expansion opportunity"
+  // (national pick). pickSlottedTop4 attaches a `slot` field to
+  // each entry so the UI can pick the right eyebrow and blur state.
+  const topExpansion = pickSlottedTop4(expansion, business.state ?? null);
 
   // Tranche 6: alternate ranking with NO geo bias — pure 4-pillar
   // score across the same candidate pool. Lets the snapshot UI offer
@@ -1346,6 +1394,107 @@ function pickDiverseTop3(
       if (result.length >= 3) break;
     }
   }
+  return result;
+}
+
+/**
+ * Tranche 11 (2026-05-10) slot-aware top-4 picker for the new
+ * 2-up-visible / 2-blurred snapshot layout.
+ *
+ * Output structure (always length ≤ 4):
+ *
+ *   [0] slot = "local-primary"     — best-scoring same-state market
+ *                                    (or "national-primary" if no
+ *                                    in-state candidate exists)
+ *   [1] slot = "national-primary"  — best-scoring different-state
+ *                                    market
+ *   [2] slot = "locked-runner-up"  — next-best market, blurred
+ *   [3] slot = "locked-runner-up"  — second-runner-up, blurred
+ *
+ * If the home state is unknown OR no in-state candidates surfaced
+ * in the scored pool, slot [0] degrades to "national-primary" and
+ * the entire visible pair is national picks. UI handles that case
+ * by relabeling the eyebrow ("YOUR BEST EXPANSION OPPORTUNITY"
+ * + "STRONG ALTERNATE").
+ *
+ * Diversity preferences (loose, fall back if unavailable):
+ *   - slot[1] in different metro than slot[0]
+ *   - slot[2] in different metro than slots[0,1]
+ *   - slot[3] in different metro than slots[0,1,2]
+ */
+function pickSlottedTop4(
+  rankedExpansion: ExpansionMarket[],
+  sourceState: string | null,
+): ExpansionMarket[] {
+  if (rankedExpansion.length === 0) return [];
+  const used = new Set<string>();
+  const result: ExpansionMarket[] = [];
+  const sourceStateU = sourceState?.toUpperCase() ?? null;
+
+  // Slot 0 — best local pick (if any).
+  let localPick: ExpansionMarket | null = null;
+  if (sourceStateU) {
+    localPick =
+      rankedExpansion.find(
+        (c) => c.state.toUpperCase() === sourceStateU,
+      ) ?? null;
+  }
+  if (localPick) {
+    result.push({ ...localPick, slot: "local-primary" });
+    used.add(localPick.zip);
+  }
+
+  // Slot 1 — best national pick. "National" = NOT the home state, and
+  // (if we found a local) NOT the same zip as the local pick.
+  let nationalPick: ExpansionMarket | null = null;
+  for (const c of rankedExpansion) {
+    if (used.has(c.zip)) continue;
+    if (sourceStateU && c.state.toUpperCase() === sourceStateU) continue;
+    // Prefer a different metro than local pick when local exists.
+    if (localPick && c.metro === localPick.metro) continue;
+    nationalPick = c;
+    break;
+  }
+  // Diversity-relaxed fallback for national pick.
+  if (!nationalPick) {
+    for (const c of rankedExpansion) {
+      if (used.has(c.zip)) continue;
+      if (sourceStateU && c.state.toUpperCase() === sourceStateU) continue;
+      nationalPick = c;
+      break;
+    }
+  }
+  if (nationalPick) {
+    result.push({ ...nationalPick, slot: "national-primary" });
+    used.add(nationalPick.zip);
+  }
+
+  // Degraded case: no local pick available (unknown state, or no
+  // in-state candidate surfaced). Fall back to two national picks
+  // with the first relabeled as national-primary so the UI knows.
+  if (result.length === 0 || result[0].slot !== "local-primary") {
+    // Either result is empty (no national either) or already has
+    // national-primary in slot 0 — handled above. Nothing to do.
+  }
+
+  // Slots 2 and 3 — runners-up by raw score, diversity-preferred.
+  const usedMetros = new Set(result.map((r) => r.metro));
+  for (const c of rankedExpansion) {
+    if (result.length >= 4) break;
+    if (used.has(c.zip)) continue;
+    if (usedMetros.has(c.metro)) continue;
+    result.push({ ...c, slot: "locked-runner-up" });
+    used.add(c.zip);
+    usedMetros.add(c.metro);
+  }
+  // Fallback: if metro-dedup left us short, take next-best regardless.
+  for (const c of rankedExpansion) {
+    if (result.length >= 4) break;
+    if (used.has(c.zip)) continue;
+    result.push({ ...c, slot: "locked-runner-up" });
+    used.add(c.zip);
+  }
+
   return result;
 }
 
