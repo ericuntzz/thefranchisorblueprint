@@ -92,7 +92,21 @@ export type IntakeSnapshot = {
    * keyed `prototype`).
    */
   homeMarket: HomeMarketProfile;
+  /**
+   * Default top 3: scored with full geo-bias (proximity + drive-time
+   * + cost-parity). Surfaces home-region markets first because
+   * that's how most operators expand. UI shows this by default.
+   */
   expansion: ExpansionMarket[];
+  /**
+   * Tranche 6: alternate ranking with NO proximity bias applied —
+   * pure 4-pillar score across all candidates. Powers the "Open to
+   * anywhere?" toggle on the snapshot card. Same candidate pool
+   * (existing-footprint exclusion still applies) but the geographic
+   * tailwind is removed so high-pillar coastal/distant metros can
+   * surface. Empty array if it would just duplicate `expansion`.
+   */
+  expansionAnywhere: ExpansionMarket[];
   readiness: ReadinessScore;
   /**
    * Optional. Populated only when the franchise-detection LLM pass
@@ -579,6 +593,65 @@ export async function* runIntake(args: {
   // be satisfied.
   const topExpansion = pickDiverseTop3(expansion);
 
+  // Tranche 6: alternate ranking with NO geo bias — pure 4-pillar
+  // score across the same candidate pool. Lets the snapshot UI offer
+  // a "open to anywhere?" toggle that surfaces different markets when
+  // the customer isn't constrained to home-region expansion. Same
+  // candidate pool (existing-footprint exclusion still applies) so we
+  // don't recommend metros they already saturate either way.
+  const expansionAnywhere: ExpansionMarket[] = top5
+    .map((s, i) => {
+      const compCount = competitorCounts[i];
+      const pillars = computePillars({
+        candidate: s.candidate,
+        demographics: s.demographics,
+        similarity: s.similarity,
+        competitorCount: compCount,
+        prototypeCompetitorCount,
+        competitorSignalReliable,
+      });
+      const pillarSum =
+        pillars.demographicsAndMarket +
+        pillars.trafficAndAccess +
+        pillars.competition +
+        pillars.financialAndLegal;
+      // Pure 4-pillar score, no proximity / drive-time / cost-parity
+      // delta. Visible "X/100" framing stays meaningful.
+      const overall = Math.max(0, Math.min(100, pillarSum));
+      return {
+        zip: s.candidate.zip,
+        label: s.candidate.label,
+        metro: s.candidate.metro,
+        state: s.candidate.state,
+        score: overall,
+        pillars,
+        why: explainMatch({
+          candidate: s.candidate,
+          demographics: s.demographics,
+          prototypeDemographics,
+          competitorCount: compCount,
+          competitorSignalReliable,
+        }),
+        competitorCount: compCount,
+      };
+    })
+    .sort((a, b) => b.score - a.score);
+  const topExpansionAnywhere = pickDiverseTop3(expansionAnywhere);
+  // If the alternate ranking happens to match the proximity-weighted
+  // top 3 (rare — common when home market is high-income coastal,
+  // pillar score and proximity bonus point the same way), don't
+  // duplicate the data in the payload. UI hides the toggle when
+  // expansionAnywhere is empty.
+  const isSameAsTop = (a: ExpansionMarket[], b: ExpansionMarket[]) =>
+    a.length === b.length &&
+    a.every((m, i) => b[i] && m.zip === b[i].zip);
+  const topExpansionAnywhereOrEmpty = isSameAsTop(
+    topExpansion,
+    topExpansionAnywhere,
+  )
+    ? []
+    : topExpansionAnywhere;
+
   yield { kind: "phase-done", phase: "expansion", data: topExpansion };
 
   // ─── Phase 7: Readiness score + website-specific observations ────
@@ -643,6 +716,7 @@ export async function* runIntake(args: {
       competitorCount: prototypeCompetitorCount,
     },
     expansion: topExpansion,
+    expansionAnywhere: topExpansionAnywhereOrEmpty,
     readiness,
     // Only attach the existing-franchisor signal when it actually
     // fired — keeps the JSON payload minimal for the common case

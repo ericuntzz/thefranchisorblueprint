@@ -22,6 +22,11 @@ export const PER_DOMAIN_CACHE_DAYS = 7;
  * will replace them. Acts as a manual cache-busting key.
  *
  * Last bumped:
+ *   2026-05-10  Round 9: snapshot now carries a second ranking
+ *               (expansionAnywhere) computed without the geo-bias
+ *               so the UI can offer a "near home / open to anywhere"
+ *               toggle. Old cached snapshots have no expansionAnywhere
+ *               field — toggle would be hidden until they re-run.
  *   2026-05-10  Round 8: gap LLM prompt now sees Census ACS demos +
  *               competitor density + top expansion candidates +
  *               existing-franchisor signal. Observations weave
@@ -69,7 +74,7 @@ export const PER_DOMAIN_CACHE_DAYS = 7;
  *               diversity + plain-English narratives + page-title
  *               fallback for business name.
  */
-export const CACHE_FRESHNESS_FLOOR_ISO = "2026-05-11T02:00:00Z";
+export const CACHE_FRESHNESS_FLOOR_ISO = "2026-05-11T02:30:00Z";
 
 /**
  * Per-IP rate limit — N distinct intake starts per hour. Stops

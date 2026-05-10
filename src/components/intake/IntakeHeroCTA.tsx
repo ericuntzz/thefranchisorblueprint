@@ -817,8 +817,21 @@ function SnapshotView({
   // as deliberate without being slow.
   const fadeIn = "intake-fade-in";
 
+  // Tranche 6: geographic preference toggle. Default = "near home"
+  // (proximity-weighted ranking). Alt = "anywhere" (pure 4-pillar
+  // ranking). Only shown when the two rankings actually differ —
+  // server returns empty expansionAnywhere when they collide.
+  const [marketPreference, setMarketPreference] = useState<"near" | "anywhere">(
+    "near",
+  );
+  const hasAnywhereOption =
+    Array.isArray(snapshot.expansionAnywhere) &&
+    snapshot.expansionAnywhere.length > 0;
   // Markets layout: #1 always visible. #2 + #3 blurred until revealAll.
-  const markets = snapshot.expansion;
+  const markets =
+    marketPreference === "anywhere" && hasAnywhereOption
+      ? snapshot.expansionAnywhere
+      : snapshot.expansion;
   const primaryMarket = markets[0];
   const lockedMarkets = markets.slice(1);
 
@@ -923,7 +936,7 @@ function SnapshotView({
             style={{ animationDelay: "280ms" }}
           >
             <p className="text-xs font-bold tracking-[0.18em] uppercase text-gold-warm mb-2.5">
-              Markets where we'd open next
+              Markets where we&apos;d open next
             </p>
             <p className="text-grey-3 text-base leading-relaxed mb-4">
               We match each candidate market against the demographic
@@ -932,6 +945,49 @@ function SnapshotView({
               trade area yet. The full 4-pillar breakdown unlocks when
               you save your snapshot below.
             </p>
+
+            {/* Tranche 6: geographic-preference toggle. Eric's
+                ask was a TurboTax-style "expand within driving
+                distance, or are you open to anywhere?" guided choice.
+                Two segmented buttons; clicking re-renders the markets
+                list against the alternate ranking. Hidden when the
+                server determined both rankings would surface the same
+                top 3 (no toggle = no decision to make). */}
+            {hasAnywhereOption && (
+              <div className="mb-5 flex items-center gap-2">
+                <span className="text-xs font-bold tracking-[0.12em] uppercase text-grey-3 mr-1">
+                  Show:
+                </span>
+                <div className="inline-flex p-0.5 bg-navy/5 border border-navy/10 rounded-full">
+                  <button
+                    type="button"
+                    onClick={() => setMarketPreference("near")}
+                    aria-pressed={marketPreference === "near"}
+                    className={
+                      "px-3.5 py-1.5 rounded-full text-sm font-bold transition-colors " +
+                      (marketPreference === "near"
+                        ? "bg-navy text-white"
+                        : "text-navy/70 hover:text-navy cursor-pointer")
+                    }
+                  >
+                    Near home
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMarketPreference("anywhere")}
+                    aria-pressed={marketPreference === "anywhere"}
+                    className={
+                      "px-3.5 py-1.5 rounded-full text-sm font-bold transition-colors " +
+                      (marketPreference === "anywhere"
+                        ? "bg-navy text-white"
+                        : "text-navy/70 hover:text-navy cursor-pointer")
+                    }
+                  >
+                    Open to anywhere
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Primary market — always visible, full detail */}
             {primaryMarket && (
