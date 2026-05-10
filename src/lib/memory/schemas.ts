@@ -784,7 +784,7 @@ const UNIT_ECONOMICS: SectionSchema = {
     // ── Initial investment (FDD Item 7) ─────────────────────────────────────
     {
       name: "initial_investment_low_dollars",
-      label: "What's the low end of what a franchisee will spend to open?",
+      label: "What's the low end of what a franchisee will spend to open a location?",
       type: "currency",
       required: true,
       placeholder: "275000",
@@ -794,7 +794,7 @@ const UNIT_ECONOMICS: SectionSchema = {
     },
     {
       name: "initial_investment_high_dollars",
-      label: "What's the high end of what a franchisee will spend to open?",
+      label: "What's the high end of what a franchisee will spend to open a location?",
       type: "currency",
       required: true,
       placeholder: "425000",
@@ -802,7 +802,7 @@ const UNIT_ECONOMICS: SectionSchema = {
     },
     {
       name: "buildout_cost_low_dollars",
-      label: "What's the low end of build-out cost?",
+      label: "What's the low end of build-out cost for a new location?",
       type: "currency",
       placeholder: "120000",
       helpText: "Include only construction and tenant improvements. Don't include furniture, fixtures, and equipment in this number.",
@@ -811,7 +811,7 @@ const UNIT_ECONOMICS: SectionSchema = {
     },
     {
       name: "buildout_cost_high_dollars",
-      label: "What's the high end of build-out cost?",
+      label: "What's the high end of build-out cost for a new location?",
       type: "currency",
       placeholder: "200000",
       category: "Initial investment",
@@ -828,7 +828,7 @@ const UNIT_ECONOMICS: SectionSchema = {
     },
     {
       name: "working_capital_dollars",
-      label: "How much working capital does a franchisee need?",
+      label: "How much working capital does a franchisee need to start a location?",
       type: "currency",
       placeholder: "30000",
       helpText: "This is the operating cash a franchisee needs to keep the business running through the ramp period.",
@@ -1105,7 +1105,7 @@ const FRANCHISE_ECONOMICS: SectionSchema = {
     },
     {
       name: "territory_radius_miles",
-      label: "How big is the territory around each unit?",
+      label: "How big is each franchisee's territory?",
       type: "number",
       placeholder: "3",
       helpText:
@@ -1183,7 +1183,7 @@ const FRANCHISEE_PROFILE: SectionSchema = {
     // ── Financial profile ──────────────────────────────────────────────────
     {
       name: "minimum_liquid_capital_dollars",
-      label: "How much liquid capital must a candidate have?",
+      label: "How much liquid capital must a franchisee candidate have?",
       type: "currency",
       required: true,
       placeholder: "100000",
@@ -1198,7 +1198,7 @@ const FRANCHISEE_PROFILE: SectionSchema = {
     },
     {
       name: "minimum_net_worth_dollars",
-      label: "What net worth must a candidate have?",
+      label: "What net worth must a franchisee candidate have?",
       type: "currency",
       required: true,
       placeholder: "500000",
@@ -1241,7 +1241,7 @@ const FRANCHISEE_PROFILE: SectionSchema = {
     // ── Experience required ────────────────────────────────────────────────
     {
       name: "prior_business_ownership_required",
-      label: "Do candidates need to have owned a business before?",
+      label: "Do franchisee candidates need to have owned a business before?",
       type: "boolean",
       helpText:
         "Selling only to experienced operators reduces the failure rate, but it also cuts the candidate pool by about 70%.",
@@ -1249,7 +1249,7 @@ const FRANCHISEE_PROFILE: SectionSchema = {
     },
     {
       name: "prior_industry_experience_required",
-      label: "Do candidates need industry experience?",
+      label: "Do franchisee candidates need industry experience?",
       type: "boolean",
       helpText:
         "This is whether candidates need to have worked in your specific industry before. Most franchisors do not require this, since operations training is what bridges the gap.",
@@ -1257,7 +1257,7 @@ const FRANCHISEE_PROFILE: SectionSchema = {
     },
     {
       name: "minimum_years_business_experience",
-      label: "How many years of business experience do you require?",
+      label: "How many years of business experience do you require from candidates?",
       type: "integer",
       placeholder: "3",
       helpText:
@@ -1267,7 +1267,7 @@ const FRANCHISEE_PROFILE: SectionSchema = {
     },
     {
       name: "specific_experience_notes",
-      label: "What kind of background actually helps a candidate run this concept well?",
+      label: "What kind of background actually helps a franchisee run this concept well?",
       type: "textarea",
       placeholder:
         "QSR, hospitality, or specialty retail backgrounds adapt fastest. Pure corporate finance backgrounds tend to struggle with the daily-ops side.",
@@ -1326,7 +1326,7 @@ const FRANCHISEE_PROFILE: SectionSchema = {
     },
     {
       name: "common_disqualifiers",
-      label: "What rules someone out?",
+      label: "What disqualifies a franchisee candidate?",
       type: "list_short",
       placeholder:
         "Looking for a 'set it and forget it' investment\nExpects to renegotiate the franchise agreement\nHas been an absentee owner of a struggling business\nWants to modify the menu or branding",
@@ -1980,7 +1980,7 @@ const EMPLOYEE_HANDBOOK: SectionSchema = {
     // ── Termination ──────────────────────────────────────────────────────
     {
       name: "at_will_employment_required",
-      label: "Will at-will employment be required?",
+      label: "Will at-will employment be required for employees?",
       type: "boolean",
       helpText:
         "This is standard for most U.S. franchises (except in Montana), and it's required language in your handbook template.",
@@ -1989,7 +1989,7 @@ const EMPLOYEE_HANDBOOK: SectionSchema = {
     },
     {
       name: "termination_appeal_process",
-      label: "What's the termination appeal process?",
+      label: "What's the termination appeal process for employees?",
       type: "textarea",
       placeholder:
         "Terminated employees may request a single review meeting with the franchisee owner within 7 days. Franchisor not involved in individual termination decisions.",
@@ -2040,7 +2040,7 @@ const REIMBURSEMENT_POLICY: SectionSchema = {
     },
     {
       name: "meal_per_diem_dollars",
-      label: "What's the daily meal per diem?",
+      label: "What's the daily meal per diem for business travel?",
       type: "currency",
       placeholder: "75",
       helpText: "This is the per-day cap on meal expenses while traveling. The IRS standard is around $75 for most U.S. cities.",
@@ -2048,7 +2048,7 @@ const REIMBURSEMENT_POLICY: SectionSchema = {
     },
     {
       name: "lodging_per_diem_dollars",
-      label: "What's the nightly lodging per diem?",
+      label: "What's the nightly lodging per diem for business travel?",
       type: "currency",
       placeholder: "200",
       helpText:
@@ -2057,7 +2057,7 @@ const REIMBURSEMENT_POLICY: SectionSchema = {
     },
     {
       name: "airfare_class",
-      label: "What airfare class is allowed?",
+      label: "What airfare class is allowed for business travel?",
       type: "select",
       options: [
         { value: "economy_only", label: "Economy only" },
@@ -2080,7 +2080,7 @@ const REIMBURSEMENT_POLICY: SectionSchema = {
     },
     {
       name: "monthly_expense_cap_dollars",
-      label: "What's the monthly expense cap per role?",
+      label: "What's the monthly reimbursable-expense cap per role?",
       type: "currency",
       placeholder: "2000",
       helpText: "This is the total monthly expense cap for managers and shift leads. Skip it if you don't set a cap.",
@@ -2110,7 +2110,7 @@ const REIMBURSEMENT_POLICY: SectionSchema = {
     },
     {
       name: "receipt_required_threshold_dollars",
-      label: "Above what amount is a receipt required?",
+      label: "Above what expense amount is a receipt required?",
       type: "currency",
       placeholder: "25",
       helpText: "The IRS standard is $75, but some franchisors set a tighter floor.",
@@ -2195,7 +2195,7 @@ const COMPLIANCE_LEGAL: SectionSchema = {
     },
     {
       name: "exemption_strategy",
-      label: "What's your exemption strategy?",
+      label: "What's your franchise registration exemption strategy?",
       type: "textarea",
       placeholder:
         "Pursuing the large-franchisor exemption (CA Corp Code §31101) once we hit 25 franchisees and $5M minimum net worth. Until then, full registration in all 14 registration states.",
@@ -2586,7 +2586,7 @@ const TRAINING_PROGRAM: SectionSchema = {
     // ── Certification ────────────────────────────────────────────────────
     {
       name: "certification_required",
-      label: "Will you require certification to operate?",
+      label: "Will you require certification to operate a location?",
       type: "boolean",
       helpText:
         "This covers whether franchisees and key staff have to pass a certification exam before opening or being authorized to perform key functions.",
@@ -2690,7 +2690,7 @@ const TERRITORY_REAL_ESTATE: SectionSchema = {
     // ── Priority markets ─────────────────────────────────────────────────
     {
       name: "priority_geographic_markets",
-      label: "Where do you want your first five franchisees?",
+      label: "In which markets do you want your first five franchisees?",
       type: "list_short",
       required: true,
       placeholder:
@@ -2757,7 +2757,7 @@ const MARKET_STRATEGY: SectionSchema = {
   fields: [
     {
       name: "growth_horizon_years",
-      label: "How far out are you planning?",
+      label: "How many years out are you planning your growth?",
       type: "integer",
       placeholder: "5",
       helpText:
@@ -2858,7 +2858,7 @@ const COMPETITOR_LANDSCAPE: SectionSchema = {
     },
     {
       name: "competitive_advantages",
-      label: "Where do you win?",
+      label: "Where does your concept win against competitors?",
       type: "list_short",
       placeholder:
         "Coffee quality on par with urban third-wave at small-town prices\nIn-house roasting (vertical integration)\nCommunity-room positioning (Starbucks-Reverse)",
@@ -2868,7 +2868,7 @@ const COMPETITOR_LANDSCAPE: SectionSchema = {
     },
     {
       name: "competitive_vulnerabilities",
-      label: "Where are you vulnerable?",
+      label: "Where is your concept vulnerable to competitors?",
       type: "list_short",
       placeholder:
         "Higher labor cost than Dunkin' (we have more skilled staff)\nNo drive-through (slower morning rush)\nSingle roast supplier (concentration risk)",
@@ -2974,7 +2974,7 @@ const BRAND_VOICE: SectionSchema = {
     },
     {
       name: "voice_adjectives",
-      label: "What three to five words describe your voice?",
+      label: "What three to five words describe your brand voice?",
       type: "list_short",
       required: true,
       category: "Voice",
@@ -3005,7 +3005,7 @@ const BRAND_VOICE: SectionSchema = {
     },
     {
       name: "typography_pairing",
-      label: "What fonts do you use?",
+      label: "What fonts does your brand use?",
       type: "text",
       category: "Visual",
       placeholder: "Tiempos Headline (display) / Inter (body)",
@@ -3023,7 +3023,7 @@ const BRAND_VOICE: SectionSchema = {
     },
     {
       name: "things_to_avoid",
-      label: "What words or styles should we avoid?",
+      label: "What words or styles should your brand avoid?",
       type: "list_short",
       category: "Voice",
       advanced: true,
