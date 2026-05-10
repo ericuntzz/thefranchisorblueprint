@@ -36,9 +36,13 @@ if [[ -z "$(git status --porcelain | head -1)" ]]; then
   git pull --rebase --autostash origin main || echo "[smoke-test] git pull failed (continuing with current checkout)"
 fi
 
-# 2. Seed test account state (idempotent).
+# 2. Seed test account state (idempotent). Soft-fail: log + continue
+# even on seed failure so Phase 1/2 still run and the morning email
+# always goes out. Aborting here was the failure mode on 2026-05-10
+# when the chapter→section DB migration hadn't been applied yet —
+# the orchestrator died at seed and Eric got no email at all.
 echo "[smoke-test] === seed ==="
-npm run smoke-test:seed || { echo "[smoke-test] seed failed; aborting"; exit 1; }
+npm run smoke-test:seed || echo "[smoke-test] seed failed (continuing — Phase 1/2 may still produce signal)"
 
 # 3. Phase 1.
 # tsx prints a dotenv-loaded banner to stdout BEFORE the script runs;

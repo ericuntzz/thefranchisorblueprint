@@ -84,11 +84,23 @@ async function ensureProfile() {
 }
 
 async function ensureRedlines() {
-  const { data: existing } = await supabase
+  const { data: existing, error: selErr } = await supabase
     .from("section_redlines")
     .select("id, severity, resolved_at")
     .eq("user_id", TEST_USER_ID)
     .eq("section_slug", "business_overview");
+  // Mid-migration window guard: if the table doesn't exist yet,
+  // PostgREST returns PGRST205. Skip the redline seed instead of
+  // aborting the entire orchestrator (profile + purchase already
+  // persisted; Phase 1 + 2 of the smoke test still produce signal
+  // about the rest of the journey).
+  if (selErr?.code === "PGRST205") {
+    console.warn(
+      `⚠ section_redlines table missing (likely DB migration pending); skipping redline seed`,
+    );
+    return;
+  }
+  if (selErr) throw new Error(`redline select: ${selErr.message}`);
   const want = ["blocker", "warning", "info"];
   const have = (existing ?? []).map((r) => r.severity);
   const missing = want.filter((s) => !have.includes(s));
