@@ -124,6 +124,22 @@ export function QuestionQueueClient({
   // has an `at` for an item still in the queue, jump to it.
   // Subsequent navigations push the new id back into the URL via
   // replaceState (no full Next.js navigation, no data refetch).
+  //
+  // We deliberately do NOT auto-mark phases as "seen" on URL
+  // restore. An earlier attempt did (commit d17eb18) — the
+  // intent was "if the user landed on Economics q5, they must
+  // have crossed Discover→Economics already; don't replay the
+  // celebration." But that broke the more common refresh-flow:
+  // user lands on the transition card itself (URL ?at=<first_econ_q>),
+  // refreshes to read it again or drop a doc, and instead got
+  // pushed straight into the question — the "skipped to the next
+  // question" bug Eric flagged 2026-05-10. The mid-phase case is
+  // already safe because `phaseStart` is false on questions 2+
+  // within a phase (queue[index-1].phase === current.phase), so
+  // the transition can never fire there. Replaying the card on
+  // refresh of the FIRST question of a phase is a feature, not
+  // a bug — it lets the customer revisit the celebration + the
+  // phase doc-prompt.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const at = new URL(window.location.href).searchParams.get("at");
@@ -131,20 +147,6 @@ export function QuestionQueueClient({
     const target = queue.findIndex((q) => q.id === at);
     if (target >= 0 && target !== nav.index) {
       setNav((n) => ({ ...n, index: target }));
-      // The customer landed at `target` via URL restore — they must
-      // have already crossed every phase boundary up to and
-      // including this one in a previous session. Mark those
-      // phases "seen" so we don't replay the celebration card for
-      // a transition the customer already saw before refreshing.
-      // Eric 2026-05-09: "the page refresh state isn't quite
-      // working properly" (refreshing on first Economics question
-      // re-rendered the Discover→Economics transition card).
-      const phasesSeen = new Set<PhaseId>();
-      for (let i = 0; i <= target; i++) {
-        const item = queue[i];
-        if (item) phasesSeen.add(item.phase.id);
-      }
-      setSeenTransitions(phasesSeen);
     }
     // Run once on mount only — subsequent URL changes come FROM us,
     // not the browser address bar.
