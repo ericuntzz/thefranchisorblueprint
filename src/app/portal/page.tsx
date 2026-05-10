@@ -133,12 +133,17 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
     if (refundedPurchases.length > 0) {
       return <RevokedAccessView firstName={firstName} hadRefund={true} />;
     }
-    // Pull this user's saved analyses and a 30-day analysis count for
-    // the quota meter. Both come from intake_sessions.
+    // Pull this user's saved analyses, assessments, and 30-day quota
+    // count. Intake snapshots and assessment sessions are separate
+    // tables — both surface as cards on the free dashboard.
     const userEmail = user.email ?? "";
     const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const adminClient = getSupabaseAdmin();
-    const [{ data: savedAnalyses }, { count: usedThisMonth }] = await Promise.all([
+    const [
+      { data: savedAnalyses },
+      { count: usedThisMonth },
+      { data: savedAssessments },
+    ] = await Promise.all([
       adminClient
         .from("intake_sessions")
         .select("id, domain, business_data, score_data, created_at, cookie_token")
@@ -151,6 +156,13 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
         .select("id", { count: "exact", head: true })
         .eq("user_id", user.id)
         .gte("created_at", since30d),
+      adminClient
+        .from("assessment_sessions")
+        .select("id, business_name, total_score, band, completed_at, resume_token")
+        .eq("user_id", user.id)
+        .not("completed_at", "is", null)
+        .order("completed_at", { ascending: false })
+        .limit(10),
     ]);
     type SavedRow = {
       id: string;
@@ -171,10 +183,33 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
       // resume mode (same path Tranche 1 wires up).
       resume_path: `/?intake=${row.id}`,
     }));
+    type AssessRow = {
+      id: string;
+      business_name: string | null;
+      total_score: number | null;
+      band: string | null;
+      completed_at: string | null;
+      resume_token: string | null;
+    };
+    const assessments = ((savedAssessments ?? []) as AssessRow[]).map((row) => ({
+      id: row.id,
+      business_name: row.business_name,
+      total_score: row.total_score,
+      // Max-score is fixed in the assessment scoring module — 75 from
+      // 15 questions × 5 points. Hardcoded here to avoid a heavy
+      // import on the dashboard branch.
+      max_score: 75,
+      band: row.band,
+      completed_at: row.completed_at,
+      resume_path: row.resume_token
+        ? `/assessment/result/${row.id}?token=${encodeURIComponent(row.resume_token)}`
+        : `/assessment/result/${row.id}`,
+    }));
     return (
       <FreeTierDashboard
         email={userEmail}
         analyses={analyses}
+        assessments={assessments}
         usedThisMonth={usedThisMonth ?? 0}
         monthlyCap={5}
       />

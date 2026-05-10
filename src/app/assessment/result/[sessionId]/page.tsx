@@ -269,6 +269,49 @@ export default async function AssessmentResultPage({
         </div>
       </section>
 
+      {/* ===== Free portal CTA (Tranche 15) ===== */}
+      {/* The assessment-complete endpoint auto-creates a free-tier
+          Supabase auth user keyed to the email they entered. By the
+          time this page renders for the first time, they're signed
+          in — clicking through to /portal lands them in their free
+          dashboard without a login screen. The copy is benefit-led
+          per the conversion research: outcome, not feature. */}
+      <section className="bg-navy py-12 md:py-16 border-t border-cream/10">
+        <div className="max-w-[860px] mx-auto px-4 md:px-8">
+          <div className="flex items-center gap-2 mb-3">
+            <Award size={16} className="text-gold-warm" aria-hidden />
+            <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-gold-warm">
+              Your free portal is ready
+            </span>
+          </div>
+          <h2 className="text-cream font-bold text-2xl md:text-[28px] leading-tight mb-3 tracking-tight">
+            Save this report and run market analyses on the side.
+          </h2>
+          <p className="text-cream/80 text-base md:text-[17px] leading-relaxed mb-6 max-w-[680px]">
+            We&apos;ve set up a free portal for you so this report sticks
+            around. You can also drop your business URL anytime to see your
+            best local expansion market, your best out-of-state pick, and
+            your readiness score — up to five times every 30 days,
+            on the house.
+          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/portal"
+              className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-sm uppercase tracking-[0.1em] px-9 py-4 rounded-full hover:bg-gold-dark hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(212,175,55,0.35)] transition-all"
+            >
+              Open your free portal
+              <ArrowRight size={16} aria-hidden />
+            </Link>
+            <Link
+              href="/?run=new"
+              className="inline-flex items-center gap-2 text-cream hover:text-gold-warm text-sm font-semibold transition-colors"
+            >
+              Run a market analysis →
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ===== Download PDF + share ===== */}
       <section className="bg-white py-12 md:py-16">
         <div className="max-w-[860px] mx-auto px-4 md:px-8">

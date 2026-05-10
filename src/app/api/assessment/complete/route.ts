@@ -165,10 +165,12 @@ export async function POST(req: NextRequest) {
   const band: AssessmentBand = result.band;
   const categoryScoresJson = toCategoryScoresJson(result.categories);
 
-  // Try to link to an existing auth.users row by email — just for the
-  // user_id FK. We do NOT auto-create auth users from a free assessment;
-  // that only happens on a paid Stripe purchase. So a null user_id here
-  // is the normal case.
+  // Tranche 15 (2026-05-10): auto-create a free-tier Supabase auth
+  // user for assessment completers, mirroring the /api/intake/save
+  // flow. Previously this endpoint only LINKED to an existing profile
+  // if one existed (paid customers); free assessment-takers ended at
+  // a result page with no account. Now they land in their free portal
+  // alongside intake/market-analysis users — same friction-free path.
   let userId: string | null = null;
   const { data: existingProfile } = await supabase
     .from("profiles")
@@ -177,6 +179,85 @@ export async function POST(req: NextRequest) {
     .maybeSingle();
   if (existingProfile) {
     userId = existingProfile.id;
+  } else {
+    // No profile yet — try to find an auth.users row by email (could
+    // exist from a prior intake-save signup), then create one if not.
+    try {
+      const { data: bigList } = await supabase.auth.admin.listUsers({
+        page: 1,
+        perPage: 1000,
+      });
+      const match = bigList?.users.find(
+        (u) => u.email?.toLowerCase() === email,
+      );
+      if (match) {
+        userId = match.id;
+      } else {
+        const { data: created, error: createErr } =
+          await supabase.auth.admin.createUser({
+            email,
+            email_confirm: true,
+            user_metadata: {
+              signup_source: "assessment",
+              tier: "free",
+              first_name: firstName,
+              business_name: businessName,
+            },
+          });
+        if (!createErr && created?.user) {
+          userId = created.user.id;
+        } else if (createErr) {
+          console.error("[assessment/complete] createUser failed:", createErr);
+        }
+      }
+    } catch (err) {
+      console.error("[assessment/complete] auth user lookup/create failed:", err);
+    }
+    // Ensure a profile row exists for the new auth user. Best-effort.
+    if (userId) {
+      const { error: profileErr } = await supabase
+        .from("profiles")
+        .upsert(
+          {
+            id: userId,
+            email,
+            full_name: firstName || null,
+            stripe_customer_id: null,
+          },
+          { onConflict: "id", ignoreDuplicates: false },
+        );
+      if (profileErr) {
+        console.error("[assessment/complete] profile upsert failed:", profileErr);
+      }
+    }
+  }
+
+  // Server-side magic-link redemption — same pattern as
+  // /api/intake/save. Sets the Supabase auth cookies so the visitor
+  // can navigate to /portal authenticated, no click required.
+  if (userId) {
+    try {
+      const { data: linkData, error: linkErr } =
+        await supabase.auth.admin.generateLink({
+          type: "magiclink",
+          email,
+        });
+      if (!linkErr && linkData?.properties?.hashed_token) {
+        const { getSupabaseServer } = await import("@/lib/supabase/server");
+        const ssrSupabase = await getSupabaseServer();
+        const { error: verifyErr } = await ssrSupabase.auth.verifyOtp({
+          token_hash: linkData.properties.hashed_token,
+          type: "magiclink",
+        });
+        if (verifyErr) {
+          console.error("[assessment/complete] verifyOtp failed:", verifyErr);
+        }
+      } else if (linkErr) {
+        console.error("[assessment/complete] generateLink failed:", linkErr);
+      }
+    } catch (err) {
+      console.error("[assessment/complete] sign-in step failed:", err);
+    }
   }
 
   const { error: updateErr } = await supabase
@@ -303,6 +384,11 @@ export async function POST(req: NextRequest) {
     resultUrl: relativeResultUrl,
     band,
     totalScore: result.totalScore,
+    // Tranche 15: portal URL the client can show as a CTA on the
+    // result page. Always /portal — the visitor is auto-authenticated
+    // by the magic-link redemption above (best-effort; if it failed,
+    // the link still works, they'll just see /portal/login first).
+    portalUrl: "/portal",
   });
   // Clear the HttpOnly resume cookie now that the session is completed.
   // (The result page is the canonical view for the finished assessment;

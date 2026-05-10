@@ -1,5 +1,13 @@
 import Link from "next/link";
-import { ArrowRight, BarChart3, Lock, MapPin, Search, Sparkles } from "lucide-react";
+import {
+  Award,
+  ArrowRight,
+  BarChart3,
+  Lock,
+  MapPin,
+  Search,
+  Sparkles,
+} from "lucide-react";
 
 /**
  * FreeTierDashboard — main work surface for free-tier portal users.
@@ -31,11 +39,30 @@ export type FreeTierAnalysis = {
   resume_path: string;
 };
 
+/**
+ * Tranche 15 (2026-05-10): assessment results live alongside market
+ * analyses on the free portal dashboard. The visitor who came in
+ * through the 15-question assessment funnel gets the same free
+ * account as a URL-prefill visitor, plus their assessment shows up
+ * as a card with score + band + recommendation.
+ */
+export type FreeTierAssessment = {
+  id: string;
+  business_name: string | null;
+  total_score: number | null;
+  max_score: number | null;
+  band: string | null;
+  completed_at: string | null;
+  resume_path: string;
+};
+
 export type FreeTierDashboardProps = {
   /** The authenticated user's email — shown in the welcome line. */
   email: string;
   /** Past intake analyses for this user. Most recent first. */
   analyses: FreeTierAnalysis[];
+  /** Past assessment sessions for this user. Most recent first. */
+  assessments: FreeTierAssessment[];
   /** How many analyses this user has run in the rolling 30 days. */
   usedThisMonth: number;
   /** Monthly cap (default 5). */
@@ -45,6 +72,7 @@ export type FreeTierDashboardProps = {
 export function FreeTierDashboard({
   email,
   analyses,
+  assessments,
   usedThisMonth,
   monthlyCap,
 }: FreeTierDashboardProps) {
@@ -133,6 +161,68 @@ export function FreeTierDashboard({
             </span>
           </div>
         </section>
+
+        {/* ─── Assessment results (Tranche 15) ───────────────────── */}
+        {assessments.length > 0 && (
+          <section>
+            <div className="flex items-baseline justify-between mb-4">
+              <h2 className="text-navy font-bold text-xl md:text-2xl">
+                Your readiness assessment
+              </h2>
+              <span className="text-grey-4 text-sm tabular-nums">
+                {assessments.length} saved
+              </span>
+            </div>
+            <ul className="space-y-3">
+              {assessments.map((a) => {
+                const pct =
+                  a.total_score != null && a.max_score
+                    ? Math.round((a.total_score / a.max_score) * 100)
+                    : null;
+                return (
+                  <li key={a.id}>
+                    <Link
+                      href={a.resume_path}
+                      className="block bg-white rounded-2xl border border-navy/10 hover:border-navy/30 transition-colors p-5 md:p-6"
+                    >
+                      <div className="flex items-baseline justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Award size={14} className="text-gold-warm" aria-hidden />
+                            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-gold-warm">
+                              Franchise Readiness Assessment
+                            </p>
+                          </div>
+                          <p className="text-navy font-bold text-lg md:text-xl truncate">
+                            {a.business_name ?? "Your assessment"}
+                          </p>
+                          <p className="text-grey-4 text-xs md:text-sm mt-0.5">
+                            {a.band ? `${a.band} band · ` : ""}
+                            completed {a.completed_at ? new Date(a.completed_at).toLocaleDateString() : "—"}
+                          </p>
+                        </div>
+                        {pct != null && (
+                          <div className="flex-shrink-0 flex items-baseline gap-1.5">
+                            <span className="text-navy font-extrabold text-2xl md:text-3xl tabular-nums">
+                              {pct}
+                            </span>
+                            <span className="text-grey-4 text-sm font-bold">
+                              /100
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-grey-3 text-sm mt-3 inline-flex items-center gap-1.5">
+                        <ArrowRight size={14} className="text-gold-warm" aria-hidden />
+                        Open this assessment
+                      </p>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
 
         {/* ─── Past analyses ─────────────────────────────────────── */}
         <section>
