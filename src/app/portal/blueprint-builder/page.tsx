@@ -150,6 +150,7 @@ export default async function GuidedNextPage({
               <AllCaughtUpPanel firstName={firstName} />
             ) : (
               <QuestionQueueClient
+                userId={user.id}
                 initialQueue={queue}
                 initialSummary={summary}
                 hasWebsite={hasWebsite}

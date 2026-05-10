@@ -42,6 +42,10 @@ import type { MemoryFileSlug } from "@/lib/memory/files";
 type FieldValue = string | number | boolean | string[] | null;
 
 type Props = {
+  /** Supabase auth user id — used to namespace localStorage so two
+   *  accounts on the same browser don't see each other's in-flight
+   *  typing or last-position. */
+  userId: string;
   initialQueue: QueueItem[];
   initialSummary: QueueSummary;
   /** True when the customer has already added a website (and we ran
@@ -60,12 +64,35 @@ type Props = {
 };
 
 export function QuestionQueueClient({
+  userId,
   initialQueue,
   initialSummary,
   hasWebsite,
   attachmentCountBySlug,
   save,
 }: Props) {
+  // localStorage keys, namespaced per-user so two accounts on the same
+  // browser don't share state. Two persistence concerns live here:
+  //
+  //   - lsKeyValues:  the full valuesByItem map. Survives navigation
+  //                   away from the builder (sidebar Dashboard click,
+  //                   browser tab close, etc.) so a customer who typed
+  //                   into a question but didn't hit "Save & Next"
+  //                   doesn't lose their text on return. Eric flagged
+  //                   this on 2026-05-10 — losing in-flight typing
+  //                   when leaving + returning is the kind of friction
+  //                   that erodes trust in the whole product.
+  //
+  //   - lsKeyLastAt:  the last `?at=<itemId>` the customer was viewing.
+  //                   Sidebar's "Continue Building" links to bare
+  //                   `/portal/blueprint-builder`; without this, every
+  //                   click drops the customer at queue[0] (first
+  //                   unanswered globally) regardless of where they
+  //                   left off. With this, the mount effect below
+  //                   reads it and replaceState's `?at=` into the URL,
+  //                   landing them on their last position.
+  const lsKeyValues = `tfb-builder:${userId}:values`;
+  const lsKeyLastAt = `tfb-builder:${userId}:last-at`;
   // The queue is a snapshot taken at page load. We don't mutate it
   // here — we track an index + a per-item-id Set of "completed"
   // items so the UI can show progress without a server round-trip.
@@ -82,7 +109,43 @@ export function QuestionQueueClient({
   // derived view (`draft`) over this map.
   const [valuesByItem, setValuesByItem] = useState<
     Record<string, FieldValue>
-  >({});
+  >(() => {
+    // Lazy initializer: rehydrate from localStorage so a customer who
+    // typed into a question, navigated away (Dashboard click, tab
+    // close, etc.), then returned doesn't lose their text. Only runs
+    // once per mount. Window-guard for SSR safety even though this is
+    // a client component (Next.js still pre-renders the initial HTML).
+    if (typeof window === "undefined") return {};
+    try {
+      const raw = window.localStorage.getItem(lsKeyValues);
+      if (!raw) return {};
+      const parsed = JSON.parse(raw) as unknown;
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        return parsed as Record<string, FieldValue>;
+      }
+      return {};
+    } catch {
+      // Quota / corrupted JSON / disabled storage — start clean.
+      return {};
+    }
+  });
+  // Persist valuesByItem to localStorage on every change. The serialize
+  // is small (typically <50 fields × short strings = a few KB) so we
+  // don't bother debouncing. JSON.stringify is sync but fast at this
+  // size; running it on every keystroke is fine.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(
+        lsKeyValues,
+        JSON.stringify(valuesByItem),
+      );
+    } catch {
+      // Quota exceeded or storage disabled — drop silently. The
+      // customer's in-flight typing won't survive navigation in that
+      // case, but the rest of the experience still works.
+    }
+  }, [valuesByItem, lsKeyValues]);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [completed, setCompleted] = useState<Set<string>>(new Set());
@@ -142,7 +205,28 @@ export function QuestionQueueClient({
   // phase doc-prompt.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const at = new URL(window.location.href).searchParams.get("at");
+    let at = new URL(window.location.href).searchParams.get("at");
+    // If the URL has no `?at=` (typical when arriving via the sidebar's
+    // bare /portal/blueprint-builder link), fall back to the last
+    // position the customer was on per localStorage. This is the
+    // "remember where I left off" half of the state-loss fix —
+    // sidebar Continue Building no longer drops customers at queue[0]
+    // every click.
+    if (!at) {
+      try {
+        const stored = window.localStorage.getItem(lsKeyLastAt);
+        if (stored && queue.some((q) => q.id === stored)) {
+          at = stored;
+          // Reflect in URL so the next sync useEffect doesn't fight us
+          // and a refresh stays anchored.
+          const url = new URL(window.location.href);
+          url.searchParams.set("at", stored);
+          window.history.replaceState({}, "", url);
+        }
+      } catch {
+        // Storage disabled — fall through to default index 0.
+      }
+    }
     if (!at) return;
     const target = queue.findIndex((q) => q.id === at);
     if (target >= 0 && target !== nav.index) {
@@ -166,7 +250,17 @@ export function QuestionQueueClient({
       // is the proper question-by-question control.
       window.history.replaceState({}, "", url);
     }
-  }, [index, queue]);
+    // Mirror current position to localStorage. On the next visit
+    // (sidebar Continue Building click, refresh of bare URL, etc.)
+    // the mount effect above reads this and restores the customer's
+    // place. Updated even when URL didn't change so a fresh render
+    // can still capture it.
+    try {
+      window.localStorage.setItem(lsKeyLastAt, cur.id);
+    } catch {
+      // Storage disabled — last-position won't survive the session.
+    }
+  }, [index, queue, lsKeyLastAt]);
   // Slide direction for the question-card transition. "forward" =
   // Save/Skip (new card slides in from the right). "back" = Back
   // (new card slides in from the left). Initial render = "forward".
