@@ -366,10 +366,50 @@ export async function* runIntake(args: {
     message: "Scoring expansion markets across the country…",
   };
 
+  // Tranche 4 (2026-05-10): exclude metros/states the franchise-
+  // detection LLM identified as places the customer ALREADY operates.
+  // Costa Vida shouldn't get "Salt Lake City" recommended as an
+  // expansion pick — they have 30 locations there; the metro is
+  // saturated by their own brand. Match is case-insensitive on
+  // candidate.metro and case-insensitive on state code. Logic stays
+  // conservative (only drops candidates where we have HIGH confidence
+  // they're already there) — false negatives from LLM extraction
+  // just mean we keep showing a metro they're already in, which is
+  // suboptimal but not harmful.
+  const existingMetroSet = new Set(
+    existingFranchisor.existingMetros.map((m) => m.toLowerCase().trim()),
+  );
+  // existingStates is captured but NOT used as an exclusion source
+  // here. Reasoning: a UT operator's site lists UT in their existing
+  // states; using state-level exclusion would drop every UT candidate
+  // including the home market itself (already handled by
+  // excludeSourceLocation). State-level signal will be useful in
+  // tranche 7's parameter sweep for the "expand contiguously vs
+  // anywhere" preference, where someone in UT/NV/AZ might want to
+  // skip the entire West cluster they already saturate. Leaving the
+  // door open without acting on it yet.
   const candidatePool = excludeSourceLocation(
     CANDIDATE_ZIPS,
     sourceLocation?.zip ?? null,
-  );
+  ).filter((c) => {
+    const metroKey = c.metro.toLowerCase().trim();
+    if (existingMetroSet.has(metroKey)) return false;
+    // Some candidate metros are named "Salt Lake City" while a chain
+    // might list "SLC" or "Salt Lake" — fuzzy substring match catches
+    // those. Only fire when the candidate metro contains the existing
+    // metro name as a whole word (avoids "Cityville" matching "City").
+    for (const existing of existingMetroSet) {
+      if (existing.length < 4) continue;
+      // Whole-word containment in either direction.
+      if (
+        metroKey.includes(existing) ||
+        (existing.includes(metroKey) && metroKey.length >= 4)
+      ) {
+        return false;
+      }
+    }
+    return true;
+  });
 
   // Step 1: Fetch demographics for every candidate (parallel; Census is
   // fast and free). We bail to a graceful smaller list if Census is down.

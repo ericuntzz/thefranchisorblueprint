@@ -49,10 +49,27 @@ export type ExistingFranchisorSignal = {
   /**
    * Approximate location count if mentioned anywhere on the site.
    * Drives the existing-franchisor copy ("with 94 locations…"), and
-   * later the existing-footprint exclusion in candidate selection
-   * (Tranche 4).
+   * the existing-footprint exclusion in candidate selection.
    */
   locationCount: number | null;
+  /**
+   * Free-form list of metros / cities the customer's website mentions
+   * as places they already operate. Used by the candidate-pool
+   * filter — if "Salt Lake City" or "Denver" shows up here, those
+   * metros get dropped from the expansion-candidate set so we don't
+   * recommend a market they already saturate.
+   *
+   * Empty array if the site doesn't enumerate locations (e.g. a
+   * single-location coffee shop or a sparse-website edge case).
+   */
+  existingMetros: string[];
+  /**
+   * Free-form list of US state codes (2-letter) the customer mentions
+   * operating in. Coarser than existingMetros but useful when the
+   * locations page only says "Available in UT, NV, AZ, CO" without
+   * naming individual cities. Empty array if not derivable.
+   */
+  existingStates: string[];
 };
 
 const NEUTRAL_SIGNAL: ExistingFranchisorSignal = {
@@ -60,6 +77,8 @@ const NEUTRAL_SIGNAL: ExistingFranchisorSignal = {
   signalType: "none",
   evidence: [],
   locationCount: null,
+  existingMetros: [],
+  existingStates: [],
 };
 
 /**
@@ -72,10 +91,13 @@ export async function detectFranchiseSignals(
   scrape: ScrapeArtifacts,
 ): Promise<ExistingFranchisorSignal> {
   // Build the LLM context from the most signal-rich parts of the scrape.
-  // We deliberately include any /franchise* or /investor* sub-pages the
-  // scraper picked up — those are where franchise-recruitment copy
-  // lives on most existing-franchisor sites.
+  // The locationsText page (when found) is the strongest signal for
+  // existingMetros/existingStates — chains list every city or state
+  // they're in, often with a clickable map. We include it FIRST so it
+  // doesn't get truncated by the LLM's attention budget on the home
+  // page boilerplate.
   const haystack = [
+    scrape.locationsText ? `LOCATIONS PAGE:\n${scrape.locationsText}` : "",
     scrape.title ?? "",
     scrape.metaDescription ?? "",
     scrape.aboutText ?? "",
@@ -89,17 +111,19 @@ export async function detectFranchiseSignals(
     return NEUTRAL_SIGNAL;
   }
 
-  const sys = `You analyze business websites and detect whether the company is ALREADY operating as a franchisor (selling franchises to other operators).
+  const sys = `You analyze business websites and detect (a) whether the company is ALREADY operating as a franchisor selling franchises, and (b) which US metros/states they already operate in. The geographic footprint is used downstream to avoid recommending markets they already saturate.
 
 Respond with strict JSON only — no commentary, no markdown fences. Schema:
 {
   "isFranchising": boolean,
   "signalType": "active-franchise-sales" | "multi-unit-mature" | "none",
   "evidence": [string, ...],   // up to 4 short evidence strings, each ≤ 100 chars
-  "locationCount": number | null
+  "locationCount": number | null,
+  "existingMetros": [string, ...],  // up to 30 US metros/cities they operate in
+  "existingStates": [string, ...]   // up to 25 US 2-letter state codes they operate in
 }
 
-Rules:
+Rules for isFranchising:
 - isFranchising = true if you see ANY of:
     * Direct franchise-recruitment language: "franchise with us", "franchising info", "become a franchisee", "franchise opportunity", "apply to franchise"
     * Regulatory artifacts only an existing franchisor would publish: "Item 19", "FDD", "FTC franchise rule", "franchise disclosure document"
@@ -112,7 +136,14 @@ Rules:
 - evidence must be SHORT verbatim phrases or paraphrases from the input — don't fabricate.
 - locationCount: extract any explicit number ("94 locations", "150 stores"). Null if not mentioned.
 
-If the input is too sparse to judge, default to {"isFranchising": false, "signalType": "none", "evidence": [], "locationCount": null}.`;
+Rules for existingMetros / existingStates:
+- existingMetros: list every distinct US metro or city name the input mentions as a place where this business operates a location. Use the metro name, not the neighborhood ("Salt Lake City" not "Sugar House"). Deduplicate. Skip a city if it's clearly just a customer story / press mention, not a location.
+- existingStates: list every distinct US state where the business operates, as 2-letter postal codes (UT, CO, AZ). If the locations page lists states explicitly ("Available in: UT, NV, AZ"), use those. If only cities are listed, infer states from city → state mapping where obvious.
+- Both lists empty if you can't determine geographic footprint with confidence.
+- DO NOT include international locations (Mexico, Canada, etc) — US only.
+- DO NOT fabricate locations; if the page doesn't mention specific cities/states, return empty arrays.
+
+If the input is too sparse to judge, default to {"isFranchising": false, "signalType": "none", "evidence": [], "locationCount": null, "existingMetros": [], "existingStates": []}.`;
 
   const userPrompt = `Analyze this website content and emit the JSON described above.
 
@@ -160,14 +191,49 @@ ${haystack}
       typeof rawCount === "number" && Number.isFinite(rawCount) && rawCount >= 0
         ? Math.round(rawCount)
         : null;
+    const existingMetros = Array.isArray(parsed.existingMetros)
+      ? parsed.existingMetros
+          .filter(
+            (m): m is string =>
+              typeof m === "string" && m.length > 1 && m.length <= 60,
+          )
+          .map((m) => m.trim())
+          .filter(Boolean)
+          .slice(0, 30)
+      : [];
+    const existingStates = Array.isArray(parsed.existingStates)
+      ? parsed.existingStates
+          .filter(
+            (s): s is string =>
+              typeof s === "string" && /^[A-Za-z]{2}$/.test(s.trim()),
+          )
+          .map((s) => s.trim().toUpperCase())
+          .slice(0, 25)
+      : [];
 
     // Defensive: if the LLM said isFranchising=true but emitted no
     // evidence, downgrade to false. Prevents hallucinated positives.
+    // BUT — keep existingMetros/States even if isFranchising flips
+    // back to false; a 3-location operator who isn't actively
+    // franchising still benefits from us not recommending those 3
+    // metros as expansion picks.
     if (isFranchising && evidence.length === 0) {
-      return NEUTRAL_SIGNAL;
+      return {
+        ...NEUTRAL_SIGNAL,
+        existingMetros,
+        existingStates,
+        locationCount,
+      };
     }
 
-    return { isFranchising, signalType, evidence, locationCount };
+    return {
+      isFranchising,
+      signalType,
+      evidence,
+      locationCount,
+      existingMetros,
+      existingStates,
+    };
   } catch (err) {
     console.error("[intake] detectFranchiseSignals failed:", err);
     return NEUTRAL_SIGNAL;

@@ -22,6 +22,14 @@ export const PER_DOMAIN_CACHE_DAYS = 7;
  * will replace them. Acts as a manual cache-busting key.
  *
  * Last bumped:
+ *   2026-05-10  Round 7: existing-footprint exclusion. Scrape now
+ *               also pulls /locations / /stores / /find-us etc. and
+ *               the franchise-detection LLM extracts existingMetros
+ *               and existingStates. Candidate pool drops metros the
+ *               customer already operates in BEFORE similarity
+ *               scoring. Costa Vida no longer gets Salt Lake / Denver
+ *               / Phoenix recommended (they have stores there); they
+ *               surface markets where they don't already saturate.
  *   2026-05-10  Round 6: geographic bias now applied to FINAL overall
  *               score, not just top-5 selection. Adjacent-state map
  *               replaces coarse 4-region for the +6 tier; drive-time
@@ -52,7 +60,7 @@ export const PER_DOMAIN_CACHE_DAYS = 7;
  *               diversity + plain-English narratives + page-title
  *               fallback for business name.
  */
-export const CACHE_FRESHNESS_FLOOR_ISO = "2026-05-11T00:30:00Z";
+export const CACHE_FRESHNESS_FLOOR_ISO = "2026-05-11T01:30:00Z";
 
 /**
  * Per-IP rate limit — N distinct intake starts per hour. Stops

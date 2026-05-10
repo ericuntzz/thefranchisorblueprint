@@ -76,6 +76,15 @@ export type ScrapeArtifacts = {
   homeText: string;
   /** Raw text content of the about page if found, else null. */
   aboutText: string | null;
+  /**
+   * Raw text from a locations / stores / find-us page if one exists,
+   * else null. Powers the existing-footprint exclusion in tranche 4 —
+   * an established multi-unit operator typically lists every city
+   * (or every state) they're in, and that list is the cleanest signal
+   * for "don't recommend X as an expansion because they're already
+   * there."
+   */
+  locationsText: string | null;
   /** Site title from <title> on the home page. */
   title: string | null;
   /** Meta description from the home page. */
@@ -164,10 +173,70 @@ export async function fetchSiteArtifacts(
     }
   }
 
+  // Look for a locations / stores / find-us page via common URL
+  // conventions and link text. Used by the franchise-footprint
+  // detection (tranche 4) to figure out where the customer already
+  // operates so we don't recommend those metros as "expansion."
+  let locationsText: string | null = null;
+  for (const candidate of [
+    "/locations",
+    "/stores",
+    "/restaurants",
+    "/find-us",
+    "/find-a-location",
+    "/our-locations",
+    "/all-locations",
+    "/branches",
+  ]) {
+    try {
+      const locUrl = new URL(candidate, homeUrl.origin).toString();
+      const locHtml = await politeFetch(locUrl, 8_000);
+      const $$ = cheerio.load(locHtml);
+      $$("script, style, noscript, svg, header nav, footer").remove();
+      locationsText = $$("body").text().replace(/\s+/g, " ").trim().slice(0, 12_000);
+      break;
+    } catch {
+      // Try next candidate.
+    }
+  }
+  if (!locationsText) {
+    // Anchor-text fallback — any link whose visible text reads like
+    // "locations" / "find a store" / "our restaurants" etc.
+    const locLink = $("a")
+      .filter((_, el) => {
+        const txt = $(el).text().trim().toLowerCase();
+        return (
+          txt === "locations" ||
+          txt === "find a location" ||
+          txt === "find a store" ||
+          txt === "our locations" ||
+          txt === "find us" ||
+          txt === "stores" ||
+          txt === "restaurants"
+        );
+      })
+      .first();
+    const href = locLink.attr("href");
+    if (href) {
+      try {
+        const locUrl = safeAbsoluteUrl(href, homeUrl.toString());
+        if (locUrl) {
+          const locHtml = await politeFetch(locUrl, 8_000);
+          const $$ = cheerio.load(locHtml);
+          $$("script, style, noscript, svg, header nav, footer").remove();
+          locationsText = $$("body").text().replace(/\s+/g, " ").trim().slice(0, 12_000);
+        }
+      } catch {
+        // Give up gracefully — locations exclusion just won't fire.
+      }
+    }
+  }
+
   return {
     resolvedOrigin: homeUrl.origin,
     homeText,
     aboutText,
+    locationsText,
     title,
     metaDescription,
     ogImage,
