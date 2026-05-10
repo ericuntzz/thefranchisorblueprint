@@ -95,22 +95,30 @@ export async function mergeIntakeForUser(args: {
     });
   }
 
-  // territory_real_estate section — prototype profile + expansion markets
+  // territory_real_estate section — home-market profile + expansion markets.
+  // The snapshot key was renamed prototype → homeMarket on 2026-05-10 to
+  // remove lab-science jargon; we still read both shapes so old cached
+  // rows that may pre-date the rename don't break the merge. The DB
+  // field names (prototype_*) live on customer_memory and would require
+  // a schema migration to rename — left alone for now.
+  const homeMarket =
+    snapshot.homeMarket ??
+    (snapshot as unknown as { prototype?: typeof snapshot.homeMarket }).prototype;
   const territoryFields: Record<string, string | number | string[] | null> = {};
-  if (snapshot.prototype.zip) {
-    territoryFields.prototype_zip = snapshot.prototype.zip;
+  if (homeMarket?.zip) {
+    territoryFields.prototype_zip = homeMarket.zip;
   }
-  if (snapshot.prototype.demographics) {
+  if (homeMarket?.demographics) {
     territoryFields.prototype_median_household_income =
-      snapshot.prototype.demographics.medianHouseholdIncome;
-    territoryFields.prototype_median_age = snapshot.prototype.demographics.medianAge;
-    territoryFields.prototype_population = snapshot.prototype.demographics.population;
+      homeMarket.demographics.medianHouseholdIncome;
+    territoryFields.prototype_median_age = homeMarket.demographics.medianAge;
+    territoryFields.prototype_population = homeMarket.demographics.population;
   }
-  if (snapshot.prototype.competitorCount !== null) {
-    territoryFields.prototype_competitor_count_1mi = snapshot.prototype.competitorCount;
+  if (homeMarket?.competitorCount != null) {
+    territoryFields.prototype_competitor_count_1mi = homeMarket.competitorCount;
   }
-  if (snapshot.prototype.narrative) {
-    territoryFields.prototype_narrative = snapshot.prototype.narrative;
+  if (homeMarket?.narrative) {
+    territoryFields.prototype_narrative = homeMarket.narrative;
   }
   if (snapshot.expansion.length > 0) {
     territoryFields.expansion_market_candidates = snapshot.expansion.map(

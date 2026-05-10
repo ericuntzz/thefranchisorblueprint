@@ -36,7 +36,14 @@ import type { IntakeSnapshot } from "@/lib/intake/orchestrator";
  * the snapshot from /api/intake/snapshot/<id> rather than re-running.
  */
 
-type Phase =
+/**
+ * Orchestrator phases (server-side enum). These map onto a smaller set
+ * of display phases the visitor actually sees — Eric flagged 8 grey
+ * "todo" circles as anxiety-inducing and asked us to consolidate
+ * (2026-05-10). Display rename also lands title case + per-step
+ * findings reveal (TurboTax-style confidence checkpoint pattern).
+ */
+type ServerPhase =
   | "scrape"
   | "business"
   | "geocode"
@@ -46,50 +53,159 @@ type Phase =
   | "score"
   | "summary";
 
+/**
+ * What the visitor sees in the loading card. Six steps, title-cased,
+ * verb-first. Each consolidates 1-2 server phases:
+ *   research      = scrape + business
+ *   geography     = geocode + demographics
+ *   competitors   = competitors
+ *   expansion     = expansion
+ *   readiness     = score
+ *   summary       = summary
+ */
+type DisplayPhase =
+  | "research"
+  | "geography"
+  | "competitors"
+  | "expansion"
+  | "readiness"
+  | "summary";
+
+const SERVER_TO_DISPLAY: Record<ServerPhase, DisplayPhase> = {
+  scrape: "research",
+  business: "research",
+  geocode: "geography",
+  demographics: "geography",
+  competitors: "competitors",
+  expansion: "expansion",
+  score: "readiness",
+  summary: "summary",
+};
+
 type View =
   | { kind: "loading" }
   | { kind: "capped" }
   | { kind: "idle" }
-  | { kind: "streaming"; progress: PhaseStatus[]; activePhase: Phase | null }
+  | { kind: "streaming"; progress: PhaseStatus[]; activePhase: DisplayPhase | null }
   | { kind: "snapshot"; snapshot: IntakeSnapshot; sessionId: string }
   | { kind: "saving"; snapshot: IntakeSnapshot; sessionId: string }
   | { kind: "saved"; email: string }
   | { kind: "error"; message: string };
 
 type PhaseStatus = {
-  phase: Phase;
+  phase: DisplayPhase;
   label: string;
   status: "pending" | "active" | "done" | "skipped";
+  /**
+   * Plain-English finding surfaced under each completed step ("Looks
+   * like Costa Vida — fast-casual fresh Mexican grill."). Empty until
+   * the matching server phase emits enough data to populate it.
+   */
+  finding?: string;
 };
 
-const PHASE_LABELS: Record<Phase, string> = {
-  scrape: "Reading your website",
-  business: "Identifying your business",
-  geocode: "Mapping your trade area",
-  demographics: "Pulling demographics",
-  competitors: "Scanning competitive landscape",
-  expansion: "Scoring expansion markets",
-  score: "Building readiness score",
-  summary: "Drafting your home-market summary",
+const DISPLAY_PHASE_LABELS: Record<DisplayPhase, string> = {
+  research: "Researching Your Business",
+  geography: "Mapping Your Location(s) and Demographics",
+  competitors: "Scanning Competitive Landscape",
+  expansion: "Scoring Expansion Markets",
+  readiness: "Building Readiness Score",
+  summary: "Drafting Your Home-Market Summary",
 };
 
-const PHASES_IN_ORDER: Phase[] = [
-  "scrape",
-  "business",
-  "geocode",
-  "demographics",
+const DISPLAY_PHASES_IN_ORDER: DisplayPhase[] = [
+  "research",
+  "geography",
   "competitors",
   "expansion",
-  "score",
+  "readiness",
   "summary",
 ];
 
 function freshProgress(): PhaseStatus[] {
-  return PHASES_IN_ORDER.map((phase) => ({
+  return DISPLAY_PHASES_IN_ORDER.map((phase) => ({
     phase,
-    label: PHASE_LABELS[phase],
+    label: DISPLAY_PHASE_LABELS[phase],
     status: "pending",
   }));
+}
+
+/**
+ * Last server phase that maps to a given display phase. Used by the
+ * stream consumer to decide when to flip a display step from 'active'
+ * to 'done'. For consolidated steps (research = scrape + business), we
+ * wait for the second sub-phase to complete before showing ✓.
+ */
+function lastServerPhaseFor(display: DisplayPhase): ServerPhase {
+  switch (display) {
+    case "research":
+      return "business";
+    case "geography":
+      return "demographics";
+    case "competitors":
+      return "competitors";
+    case "expansion":
+      return "expansion";
+    case "readiness":
+      return "score";
+    case "summary":
+      return "summary";
+  }
+}
+
+/**
+ * Derive a one-line finding to show under a completed display phase.
+ * Falls back to undefined (no caption) if we don't have enough data
+ * for a clean sentence — "no caption" reads cleaner than a half-empty
+ * one. All copy intentionally avoids spoiling the score reveal.
+ */
+function deriveFinding(
+  display: DisplayPhase,
+  serverPhase: ServerPhase,
+  data: unknown,
+): string | undefined {
+  // Narrow the data shape per-phase. Keep this defensive — the API
+  // shape is partially typed; bad casts here just hide the caption.
+  if (display === "research" && serverPhase === "business") {
+    const b = data as { name?: string | null; oneLineConcept?: string | null } | null;
+    if (b?.name && b.oneLineConcept) {
+      return `Looks like ${b.name} — ${b.oneLineConcept}.`;
+    }
+    if (b?.name) return `Looks like ${b.name}.`;
+    return undefined;
+  }
+  if (display === "geography" && serverPhase === "demographics") {
+    const d = data as {
+      demographics?: { medianHouseholdIncome?: number; medianAge?: number; population?: number } | null;
+    } | null;
+    if (d?.demographics) {
+      const inc = d.demographics.medianHouseholdIncome;
+      const age = d.demographics.medianAge;
+      const parts: string[] = [];
+      if (typeof inc === "number") parts.push(`median income $${Math.round(inc / 1000)}K`);
+      if (typeof age === "number") parts.push(`median age ${age}`);
+      return parts.length ? parts.join(" · ") : undefined;
+    }
+    return undefined;
+  }
+  if (display === "expansion" && serverPhase === "expansion") {
+    const list = Array.isArray(data) ? (data as unknown[]) : null;
+    if (list && list.length > 0) {
+      return `Scored 60 candidate metros — narrowed to top ${list.length}.`;
+    }
+    return undefined;
+  }
+  if (display === "readiness" && serverPhase === "score") {
+    const r = data as { overall?: number } | null;
+    if (typeof r?.overall === "number") {
+      return `Preliminary readiness: ${r.overall}/100.`;
+    }
+    return undefined;
+  }
+  // research/scrape, geography/geocode, competitors/competitors, summary —
+  // these don't carry useful data for a one-line finding (or aren't
+  // observed via phase-done events today). Caption stays empty.
+  return undefined;
 }
 
 export function IntakeHeroCTA() {
@@ -217,7 +333,7 @@ export function IntakeHeroCTA() {
     const decoder = new TextDecoder();
     let buffer = "";
     let progress = freshProgress();
-    let activePhase: Phase | null = null;
+    let activePhase: DisplayPhase | null = null;
     let finalSnapshot: IntakeSnapshot | null = null;
     let finalSessionId: string | null = null;
     let errorMessage: string | null = null;
@@ -235,8 +351,9 @@ export function IntakeHeroCTA() {
           if (!trimmed) continue;
           let evt: {
             kind: string;
-            phase?: Phase;
+            phase?: ServerPhase;
             message?: string;
+            data?: unknown;
             snapshot?: IntakeSnapshot;
             sessionId?: string;
           };
@@ -247,19 +364,46 @@ export function IntakeHeroCTA() {
           }
 
           if (evt.kind === "progress" && evt.phase) {
-            activePhase = evt.phase;
-            progress = progress.map((p) =>
-              p.phase === evt.phase
-                ? { ...p, status: "active" }
-                : p.status === "active"
-                  ? { ...p, status: "done" }
-                  : p,
-            );
+            const display = SERVER_TO_DISPLAY[evt.phase];
+            activePhase = display;
+            progress = progress.map((p) => {
+              if (p.phase === display) {
+                // Don't downgrade a 'done' phase back to 'active' if a
+                // sub-phase fires its progress event (e.g. server phase
+                // 'business' lands after 'scrape' both inside display
+                // phase 'research').
+                return p.status === "done" ? p : { ...p, status: "active" };
+              }
+              // Mark any earlier display phase that's still 'active'
+              // as 'done' since the server moved on past it.
+              if (
+                p.status === "active" &&
+                DISPLAY_PHASES_IN_ORDER.indexOf(p.phase) <
+                  DISPLAY_PHASES_IN_ORDER.indexOf(display)
+              ) {
+                return { ...p, status: "done" };
+              }
+              return p;
+            });
             setView({ kind: "streaming", progress, activePhase });
           } else if (evt.kind === "phase-done" && evt.phase) {
-            progress = progress.map((p) =>
-              p.phase === evt.phase ? { ...p, status: "done" } : p,
-            );
+            const display = SERVER_TO_DISPLAY[evt.phase];
+            const finding = deriveFinding(display, evt.phase, evt.data);
+            progress = progress.map((p) => {
+              if (p.phase !== display) return p;
+              // Only flip to 'done' if this server phase is the LAST
+              // server phase that maps to this display phase. Otherwise
+              // keep the display step in 'active' so the spinner shows
+              // through the second sub-phase.
+              const lastForDisplay = lastServerPhaseFor(display);
+              const status: PhaseStatus["status"] =
+                evt.phase === lastForDisplay ? "done" : p.status;
+              // Only overwrite an existing finding if the new one is
+              // more informative (we prefer last-emit-wins for findings
+              // that come from the terminal sub-phase).
+              const nextFinding = finding ?? p.finding;
+              return { ...p, status, finding: nextFinding };
+            });
             setView({ kind: "streaming", progress, activePhase });
           } else if (evt.kind === "complete" && evt.snapshot && evt.sessionId) {
             finalSnapshot = evt.snapshot;
@@ -503,7 +647,7 @@ function StreamingProgress({
   urlInput,
 }: {
   progress: PhaseStatus[];
-  activePhase: Phase | null;
+  activePhase: DisplayPhase | null;
   urlInput: string;
 }) {
   return (
@@ -514,31 +658,42 @@ function StreamingProgress({
           Analyzing <span className="text-gold">{urlInput}</span>…
         </span>
       </div>
-      <ul className="space-y-2.5">
+      <ul className="space-y-3">
         {progress.map((p) => (
-          <li key={p.phase} className="flex items-center gap-3 text-sm">
-            {p.status === "done" && (
-              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-gold flex items-center justify-center">
-                <Check size={12} className="text-navy" strokeWidth={3} />
+          <li key={p.phase} className="text-sm">
+            <div className="flex items-center gap-3">
+              {p.status === "done" && (
+                <span className="flex-shrink-0 w-5 h-5 rounded-full bg-gold flex items-center justify-center">
+                  <Check size={12} className="text-navy" strokeWidth={3} />
+                </span>
+              )}
+              {p.status === "active" && (
+                <Loader2 size={14} className="text-gold animate-spin flex-shrink-0" />
+              )}
+              {p.status === "pending" && (
+                <span className="flex-shrink-0 w-5 h-5 rounded-full border border-white/30" />
+              )}
+              <span
+                className={
+                  p.status === "done"
+                    ? "text-white"
+                    : p.status === "active"
+                      ? "text-white font-semibold"
+                      : "text-white/40"
+                }
+              >
+                {p.label}
               </span>
+            </div>
+            {/* Per-step finding — shown under completed steps so the
+                wait turns into a story of what we found. Pad the icon
+                column so the caption lines up under the label, not the
+                circle. */}
+            {p.status === "done" && p.finding && (
+              <p className="mt-1 ml-8 text-xs text-white/55 leading-relaxed">
+                {p.finding}
+              </p>
             )}
-            {p.status === "active" && (
-              <Loader2 size={14} className="text-gold animate-spin flex-shrink-0" />
-            )}
-            {p.status === "pending" && (
-              <span className="flex-shrink-0 w-5 h-5 rounded-full border border-white/30" />
-            )}
-            <span
-              className={
-                p.status === "done"
-                  ? "text-white"
-                  : p.status === "active"
-                    ? "text-white font-semibold"
-                    : "text-white/40"
-              }
-            >
-              {p.label}
-            </span>
           </li>
         ))}
       </ul>
@@ -706,7 +861,7 @@ function SnapshotView({
             Where your business operates today
           </p>
           <p className="text-navy/85 text-base md:text-[17px] leading-relaxed">
-            {snapshot.prototype.narrative}
+            {snapshot.homeMarket.narrative}
           </p>
         </div>
 

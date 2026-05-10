@@ -22,6 +22,11 @@ export const PER_DOMAIN_CACHE_DAYS = 7;
  * will replace them. Acts as a manual cache-busting key.
  *
  * Last bumped:
+ *   2026-05-10  Round 4: schema rename `snapshot.prototype` →
+ *               `snapshot.homeMarket`. Old cached rows would render
+ *               as "We sent the full snapshot for your business"
+ *               with an empty home-market narrative because the UI
+ *               consumer reads the new key. Forces a refresh.
  *   2026-05-10  Round 3: dropped "prototype" language sitewide,
  *               replaced hardcoded franchise-readiness gap checklist
  *               with website-specific LLM observations, added
@@ -34,7 +39,7 @@ export const PER_DOMAIN_CACHE_DAYS = 7;
  *               diversity + plain-English narratives + page-title
  *               fallback for business name.
  */
-export const CACHE_FRESHNESS_FLOOR_ISO = "2026-05-10T19:00:00Z";
+export const CACHE_FRESHNESS_FLOOR_ISO = "2026-05-10T22:00:00Z";
 
 /**
  * Per-IP rate limit — N distinct intake starts per hour. Stops

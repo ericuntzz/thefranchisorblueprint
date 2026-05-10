@@ -7,13 +7,13 @@
  *   1. Scrape the website (existing fetchSiteArtifacts)
  *   2. Extract business name + address from scrape via LLM
  *   3. Geocode current location via Places → resolve current ZIP
- *   4. Census ACS demographics for current ZIP (= prototype profile)
+ *   4. Census ACS demographics for current ZIP (= home-market profile)
  *   5. Places nearby-search for competitor density at current location
  *   6. Match against the 60-ZIP candidate pool: fetch Census for each,
- *      score similarity to prototype, take top 5
+ *      score similarity to home market, take top 5
  *   7. Refine top 5 with live Places competitor-density check, take top 3
  *   8. Compute readiness score from operational signals + named gaps
- *   9. Synthesize a one-paragraph prototype-profile summary via LLM
+ *   9. Synthesize a one-paragraph home-market summary via LLM
  *
  * Yields IntakeEvent values throughout so the API route can stream
  * them as Server-Sent Events. Persistence to the intake_sessions row
@@ -73,7 +73,16 @@ export type IntakePhase =
 /** What the user sees on the snapshot screen. */
 export type IntakeSnapshot = {
   business: BusinessInfo;
-  prototype: PrototypeProfile;
+  /**
+   * Profile of the customer's current/home location. Renamed from
+   * `prototype` 2026-05-10 — Eric flagged that "prototype" reads as
+   * lab-science jargon to a small business owner. The schema key now
+   * mirrors the user-facing "Where your business operates today"
+   * eyebrow. Backward-compat reader handles older cached rows
+   * elsewhere (intake_sessions JSONB column may still hold rows
+   * keyed `prototype`).
+   */
+  homeMarket: HomeMarketProfile;
   expansion: ExpansionMarket[];
   readiness: ReadinessScore;
   /** Approximate cost in cents (used to enforce daily cap). */
@@ -99,7 +108,7 @@ export type BusinessInfo = {
   placesCategory: string | null;
 };
 
-export type PrototypeProfile = {
+export type HomeMarketProfile = {
   zip: string | null;
   /** Plain-English narrative of "what makes their current spot work". */
   narrative: string;
@@ -513,24 +522,24 @@ export async function* runIntake(args: {
 
   yield { kind: "phase-done", phase: "score", data: readiness };
 
-  // ─── Phase 8: Prototype-profile summary via LLM ──────────────────
+  // ─── Phase 8: Home-market summary via LLM ────────────────────────
   yield {
     kind: "progress",
     phase: "summary",
     message: "Drafting your home-market summary…",
   };
 
-  const narrative = await synthesizePrototypeNarrative({
+  const narrative = await synthesizeHomeMarketNarrative({
     business,
     sourceLocation,
-    prototypeDemographics,
-    prototypeCompetitorCount,
+    homeMarketDemographics: prototypeDemographics,
+    homeMarketCompetitorCount: prototypeCompetitorCount,
   });
   costCents += COST.LLM_SUMMARY_CENTS;
 
   const snapshot: IntakeSnapshot = {
     business,
-    prototype: {
+    homeMarket: {
       zip: sourceLocation?.zip ?? null,
       narrative,
       demographics: prototypeDemographics,
@@ -1104,25 +1113,25 @@ ${args.scrape.aboutText?.slice(0, 2000) ?? "(no About page found)"}`;
   }
 }
 
-async function synthesizePrototypeNarrative(args: {
+async function synthesizeHomeMarketNarrative(args: {
   business: BusinessInfo;
   sourceLocation: { zip: string; formattedAddress: string } | null;
-  prototypeDemographics: Demographics | null;
-  prototypeCompetitorCount: number | null;
+  homeMarketDemographics: Demographics | null;
+  homeMarketCompetitorCount: number | null;
 }): Promise<string> {
   if (!args.business.name && !args.business.oneLineConcept) {
-    return "We weren't able to extract a clear business profile from your website. Sign up to fill in the details and we'll generate the full prototype profile inside your portal.";
+    return "We weren't able to extract a clear business profile from your website. Sign up to fill in the details and we'll generate the full home-market profile inside your portal.";
   }
 
   // If we don't have demographics, return a simpler narrative without an LLM call.
-  if (!args.prototypeDemographics) {
+  if (!args.homeMarketDemographics) {
     return `${args.business.name ?? "Your business"} reads as ${args.business.oneLineConcept ?? "a service business"}. We weren't able to fully map your trade area from public data — sign up and add your address and we'll complete the analysis inside your portal.`;
   }
 
   const anthropic = getAnthropic();
   const sys = `You are Jason Stowe, a 30-year franchise development consultant. Write a single short paragraph (3-4 sentences, max 70 words) describing what makes this business's current trade area work — its demographic signature, density, and competitive context. Plain English, conversational, like an experienced operator dictating a memo. No marketing speak, no superlatives, no AI buzzwords.`;
 
-  const d = args.prototypeDemographics;
+  const d = args.homeMarketDemographics;
   const userPrompt = `Business: ${args.business.name ?? "(unknown)"}
 Concept: ${args.business.oneLineConcept ?? "(unknown)"}
 Brand voice: ${args.business.brandVoice ?? "(unknown)"}
@@ -1131,7 +1140,7 @@ ZIP: ${args.sourceLocation?.zip ?? "(unknown)"}
 Median household income: $${d.medianHouseholdIncome.toLocaleString()}
 Median age: ${d.medianAge}
 Population (5-digit ZIP): ${d.population.toLocaleString()}
-Comparable concepts within 1 mile: ${args.prototypeCompetitorCount ?? "(unknown)"}`;
+Comparable concepts within 1 mile: ${args.homeMarketCompetitorCount ?? "(unknown)"}`;
 
   try {
     const res = await anthropic.messages.create({
@@ -1145,8 +1154,8 @@ Comparable concepts within 1 mile: ${args.prototypeCompetitorCount ?? "(unknown)
         .filter((b) => b.type === "text")
         .map((b) => (b as { type: "text"; text: string }).text)
         .join("\n") ?? "";
-    return text.trim() || "Prototype profile pending — sign up to complete the analysis inside your portal.";
+    return text.trim() || "Home-market profile pending — sign up to complete the analysis inside your portal.";
   } catch {
-    return `${args.business.name ?? "Your business"} sits in a market with median household income of $${d.medianHouseholdIncome.toLocaleString()} and ${args.prototypeCompetitorCount ?? "an unknown number of"} comparable concepts within a 1-mile radius. The full analysis is waiting in your portal once you sign up.`;
+    return `${args.business.name ?? "Your business"} sits in a market with median household income of $${d.medianHouseholdIncome.toLocaleString()} and ${args.homeMarketCompetitorCount ?? "an unknown number of"} comparable concepts within a 1-mile radius. The full analysis is waiting in your portal once you sign up.`;
   }
 }
