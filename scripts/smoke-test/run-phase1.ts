@@ -124,6 +124,36 @@ async function curlGet(jar: string, path: string): Promise<{ status: number; bod
   });
 }
 
+/**
+ * Like curlGet but does NOT follow redirects. Used to verify that
+ * legacy paths (e.g. /portal/lab/next → /portal/blueprint-builder)
+ * actually issue a 3xx with the right Location header rather than
+ * silently rendering the new page under the old URL.
+ */
+async function curlGetNoFollow(
+  jar: string,
+  path: string,
+): Promise<{ status: number; location: string }> {
+  return new Promise((resolve, reject) => {
+    const proc = spawn(
+      "curl",
+      ["-s", "-c", jar, "-b", jar, "-A", "tfb-smoke-test/1", "-D", "-", "-o", "/dev/null", `${BASE}${path}`, "-w", "\n__STATUS__%{http_code}"],
+      { stdio: ["ignore", "pipe", "ignore"] },
+    );
+    let out = "";
+    proc.stdout.on("data", (d) => (out += d.toString()));
+    proc.on("exit", () => {
+      const idx = out.lastIndexOf("__STATUS__");
+      const meta = idx >= 0 ? out.slice(idx + 10) : "";
+      const status = parseInt(meta.trim() || "0", 10);
+      const headers = idx >= 0 ? out.slice(0, idx) : out;
+      const m = /^location:\s*(.+)$/im.exec(headers);
+      resolve({ status, location: (m?.[1] ?? "").trim() });
+    });
+    proc.on("error", reject);
+  });
+}
+
 async function curlPost(jar: string, path: string, body: unknown): Promise<{ status: number; body: string }> {
   return new Promise((resolve, reject) => {
     const proc = spawn(
@@ -226,6 +256,11 @@ async function main() {
     "/portal/section/compliance_legal",
     "/portal/lab/intake",
     "/portal/lab/blueprint",
+    "/portal/blueprint-builder",
+    // Legacy path. Renamed to /portal/blueprint-builder on 2026-05-10
+    // and kept here so curl-with-follow proves the redirect still
+    // resolves to a real page (not a 404). The explicit redirect
+    // check below asserts the 3xx status + Location header.
     "/portal/lab/next",
     "/portal/library",
     "/portal/upgrade",
@@ -240,6 +275,39 @@ async function main() {
       return { pass: status === 200 && size > 5000, evidence: `status=${status} size=${size}` };
     });
   }
+
+  // Legacy /portal/lab/next → /portal/blueprint-builder redirect.
+  // Verifies the rename keeps old bookmarks / email links / chat-history
+  // links working. Preserves both the ?focus=<deliverable-id> and
+  // ?at=<chapter>.<field> query params on redirect.
+  await runCheck(
+    "redirect:legacy-lab-next",
+    "Legacy /portal/lab/next redirects to /portal/blueprint-builder",
+    "blocker",
+    async () => {
+      const { status, location } = await curlGetNoFollow(jar, "/portal/lab/next");
+      const ok = status >= 300 && status < 400 && location.includes("/portal/blueprint-builder");
+      return { pass: ok, evidence: `status=${status} location=${location}` };
+    },
+  );
+  await runCheck(
+    "redirect:legacy-lab-next-querystring",
+    "Legacy /portal/lab/next preserves ?focus on redirect",
+    "blocker",
+    async () => {
+      const { status, location } = await curlGetNoFollow(
+        jar,
+        "/portal/lab/next?focus=concept-and-story&at=business_overview.brand_promise",
+      );
+      const ok =
+        status >= 300 &&
+        status < 400 &&
+        location.includes("/portal/blueprint-builder") &&
+        location.includes("focus=concept-and-story") &&
+        location.includes("at=business_overview.brand_promise");
+      return { pass: ok, evidence: `status=${status} location=${location}` };
+    },
+  );
 
   await runCheck("redlines-get", "/api/agent/redlines GET shape", "blocker", async () => {
     const { status, body } = await curlGet(jar, "/api/agent/redlines?slug=business_overview");

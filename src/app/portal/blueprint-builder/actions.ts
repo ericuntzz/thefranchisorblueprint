@@ -1,7 +1,7 @@
 "use server";
 
 /**
- * Server actions for the Question Queue (`/portal/lab/next`).
+ * Server actions for the Question Queue (`/portal/blueprint-builder`).
  *
  * `saveQueueAnswer` — write one field's answer into Memory and return.
  * The client advances locally (it already knows the queue order) and
@@ -61,7 +61,7 @@ export async function saveQueueAnswer(args: {
   // Revalidate both the queue route (so the next visit recomputes
   // freshly) and the Blueprint canvas (so the section card's filled-
   // count picks up the change if the customer flips back).
-  revalidatePath("/portal/lab/next");
+  revalidatePath("/portal/blueprint-builder");
   revalidatePath("/portal/lab/blueprint");
   revalidatePath("/portal");
 }

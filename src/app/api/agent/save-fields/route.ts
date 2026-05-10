@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
       source: "user_typed",
     });
     revalidatePath("/portal/lab/blueprint");
-    revalidatePath("/portal/lab/next");
+    revalidatePath("/portal/blueprint-builder");
     revalidatePath("/portal");
     return NextResponse.json({ ok: true });
   } catch (err) {

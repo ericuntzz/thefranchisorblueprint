@@ -171,7 +171,7 @@ export function BlueprintTOC({ items }: BlueprintTOCProps) {
           without scrolling the whole document. */}
       <div className="mt-5 pt-4 border-t border-navy/10">
         <Link
-          href="/portal/lab/next"
+          href="/portal/blueprint-builder"
           className="group flex items-center justify-between gap-2 rounded-full bg-gold text-navy hover:bg-gold-dark font-bold text-[11px] uppercase tracking-[0.1em] pl-4 pr-3 py-2.5 transition-colors"
         >
           <span>Continue building</span>

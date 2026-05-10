@@ -607,7 +607,7 @@ function Day1OnboardingHero({ firstName }: { firstName: string | null }) {
                 <ArrowRight size={15} />
               </Link>
               <Link
-                href="/portal/lab/next"
+                href="/portal/blueprint-builder"
                 className="text-white/70 hover:text-white text-xs font-bold uppercase tracking-[0.1em] underline underline-offset-4 decoration-white/30 hover:decoration-white transition-colors"
               >
                 or skip and answer questions instead

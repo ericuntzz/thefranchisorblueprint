@@ -21,7 +21,7 @@ import {
   indexMemoryRows,
 } from "@/lib/memory/readiness";
 import type { MemoryFieldsMap } from "@/lib/calc";
-// SiteFooter intentionally not rendered — see /portal/lab/next/page.tsx.
+// SiteFooter intentionally not rendered — see /portal/blueprint-builder/page.tsx.
 import {
   saveSectionSection,
   saveMemoryFields,
@@ -57,7 +57,7 @@ export const dynamic = "force-dynamic";
  * and open it as its own page, just like the old capability cards."
  *
  * What this is NOT:
- *   - Not a queue (that's /portal/lab/next).
+ *   - Not a queue (that's /portal/blueprint-builder).
  *   - Not the assembled document (that's /portal/lab/blueprint).
  *
  * It's the per-section equivalent of the old (now-removed)

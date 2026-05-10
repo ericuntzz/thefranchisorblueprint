@@ -7,9 +7,9 @@
  * Complements `phase2-structural.ts` (cheerio HTML parsing). Where the
  * structural pass catches "this DOM element exists / this text is
  * present", this pass catches:
- *   - layout intent (e.g. /portal/lab/next must vertically center its
- *     question card; if someone removes the `flex items-center` we'd
- *     ship a regression that cheerio wouldn't notice)
+ *   - layout intent (e.g. /portal/blueprint-builder must vertically
+ *     center its question card; if someone removes the `flex
+ *     items-center` we'd ship a regression that cheerio wouldn't notice)
  *   - CSS regressions (a class rename that compiles fine but renders
  *     wrong)
  *   - post-hydration UI state (drawers, modals, dynamic counts)
@@ -195,9 +195,9 @@ const flows: FlowSpec[] = [
     },
   },
   {
-    id: "visual-lab-next-centering",
-    name: "Lab/next — question card vertical centering",
-    url: "/portal/lab/next",
+    id: "visual-blueprint-builder-centering",
+    name: "Blueprint Builder — question card vertical centering",
+    url: "/portal/blueprint-builder",
     waitFor: "main.bg-cream-soft",
     assert: async (page) => {
       // Main wrapper must use flex + items-center so the question card

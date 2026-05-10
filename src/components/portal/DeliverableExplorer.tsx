@@ -471,7 +471,7 @@ function DeliverableEntry({
             also expand the card. */}
         {review.totalGaps > 0 && (
           <Link
-            href={`/portal/lab/next?focus=${deliverable.id}`}
+            href={`/portal/blueprint-builder?focus=${deliverable.id}`}
             onClick={(e) => e.stopPropagation()}
             title={`Complete the ${review.totalGaps} unfilled field${review.totalGaps === 1 ? "" : "s"} for ${deliverable.name}`}
             className="flex-shrink-0 inline-flex items-center gap-1.5 bg-gold text-navy hover:bg-gold-dark font-bold text-[11px] uppercase tracking-[0.1em] px-3 py-2 rounded-full transition-colors"

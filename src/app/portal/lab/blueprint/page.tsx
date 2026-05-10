@@ -16,7 +16,7 @@ import { getSectionSchema } from "@/lib/memory/schemas";
 import type { MemoryFieldsMap } from "@/lib/calc";
 import { SectionCard } from "@/components/agent/SectionCard";
 import { BlueprintTOC } from "@/components/portal/BlueprintTOC";
-// SiteFooter intentionally not rendered here — see /portal/lab/next/page.tsx
+// SiteFooter intentionally not rendered here — see /portal/blueprint-builder/page.tsx
 // for the rationale (Eric 2026-05-09: marketing footer leaks felt off-brand).
 import { saveSectionSection, saveMemoryFields, setSectionConfidence } from "./actions";
 import {
@@ -217,7 +217,7 @@ export default async function BlueprintLabPage() {
               {/* End-of-document affordance. Customer can edit
                   inline on this page, so the closing isn't a "go
                   elsewhere to edit" message — it's a forward push
-                  into the guided question queue (/portal/lab/next)
+                  into the guided question queue (/portal/blueprint-builder)
                   where Jason walks them through the next thing
                   that's missing. Secondary "back to dashboard" stays
                   as a quieter exit option. */}
@@ -234,7 +234,7 @@ export default async function BlueprintLabPage() {
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-3">
                   <Link
-                    href="/portal/lab/next"
+                    href="/portal/blueprint-builder"
                     className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-xs uppercase tracking-[0.1em] px-6 py-3 rounded-full hover:bg-gold-dark transition-colors"
                   >
                     Continue building

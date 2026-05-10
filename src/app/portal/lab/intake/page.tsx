@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import type { Profile, Purchase } from "@/lib/supabase/types";
 import { IntakeClient } from "./IntakeClient";
-// SiteFooter intentionally not rendered — see /portal/lab/next/page.tsx.
+// SiteFooter intentionally not rendered — see /portal/blueprint-builder/page.tsx.
 
 export const metadata: Metadata = {
   title: "Day 1 · Pre-fill your Blueprint | The Franchisor Blueprint",

@@ -11,7 +11,7 @@
  *   - Eyebrow: "Franchise Readiness"
  *   - Headline: "{firstName}'s Blueprint is X% complete" (or generic)
  *   - Next-up panel: phase + question label + estimated time + why it
- *     matters, anchored by a single primary CTA → /portal/lab/next
+ *     matters, anchored by a single primary CTA → /portal/blueprint-builder
  *   - Secondary actions: View full Blueprint / Pre-fill from your site
  *
  * If the queue is empty (every required section answered), we swap to
@@ -111,7 +111,7 @@ function NextStepPanel({
       )}
       <div className="flex justify-end">
         <Link
-          href="/portal/lab/next"
+          href="/portal/blueprint-builder"
           className="inline-flex items-center gap-2 bg-gold text-navy font-bold text-xs uppercase tracking-[0.1em] px-5 py-3 rounded-full hover:bg-gold-dark transition-colors"
         >
           <Sparkles size={13} />

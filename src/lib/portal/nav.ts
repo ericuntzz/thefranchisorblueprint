@@ -45,7 +45,7 @@ export function getPortalNavItems({
   checklistPct?: number;
 } = {}): PortalNavItems {
   const primary: PortalNavItem = {
-    href: "/portal/lab/next",
+    href: "/portal/blueprint-builder",
     label: "Continue Building",
     icon: ArrowRight,
     progressPct: blueprintPct,

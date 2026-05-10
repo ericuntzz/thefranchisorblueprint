@@ -3,7 +3,7 @@
 /**
  * Shared input control for a single schema field. Used by:
  *
- *   - The Question Queue (`/portal/lab/next`) — one question per card.
+ *   - The Question Queue (`/portal/blueprint-builder`) — one question per card.
  *   - The pre-draft modal — inline blocker inputs when Jason refuses
  *     to draft until specific gaps are filled.
  *

@@ -24,13 +24,18 @@ import type { DeliverableId } from "@/lib/export/types";
 // chrome-free; the left sidebar already carries portal nav. Same
 // removal applied to /portal/lab/blueprint, /portal/lab/intake,
 // /portal/section/[slug] for consistency.
+//
+// Renamed 2026-05-10 from /portal/lab/next → /portal/blueprint-builder.
+// Eric flagged "lab/next" as opaque user-facing copy; "blueprint-builder"
+// matches the customer's mental model. Legacy /portal/lab/next still
+// resolves via a thin redirect at src/app/portal/lab/next/page.tsx.
 import { QuestionQueueClient } from "./QuestionQueueClient";
 import { saveQueueAnswer } from "./actions";
 
 type SearchParams = Promise<{ focus?: string }>;
 
 export const metadata: Metadata = {
-  title: "What's Next | The Franchisor Blueprint",
+  title: "Blueprint Builder | The Franchisor Blueprint",
   description:
     "The next questions Jason needs answered before drafting your Blueprint.",
   robots: { index: false, follow: false },
@@ -39,7 +44,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 /**
- * /portal/lab/next — the guided "next best step" surface.
+ * /portal/blueprint-builder — the guided "next best step" surface.
  *
  * The portal's primary CTA points here. Customer answers one question
  * at a time; each answer writes to Memory and advances the queue. When
@@ -60,7 +65,7 @@ export default async function GuidedNextPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/portal/login?next=/portal/lab/next");
+  if (!user) redirect("/portal/login?next=/portal/blueprint-builder");
 
   const [{ data: profileRow }, { data: purchasesData }] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),

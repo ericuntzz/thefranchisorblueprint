@@ -4,7 +4,7 @@
  * Given the customer's full Memory state + every section schema, walk
  * the schemas and surface the next set of structured-field questions
  * the customer should answer. This is the engine behind the guided
- * `/portal/lab/next` surface.
+ * `/portal/blueprint-builder` surface.
  *
  * Prioritization, in order:
  *   1. Phase order. Discover → Economics → Operations → People →
@@ -128,7 +128,7 @@ export function computeQuestionQueue(
  *
  * Used by the dashboard's per-deliverable "Complete Section" button:
  * the customer clicks it on a specific deliverable, lands on
- * /portal/lab/next, and the first question they see is the next
+ * /portal/blueprint-builder, and the first question they see is the next
  * unfilled required field in one of THAT deliverable's source
  * sections. Once those are exhausted the rest of the queue follows
  * in its normal phase order, so a customer who keeps hitting "Next"

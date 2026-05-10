@@ -90,7 +90,7 @@ Current flows:
 |---|---|---|
 | `visual-portal-landing` | `/portal` | First deliverable card renders; "Preview bundle" + "Preview & download" buttons present (catches regression on commit 6897642) |
 | `visual-section-business-overview` | `/portal/section/business_overview` | "Concept summary" form label visible; back-to-/portal link present |
-| `visual-lab-next-centering` | `/portal/lab/next` | `<main>` has `display:flex` + `align-items:center`; question card top/bottom space symmetric within 5% tolerance (catches regression on commit ced8a53) |
+| `visual-blueprint-builder-centering` | `/portal/blueprint-builder` | `<main>` has `display:flex` + `align-items:center`; question card top/bottom space symmetric within 5% tolerance (catches regression on commit ced8a53). Renamed from `visual-lab-next-centering` on 2026-05-10 alongside the route rename. |
 | `visual-preview-modal` | `/portal` (then click "Preview & download") | Modal `[role="dialog"]` opens, contains `<iframe>` for the PDF, footer has both Download buttons (catches regression on the morning-2026-05-08 feature ship) |
 | `visual-lab-blueprint-canvas` | `/portal/lab/blueprint` | No horizontal overflow at 1440×900; multiple section cards visible |
 

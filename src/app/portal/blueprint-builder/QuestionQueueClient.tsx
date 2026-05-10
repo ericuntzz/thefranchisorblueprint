@@ -105,8 +105,8 @@ export function QuestionQueueClient({
   // Initial index is recovered from `?at=<itemId>` if the URL has
   // it — that's how we keep refreshes anchored to the current
   // question instead of snapping back to "first unanswered." Eric
-  // 2026-05-09: "when I refresh the portal/lab/next page it brings
-  // me back to the last question that I haven't answered rather
+  // 2026-05-09: "when I refresh the portal/blueprint-builder page it
+  // brings me back to the last question that I haven't answered rather
   // than staying on the same page I was currently viewing."
   const [nav, setNav] = useState<{ index: number; visited: number[] }>(
     () => {

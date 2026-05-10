@@ -223,7 +223,7 @@ function getContextGreeting(args: {
     return `${hi}you're on **${title}**. Want me to draft what I've got, or do you want to think it through first? Drop a doc anytime and I'll pull what I can.`;
   }
 
-  if (pathname.includes("/portal/lab/next")) {
+  if (pathname.includes("/portal/blueprint-builder")) {
     return `${hi}let's burn through the queue. Stuck on a question? Drop a doc and I'll skip a chunk of these for you. Or just tell me what's on your mind.`;
   }
 
@@ -259,7 +259,7 @@ function getStatusLine(pathname: string): string {
   if (sectionMatch && isValidMemoryFileSlug(sectionMatch[1])) {
     return `Reading ${MEMORY_FILE_TITLES[sectionMatch[1] as MemoryFileSlug]}`;
   }
-  if (pathname.includes("/portal/lab/next")) return "Watching the question queue";
+  if (pathname.includes("/portal/blueprint-builder")) return "Watching the question queue";
   if (pathname.includes("/portal/lab/intake")) return "Watching intake";
   if (pathname.includes("/portal/lab/blueprint")) return "Reading the full Blueprint";
   if (pathname.includes("/portal/coaching")) return "Coaching mode";
@@ -392,7 +392,7 @@ function getStarterChips(pageContext: string | undefined): StarterChip[] {
   }
 
   // Question Queue context.
-  if (ctx.includes("/portal/lab/next")) {
+  if (ctx.includes("/portal/blueprint-builder")) {
     return [
       {
         label: "What docs speed this up?",
