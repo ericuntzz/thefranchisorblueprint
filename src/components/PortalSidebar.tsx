@@ -176,14 +176,16 @@ export function PortalSidebar({
           onClick={() => setCollapsed((v) => !v)}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className={`w-full flex items-center gap-2 ${
-            collapsed ? "justify-center" : ""
-          } px-3 py-2 rounded-md text-cream/55 hover:text-cream hover:bg-cream/5 transition-colors`}
+          className={`w-full flex items-center gap-3 ${
+            collapsed ? "justify-center px-2" : "px-3"
+          } py-2.5 rounded-lg text-sm font-semibold text-cream/55 hover:text-cream hover:bg-cream/10 transition-colors`}
         >
-          {collapsed ? <ChevronsRight size={14} /> : <ChevronsLeft size={14} />}
-          {showLabels && (
-            <span className="text-[11px] font-normal">Collapse</span>
+          {collapsed ? (
+            <ChevronsRight size={18} className="flex-shrink-0" />
+          ) : (
+            <ChevronsLeft size={18} className="flex-shrink-0" />
           )}
+          {showLabels && <span className="truncate">Collapse</span>}
         </button>
       </div>
 
