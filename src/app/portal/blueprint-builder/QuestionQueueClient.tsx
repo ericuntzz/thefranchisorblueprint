@@ -38,6 +38,40 @@ import { SchemaFieldInput } from "@/components/agent/SchemaFieldInput";
 import { DocPromptCard } from "@/components/agent/DocPromptCard";
 import { docPromptFor } from "@/lib/memory/doc-prompts";
 import type { MemoryFileSlug } from "@/lib/memory/files";
+import { SECTION_SCHEMAS } from "@/lib/memory/schemas";
+import { hasCalc } from "@/lib/calc";
+
+// Schema-static total of askable fields per phase — same for every
+// customer, every session. Mirrors the include/exclude rules in
+// `computeQuestionQueue` (queue.ts) so the COUNTER's denominator
+// matches what the queue COULD have contained had the customer
+// filled nothing.
+//
+// Why static (vs. computed-from-queue-at-mount): a customer who
+// answered 5 questions yesterday sees "0/13" today on a fresh mount
+// if the total is queue-derived. With schema-static, they see
+// "5/17" — credit for past progress, consistent denominator across
+// sessions. Eric flagged this on the QA pass 2026-05-10.
+const SCHEMA_PHASE_TOTALS: Record<PhaseId, number> = (() => {
+  const totals = {} as Record<PhaseId, number>;
+  for (const phase of PHASES) {
+    let n = 0;
+    for (const slug of phase.slugs) {
+      const schema = SECTION_SCHEMAS[slug];
+      if (!schema) continue;
+      for (const fd of schema.fields) {
+        // Mirror queue.ts:90-92 — these never enter the queue, so
+        // they shouldn't count toward the total either.
+        if (fd.advanced) continue;
+        if (fd.computed) continue;
+        if (hasCalc(slug, fd.name)) continue;
+        n++;
+      }
+    }
+    totals[phase.id] = n;
+  }
+  return totals;
+})();
 
 type FieldValue = string | number | boolean | string[] | null;
 
@@ -191,34 +225,6 @@ export function QuestionQueueClient({
   // Pattern: state (not ref) so the sync effect re-fires after the
   // restore lands.
   const [hydrated, setHydrated] = useState(false);
-  // Frozen-at-mount per-phase totals. Used as the DENOMINATOR for both
-  // the "ANSWERED X / Y" counter and the segmented progress bar.
-  //
-  // Eric flagged 2026-05-10 that the counter "loaded weird" between
-  // saves: it'd go 0/23 → 1/22 → 2/21 → 3/21 → 4/19 → 5/18, etc.
-  // Root cause: the previous math used `queue.filter(...).length` as
-  // the denominator, but `queue` is the SERVER-COMPUTED list of
-  // unanswered fields. Each Save & Next triggers revalidatePath, the
-  // server re-renders the page, and queue arrives with the just-saved
-  // item removed — so the denominator decreases on every save.
-  //
-  // Reads to a customer as "X done of Y total" but Y is actually
-  // "Y remaining"; the math is right, the UX is broken — it implies
-  // total work is shrinking, when really it's the customer's own
-  // progress chewing through it.
-  //
-  // Fix: freeze the per-phase total at mount, then count done as
-  // (total - items currently in this phase ahead of cursor). Saved
-  // items no longer in queue count as done. Items still in queue but
-  // behind cursor (skipped, navigated past) count as done. Current
-  // item doesn't count yet — they're on it.
-  const [initialPhaseTotals] = useState<Record<PhaseId, number>>(() => {
-    const totals = {} as Record<PhaseId, number>;
-    for (const p of PHASES) {
-      totals[p.id] = initialQueue.filter((q) => q.phase.id === p.id).length;
-    }
-    return totals;
-  });
 
   // Sync URL `?at=<itemId>` ↔ current index. On mount, if the URL
   // has an `at` for an item still in the queue, jump to it.
@@ -336,7 +342,7 @@ export function QuestionQueueClient({
 
   const phaseProgress = useMemo(() => {
     if (!current) return null;
-    const total = initialPhaseTotals[current.phase.id] ?? 0;
+    const total = SCHEMA_PHASE_TOTALS[current.phase.id] ?? 0;
     // Items in the CURRENT queue that are in this phase AND still
     // ahead of (or at) the cursor. "Done" = total minus those.
     // Saved items have been removed from queue → counted toward done.
@@ -347,7 +353,7 @@ export function QuestionQueueClient({
       if (queue[i].phase.id === current.phase.id) stillAhead++;
     }
     return { done: Math.max(0, total - stillAhead), total };
-  }, [current, queue, index, initialPhaseTotals]);
+  }, [current, queue, index]);
 
   // Done — every item processed.
   if (!current) {
@@ -464,12 +470,12 @@ export function QuestionQueueClient({
   // where each click moves a sliver.
   const phaseSegments = useMemo(() => {
     return PHASES.map((p) => {
-      const total = initialPhaseTotals[p.id] ?? 0;
+      const total = SCHEMA_PHASE_TOTALS[p.id] ?? 0;
       if (total === 0) return { id: p.id, pct: 0, isActive: false };
-      // Same math as phaseProgress: done = frozen-total minus items
+      // Same math as phaseProgress: done = schema-total minus items
       // ahead of the cursor in this phase. Stable across server-side
-      // queue refreshes (revalidatePath after a save), so the bar
-      // only ticks forward.
+      // queue refreshes (revalidatePath after a save) AND across
+      // sessions (a returning customer sees credit for past saves).
       let stillAhead = 0;
       for (let i = index; i < queue.length; i++) {
         if (queue[i].phase.id === p.id) stillAhead++;
@@ -478,7 +484,7 @@ export function QuestionQueueClient({
       const isActive = current?.phase.id === p.id;
       return { id: p.id, pct: (done / total) * 100, isActive };
     });
-  }, [queue, index, current, initialPhaseTotals]);
+  }, [queue, index, current]);
 
   return (
     <div className="space-y-6">
