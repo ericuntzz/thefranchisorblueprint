@@ -166,9 +166,29 @@ export function PortalSidebar({
         </ul>
       </nav>
 
-      {/* Bottom anchor: Account, Upgrade, Need a hand, then a small
-          collapse toggle row. Sign-out lives inside the Account page
-          now. */}
+      {/* Collapse toggle — small, low-priority. Sits ABOVE the Account
+          divider so the bottom anchor block reads as a single grouped
+          unit (Account / Upgrade / Need a hand) without an
+          unrelated tool below it. */}
+      <div className="px-2 pb-1 flex-shrink-0">
+        <button
+          type="button"
+          onClick={() => setCollapsed((v) => !v)}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className={`w-full flex items-center gap-2 ${
+            collapsed ? "justify-center" : ""
+          } px-3 py-2 rounded-md text-cream/55 hover:text-cream hover:bg-cream/5 transition-colors`}
+        >
+          {collapsed ? <ChevronsRight size={14} /> : <ChevronsLeft size={14} />}
+          {showLabels && (
+            <span className="text-[11px] font-normal">Collapse</span>
+          )}
+        </button>
+      </div>
+
+      {/* Bottom anchor: Account, Upgrade, Need a hand. Sign-out lives
+          inside the Account page now. */}
       <div className="border-t border-cream/10 px-2 py-2 flex-shrink-0 space-y-0.5">
         <Link
           href="/portal/account"
@@ -210,22 +230,6 @@ export function PortalSidebar({
           </Link>
         )}
         <NeedAHandButton collapsed={collapsed} />
-        {/* Collapse toggle row — small, low-priority, lives at the
-            very bottom so it doesn't compete with primary nav. */}
-        <button
-          type="button"
-          onClick={() => setCollapsed((v) => !v)}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className={`w-full flex items-center gap-2 ${
-            collapsed ? "justify-center" : ""
-          } px-3 py-2 rounded-md text-cream/55 hover:text-cream hover:bg-cream/5 transition-colors`}
-        >
-          {collapsed ? <ChevronsRight size={14} /> : <ChevronsLeft size={14} />}
-          {showLabels && (
-            <span className="text-[11px] font-normal">Collapse</span>
-          )}
-        </button>
       </div>
     </aside>
   );
