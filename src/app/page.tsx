@@ -147,7 +147,7 @@ export default function Home() {
             The Smartest, Most Affordable Path to Becoming a Franchisor
           </h1>
           <p className="text-white/85 text-lg md:text-xl leading-relaxed max-w-[680px] mb-10 font-light">
-            In less than 60 seconds, see if your business is ready to franchise — and your three best expansion markets.
+            In less than 60 seconds, see if your business is ready to franchise — and a market you can expand into.
           </p>
           <IntakeHeroCTA />
         </div>

@@ -225,6 +225,15 @@ export async function* runIntake(args: {
             lng: geo.lng,
             formattedAddress: geo.formattedAddress,
           };
+          // Backfill business.state from the geocoded address if the LLM
+          // didn't extract it. The state drives the geographic-proximity
+          // bonus on expansion-market scoring; without it, a UT business
+          // gets ranked against the whole country evenly and ends up
+          // recommending Dallas as #1 (which Eric's QA flagged).
+          if (!business.state) {
+            const stateMatch = geo.formattedAddress.match(/,\s*([A-Z]{2})\s+\d{5}\b/);
+            if (stateMatch) business.state = stateMatch[1];
+          }
         }
       }
     } catch {
@@ -314,22 +323,33 @@ export async function* runIntake(args: {
     };
   });
 
-  // Step 2: Take the best 5 candidates, ENFORCING METRO DIVERSITY.
-  //
-  // Naive "top 5 by similarity" lets clusters of same-metro candidates
-  // dominate (e.g., for a UT business that matches high-income urban
-  // cores, the top 5 might be Atlanta-Midtown, Atlanta-Buckhead,
-  // Austin-South-Congress, Atlanta-Sandy-Springs, Austin-Northwest —
-  // really 2 metros pretending to be 5 markets). The diversity-aware
-  // top-3 picker downstream can't fix that if its inputs aren't diverse.
-  //
-  // Fix: dedupe by metro at the top-5 selection step. Keep only the
-  // single best-similarity candidate per metro, then take the top 5
-  // metros. This gives the downstream picker 5 truly different markets
-  // to choose from, which is exactly what an owner skimming the
-  // snapshot wants to see.
+  // Step 2: Take the best 5 candidates, with TWO selection rules:
+  //   (a) Geographic proximity bias — same-state markets ranked first,
+  //       then same-region, then far-flung. Most franchise operators
+  //       expand within their own region first because operational
+  //       support, brand recognition, and real-estate familiarity all
+  //       radiate outward. A Utah business getting "Dallas" as its top
+  //       expansion pick (which Eric flagged in QA) reads as the
+  //       algorithm not understanding franchise development.
+  //   (b) Metro diversity — keep only the best-similarity candidate
+  //       per metro so the downstream top-3 picker always gets 5
+  //       different metros, not clusters.
+  const sourceState = business.state ?? null;
+  const sourceRegion = sourceState ? regionForState(sourceState) : null;
   const sortedBySimilarity = scored
     .filter((s) => s.demographics !== null)
+    // Apply a similarity bonus for same-state / same-region candidates
+    // BEFORE sorting so the proximity preference shows up in the
+    // top-5 selection naturally, without breaking the 4-pillar /
+    // 100-point rubric framing the user sees.
+    .map((s) => {
+      const candState = s.candidate.state;
+      const candRegion = regionForState(candState);
+      let proximityBonus = 0;
+      if (sourceState && candState === sourceState) proximityBonus = 25;
+      else if (sourceRegion && candRegion === sourceRegion) proximityBonus = 12;
+      return { ...s, similarity: Math.min(100, s.similarity + proximityBonus) };
+    })
     .sort((a, b) => b.similarity - a.similarity);
   const seenMetros = new Set<string>();
   const top5: typeof sortedBySimilarity = [];
@@ -423,14 +443,18 @@ export async function* runIntake(args: {
 
   yield { kind: "phase-done", phase: "expansion", data: topExpansion };
 
-  // ─── Phase 7: Readiness score + named gaps ───────────────────────
+  // ─── Phase 7: Readiness score + website-specific observations ────
   yield {
     kind: "progress",
     phase: "score",
-    message: "Building your preliminary readiness score…",
+    message: "Reading what stands out about your business…",
   };
 
-  const readiness = computeReadiness({
+  // Score + tier come from deterministic signals (signal completeness,
+  // demographic match, expansion viability). Gaps come from an LLM
+  // pass over the actual scraped content so they reference what we
+  // can OBSERVE, not generic franchise-readiness checklists.
+  const baseReadiness = computeReadiness({
     business,
     sourceLocation,
     prototypeDemographics,
@@ -438,13 +462,26 @@ export async function* runIntake(args: {
     expansionScores: topExpansion.map((e) => e.score),
   });
 
+  const llmGaps = await generateWebsiteSpecificGaps({
+    scrape,
+    business,
+    sourceLocation,
+  });
+  costCents += COST.LLM_SUMMARY_CENTS;
+
+  const readiness: ReadinessScore = {
+    overall: baseReadiness.overall,
+    suggestedTier: baseReadiness.suggestedTier,
+    gaps: llmGaps,
+  };
+
   yield { kind: "phase-done", phase: "score", data: readiness };
 
   // ─── Phase 8: Prototype-profile summary via LLM ──────────────────
   yield {
     kind: "progress",
     phase: "summary",
-    message: "Drafting your prototype profile…",
+    message: "Drafting your home-market summary…",
   };
 
   const narrative = await synthesizePrototypeNarrative({
@@ -472,6 +509,40 @@ export async function* runIntake(args: {
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────
+
+/**
+ * Coarse US-region grouping used by the proximity bias in expansion-
+ * market scoring. Same-state and same-region candidates get a
+ * similarity bonus before the top-5 cut, so the snapshot prefers
+ * markets the owner could realistically support out of their existing
+ * organization. Region buckets follow common franchise-development
+ * convention (West / Mountain West roll up together for support
+ * radius purposes; Texas usually gets bridged into both South and
+ * West because of how franchisor field-ops territories are drawn).
+ */
+const REGION_BY_STATE: Record<string, string> = {
+  // West / Mountain West / Pacific
+  AK: "West", AZ: "West", CA: "West", CO: "West", HI: "West",
+  ID: "West", MT: "West", NV: "West", NM: "West", OR: "West",
+  UT: "West", WA: "West", WY: "West",
+  // Midwest
+  IL: "Midwest", IN: "Midwest", IA: "Midwest", KS: "Midwest",
+  MI: "Midwest", MN: "Midwest", MO: "Midwest", NE: "Midwest",
+  ND: "Midwest", OH: "Midwest", SD: "Midwest", WI: "Midwest",
+  // South / Southeast
+  AL: "South", AR: "South", FL: "South", GA: "South", KY: "South",
+  LA: "South", MS: "South", NC: "South", OK: "South", SC: "South",
+  TN: "South", TX: "South", VA: "South", WV: "South",
+  // Northeast / Mid-Atlantic
+  CT: "Northeast", DC: "Northeast", DE: "Northeast", MA: "Northeast",
+  MD: "Northeast", ME: "Northeast", NH: "Northeast", NJ: "Northeast",
+  NY: "Northeast", PA: "Northeast", RI: "Northeast", VT: "Northeast",
+};
+
+function regionForState(state: string | null | undefined): string | null {
+  if (!state) return null;
+  return REGION_BY_STATE[state.toUpperCase()] ?? null;
+}
 
 /**
  * Last-ditch business-name inference when the LLM extract returns null.
@@ -880,29 +951,14 @@ function computeReadiness(args: {
   prototypeDemographics: Demographics | null;
   prototypeCompetitorCount: number | null;
   expansionScores: number[];
-}): ReadinessScore {
+}): { overall: number; suggestedTier: ReadinessScore["suggestedTier"] } {
   let score = 0;
-  const gaps: string[] = [];
-
-  // Each gap is a full sentence that explains WHY this gap matters and
-  // what the customer needs to do about it. Fragments like "Brand name
-  // unclear" leave first-time visitors guessing — they don't know yet
-  // that an FDD even exists, let alone why it matters.
 
   // Business signal completeness (40 points)
   if (args.business.name) score += 10;
-  else gaps.push(
-    "Your brand name isn't framed clearly on your home page. Franchise candidates need a 5-second answer to “what is this business?” before they'll consider opening one.",
-  );
   if (args.business.oneLineConcept) score += 10;
-  else gaps.push(
-    "There's no single reusable description of your concept. You'll write this once and reuse it across your FDD, your operations manual, and every Discovery Day pitch — get it right early.",
-  );
   if (args.business.brandVoice) score += 10;
   if (args.business.address || args.sourceLocation) score += 10;
-  else gaps.push(
-    "We couldn't find your physical address from your website. Your prototype location's traits — its trade area, demographics, foot-traffic pattern — are the foundation for telling future franchisees where their unit should go.",
-  );
 
   // Market signal (30 points)
   if (args.prototypeDemographics) score += 15;
@@ -913,10 +969,6 @@ function computeReadiness(args: {
     const avg =
       args.expansionScores.reduce((a, b) => a + b, 0) / args.expansionScores.length;
     score += Math.round((avg / 100) * 30);
-  } else {
-    gaps.push(
-      "We don't have enough public market data to score expansion viability for your concept yet. A 15-minute call with our team usually closes that gap quickly.",
-    );
   }
 
   // Cap at 100, floor at 0
@@ -929,24 +981,91 @@ function computeReadiness(args: {
   else if (score < 80) suggestedTier = "navigator";
   else suggestedTier = "builder";
 
-  // Generic gaps used to pad to 3. These are written for first-time
-  // visitors who may not know what an FDD or Item 19 is — each one
-  // names the artifact AND why it matters.
-  if (gaps.length < 3) {
-    const generic = [
-      "Unit economics aren't yet modeled to FDD Item 19 standard. Item 19 is the financial-performance representation prospective franchisees rely on to project returns; without an audited version, your franchise is harder to sell and easier for attorneys to challenge.",
-      "Your day-to-day playbook isn't written down yet. To franchise, the operations that live in your team's heads need to become a 100+ page manual every franchisee can run from — without you in the room.",
-      "The Franchise Disclosure Document (FDD) is your legal contract with every franchisee. It's 23 federally mandated items, takes 60–120 days to assemble, and is the single biggest milestone before you can legally sell a franchise.",
-      "There's no documented site-selection rubric yet. Your future franchisees will ask “how do I find a location like yours?” — you'll need a written 4-pillar scoring sheet (the same kind we'd build into your FDD Item 11).",
-      "Training program isn't built for franchisee onboarding. Without a structured 4–6 week training curriculum, every new franchisee opens slower and inconsistently — the #1 cause of multi-unit-brand failures.",
-    ];
-    for (const g of generic) {
-      if (gaps.length >= 3) break;
-      gaps.push(g);
-    }
-  }
+  return { overall: score, suggestedTier };
+}
 
-  return { overall: score, gaps: gaps.slice(0, 3), suggestedTier };
+/**
+ * Generate three SPECIFIC observations from the customer's actual
+ * website — not a generic franchise-readiness checklist. Eric's QA
+ * surfaced that hardcoded gaps like "your FDD isn't started" or
+ * "your operations manual doesn't exist" come across as us prescribing
+ * artifacts the customer has never heard of, when we have no way to
+ * actually know they don't have those things.
+ *
+ * The replacement: ask Claude to look at the same website data we
+ * already have (title, meta, home page, about page, brand info) and
+ * surface three things that an experienced franchise consultant would
+ * NOTICE while reading the site as a 30-second pre-screen. Things we
+ * can ACTUALLY observe: brand-voice consistency, founding-story
+ * clarity, menu/service breadth, pricing transparency, multi-location
+ * signals, etc. NOT things we can't observe (financial maturity,
+ * operations documentation, FDD readiness).
+ */
+async function generateWebsiteSpecificGaps(args: {
+  scrape: ScrapeArtifacts;
+  business: BusinessInfo;
+  sourceLocation: { formattedAddress: string } | null;
+}): Promise<string[]> {
+  const anthropic = getAnthropic();
+
+  const sysPrompt = `You are Jason Stowe, a 30-year franchise development consultant doing a quick pre-screen of a business's public web presence. Your job: write three short observations (each 1-3 sentences, 30-60 words) that a franchise candidate would find genuinely useful — things you can SEE from their website that bear on their franchise readiness, plus a concrete next step.
+
+CRITICAL CONSTRAINTS — read carefully:
+- Reference what's ACTUALLY visible on their site: their menu, services, pricing, founding story, brand voice, locations count, review presence, About page content, etc.
+- Do NOT prescribe specific franchise-development artifacts (FDD, Item 19, Operations Manual, training program, site-selection rubric) — we have no way to know if they have those things yet.
+- Do NOT say "isn't yet codified" or "isn't yet built" or any prescriptive checklist language.
+- Do say things like "We notice your home page leads with X — that's a strong/weak Y signal because Z."
+- Use plain English. No franchise jargon unless the customer is clearly already a multi-unit operator.
+- Each observation should feel like an experienced operator skimmed the site and noticed something specific. Not an AI templating itself into existence.
+
+Return JSON only:
+{
+  "gaps": [
+    "first observation (30-60 words)",
+    "second observation (30-60 words)",
+    "third observation (30-60 words)"
+  ]
+}`;
+
+  const userPrompt = `Business: ${args.business.name ?? "(unknown)"}
+Concept (LLM-extracted): ${args.business.oneLineConcept ?? "(unknown)"}
+Brand voice: ${args.business.brandVoice ?? "(unknown)"}
+Location: ${args.sourceLocation?.formattedAddress ?? "(unknown)"}
+
+Site title: ${args.scrape.title ?? "(none)"}
+Meta description: ${args.scrape.metaDescription ?? "(none)"}
+
+Home-page text (first 3000 chars):
+${args.scrape.homeText.slice(0, 3000)}
+
+About-page text (first 2000 chars):
+${args.scrape.aboutText?.slice(0, 2000) ?? "(no About page found)"}`;
+
+  try {
+    const res = await anthropic.messages.create({
+      model: CHAT_MODEL,
+      max_tokens: 800,
+      system: [{ type: "text", text: sysPrompt, cache_control: CACHE_5M }],
+      messages: [{ role: "user", content: userPrompt }],
+    });
+
+    const text =
+      res.content
+        .filter((b) => b.type === "text")
+        .map((b) => (b as { type: "text"; text: string }).text)
+        .join("\n") ?? "";
+
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return [];
+    const parsed = JSON.parse(jsonMatch[0]) as { gaps?: unknown };
+    if (!Array.isArray(parsed.gaps)) return [];
+    return parsed.gaps
+      .filter((g): g is string => typeof g === "string" && g.length > 20 && g.length < 500)
+      .slice(0, 3);
+  } catch (err) {
+    console.error("[intake] generateWebsiteSpecificGaps failed:", err);
+    return [];
+  }
 }
 
 async function synthesizePrototypeNarrative(args: {

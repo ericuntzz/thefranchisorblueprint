@@ -22,17 +22,19 @@ export const PER_DOMAIN_CACHE_DAYS = 7;
  * will replace them. Acts as a manual cache-busting key.
  *
  * Last bumped:
+ *   2026-05-10  Round 3: dropped "prototype" language sitewide,
+ *               replaced hardcoded franchise-readiness gap checklist
+ *               with website-specific LLM observations, added
+ *               same-state / same-region geographic proximity bonus
+ *               (UT business → UT/CO/AZ markets first, not Atlanta).
+ *               Snapshot copy materially different from previous run.
  *   2026-05-09  Round 2: top-5 candidate selection now dedupes by
- *               metro before taking the top 5, so the downstream
- *               diversity picker always has 5 different metros to
- *               choose from. Was previously letting same-metro
- *               clusters (e.g., 2 Atlanta + 1 Austin) reach the
- *               final top 3 — fixed.
+ *               metro before taking the top 5.
  *   2026-05-09  Round 1: saturation-aware scoring + geographic
  *               diversity + plain-English narratives + page-title
  *               fallback for business name.
  */
-export const CACHE_FRESHNESS_FLOOR_ISO = "2026-05-09T16:00:00Z";
+export const CACHE_FRESHNESS_FLOOR_ISO = "2026-05-10T18:00:00Z";
 
 /**
  * Per-IP rate limit — N distinct intake starts per hour. Stops

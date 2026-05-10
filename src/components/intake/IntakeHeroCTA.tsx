@@ -70,7 +70,7 @@ const PHASE_LABELS: Record<Phase, string> = {
   competitors: "Scanning competitive landscape",
   expansion: "Scoring expansion markets",
   score: "Building readiness score",
-  summary: "Drafting prototype profile",
+  summary: "Drafting your home-market summary",
 };
 
 const PHASES_IN_ORDER: Phase[] = [
@@ -448,10 +448,18 @@ function UrlInputForm({
           <ArrowRight size={15} />
         </button>
       </form>
-      {/* "Just want to talk? Book a strategy call" link removed —
-          duplicates the strategy-call CTAs already in the SiteNav and on
-          /pricing, and stretched the alt-path row to two lines on mobile.
-          The /strategy-call page is still discoverable from the nav. */}
+      {/* "Here's what we actually look at" — a one-line trust statement
+          that defuses the obvious skeptic question ("can they really
+          tell anything from a URL?") without forcing the visitor to
+          click through a disclosure. Eric flagged that even he is
+          suspicious of the value prop, so we name our inputs in plain
+          English right at the point of skepticism. */}
+      <p className="mt-3 text-white/70 text-sm leading-relaxed">
+        We read your homepage and About page, pull demographics on your
+        home market from US Census data, check competitor density via
+        Google Maps, and score 60 high-potential expansion markets the
+        same way.
+      </p>
       <p className="mt-4 text-white/85 text-base md:text-lg whitespace-normal sm:whitespace-nowrap">
         Don&apos;t have a website?{" "}
         <Link
@@ -539,44 +547,44 @@ function StreamingProgress({
 }
 
 /**
- * Tier-fit copy. Each tier suggestion gets a 3-4 sentence explainer
- * that names the artifact AND why it matters — written for first-time
- * visitors who've never heard of TFB before. Replaces the previous
- * single-line tier labels (e.g. "Not yet — let's talk first") that
- * Eric's QA flagged as too short and AI-speak-y.
- */
-/**
- * Tier-fit copy. Each tier suggestion gets a 2-sentence explainer that
- * names the artifact AND gives the owner one clear next step.
+ * Tier-fit copy.
  *
- * Length discipline: a small business owner scanning the snapshot needs
- * to know (1) which tier fits, (2) what they'll get for the money,
- * (3) what to do next. Anything past that is filler. Everything else
- * is on the destination /programs/blueprint or /strategy-call page.
+ * Eric flagged 2026-05-10: a $29.5K "Builder" CTA on a snapshot a
+ * stranger just generated is too aggressive for a first touchpoint.
+ * Owners need a low-friction next step ("book a 15-min call")
+ * regardless of internal tier routing. Pricing belongs on the
+ * destination /programs page, not the snapshot. Internal sales sees
+ * the suggestedTier flag in the lead-notification email so they can
+ * prepare for the call appropriately.
+ *
+ * All four tier copies now (1) lead with a benefit, (2) name the path
+ * forward in plain English, (3) end on a low-friction "let's talk"
+ * framing. The unified CTA below the section is "Book a 15-min call"
+ * for every tier — same conversion mechanic regardless of routing.
  */
 const TIER_COPY: Record<
   IntakeSnapshot["readiness"]["suggestedTier"],
   { headline: string; body: string }
 > = {
   "not-yet": {
-    headline: "Take a beat first — let's talk",
+    headline: "Talk to us before you spend a dollar on franchising.",
     body:
-      "A few foundational pieces aren't quite in place yet for franchising to make financial sense. Owners who try to franchise too early often burn $40K–$80K on legal fees for a system that won't scale. Free 30-minute call: we'll tell you straight what to fix and roughly how long it'll take.",
+      "A few foundational pieces aren't quite in place yet, and owners who try to franchise too early often burn $40K to $80K on legal fees for a system that won't scale. A 15-minute call gets you a candid read on what to fix first and a realistic timeline.",
   },
   blueprint: {
-    headline: "Start with The Blueprint — $2,997",
+    headline: "You're closer to franchise-ready than most.",
     body:
-      "You're close. The Blueprint is the complete 9-framework franchisor system you can run yourself: 17-section Operations Manual, FDD explainer for all 23 federal items, site-selection rubric, training scaffolding, and a Discovery Day deck. Most DIY-ready operators launch their first franchisee in about 6 months.",
+      "You have the foundations to run a structured franchise development project. A 15-minute call lets us pressure-test that read against your specific situation and map the cleanest path to your first franchisee, usually inside six months.",
   },
   navigator: {
-    headline: "Navigator is your match — $8,500",
+    headline: "You'd benefit from a guide for the legal and operational handoffs.",
     body:
-      "You're ready, but the legal and operational handoffs are where first-timers stumble. Navigator pairs the full Blueprint system with 24 weekly 1:1 coaching calls over 6 months, document review, and Franchise Ready certification. The structured cadence gets you to launch faster than going it alone.",
+      "You're ready to franchise, but the FDD, the operations manual, and the first franchisee recruitment are where most first-timers stumble. A 15-minute call lets us walk you through what coached franchise development looks like so you can decide if it's the right fit.",
   },
   builder: {
-    headline: "Builder is your match — $29,500",
+    headline: "You're ready for the highest-touch path.",
     body:
-      "Your business is ready for full done-with-you franchise development. We project-manage the 12-month build, coordinate your franchise attorney, generate the FDD, and assist with your first franchisee recruitment. You stay in the captain's chair on brand and operations.",
+      "Your business has the maturity for done-with-you franchise development. A 15-minute call lets us walk you through what that engagement actually looks like, what we'd own versus what you'd own, and whether the timing is right.",
   },
 };
 
@@ -666,10 +674,10 @@ function SnapshotView({
         {/* Header — eyebrow + business + score (sized to dominate) */}
         <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-4 pb-5 border-b border-navy/15">
           <div className="min-w-0">
-            <p className="text-xs font-bold tracking-[0.18em] uppercase text-gold-warm">
-              Franchise Readiness Snapshot
-            </p>
-            <p className="text-navy font-bold text-2xl md:text-3xl mt-1.5 break-words leading-tight">
+            {/* "Franchise Readiness Snapshot" eyebrow removed per Eric's
+                QA (2026-05-10). The business name + score below already
+                anchor the card. */}
+            <p className="text-navy font-bold text-2xl md:text-3xl break-words leading-tight">
               {displayName}
             </p>
             {snapshot.business.oneLineConcept && (
@@ -712,10 +720,11 @@ function SnapshotView({
               Markets where we'd open next
             </p>
             <p className="text-grey-3 text-base leading-relaxed mb-4">
-              Each market is scored against your prototype's demographic
-              signature, with bonus weight for whitespace (low competitor
-              saturation). The full 4-pillar breakdown unlocks when you
-              save your snapshot.
+              We match each candidate market against the demographic
+              fingerprint of your home market and give bonus weight to
+              areas where comparable concepts haven&apos;t saturated the
+              trade area yet. The full 4-pillar breakdown unlocks when
+              you save your snapshot below.
             </p>
 
             {/* Primary market — always visible, full detail */}
@@ -737,12 +746,29 @@ function SnapshotView({
                 ))}
                 {!revealAll && (
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="bg-navy/95 text-white rounded-xl px-6 py-4 shadow-2xl border border-gold/40 flex items-center gap-3 pointer-events-auto">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const form = document.getElementById("intake-save-form");
+                        form?.scrollIntoView({ behavior: "smooth", block: "center" });
+                        // Focus the email input after the smooth scroll
+                        // settles. 480ms matches typical smooth-scroll
+                        // duration; a touch longer feels less janky.
+                        window.setTimeout(() => {
+                          const input = form?.querySelector<HTMLInputElement>(
+                            'input[type="email"]',
+                          );
+                          input?.focus();
+                        }, 520);
+                      }}
+                      className="bg-navy/95 hover:bg-navy text-white rounded-xl px-6 py-4 shadow-2xl border border-gold/40 hover:border-gold flex items-center gap-3 pointer-events-auto cursor-pointer transition-all hover:scale-[1.02]"
+                    >
                       <Lock size={20} className="text-gold flex-shrink-0" aria-hidden />
                       <span className="text-base font-semibold">
-                        Two more markets unlock when you save below
+                        Unlock Two More Markets
                       </span>
-                    </div>
+                      <ArrowRight size={18} className="text-gold flex-shrink-0" aria-hidden />
+                    </button>
                   </div>
                 )}
               </div>
@@ -772,20 +798,30 @@ function SnapshotView({
           </div>
         )}
 
-        {/* "What we'd recommend next" — the most decision-driving section */}
+        {/* "What we'd recommend next" — the most decision-driving section.
+            Every tier routes to a low-friction "book a 15-min call" CTA;
+            pricing belongs on /programs, not the snapshot. Internal sales
+            sees the suggestedTier flag in the lead-notification email. */}
         <div
           className={`${fadeIn} mt-7 pt-6 border-t border-navy/15`}
           style={{ animationDelay: "560ms" }}
         >
           <p className="text-xs font-bold tracking-[0.18em] uppercase text-gold-warm mb-2.5">
-            What we'd recommend next
+            What we&apos;d recommend next
           </p>
           <p className="text-navy font-bold text-xl md:text-2xl mb-2.5 leading-tight">
             {tierCopy.headline}
           </p>
-          <p className="text-navy/85 text-base md:text-[17px] leading-relaxed">
+          <p className="text-navy/85 text-base md:text-[17px] leading-relaxed mb-5">
             {tierCopy.body}
           </p>
+          <Link
+            href="/strategy-call"
+            className="inline-flex items-center gap-2 bg-gold hover:bg-gold-dark text-navy font-bold text-base px-7 py-3.5 rounded-full transition-colors"
+          >
+            Book a 15-min call
+            <ArrowRight size={18} aria-hidden />
+          </Link>
         </div>
 
         {/* Diagnostic footer — preserves the "30-year operator with software"
@@ -799,29 +835,32 @@ function SnapshotView({
         </div>
       </div>
 
-      {/* Save form — replaced with confirmation banner once saved */}
+      {/* Save form — replaced with confirmation banner once saved.
+          The id="intake-save-form" is the scroll target for the
+          "Unlock Two More Markets" lock overlay above. */}
       {!revealAll && (
         <form
+          id="intake-save-form"
           onSubmit={onSubmit}
-          className={`${fadeIn} mt-5 bg-white/95 backdrop-blur rounded-2xl p-6 md:p-8 shadow-[0_12px_40px_rgba(0,0,0,0.25)]`}
+          className={`${fadeIn} mt-5 bg-white/95 backdrop-blur rounded-2xl p-6 md:p-8 shadow-[0_12px_40px_rgba(0,0,0,0.25)] scroll-mt-24`}
           style={{ animationDelay: "700ms" }}
         >
           <p className="text-navy font-bold text-xl md:text-2xl mb-3 leading-tight">
-            Unlock the full snapshot — and we'll save your work.
+            Unlock the full snapshot.
           </p>
           <ul className="text-navy/85 text-base leading-relaxed mb-5 space-y-2">
             <li className="flex gap-3">
               <span className="text-gold-warm font-bold flex-shrink-0 mt-0.5">→</span>
               <span>
-                The other two markets unlock here, plus the full 4-pillar
-                scoring on all three.
+                See the other two markets and the full 4-pillar scoring
+                on all three.
               </span>
             </li>
             <li className="flex gap-3">
               <span className="text-gold-warm font-bold flex-shrink-0 mt-0.5">→</span>
               <span>
-                If you ever build your franchise system with us, we already
-                have a 15–20% head start on your data.
+                Use this data to get a 20% head start on franchising
+                your business.
               </span>
             </li>
           </ul>
@@ -874,18 +913,35 @@ function SnapshotView({
         </div>
       )}
 
-      {/* Additive deeper assessment CTA — only in the unsaved state */}
+      {/* Additive deeper-assessment CTA — only in the unsaved state.
+          Eric flagged the old text-sm white/70 link as too easy to
+          miss. Now: bigger type, gold accent, benefits-led headline. */}
       {!revealAll && (
-        <div className="mt-3 text-center">
-          <Link
-            href="/assessment"
-            className="inline-flex items-center gap-1.5 text-white/80 hover:text-white text-sm underline-offset-4 hover:underline"
-          >
-            <Sparkles size={14} />
-            Want a sharper score? Add the 15-question Readiness Assessment (~5 min)
-            <ArrowRight size={13} />
-          </Link>
-        </div>
+        <Link
+          href="/assessment"
+          className="mt-5 flex items-start gap-3 bg-white/10 hover:bg-white/15 backdrop-blur border border-white/15 hover:border-gold/40 rounded-xl px-5 py-4 transition-all group"
+        >
+          <Sparkles
+            size={20}
+            className="text-gold flex-shrink-0 mt-0.5"
+            aria-hidden
+          />
+          <div className="min-w-0 flex-1">
+            <p className="text-white font-bold text-base md:text-lg leading-tight">
+              Get a more accurate score in 5 minutes.
+            </p>
+            <p className="text-white/75 text-sm mt-0.5 leading-relaxed">
+              Answer 15 honest questions about your business and we&apos;ll
+              sharpen the read on your readiness, your gaps, and the
+              right next step.
+            </p>
+          </div>
+          <ArrowRight
+            size={18}
+            className="text-gold flex-shrink-0 mt-1.5 group-hover:translate-x-1 transition-transform"
+            aria-hidden
+          />
+        </Link>
       )}
     </div>
   );

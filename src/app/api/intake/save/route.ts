@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
   const supabase = getSupabaseAdmin();
   const { data: session, error: fetchErr } = await supabase
     .from("intake_sessions")
-    .select("id, cookie_token, status, business_data, score_data")
+    .select("id, cookie_token, status, business_data, score_data, url")
     .eq("id", sessionId)
     .maybeSingle();
 
@@ -164,6 +164,67 @@ export async function POST(req: NextRequest) {
   }).catch((err) => {
     console.error("[intake/save] resend failed:", err);
   });
+
+  // ─── Internal team notification ──────────────────────────────────
+  // Eric (2026-05-10): when a high-tier lead saves their snapshot,
+  // route the suggestedTier flag to the team inbox so sales knows
+  // how to prep before the strategy call. Doesn't fire when
+  // INTERNAL_NOTIFICATION_EMAIL is unset (dev / test environments).
+  const internalTo = process.env.INTERNAL_NOTIFICATION_EMAIL;
+  if (internalTo) {
+    const tierFlagMap: Record<string, string> = {
+      "not-yet": "[NOT-YET] coach to fix-first first",
+      blueprint: "[BLUEPRINT] DIY-ready — light touch",
+      navigator: "[NAVIGATOR] coached engagement fit",
+      builder: "[BUILDER] hot lead — done-with-you fit",
+    };
+    const tierFlag = suggestedTier ? tierFlagMap[suggestedTier] ?? "" : "";
+    const businessUrl = (session as { url?: string }).url ?? "";
+
+    const internalSubject = `New intake lead: ${businessName} ${tierFlag}`;
+    const internalText = [
+      `New intake save from the URL-prefill lead magnet.`,
+      ``,
+      `Business: ${businessName}`,
+      `URL submitted: ${businessUrl}`,
+      `Email: ${email}`,
+      `Preliminary score: ${overall ?? "(unknown)"}/100`,
+      `Suggested tier: ${suggestedTier ?? "(unknown)"}  ${tierFlag}`,
+      ``,
+      `Open the snapshot: ${resumeUrl}`,
+      ``,
+      `What this means for the call:`,
+      suggestedTier === "builder"
+        ? `  Hot lead. Their business shape suggests Builder fit. Prep accordingly.`
+        : suggestedTier === "navigator"
+          ? `  Strong fit for Navigator. They likely need the coached path.`
+          : suggestedTier === "blueprint"
+            ? `  DIY-ready signal. Light-touch sales — they may want to self-serve.`
+            : `  Not-yet signal. Discovery call should focus on what to fix first.`,
+    ].join("\n");
+    const internalHtml = `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; color: #1e3a5f; max-width: 560px; padding: 16px;">
+        <h2 style="margin: 0 0 12px; font-size: 18px;">New intake lead: ${escapeHtml(businessName)} ${escapeHtml(tierFlag)}</h2>
+        <table style="font-size: 14px; line-height: 1.5; border-collapse: collapse;">
+          <tr><td style="color:#888;padding-right:12px;">URL submitted</td><td><a href="${escapeHtml(businessUrl)}">${escapeHtml(businessUrl)}</a></td></tr>
+          <tr><td style="color:#888;padding-right:12px;">Email</td><td><a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a></td></tr>
+          <tr><td style="color:#888;padding-right:12px;">Preliminary score</td><td><strong>${overall ?? "(unknown)"}/100</strong></td></tr>
+          <tr><td style="color:#888;padding-right:12px;">Suggested tier</td><td><strong>${escapeHtml(suggestedTier ?? "(unknown)")}</strong>  ${escapeHtml(tierFlag)}</td></tr>
+        </table>
+        <p style="margin: 16px 0;"><a href="${resumeUrl}" style="background: #d4af37; color: #1e3a5f; font-weight: 700; text-decoration: none; padding: 8px 16px; border-radius: 6px;">Open the snapshot</a></p>
+      </div>
+    `.trim();
+    void sendEmail({
+      to: internalTo,
+      subject: internalSubject,
+      html: internalHtml,
+      text: internalText,
+      tag: "intake-internal-lead-notification",
+      idempotencyKey: `intake-internal-${sessionId}`,
+    }).catch((err) => {
+      console.error("[intake/save] internal notification failed:", err);
+    });
+  }
 
   return NextResponse.json({ ok: true });
 }
