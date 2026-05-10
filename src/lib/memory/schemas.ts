@@ -400,38 +400,38 @@ const BUSINESS_OVERVIEW: SectionSchema = {
   slug: "business_overview",
   title: "Concept & Story",
   description:
-    "What you do, who you do it for, and how you got here. The opening of your FDD — and what franchisees fall in love with.",
+    "What you do, who you do it for, and how you got here. This is the opening of your FDD, and it's what franchisees fall in love with.",
   compilesInto:
     "FDD Item 1, Operations Manual §1, Discovery Day deck opener.",
   fields: [
     // ── The concept ─────────────────────────────────────────────────────────
     {
       name: "concept_summary",
-      label: "Concept summary",
+      label: "How would you describe your concept in two or three sentences?",
       type: "textarea",
       required: true,
       placeholder:
         "Cypress Lane is a small-town third-wave coffee shop that roasts on-site, serves a locally-tuned menu, and treats every café as a community room rather than a transaction counter.",
       helpText:
-        "2–3 sentences. The first paragraph an attorney reads. Should be unmistakably about your business — not generic.",
+        "Write two or three sentences that an attorney can use as the opening paragraph of your FDD. It should sound unmistakably like your business, not a generic description that could apply to any company.",
       category: "The concept",
     },
     {
       name: "core_offering",
-      label: "What you sell",
+      label: "What do you sell?",
       type: "textarea",
       placeholder:
         "Specialty coffee (single-origin pour-over, espresso drinks), in-house pastries, light savory menu, retail beans by the bag.",
       helpText:
-        "What changes hands at the register. Specific enough an attorney can classify the business.",
+        "Tell us what your customers actually buy when they walk in. Be specific enough that an attorney can classify the kind of business you run.",
       category: "The concept",
     },
     {
       name: "industry_category",
-      label: "Industry category",
+      label: "What industry category does your business fall into?",
       type: "text",
       placeholder: "Specialty coffee café (QSR coffee subcategory)",
-      helpText: "Plain-English category, not a NAICS code.",
+      helpText: "Describe the category in plain English rather than using a NAICS code.",
       category: "The concept",
       suggestedFrom: {
         kind: "from_scrape",
@@ -444,7 +444,7 @@ const BUSINESS_OVERVIEW: SectionSchema = {
       type: "text",
       placeholder: "722515",
       helpText:
-        "We look this up from your industry category — you don't have to find it yourself. Verify on the U.S. Census NAICS site if you want to double-check, and override here if we got it wrong.",
+        "We look this up from your industry category, so you don't have to find it yourself. If you want to double-check, you can verify it on the U.S. Census NAICS site and override the value here if we got it wrong.",
       category: "The concept",
       advanced: true,
       suggestedFrom: {
@@ -457,12 +457,12 @@ const BUSINESS_OVERVIEW: SectionSchema = {
     // ── Founder ─────────────────────────────────────────────────────────────
     {
       name: "founder_name",
-      label: "Founder",
+      label: "Who's the founder?",
       type: "text",
       required: true,
       placeholder: "Sarah Chen",
       helpText:
-        "The person whose story anchors the brand. If multiple co-founders, the one who's the public face.",
+        "This is the person whose story anchors the brand. If you have multiple co-founders, list the one who's the public face of the business.",
       category: "Founder",
       suggestedFrom: {
         kind: "from_assessment",
@@ -471,32 +471,32 @@ const BUSINESS_OVERVIEW: SectionSchema = {
     },
     {
       name: "founder_background",
-      label: "Founder background",
+      label: "What's the founder's background?",
       type: "textarea",
       placeholder:
         "Sarah spent eight years as a barista and trainer at three Bay Area roasters before moving back home to Oxford in 2018.",
       helpText:
-        "1–2 sentences on relevant experience. The credibility paragraph — what gives the founder the right to be running this.",
+        "Write one or two sentences about the relevant experience that gives the founder credibility to run this business.",
       category: "Founder",
     },
     {
       name: "founder_origin_story",
-      label: "Why this business exists",
+      label: "Why does your business exist?",
       type: "textarea",
       placeholder:
-        "I grew up here and I drove 40 miles each way for good coffee for years. When I moved back, I didn't want to keep doing that — and I figured my neighbors didn't either.",
+        "I grew up here and I drove 40 miles each way for good coffee for years. When I moved back, I didn't want to keep doing that, and I figured my neighbors didn't either.",
       helpText:
-        "1–2 paragraphs in the founder's own voice. The single most important narrative passage in the whole Blueprint — this is what franchisees remember.",
+        "Write one or two paragraphs in the founder's own voice. This is the most important passage in the whole Blueprint, and it's what franchisees will remember about you.",
       category: "Founder",
     },
 
     // ── Track record ────────────────────────────────────────────────────────
     {
       name: "founding_date",
-      label: "First location opened",
+      label: "When did your first location open?",
       type: "date",
       placeholder: "2018-09-01",
-      helpText: "Date the first revenue-generating location opened.",
+      helpText: "The date your first location actually started generating revenue.",
       category: "Track record",
       suggestedFrom: {
         kind: "from_scrape",
@@ -505,7 +505,7 @@ const BUSINESS_OVERVIEW: SectionSchema = {
     },
     {
       name: "first_location_address",
-      label: "First location address",
+      label: "What's the address of your first location?",
       type: "text",
       placeholder: "412 Main Street, Oxford, MS 38655",
       category: "Track record",
@@ -513,10 +513,10 @@ const BUSINESS_OVERVIEW: SectionSchema = {
     },
     {
       name: "current_location_count",
-      label: "Locations operating today",
+      label: "How many locations are operating today?",
       type: "integer",
       placeholder: "3",
-      helpText: "Open and earning revenue, both your own and any already franchised.",
+      helpText: "Count every location that's open and earning revenue, including the ones you own and any that have already been franchised.",
       category: "Track record",
     },
     {
@@ -532,40 +532,40 @@ const BUSINESS_OVERVIEW: SectionSchema = {
       label: "Of which: already franchised",
       type: "integer",
       placeholder: "0",
-      helpText: "Most emerging franchisors are at 0 here when they start the FDD process.",
+      helpText: "Most emerging franchisors are at zero here when they start the FDD process.",
       category: "Track record",
       advanced: true,
     },
     {
       name: "business_history_milestones",
-      label: "Key milestones",
+      label: "What are the key milestones in your business history?",
       type: "list_long",
       placeholder:
         "2018: opened first location\n2020: hit $850K AUV\n2022: opened second location, brought roasting in-house\n2024: third location, started developing the franchise model",
       helpText:
-        "One short line per milestone. The arc the FDD and Discovery Day deck both walk through.",
+        "Add one short line per milestone. This is the arc that both your FDD and your Discovery Day deck will walk through.",
       category: "Track record",
     },
 
     // ── Audience ────────────────────────────────────────────────────────────
     {
       name: "target_customer_persona",
-      label: "Who walks through the door",
+      label: "Who walks through your door?",
       type: "textarea",
       placeholder:
         "Locals 25–55 with disposable income and either a remote-work setup or a kid in school. They have a coffee habit and they care about quality more than they admit.",
       helpText:
-        "2–3 sentences on your typical customer. Specific enough to drive site selection and franchisee training.",
+        "Describe your typical customer in two or three sentences. Be specific enough that the description can guide site selection and franchisee training.",
       category: "Audience",
     },
     {
       name: "distinctive_attributes",
-      label: "Why this works as a franchise",
+      label: "Why does your concept work as a franchise?",
       type: "list_short",
       placeholder:
         "Codified menu (no chef-driven dependency)\nIn-house roasting + barista training program\nProven unit economics across 3 locations",
       helpText:
-        "Three to five reasons this works as a franchise — not just as your business. Each should be a defensible claim, not marketing fluff.",
+        "Give us three to five reasons this works as a franchise, not just as your business. Each one should be a defensible claim rather than marketing fluff.",
       category: "Audience",
     },
   ],
@@ -602,21 +602,21 @@ const UNIT_ECONOMICS: SectionSchema = {
     // ── Headline performance ────────────────────────────────────────────────
     {
       name: "average_unit_volume_dollars",
-      label: "Average Unit Volume (mature)",
+      label: "What's the average annual revenue of a mature location?",
       type: "currency",
       required: true,
       placeholder: "1200000",
       helpText:
-        "The annual gross revenue of a mature location (year 3+). The single most important number in the whole Blueprint.",
+        "This is the annual gross revenue of a location that's been open for three or more years. It's the single most important number in your whole Blueprint.",
       category: "Headline performance",
     },
     {
       name: "auv_year_1_dollars",
-      label: "Year 1 revenue (typical)",
+      label: "What does a typical new location earn in year one?",
       type: "currency",
       placeholder: "780000",
       helpText:
-        "What a typical new location generates in its first 12 months. We suggest a starting number from your mature AUV × your year-1 ramp percentage; override if your real data says different.",
+        "This is what a typical new location generates in its first 12 months. We'll suggest a starting number based on your mature AUV multiplied by your year-one ramp percentage, and you can override it if your real data says something different.",
       category: "Headline performance",
       suggestedFrom: {
         kind: "derived",
@@ -626,7 +626,7 @@ const UNIT_ECONOMICS: SectionSchema = {
     },
     {
       name: "auv_year_2_dollars",
-      label: "Year 2 revenue (typical)",
+      label: "What does a typical location earn in year two?",
       type: "currency",
       placeholder: "1000000",
       category: "Headline performance",
@@ -638,12 +638,12 @@ const UNIT_ECONOMICS: SectionSchema = {
     },
     {
       name: "ebitda_margin_pct",
-      label: "Operating profit margin (mature)",
+      label: "What's your operating profit margin at a mature location?",
       type: "percentage",
       required: true,
       placeholder: "18",
       helpText:
-        "EBITDA as a % of revenue (operating profit before interest, taxes, depreciation, amortization). Calculated for you from the cost-structure inputs below — you don't need to compute this. The number a banker or franchisee will look at first.",
+        "This is EBITDA as a percentage of revenue (operating profit before interest, taxes, depreciation, and amortization). We calculate it for you from the cost-structure inputs below, so you don't need to compute it yourself. It's the number a banker or franchisee will look at first.",
       category: "Headline performance",
       min: 0,
       max: 100,
@@ -665,7 +665,7 @@ const UNIT_ECONOMICS: SectionSchema = {
       type: "integer",
       placeholder: "30",
       helpText:
-        "How long until a franchisee recovers their initial investment from operating cash flow. Calculated from the average initial investment and mature-unit profit dollars — you don't need to compute this.",
+        "This is how long it takes a franchisee to recover their initial investment from operating cash flow. We calculate it from the average initial investment and mature-unit profit dollars, so you don't need to compute it.",
       category: "Headline performance",
       computed: {
         deps: [
@@ -687,51 +687,51 @@ const UNIT_ECONOMICS: SectionSchema = {
       required: true,
       placeholder: "32",
       helpText:
-        "Variable cost of the product itself. For coffee: beans, milk, syrups, cups. NOT labor.",
+        "This is the variable cost of the product itself. For a coffee shop, that's beans, milk, syrups, and cups. Don't include labor in this number.",
       category: "Cost structure",
       min: 0,
       max: 100,
     },
     {
       name: "labor_pct",
-      label: "Labor %",
+      label: "What's your labor cost as a percentage of revenue?",
       type: "percentage",
       required: true,
       placeholder: "28",
-      helpText: "All wages, benefits, payroll taxes. As % of revenue.",
+      helpText: "Include all wages, benefits, and payroll taxes as a percentage of your revenue.",
       category: "Cost structure",
       min: 0,
       max: 100,
     },
     {
       name: "occupancy_pct",
-      label: "Occupancy %",
+      label: "What's your occupancy cost as a percentage of revenue?",
       type: "percentage",
       required: true,
       placeholder: "8",
-      helpText: "Rent + CAM + utilities. As % of revenue.",
+      helpText: "Include rent, CAM, and utilities as a percentage of your revenue.",
       category: "Cost structure",
       min: 0,
       max: 100,
     },
     {
       name: "marketing_pct",
-      label: "Local marketing %",
+      label: "What percentage of revenue goes to local marketing?",
       type: "percentage",
       placeholder: "2",
       helpText:
-        "Local marketing spend (NOT the brand-level ad fund — that's in Royalty, Ad Fund & Fees).",
+        "This is the local marketing spend at each location. The brand-level ad fund is separate and lives in the Royalty, Ad Fund & Fees section.",
       category: "Cost structure",
       min: 0,
       max: 100,
     },
     {
       name: "other_opex_pct",
-      label: "Other operating expenses %",
+      label: "What percentage of revenue covers other operating expenses?",
       type: "percentage",
       placeholder: "6",
       helpText:
-        "Everything not in the above buckets: insurance, repairs, software, supplies, etc.",
+        "This covers everything that doesn't fit in the buckets above, like insurance, repairs, software, and supplies.",
       category: "Cost structure",
       min: 0,
       max: 100,
@@ -741,11 +741,11 @@ const UNIT_ECONOMICS: SectionSchema = {
     // ── Ramp curve ──────────────────────────────────────────────────────────
     {
       name: "ramp_curve_year_1_pct",
-      label: "Year 1 ramp (% of mature AUV)",
+      label: "What percentage of mature AUV does a new location hit in year one?",
       type: "percentage",
       placeholder: "65",
       helpText:
-        "What % of mature AUV a new location hits in year 1. We suggest an industry-typical default for your concept; override if your existing locations have shown a different curve.",
+        "This is the share of mature AUV a new location reaches in its first year. We suggest an industry-typical default for your concept, and you can override it if your existing locations have shown a different curve.",
       category: "Ramp curve",
       min: 0,
       max: 100,
@@ -757,7 +757,7 @@ const UNIT_ECONOMICS: SectionSchema = {
     },
     {
       name: "ramp_curve_year_2_pct",
-      label: "Year 2 ramp",
+      label: "What percentage of mature AUV does a location hit in year two?",
       type: "percentage",
       placeholder: "85",
       category: "Ramp curve",
@@ -771,10 +771,10 @@ const UNIT_ECONOMICS: SectionSchema = {
     },
     {
       name: "ramp_curve_year_3_pct",
-      label: "Year 3 ramp",
+      label: "What percentage of mature AUV does a location hit in year three?",
       type: "percentage",
       placeholder: "100",
-      helpText: "Defaults to 100% (year 3 = mature) for most concepts.",
+      helpText: "For most concepts this defaults to 100%, since year three is when a location is considered mature.",
       category: "Ramp curve",
       min: 0,
       max: 100,
@@ -784,17 +784,17 @@ const UNIT_ECONOMICS: SectionSchema = {
     // ── Initial investment (FDD Item 7) ─────────────────────────────────────
     {
       name: "initial_investment_low_dollars",
-      label: "Initial investment — low estimate",
+      label: "What's the low end of what a franchisee will spend to open?",
       type: "currency",
       required: true,
       placeholder: "275000",
       helpText:
-        "The low end of what a franchisee will spend to open. Drives FDD Item 7 directly.",
+        "This is the low end of what a franchisee will spend to open a location, and it feeds directly into FDD Item 7.",
       category: "Initial investment",
     },
     {
       name: "initial_investment_high_dollars",
-      label: "Initial investment — high estimate",
+      label: "What's the high end of what a franchisee will spend to open?",
       type: "currency",
       required: true,
       placeholder: "425000",
@@ -802,16 +802,16 @@ const UNIT_ECONOMICS: SectionSchema = {
     },
     {
       name: "buildout_cost_low_dollars",
-      label: "Build-out cost — low",
+      label: "What's the low end of build-out cost?",
       type: "currency",
       placeholder: "120000",
-      helpText: "Construction + tenant improvements only. Excludes FF&E.",
+      helpText: "Include only construction and tenant improvements. Don't include furniture, fixtures, and equipment in this number.",
       category: "Initial investment",
       advanced: true,
     },
     {
       name: "buildout_cost_high_dollars",
-      label: "Build-out cost — high",
+      label: "What's the high end of build-out cost?",
       type: "currency",
       placeholder: "200000",
       category: "Initial investment",
@@ -819,19 +819,19 @@ const UNIT_ECONOMICS: SectionSchema = {
     },
     {
       name: "ff_e_cost_dollars",
-      label: "FF&E cost (typical)",
+      label: "What's the typical cost of furniture, fixtures, and equipment?",
       type: "currency",
       placeholder: "80000",
-      helpText: "Furniture, fixtures, equipment.",
+      helpText: "Include the full cost of furniture, fixtures, and equipment a franchisee needs to open.",
       category: "Initial investment",
       advanced: true,
     },
     {
       name: "working_capital_dollars",
-      label: "Working capital",
+      label: "How much working capital does a franchisee need?",
       type: "currency",
       placeholder: "30000",
-      helpText: "Operating cash to run the business through ramp.",
+      helpText: "This is the operating cash a franchisee needs to keep the business running through the ramp period.",
       category: "Initial investment",
       advanced: true,
     },
@@ -839,7 +839,7 @@ const UNIT_ECONOMICS: SectionSchema = {
     // ── Systems ─────────────────────────────────────────────────────────────
     {
       name: "pos_system",
-      label: "Point-of-sale system",
+      label: "What point-of-sale system do you use?",
       type: "text",
       placeholder: "Square for Restaurants",
       category: "Systems",
@@ -847,7 +847,7 @@ const UNIT_ECONOMICS: SectionSchema = {
     },
     {
       name: "accounting_system",
-      label: "Accounting / bookkeeping system",
+      label: "What accounting or bookkeeping system do you use?",
       type: "text",
       placeholder: "QuickBooks Online",
       category: "Systems",
@@ -857,12 +857,12 @@ const UNIT_ECONOMICS: SectionSchema = {
     // ── Assumptions narrative ───────────────────────────────────────────────
     {
       name: "key_assumptions",
-      label: "Key assumptions behind these numbers",
+      label: "What assumptions are behind these numbers?",
       type: "textarea",
       placeholder:
-        "Numbers based on the three corporate locations (years 2018–2025). Assumes a 1,400–1,800 sqft footprint, urban or close-suburb location, and a household income median ≥ $55K within 5 miles. Does not assume drive-through revenue.",
+        "Numbers based on the three corporate locations (years 2018–2025). Assumes a 1,400–1,800 sqft footprint, urban or close-suburb location, and a household income median of $55K or more within 5 miles. Does not assume drive-through revenue.",
       helpText:
-        "Anything an attorney or franchisee should know to read these numbers correctly. Becomes the FDD Item 19 disclaimer paragraph.",
+        "Tell us anything an attorney or franchisee should know to read these numbers correctly. This becomes the disclaimer paragraph in FDD Item 19.",
       category: "Assumptions",
     },
   ],
@@ -898,12 +898,12 @@ const FRANCHISE_ECONOMICS: SectionSchema = {
     // ── Initial fee ─────────────────────────────────────────────────────────
     {
       name: "franchise_fee_dollars",
-      label: "Initial franchise fee",
+      label: "What would you like your initial franchise fee to be?",
       type: "currency",
       required: true,
       placeholder: "45000",
       helpText:
-        "One-time fee paid at signing. We'll suggest a number from your industry — adjust to match your strategy. Most emerging franchisors land between $25K and $50K.",
+        "This is the one-time fee a franchisee pays when they sign on. We'll suggest a typical number for your industry, and you can adjust it to fit your strategy. Most new franchisors set this somewhere between $25,000 and $50,000.",
       category: "Initial fee",
       suggestedFrom: {
         kind: "industry_lookup",
@@ -913,11 +913,11 @@ const FRANCHISE_ECONOMICS: SectionSchema = {
     },
     {
       name: "franchise_fee_volume_discount",
-      label: "Multi-unit discount (if any)",
+      label: "Do you offer a multi-unit discount?",
       type: "textarea",
       placeholder:
         "$5,000 off each additional unit signed at the same time, up to 4 units.",
-      helpText: "Optional — leave blank if you don't offer one.",
+      helpText: "This one is optional, so leave it blank if you don't offer a discount.",
       category: "Initial fee",
       advanced: true,
     },
@@ -925,12 +925,12 @@ const FRANCHISE_ECONOMICS: SectionSchema = {
     // ── Royalty ─────────────────────────────────────────────────────────────
     {
       name: "royalty_rate_pct",
-      label: "Royalty rate",
+      label: "What royalty rate do you want to charge?",
       type: "percentage",
       required: true,
       placeholder: "6",
       helpText:
-        "% of gross sales the franchisee pays the franchisor. We'll suggest a number from your industry; adjust to match what your unit economics support. Industry typical: 4–8%.",
+        "This is the percentage of gross sales a franchisee pays the franchisor. We'll suggest a number from your industry, and you can adjust it to match what your unit economics support. The typical range is 4% to 8%.",
       category: "Royalty",
       min: 0,
       max: 25,
@@ -942,10 +942,10 @@ const FRANCHISE_ECONOMICS: SectionSchema = {
     },
     {
       name: "royalty_rate_basis",
-      label: "Royalty basis",
+      label: "What's your royalty calculated against?",
       type: "select",
       placeholder: "gross sales",
-      helpText: "What the royalty is calculated against.",
+      helpText: "Pick the figure your royalty rate gets applied to.",
       options: [
         { value: "gross_sales", label: "Gross sales" },
         { value: "net_sales", label: "Net sales (gross minus refunds/comps)" },
@@ -955,7 +955,7 @@ const FRANCHISE_ECONOMICS: SectionSchema = {
     },
     {
       name: "royalty_payment_frequency",
-      label: "Royalty payment frequency",
+      label: "How often do franchisees pay royalties?",
       type: "select",
       options: [
         { value: "weekly", label: "Weekly" },
@@ -966,11 +966,11 @@ const FRANCHISE_ECONOMICS: SectionSchema = {
     },
     {
       name: "royalty_minimum_dollars",
-      label: "Royalty minimum (monthly)",
+      label: "Do you set a minimum monthly royalty?",
       type: "currency",
       placeholder: "500",
       helpText:
-        "Optional minimum royalty if % calculation comes out lower. Most concepts skip this.",
+        "If you want a floor when the percentage calculation comes out lower, set it here. Most concepts skip this.",
       category: "Royalty",
       advanced: true,
     },
@@ -978,12 +978,12 @@ const FRANCHISE_ECONOMICS: SectionSchema = {
     // ── Ad fund ─────────────────────────────────────────────────────────────
     {
       name: "ad_fund_pct",
-      label: "Brand ad fund contribution",
+      label: "What percentage of sales goes to the brand ad fund?",
       type: "percentage",
       required: true,
       placeholder: "2",
       helpText:
-        "% of gross sales franchisees contribute to the brand-wide ad fund. We'll suggest a number from your industry. Industry typical: 1–3%.",
+        "This is the percentage of gross sales franchisees contribute to the brand-wide ad fund. We'll suggest a number from your industry, and the typical range is 1% to 3%.",
       category: "Ad fund",
       min: 0,
       max: 10,
@@ -995,11 +995,11 @@ const FRANCHISE_ECONOMICS: SectionSchema = {
     },
     {
       name: "local_marketing_minimum_pct",
-      label: "Local marketing minimum (% of sales)",
+      label: "What's the minimum percentage of sales franchisees must spend on local marketing?",
       type: "percentage",
       placeholder: "2",
       helpText:
-        "What franchisees MUST spend on local marketing on top of the ad fund. Optional.",
+        "This is what franchisees are required to spend on local marketing on top of the brand ad fund. It's optional, so leave it blank if you don't require one.",
       category: "Ad fund",
       advanced: true,
     },
@@ -1007,40 +1007,40 @@ const FRANCHISE_ECONOMICS: SectionSchema = {
     // ── Other recurring fees ────────────────────────────────────────────────
     {
       name: "technology_fee_dollars_per_month",
-      label: "Technology fee (monthly)",
+      label: "What's the monthly technology fee?",
       type: "currency",
       placeholder: "350",
       helpText:
-        "Monthly fee for required technology stack (POS, scheduling, etc.). Pass-through cost is fine here.",
+        "This is the monthly fee for the required technology stack, like POS and scheduling tools. It's fine to use this as a pass-through cost.",
       category: "Other fees",
       advanced: true,
     },
     {
       name: "transfer_fee_dollars",
-      label: "Transfer fee",
+      label: "What's your transfer fee?",
       type: "currency",
       placeholder: "10000",
       helpText:
-        "Fee when a franchisee sells/transfers their unit. Industry typical: $5K–$15K.",
+        "This is the fee a franchisee pays when they sell or transfer their unit. The industry-typical range is $5,000 to $15,000.",
       category: "Other fees",
       advanced: true,
     },
     {
       name: "renewal_fee_dollars",
-      label: "Renewal fee",
+      label: "What's your renewal fee?",
       type: "currency",
       placeholder: "15000",
-      helpText: "Charged when the franchisee renews the agreement at term end.",
+      helpText: "This is what you charge a franchisee when they renew their agreement at the end of the term.",
       category: "Other fees",
       advanced: true,
     },
     {
       name: "training_fee_dollars",
-      label: "Initial training fee",
+      label: "What's your initial training fee?",
       type: "currency",
       placeholder: "0",
       helpText:
-        "Most concepts include training in the franchise fee — leave at 0 if so. Charge separately if you want a higher franchise fee + standalone training cost.",
+        "Most concepts include training in the franchise fee, so you can leave this at zero. Set a number here if you'd rather charge a higher franchise fee plus a separate training cost.",
       category: "Other fees",
       advanced: true,
     },
@@ -1048,11 +1048,11 @@ const FRANCHISE_ECONOMICS: SectionSchema = {
     // ── Term ────────────────────────────────────────────────────────────────
     {
       name: "term_years",
-      label: "Initial term (years)",
+      label: "How long is your initial franchise term?",
       type: "integer",
       required: true,
       placeholder: "10",
-      helpText: "Length of the initial franchise agreement. We default to 10 years — the franchise-industry standard. Adjust if your industry runs shorter (some service trades are 5-7).",
+      helpText: "This is the length of the initial franchise agreement. We default to 10 years, which is the franchise-industry standard, and you can adjust it if your industry runs shorter (some service trades are 5 to 7 years).",
       category: "Term",
       min: 1,
       max: 30,
@@ -1064,19 +1064,19 @@ const FRANCHISE_ECONOMICS: SectionSchema = {
     },
     {
       name: "renewal_term_years",
-      label: "Renewal term (years)",
+      label: "How long does each renewal last?",
       type: "integer",
       placeholder: "5",
-      helpText: "How long each renewal lasts. Industry typical: 5–10 years.",
+      helpText: "The industry-typical range is 5 to 10 years.",
       category: "Term",
       advanced: true,
     },
     {
       name: "renewal_count_allowed",
-      label: "Number of renewals allowed",
+      label: "How many renewals can a franchisee do?",
       type: "integer",
       placeholder: "2",
-      helpText: "How many times a franchisee can renew. 0 = no renewals; 99 = unlimited.",
+      helpText: "Use zero if you don't allow renewals, or 99 for unlimited.",
       category: "Term",
       advanced: true,
     },
@@ -1084,41 +1084,41 @@ const FRANCHISE_ECONOMICS: SectionSchema = {
     // ── Territory ───────────────────────────────────────────────────────────
     {
       name: "territory_protection_type",
-      label: "Territory protection type",
+      label: "What kind of territory protection will you offer?",
       type: "select",
       required: true,
       helpText:
-        "How exclusive the franchisee's territory is. The biggest single decision in the franchise agreement.",
+        "This sets how exclusive the franchisee's territory is, and it's the single biggest decision in your franchise agreement.",
       options: [
-        { value: "exclusive", label: "Exclusive — no other franchised or corporate units inside" },
-        { value: "non_exclusive", label: "Non-exclusive — franchisor can place additional units" },
+        { value: "exclusive", label: "Exclusive (no other franchised or corporate units inside)" },
+        { value: "non_exclusive", label: "Non-exclusive (franchisor can place additional units)" },
         {
           value: "protected",
-          label: "Protected — franchisor can't place inside, but can grant outside",
+          label: "Protected (franchisor can't place inside, but can grant outside)",
         },
         {
           value: "point_of_interest",
-          label: "Point-of-interest — franchisee gets a designated address only, no surrounding territory",
+          label: "Point-of-interest (franchisee gets a designated address only, no surrounding territory)",
         },
       ],
       category: "Territory",
     },
     {
       name: "territory_radius_miles",
-      label: "Territory radius (miles)",
+      label: "How big is the territory around each unit?",
       type: "number",
       placeholder: "3",
       helpText:
-        "If territory is exclusive/protected, the radius around the unit. Often 1–5 miles for retail, larger for service-based concepts.",
+        "If a territory is exclusive or protected, this is the radius around the unit in miles. Retail concepts are often 1 to 5 miles, and service-based concepts tend to be larger.",
       category: "Territory",
     },
     {
       name: "territory_population_count",
-      label: "Territory population (alternative to radius)",
+      label: "Do you define territory by population instead of radius?",
       type: "integer",
       placeholder: "50000",
       helpText:
-        "Population-based territory: '1 unit per 50,000 residents' instead of a fixed radius. Skip if using radius.",
+        "Some franchisors define territory by population, like one unit per 50,000 residents, instead of a fixed radius. Skip this if you're using a radius.",
       category: "Territory",
       advanced: true,
     },
@@ -1126,28 +1126,28 @@ const FRANCHISE_ECONOMICS: SectionSchema = {
     // ── Multi-unit & development ────────────────────────────────────────────
     {
       name: "multi_unit_required",
-      label: "Multi-unit deal required?",
+      label: "Will you require multi-unit deals?",
       type: "boolean",
       helpText:
-        "Some concepts only sell to multi-unit operators. Leave false if you accept single-unit franchisees.",
+        "Some concepts only sell to multi-unit operators. Leave this false if you accept single-unit franchisees.",
       category: "Multi-unit",
       advanced: true,
     },
     {
       name: "area_development_fee_dollars",
-      label: "Area Development fee",
+      label: "Do you charge an area development fee?",
       type: "currency",
       placeholder: "20000",
       helpText:
-        "Optional separate fee for area developers (multi-unit operators committing to a region). Skip if not offering ADAs.",
+        "This is an optional separate fee for area developers, who are multi-unit operators committing to a whole region. Skip it if you're not offering ADAs.",
       category: "Multi-unit",
       advanced: true,
     },
     {
       name: "master_franchise_available",
-      label: "Master franchise opportunities available?",
+      label: "Will you offer master franchise opportunities?",
       type: "boolean",
-      helpText: "Sub-franchising rights for international expansion. Most emerging franchisors say no.",
+      helpText: "These are sub-franchising rights for international expansion. Most emerging franchisors say no.",
       category: "Multi-unit",
       advanced: true,
     },
@@ -1176,19 +1176,19 @@ const FRANCHISEE_PROFILE: SectionSchema = {
   slug: "franchisee_profile",
   title: "Who You Want as a Franchisee",
   description:
-    "The kind of person who should own one of your locations. Their financial profile, what they've done before, how they'll run it, and — just as important — who they aren't.",
+    "The kind of person who should own one of your locations. Their financial profile, what they've done before, how they'll run it, and (just as important) who they aren't.",
   compilesInto:
     "FDD Item 20, Franchisee Scoring Matrix, Discovery Day pre-qualification.",
   fields: [
     // ── Financial profile ──────────────────────────────────────────────────
     {
       name: "minimum_liquid_capital_dollars",
-      label: "Required liquid capital",
+      label: "How much liquid capital must a candidate have?",
       type: "currency",
       required: true,
       placeholder: "100000",
       helpText:
-        "How much cash a candidate must have on hand. We suggest 30% of the high end of your initial investment range — adjust if you want a tighter or looser threshold.",
+        "This is how much cash a candidate needs to have on hand. We suggest 30% of the high end of your initial investment range, and you can adjust it if you want a tighter or looser threshold.",
       category: "Financial profile",
       suggestedFrom: {
         kind: "derived",
@@ -1198,12 +1198,12 @@ const FRANCHISEE_PROFILE: SectionSchema = {
     },
     {
       name: "minimum_net_worth_dollars",
-      label: "Required net worth",
+      label: "What net worth must a candidate have?",
       type: "currency",
       required: true,
       placeholder: "500000",
       helpText:
-        "Total net worth (cash, investments, equity in real estate, etc.) required to qualify. We suggest 3.5× the liquid capital requirement — the franchise-industry default.",
+        "This is the total net worth a candidate needs, including cash, investments, and equity in real estate. We suggest 3.5 times the liquid capital requirement, which is the franchise-industry default.",
       category: "Financial profile",
       suggestedFrom: {
         kind: "derived",
@@ -1213,11 +1213,11 @@ const FRANCHISEE_PROFILE: SectionSchema = {
     },
     {
       name: "minimum_credit_score",
-      label: "Minimum credit score",
+      label: "What's the minimum credit score you'll accept?",
       type: "integer",
       placeholder: "680",
       helpText:
-        "We default to 680 — the franchise-industry standard for SBA-financed deals. Lower scores can usually still qualify with the right bank but narrow the candidate pool.",
+        "We default to 680, which is the franchise-industry standard for SBA-financed deals. Lower scores can usually still qualify with the right bank, but they narrow the candidate pool.",
       category: "Financial profile",
       min: 300,
       max: 850,
@@ -1230,10 +1230,10 @@ const FRANCHISEE_PROFILE: SectionSchema = {
     },
     {
       name: "accepts_sba_financed",
-      label: "Open to SBA-financed candidates?",
+      label: "Are you open to SBA-financed candidates?",
       type: "boolean",
       helpText:
-        "Most emerging franchisors say yes. Saying no narrows the candidate pool dramatically.",
+        "Most emerging franchisors say yes here, since saying no narrows the candidate pool dramatically.",
       category: "Financial profile",
       advanced: true,
     },
@@ -1241,38 +1241,38 @@ const FRANCHISEE_PROFILE: SectionSchema = {
     // ── Experience required ────────────────────────────────────────────────
     {
       name: "prior_business_ownership_required",
-      label: "Must have owned a business before?",
+      label: "Do candidates need to have owned a business before?",
       type: "boolean",
       helpText:
-        "Selling only to experienced operators reduces failure rate but cuts the candidate pool by ~70%.",
+        "Selling only to experienced operators reduces the failure rate, but it also cuts the candidate pool by about 70%.",
       category: "Experience",
     },
     {
       name: "prior_industry_experience_required",
-      label: "Must have industry experience?",
+      label: "Do candidates need industry experience?",
       type: "boolean",
       helpText:
-        "Whether they need to have worked in your specific industry before. Most franchisors do NOT require this — operations training is what bridges the gap.",
+        "This is whether candidates need to have worked in your specific industry before. Most franchisors do not require this, since operations training is what bridges the gap.",
       category: "Experience",
     },
     {
       name: "minimum_years_business_experience",
-      label: "Minimum years running a business",
+      label: "How many years of business experience do you require?",
       type: "integer",
       placeholder: "3",
       helpText:
-        "Optional. Skip if you don't require prior business ownership. Typical range: 3–7 years.",
+        "This one is optional, so skip it if you don't require prior business ownership. The typical range is 3 to 7 years.",
       category: "Experience",
       advanced: true,
     },
     {
       name: "specific_experience_notes",
-      label: "Specific experience that helps (optional)",
+      label: "What kind of background actually helps a candidate run this concept well?",
       type: "textarea",
       placeholder:
         "QSR, hospitality, or specialty retail backgrounds adapt fastest. Pure corporate finance backgrounds tend to struggle with the daily-ops side.",
       helpText:
-        "Free-form notes for Discovery Day screeners. What kind of background actually transfers to running this concept well.",
+        "Use this for free-form notes that Discovery Day screeners can reference. Tell us what kind of background actually transfers to running your concept well.",
       category: "Experience",
       advanced: true,
     },
@@ -1280,35 +1280,35 @@ const FRANCHISEE_PROFILE: SectionSchema = {
     // ── How they'll run it ─────────────────────────────────────────────────
     {
       name: "engagement_model",
-      label: "How they'll run their location",
+      label: "How will franchisees run their location?",
       type: "select",
       required: true,
       helpText:
-        "Drives nearly every other downstream qualification. Owner-operators show up daily; semi-absentees hire a manager; absentees hire a whole leadership team and visit monthly.",
+        "This drives nearly every other qualification downstream. Owner-operators show up daily, semi-absentees hire a manager, and absentees hire a whole leadership team and visit monthly.",
       options: [
         { value: "owner_operator", label: "Owner-operator (full-time, on-site)" },
         { value: "semi_absentee", label: "Semi-absentee (10-25 hrs/week + GM)" },
         { value: "absentee", label: "Absentee (investor with operations team)" },
-        { value: "flexible", label: "Flexible — any of the above" },
+        { value: "flexible", label: "Flexible (any of the above)" },
       ],
       category: "How they'll run it",
     },
     {
       name: "minimum_hours_per_week",
-      label: "Minimum hours/week (owner-operator only)",
+      label: "How many hours per week does an owner-operator need to work?",
       type: "integer",
       placeholder: "40",
       helpText:
-        "If you require owner-operators, how many hours per week minimum. Skip if you accept semi-absentee or absentee.",
+        "If you require owner-operators, set the minimum number of hours per week here. Skip this if you accept semi-absentee or absentee operators.",
       category: "How they'll run it",
       advanced: true,
     },
     {
       name: "relocation_required",
-      label: "Must they live near the location?",
+      label: "Do franchisees need to live near the location?",
       type: "boolean",
       helpText:
-        "True for most owner-operator concepts. False for semi-absentee or absentee.",
+        "This is usually true for owner-operator concepts and false for semi-absentee or absentee setups.",
       category: "How they'll run it",
       advanced: true,
     },
@@ -1316,54 +1316,54 @@ const FRANCHISEE_PROFILE: SectionSchema = {
     // ── Character & fit ────────────────────────────────────────────────────
     {
       name: "ideal_traits",
-      label: "Traits that make a great franchisee",
+      label: "What traits make someone a great franchisee?",
       type: "list_short",
       placeholder:
         "Comfortable with structure and brand standards\nGenuinely likes serving customers daily\nHas savings to weather a slow ramp\nWants to own the business, not be owned by it",
       helpText:
-        "Three to six traits. The ones a Jason-style strategy call would surface. Specific enough that a Discovery Day screener can ask about them.",
+        "List three to six traits, the kind that would surface on a Jason-style strategy call. Be specific enough that a Discovery Day screener can ask about each one.",
       category: "Character & fit",
     },
     {
       name: "common_disqualifiers",
-      label: "What rules someone OUT",
+      label: "What rules someone out?",
       type: "list_short",
       placeholder:
         "Looking for a 'set it and forget it' investment\nExpects to renegotiate the franchise agreement\nHas been an absentee owner of a struggling business\nWants to modify the menu or branding",
       helpText:
-        "The deal-killers. What separates a great-on-paper candidate from a fit. Critical for Discovery Day — these are the questions the franchisee answers in their own words.",
+        "These are the deal-killers that separate a great-on-paper candidate from a real fit. They're critical for Discovery Day, since these are the questions a franchisee will answer in their own words.",
       category: "Character & fit",
     },
     {
       name: "candidate_persona_narrative",
-      label: "The ideal franchisee, in your own words",
+      label: "How would you describe your ideal franchisee in your own words?",
       type: "textarea",
       placeholder:
-        "Mid-career operator, 35-55, who's been a GM or owner of a service business and wants something they can hand to their kids in 15 years. Not chasing a quick exit — building a portfolio.",
+        "Mid-career operator, 35-55, who's been a GM or owner of a service business and wants something they can hand to their kids in 15 years. Not chasing a quick exit, but building a portfolio.",
       helpText:
-        "1-2 paragraphs describing your ideal candidate as a person, not a checklist. Used in marketing copy and the Discovery Day pre-qual.",
+        "Write one or two paragraphs describing your ideal candidate as a person rather than a checklist. We use this in marketing copy and the Discovery Day pre-qual.",
       category: "Character & fit",
     },
 
     // ── Recruitment ────────────────────────────────────────────────────────
     {
       name: "target_recruitment_channels",
-      label: "Where you'll find them",
+      label: "Where will you find your franchisees?",
       type: "list_short",
       placeholder:
         "Franchise broker network\nIndustry trade shows\nReferrals from existing locations\nLinkedIn (mid-career operators)",
       helpText:
-        "Three to five channels. Drives marketing-team focus in year 1.",
+        "List three to five channels. This drives where the marketing team focuses in year one.",
       category: "Recruitment",
       advanced: true,
     },
     {
       name: "typical_decision_timeline_days",
-      label: "Days from first call to signed agreement",
+      label: "How many days does it take to go from first call to signed agreement?",
       type: "integer",
       placeholder: "60",
       helpText:
-        "Used for sales forecasting and capacity planning. Typical range: 45–120 days for emerging franchisors.",
+        "We use this for sales forecasting and capacity planning. The typical range for emerging franchisors is 45 to 120 days.",
       category: "Recruitment",
       advanced: true,
     },
@@ -1371,50 +1371,50 @@ const FRANCHISEE_PROFILE: SectionSchema = {
     // ── Discovery Day & screening ──────────────────────────────────────────
     {
       name: "discovery_day_format",
-      label: "Discovery Day format",
+      label: "What format will your Discovery Day take?",
       type: "select",
       helpText:
-        "How candidates meet you and the team before signing. In-person at HQ is the gold standard for emerging franchisors — it builds the trust that closes the deal.",
+        "This is how candidates meet you and the team before signing. In-person at HQ is the gold standard for emerging franchisors, since it builds the trust that closes the deal.",
       options: [
         { value: "in_person_hq", label: "In-person at headquarters" },
         { value: "virtual", label: "Virtual / video" },
-        { value: "hybrid", label: "Hybrid — virtual screen, in-person decision day" },
+        { value: "hybrid", label: "Hybrid (virtual screen, in-person decision day)" },
       ],
       category: "Discovery Day",
     },
     {
       name: "discovery_day_duration_hours",
-      label: "Discovery Day duration (hours)",
+      label: "How long will Discovery Day run?",
       type: "integer",
       placeholder: "6",
-      helpText: "Typical: 4–8 hours. Long enough to see how they react under fatigue.",
+      helpText: "The typical range is 4 to 8 hours, which is long enough to see how candidates react under fatigue.",
       category: "Discovery Day",
       advanced: true,
     },
     {
       name: "background_check_required",
-      label: "Background check required?",
+      label: "Will you require a background check?",
       type: "boolean",
       helpText:
-        "Most franchisors say yes — protects the brand if a candidate has a criminal or fraud history.",
+        "Most franchisors say yes here, since it protects the brand if a candidate has a criminal or fraud history.",
       category: "Discovery Day",
       advanced: true,
     },
     {
       name: "credit_check_required",
-      label: "Credit check required?",
+      label: "Will you require a credit check?",
       type: "boolean",
-      helpText: "Standard for any deal that requires SBA financing.",
+      helpText: "This is standard for any deal that requires SBA financing.",
       category: "Discovery Day",
       advanced: true,
     },
     {
       name: "references_required_count",
-      label: "Personal/business references required",
+      label: "How many references must each candidate provide?",
       type: "integer",
       placeholder: "3",
       helpText:
-        "How many references each candidate must provide. Typical: 3 personal + 2 business.",
+        "A typical setup is 3 personal references plus 2 business references.",
       category: "Discovery Day",
       advanced: true,
     },
@@ -1456,67 +1456,67 @@ const VENDOR_SUPPLY_CHAIN: SectionSchema = {
   slug: "vendor_supply_chain",
   title: "Approved Suppliers",
   description:
-    "Who franchisees buy from. The vendor list is one of the franchisor's strongest levers — both for quality control and for negotiating better prices as you scale.",
+    "Who franchisees buy from. The vendor list is one of the franchisor's strongest levers, both for quality control and for negotiating better prices as you scale.",
   compilesInto:
     "Operations Manual §14, Build-Out Manual procurement appendix, FDD Item 8.",
   fields: [
     {
       name: "approved_vendors",
-      label: "Approved vendors",
+      label: "Who are your approved vendors?",
       type: "list_long",
       required: true,
       placeholder:
         "Royal Cup Coffee (green beans) — Birmingham, AL — net-30 terms, $3,200 minimum order, 5-day delivery\nKenco Restaurant Supply (paper goods) — net-30, free delivery over $250\nLavazza (espresso machines) — leasing only, $385/month with maintenance",
       helpText:
-        "One per line: vendor name, what they supply, and the contract terms. The list every franchisee gets when they sign on.",
+        "Add one vendor per line, including the name, what they supply, and the contract terms. This is the list every franchisee gets when they sign on.",
       category: "Vendors",
     },
     {
       name: "alternate_vendors",
-      label: "Approved alternates (backup)",
+      label: "Who are your backup vendors?",
       type: "list_long",
       placeholder:
         "S&D Coffee (green beans) — only for Royal Cup outages\nWebstaurantStore (paper goods) — for orders below the Kenco minimum",
       helpText:
-        "Backup vendors franchisees can use when the primary is unavailable. Optional but recommended — every franchisor has at least one Royal-Cup-can't-deliver moment.",
+        "These are the backup vendors franchisees can use when the primary one is unavailable. They're optional but worth having, since every franchisor eventually has a moment where the primary vendor can't deliver.",
       category: "Vendors",
       advanced: true,
     },
     {
       name: "exclusive_purchase_required_items",
-      label: "Items franchisees must buy from approved vendors",
+      label: "What items must franchisees buy from your approved vendors?",
       type: "list_short",
       placeholder:
         "Coffee beans\nMilk and dairy\nBranded packaging and cups",
       helpText:
-        "Items franchisees CAN'T source elsewhere. These are the brand-defining inputs. FDD Item 8 will list these explicitly.",
+        "These are the items franchisees can't source anywhere else. They're the brand-defining inputs, and FDD Item 8 will list each of them explicitly.",
       category: "Procurement rules",
     },
     {
       name: "items_franchisee_can_source_locally",
-      label: "Items franchisees can source themselves",
+      label: "What items can franchisees source themselves?",
       type: "list_short",
       placeholder:
         "Cleaning supplies (must meet spec)\nFresh pastries (if from a local bakery you've vetted)\nNon-coffee retail beans",
       helpText:
-        "Items where local sourcing is OK — usually because shipping cost > value. Spec must still be met.",
+        "These are items where local sourcing is fine, usually because the shipping cost outweighs the value. The spec still has to be met.",
       category: "Procurement rules",
       advanced: true,
     },
     {
       name: "rebate_arrangements",
-      label: "Rebate arrangements with vendors",
+      label: "Do you have rebate arrangements with any vendors?",
       type: "textarea",
       placeholder:
         "Royal Cup pays 1.5% rebate on franchisee purchases, paid quarterly to the franchisor. Disclosed in FDD Item 8.",
       helpText:
-        "Most emerging franchisors don't have these yet. If you do, they MUST be disclosed in FDD Item 8 — failing to disclose is a serious compliance issue.",
+        "Most emerging franchisors don't have these yet. If you do, they have to be disclosed in FDD Item 8, since failing to disclose them is a serious compliance issue.",
       category: "Procurement rules",
       advanced: true,
     },
     {
       name: "minimum_order_frequency",
-      label: "Minimum order frequency",
+      label: "How often must franchisees place orders?",
       type: "select",
       options: [
         { value: "weekly", label: "Weekly" },
@@ -1525,53 +1525,53 @@ const VENDOR_SUPPLY_CHAIN: SectionSchema = {
         { value: "as_needed", label: "As needed (no minimum cadence)" },
       ],
       helpText:
-        "How often franchisees must order. Drives inventory expectations and vendor pricing tiers.",
+        "This is how often franchisees have to order, and it drives both inventory expectations and vendor pricing tiers.",
       category: "Procurement rules",
       advanced: true,
     },
     {
       name: "inventory_management_system",
-      label: "Required inventory management system",
+      label: "What inventory management system do franchisees use?",
       type: "text",
       placeholder: "MarketMan",
       helpText:
-        "If you require franchisees to use a specific tool. Skip if you don't mandate one.",
+        "Set this if you require a specific tool. Skip it if you don't mandate one.",
       category: "Procurement rules",
       advanced: true,
     },
     {
       name: "vendor_change_approval_process",
-      label: "How vendor changes get approved",
+      label: "How does a franchisee get a new vendor approved?",
       type: "textarea",
       placeholder:
-        "Franchisees can propose alternate vendors via the franchisee portal. Franchisor reviews within 14 days; approval requires vendor meeting documented quality and food-safety standards.",
+        "Franchisees can propose alternate vendors via the franchisee portal. Franchisor reviews within 14 days, and approval requires the vendor to meet documented quality and food-safety standards.",
       helpText:
-        "What a franchisee does when they want to use a vendor not on the approved list. Often more important than the list itself.",
+        "Describe what a franchisee has to do when they want to use a vendor that isn't on the approved list. This is often more important than the list itself.",
       category: "Procurement rules",
       advanced: true,
     },
     {
       name: "quality_inspection_cadence",
-      label: "Vendor quality inspections",
+      label: "How often do you inspect your vendors for quality?",
       type: "text",
       placeholder: "Annual on-site, plus quarterly product samples",
       helpText:
-        "How often the franchisor (or third party) inspects approved vendors. Optional but signals operational maturity.",
+        "This is how often you or a third party inspect approved vendors. It's optional, but having a clear cadence signals operational maturity.",
       category: "Quality control",
       advanced: true,
     },
     {
       name: "spec_documents",
-      label: "Product specs maintained",
+      label: "Do you maintain written specs for each approved product?",
       type: "boolean",
       helpText:
-        "Do you have written specs for each approved product (e.g. \"single-origin Arabica, 18% screen size, certified organic\")? Required for any item with substitution flexibility.",
+        "Written specs look like \"single-origin Arabica, 18% screen size, certified organic.\" They're required for any item that has substitution flexibility.",
       category: "Quality control",
       advanced: true,
     },
     {
       name: "preferred_payment_terms",
-      label: "Standard payment terms with vendors",
+      label: "What payment terms do you use with vendors?",
       type: "select",
       options: [
         { value: "net_15", label: "Net 15" },
@@ -1585,21 +1585,21 @@ const VENDOR_SUPPLY_CHAIN: SectionSchema = {
     },
     {
       name: "centralized_purchasing_required",
-      label: "Centralized purchasing through franchisor?",
+      label: "Do all orders flow through the franchisor?",
       type: "boolean",
       helpText:
-        "Some franchisors have all orders flow through them (they buy + resell). Most have franchisees buy direct from approved vendors. Different FDD Item 8 disclosure.",
+        "Some franchisors have every order flow through them, where they buy and resell to franchisees. Most franchisors instead let franchisees buy directly from approved vendors. Each approach has its own FDD Item 8 disclosure.",
       category: "Financial terms",
       advanced: true,
     },
     {
       name: "supply_chain_assumptions_narrative",
-      label: "Anything else about the supply chain",
+      label: "Is there anything else about your supply chain we should know?",
       type: "textarea",
       placeholder:
         "Currently sourcing 80% of green beans from a single supplier. Diversifying to two roaster partners over 2025–2026 to reduce concentration risk.",
       helpText:
-        "Free-form notes. Risks, planned changes, anything an attorney or franchisee should know.",
+        "Use this for free-form notes about risks, planned changes, or anything else an attorney or franchisee should know.",
       category: "Notes",
       advanced: true,
     },
@@ -1632,11 +1632,11 @@ const MARKETING_FUND: SectionSchema = {
     // ── Structure ─────────────────────────────────────────────────────────
     {
       name: "fund_governance_model",
-      label: "Who controls the fund",
+      label: "Who controls the marketing fund?",
       type: "select",
       required: true,
       helpText:
-        "Three common shapes. Franchisor-controlled is simplest for emerging franchisors; advisory boards add legitimacy as you scale; cooperative funds are required in some states.",
+        "There are three common shapes. Franchisor-controlled is simplest for emerging franchisors, advisory boards add legitimacy as you scale, and cooperative funds are required in some states.",
       options: [
         {
           value: "franchisor_controlled",
@@ -1655,27 +1655,27 @@ const MARKETING_FUND: SectionSchema = {
     },
     {
       name: "advisory_board_size",
-      label: "Advisory board size",
+      label: "How many franchisees sit on the advisory board?",
       type: "integer",
       placeholder: "5",
       helpText:
-        "Number of franchisees on the board. Optional unless you picked an advisory or cooperative model.",
+        "This is optional unless you picked an advisory or cooperative model.",
       category: "Structure",
       advanced: true,
     },
     {
       name: "board_election_method",
-      label: "How board members are selected",
+      label: "How are board members selected?",
       type: "textarea",
       placeholder:
-        "Three seats elected by franchisees annually; two seats appointed by the franchisor.",
-      helpText: "Optional. Skip if franchisor-controlled.",
+        "Three seats elected by franchisees annually, and two seats appointed by the franchisor.",
+      helpText: "This is optional, so skip it if your fund is franchisor-controlled.",
       category: "Structure",
       advanced: true,
     },
     {
       name: "board_term_length_years",
-      label: "Board term length (years)",
+      label: "How long is each board term?",
       type: "integer",
       placeholder: "2",
       category: "Structure",
@@ -1685,32 +1685,32 @@ const MARKETING_FUND: SectionSchema = {
     // ── Spending rules ────────────────────────────────────────────────────
     {
       name: "approved_uses",
-      label: "What the fund CAN be spent on",
+      label: "What can the fund be spent on?",
       type: "list_short",
       required: true,
       placeholder:
         "National brand campaigns\nDigital media buys (paid social, search)\nCreative production for franchisee use\nMarket research\nPR and trade press",
       helpText:
-        "Typically broad. The fund's purpose statement in your FDD will reference these.",
+        "This list is typically broad, and the fund's purpose statement in your FDD will reference each item.",
       category: "Spending rules",
     },
     {
       name: "excluded_uses",
-      label: "What the fund CAN'T be spent on",
+      label: "What can the fund NOT be spent on?",
       type: "list_short",
       placeholder:
         "Franchisor's own salary or overhead\nLocal-market advertising for a single unit\nNew-franchisee recruitment marketing\nLitigation costs",
       helpText:
-        "Typically: anything that benefits the franchisor more than the franchisees, or that's a single-unit local effort. Most attorneys will require explicit exclusions.",
+        "Typical exclusions are anything that benefits the franchisor more than the franchisees, or that's a single-unit local effort. Most attorneys will require explicit exclusions like these.",
       category: "Spending rules",
     },
     {
       name: "minimum_brand_spend_pct",
-      label: "Minimum % spent on brand-building (vs admin)",
+      label: "What percentage of the fund must go to brand-building rather than admin?",
       type: "percentage",
       placeholder: "85",
       helpText:
-        "What share of the fund must go to actual marketing vs administrative overhead. Industry standard: 80–90%.",
+        "This is the share of the fund that has to go to actual marketing instead of administrative overhead. The industry standard is 80% to 90%.",
       category: "Spending rules",
       min: 0,
       max: 100,
@@ -1720,7 +1720,7 @@ const MARKETING_FUND: SectionSchema = {
     // ── Reporting ─────────────────────────────────────────────────────────
     {
       name: "reporting_cadence",
-      label: "Reporting cadence to franchisees",
+      label: "How often will you report fund activity to franchisees?",
       type: "select",
       options: [
         { value: "monthly", label: "Monthly" },
@@ -1728,20 +1728,20 @@ const MARKETING_FUND: SectionSchema = {
         { value: "annually", label: "Annually only" },
       ],
       helpText:
-        "How often franchisees see what the fund spent. Quarterly is the franchise-industry standard.",
+        "This is how often franchisees get to see what the fund spent. Quarterly is the franchise-industry standard.",
       category: "Reporting & audit",
     },
     {
       name: "audit_required",
-      label: "Independent audit required?",
+      label: "Will the fund get an independent audit?",
       type: "boolean",
       helpText:
-        "Most state franchise registrations require an annual independent audit of the fund. Says yes for almost every emerging franchisor.",
+        "Most state franchise registrations require an annual independent audit of the fund, so this is yes for almost every emerging franchisor.",
       category: "Reporting & audit",
     },
     {
       name: "audit_frequency",
-      label: "Audit frequency",
+      label: "How often will the audit happen?",
       type: "select",
       options: [
         { value: "annual", label: "Annual" },
@@ -1752,12 +1752,12 @@ const MARKETING_FUND: SectionSchema = {
     },
     {
       name: "carryover_policy",
-      label: "How unspent funds carry over year-to-year",
+      label: "How do unspent funds carry over from year to year?",
       type: "textarea",
       placeholder:
         "Unspent funds carry over to the following year and must be spent on approved uses within 24 months. After 24 months, unspent funds may be allocated to a brand-development reserve.",
       helpText:
-        "Default: carry forward indefinitely. Some franchisors set a use-it-or-lose-it deadline. Disclosed in FDD Item 11.",
+        "By default, unspent funds carry forward indefinitely. Some franchisors set a use-it-or-lose-it deadline instead. Whatever you choose has to be disclosed in FDD Item 11.",
       category: "Reporting & audit",
       advanced: true,
     },
@@ -1765,19 +1765,19 @@ const MARKETING_FUND: SectionSchema = {
     // ── Local marketing ───────────────────────────────────────────────────
     {
       name: "local_marketing_spend_required",
-      label: "Local marketing also required?",
+      label: "Will franchisees also be required to spend on local marketing?",
       type: "boolean",
       helpText:
-        "On TOP of the brand fund, do franchisees have a local-marketing minimum? See `franchise_economics.local_marketing_minimum_pct` for the percentage.",
+        "This is whether franchisees have a local-marketing minimum on top of the brand fund. The percentage itself lives in `franchise_economics.local_marketing_minimum_pct`.",
       category: "Local marketing",
       advanced: true,
     },
     {
       name: "local_marketing_pre_approval_required",
-      label: "Pre-approval required for franchisee-created local ads?",
+      label: "Do franchisee-created local ads need pre-approval?",
       type: "boolean",
       helpText:
-        "Most franchisors require franchisor approval of any creative that uses the brand. Protects against off-brand or non-compliant local ads.",
+        "Most franchisors require approval of any creative that uses the brand, since it protects against off-brand or non-compliant local ads.",
       category: "Local marketing",
       advanced: true,
     },
@@ -1785,12 +1785,12 @@ const MARKETING_FUND: SectionSchema = {
     // ── Initial campaign ──────────────────────────────────────────────────
     {
       name: "grand_opening_marketing_required",
-      label: "Grand-opening marketing requirement",
+      label: "What's required for grand-opening marketing?",
       type: "textarea",
       placeholder:
         "Franchisees must spend a minimum of $5,000 on grand-opening marketing in the 30 days before and after opening, using franchisor-approved creative.",
       helpText:
-        "Most franchisors mandate a minimum opening spend. The number lives in FDD Item 6 as a 'required expenditure.'",
+        "Most franchisors mandate a minimum opening spend. Whatever you require shows up in FDD Item 6 as a required expenditure.",
       category: "Initial campaign",
       advanced: true,
     },
@@ -1824,28 +1824,28 @@ const EMPLOYEE_HANDBOOK: SectionSchema = {
     // ── Hours & scheduling ───────────────────────────────────────────────
     {
       name: "standard_full_time_hours_per_week",
-      label: "Standard full-time hours/week",
+      label: "How many hours per week count as full-time?",
       type: "integer",
       placeholder: "32",
       helpText:
-        "What counts as full-time at your locations. Drives benefits eligibility. Most franchisors set 30–35.",
+        "This sets what counts as full-time at your locations and drives benefits eligibility. Most franchisors set this between 30 and 35 hours.",
       category: "Hours & scheduling",
     },
     {
       name: "minimum_shifts_per_week",
-      label: "Minimum shifts/week to remain on payroll",
+      label: "How many shifts per week must employees work to stay on payroll?",
       type: "integer",
       placeholder: "2",
-      helpText: "Below this, employees are reclassified or terminated. Optional.",
+      helpText: "Below this number, employees are reclassified or terminated. This field is optional.",
       category: "Hours & scheduling",
       advanced: true,
     },
     {
       name: "scheduling_software",
-      label: "Required scheduling software",
+      label: "What scheduling software do you require?",
       type: "text",
       placeholder: "When I Work",
-      helpText: "If you mandate one. Skip if franchisees pick their own.",
+      helpText: "Set this if you mandate a tool. Skip it if franchisees pick their own.",
       category: "Hours & scheduling",
       advanced: true,
     },
@@ -1853,31 +1853,31 @@ const EMPLOYEE_HANDBOOK: SectionSchema = {
     // ── Compensation ─────────────────────────────────────────────────────
     {
       name: "minimum_starting_wage_dollars_per_hour",
-      label: "Minimum starting wage ($/hour)",
+      label: "What's the minimum starting wage per hour?",
       type: "currency",
       placeholder: "16",
       helpText:
-        "Brand-wide floor. Franchisees can pay more but not less. Drives the labor % in unit economics.",
+        "This is the brand-wide floor. Franchisees can pay more but not less, and it drives the labor percentage in your unit economics.",
       category: "Compensation",
     },
     {
       name: "tip_pooling_policy",
-      label: "Tip pooling policy",
+      label: "What's your tip pooling policy?",
       type: "select",
       options: [
-        { value: "no_tip_pooling", label: "No tip pooling — individuals keep their own" },
+        { value: "no_tip_pooling", label: "No tip pooling (individuals keep their own)" },
         { value: "shift_pool", label: "Pooled by shift" },
         { value: "weekly_pool", label: "Pooled weekly across all employees" },
         { value: "no_tipping", label: "No tipping accepted" },
       ],
       helpText:
-        "Has wage-and-hour-law implications — franchisees should also confirm against state law before applying.",
+        "This has wage-and-hour-law implications, so franchisees should also confirm against state law before applying it.",
       category: "Compensation",
       advanced: true,
     },
     {
       name: "performance_review_cadence",
-      label: "Performance review cadence",
+      label: "How often will employees get performance reviews?",
       type: "select",
       options: [
         { value: "monthly", label: "Monthly" },
@@ -1892,26 +1892,26 @@ const EMPLOYEE_HANDBOOK: SectionSchema = {
     // ── Benefits ─────────────────────────────────────────────────────────
     {
       name: "pto_days_per_year",
-      label: "PTO days per year (after 1st year)",
+      label: "How many PTO days per year do employees get after their first year?",
       type: "integer",
       placeholder: "10",
       helpText:
-        "Floor that franchisees inherit. Some states (CA, MA, NY) require more for sick leave specifically.",
+        "This is the floor that franchisees inherit. Some states like California, Massachusetts, and New York require more, specifically for sick leave.",
       category: "Benefits",
     },
     {
       name: "paid_sick_days_per_year",
-      label: "Paid sick days per year",
+      label: "How many paid sick days per year do employees get?",
       type: "integer",
       placeholder: "5",
       helpText:
-        "Separate from PTO in most state laws. Required minimum in many states.",
+        "Most state laws treat this as separate from PTO, and many states require a minimum.",
       category: "Benefits",
       advanced: true,
     },
     {
       name: "paid_holidays",
-      label: "Paid holidays observed",
+      label: "Which paid holidays do you observe?",
       type: "list_short",
       placeholder:
         "New Year's Day\nMemorial Day\nIndependence Day\nLabor Day\nThanksgiving\nChristmas",
@@ -1920,19 +1920,19 @@ const EMPLOYEE_HANDBOOK: SectionSchema = {
     },
     {
       name: "health_benefits_offered",
-      label: "Health benefits offered to employees?",
+      label: "Will locations be required to offer health benefits?",
       type: "boolean",
       helpText:
-        "Whether each location is REQUIRED to offer health benefits to qualifying employees. Most franchisors leave this to the franchisee.",
+        "This is whether each location has to offer health benefits to qualifying employees. Most franchisors leave this decision to the franchisee.",
       category: "Benefits",
       advanced: true,
     },
     {
       name: "retirement_benefits_offered",
-      label: "Retirement plan offered?",
+      label: "Will locations be required to offer a retirement plan?",
       type: "boolean",
       helpText:
-        "Whether locations must offer a 401(k) or similar. SECURE Act state mandates may apply.",
+        "This covers whether locations have to offer a 401(k) or similar plan. SECURE Act state mandates may apply.",
       category: "Benefits",
       advanced: true,
     },
@@ -1940,27 +1940,27 @@ const EMPLOYEE_HANDBOOK: SectionSchema = {
     // ── Conduct & culture ────────────────────────────────────────────────
     {
       name: "uniform_requirements",
-      label: "Uniform requirements",
+      label: "What are your uniform requirements?",
       type: "textarea",
       placeholder:
-        "Branded apron + plain black or denim pants. Closed-toe non-slip shoes. Branded cap optional.",
+        "Branded apron with plain black or denim pants. Closed-toe non-slip shoes. Branded cap optional.",
       helpText:
-        "Brand-mandated. Specific enough that franchisees know what to enforce.",
+        "These are brand-mandated. Be specific enough that franchisees know exactly what to enforce.",
       category: "Conduct & culture",
     },
     {
       name: "customer_service_standards",
-      label: "Customer service standards",
+      label: "What are your customer service standards?",
       type: "list_short",
       placeholder:
         "10-second greeting at the door\nFirst name when handing off the order\n4-minute maximum wait time at peak\nNo phone use behind the counter",
       helpText:
-        "The brand-defining service moments. The Operations Manual will go deeper; this is the headline list.",
+        "These are the brand-defining service moments. The Operations Manual will go deeper, and this is your headline list.",
       category: "Conduct & culture",
     },
     {
       name: "social_media_policy",
-      label: "Social media policy",
+      label: "What's your social media policy for employees?",
       type: "textarea",
       placeholder:
         "Employees may share branded content with #cypresslane. Personal accounts must clearly state 'opinions are my own.' No customer photos without consent. No discussion of internal operations.",
@@ -1969,10 +1969,10 @@ const EMPLOYEE_HANDBOOK: SectionSchema = {
     },
     {
       name: "non_compete_required",
-      label: "Non-compete required at hire?",
+      label: "Will employees sign a non-compete at hire?",
       type: "boolean",
       helpText:
-        "Most franchisors require this for managers but not hourly. Has serious enforceability variation by state — your attorney should review.",
+        "Most franchisors require this for managers but not hourly employees. Enforceability varies a lot by state, so your attorney should review whatever you choose.",
       category: "Conduct & culture",
       advanced: true,
     },
@@ -1980,21 +1980,21 @@ const EMPLOYEE_HANDBOOK: SectionSchema = {
     // ── Termination ──────────────────────────────────────────────────────
     {
       name: "at_will_employment_required",
-      label: "At-will employment required?",
+      label: "Will at-will employment be required?",
       type: "boolean",
       helpText:
-        "Standard for most U.S. franchises (except Montana). Required language in your handbook template.",
+        "This is standard for most U.S. franchises (except in Montana), and it's required language in your handbook template.",
       category: "Termination",
       advanced: true,
     },
     {
       name: "termination_appeal_process",
-      label: "Termination appeal process",
+      label: "What's the termination appeal process?",
       type: "textarea",
       placeholder:
         "Terminated employees may request a single review meeting with the franchisee owner within 7 days. Franchisor not involved in individual termination decisions.",
       helpText:
-        "Optional. Most franchisors don't mandate one — leave to franchisee discretion.",
+        "This one is optional. Most franchisors don't mandate a process and leave it to franchisee discretion.",
       category: "Termination",
       advanced: true,
     },
@@ -2026,11 +2026,11 @@ const REIMBURSEMENT_POLICY: SectionSchema = {
     // ── Travel ────────────────────────────────────────────────────────────
     {
       name: "mileage_rate_dollars_per_mile",
-      label: "Mileage rate ($/mile)",
+      label: "What's your mileage reimbursement rate per mile?",
       type: "number",
       placeholder: "0.67",
       helpText:
-        "We default to the current IRS standard rate. Most franchisors match it.",
+        "We default to the current IRS standard rate, and most franchisors match it.",
       category: "Travel",
       suggestedFrom: {
         kind: "industry_lookup",
@@ -2040,24 +2040,24 @@ const REIMBURSEMENT_POLICY: SectionSchema = {
     },
     {
       name: "meal_per_diem_dollars",
-      label: "Meal per diem ($/day)",
+      label: "What's the daily meal per diem?",
       type: "currency",
       placeholder: "75",
-      helpText: "Per-day cap on meal expenses while traveling. IRS standard: ~$75 for most U.S. cities.",
+      helpText: "This is the per-day cap on meal expenses while traveling. The IRS standard is around $75 for most U.S. cities.",
       category: "Travel",
     },
     {
       name: "lodging_per_diem_dollars",
-      label: "Lodging per diem ($/night)",
+      label: "What's the nightly lodging per diem?",
       type: "currency",
       placeholder: "200",
       helpText:
-        "Per-night cap on hotel expenses. Higher in major-metro travel.",
+        "This is the per-night cap on hotel expenses, and you'll want to set it higher for major-metro travel.",
       category: "Travel",
     },
     {
       name: "airfare_class",
-      label: "Airfare class allowed",
+      label: "What airfare class is allowed?",
       type: "select",
       options: [
         { value: "economy_only", label: "Economy only" },
@@ -2071,19 +2071,19 @@ const REIMBURSEMENT_POLICY: SectionSchema = {
     // ── Approval thresholds ──────────────────────────────────────────────
     {
       name: "single_expense_approval_threshold_dollars",
-      label: "Single-expense approval threshold ($)",
+      label: "Above what amount does a single expense need pre-approval?",
       type: "currency",
       placeholder: "500",
       helpText:
-        "Above this dollar amount, a single expense needs pre-approval (from the owner or franchisor, depending on policy).",
+        "Anything above this dollar amount needs pre-approval, either from the owner or the franchisor depending on your policy.",
       category: "Approval thresholds",
     },
     {
       name: "monthly_expense_cap_dollars",
-      label: "Monthly expense cap per role ($)",
+      label: "What's the monthly expense cap per role?",
       type: "currency",
       placeholder: "2000",
-      helpText: "Total monthly expense cap for managers / shift leads. Skip if no cap.",
+      helpText: "This is the total monthly expense cap for managers and shift leads. Skip it if you don't set a cap.",
       category: "Approval thresholds",
       advanced: true,
     },
@@ -2091,35 +2091,35 @@ const REIMBURSEMENT_POLICY: SectionSchema = {
     // ── What is NOT reimbursable ─────────────────────────────────────────
     {
       name: "non_reimbursable_categories",
-      label: "Categories that are never reimbursable",
+      label: "What categories are never reimbursable?",
       type: "list_short",
       placeholder:
-        "Personal entertainment\nAlcohol (except client meals)\nPersonal travel companion expenses\nGifts > $25 to a single recipient",
+        "Personal entertainment\nAlcohol (except client meals)\nPersonal travel companion expenses\nGifts over $25 to a single recipient",
       category: "Exclusions",
     },
 
     // ── Process ───────────────────────────────────────────────────────────
     {
       name: "expense_reporting_software",
-      label: "Required expense reporting tool",
+      label: "What expense reporting tool do you require?",
       type: "text",
       placeholder: "Expensify",
-      helpText: "If you mandate a tool. Skip if franchisees pick their own.",
+      helpText: "Set this if you mandate a tool. Skip it if franchisees pick their own.",
       category: "Process",
       advanced: true,
     },
     {
       name: "receipt_required_threshold_dollars",
-      label: "Receipt required above ($)",
+      label: "Above what amount is a receipt required?",
       type: "currency",
       placeholder: "25",
-      helpText: "IRS standard: $75. Some franchisors set a tighter floor.",
+      helpText: "The IRS standard is $75, but some franchisors set a tighter floor.",
       category: "Process",
       advanced: true,
     },
     {
       name: "reimbursement_payment_schedule",
-      label: "How often expenses are reimbursed",
+      label: "How often will expenses be reimbursed?",
       type: "select",
       options: [
         { value: "with_payroll", label: "With each payroll cycle" },
@@ -2159,12 +2159,12 @@ const COMPLIANCE_LEGAL: SectionSchema = {
     // ── State strategy ───────────────────────────────────────────────────
     {
       name: "registration_states",
-      label: "Registration states (priority)",
+      label: "Which states will you register your FDD in first?",
       type: "list_short",
       required: true,
       placeholder: "California\nNew York\nIllinois\nVirginia",
       helpText:
-        "States where you'll register the FDD and pay the registration fee — usually the states where you want to actively recruit franchisees first. 14 states require registration; 13 are 'filing states' (just file, no review); the rest are non-registration.",
+        "These are the states where you'll register the FDD and pay the registration fee, usually the states where you want to actively recruit franchisees first. 14 states require full registration, 13 are filing states where you just file without a review, and the rest are non-registration.",
       category: "State strategy",
       suggestedFrom: {
         kind: "industry_lookup",
@@ -2175,32 +2175,32 @@ const COMPLIANCE_LEGAL: SectionSchema = {
     },
     {
       name: "filing_only_states",
-      label: "Filing-only states",
+      label: "Which filing-only states will you target?",
       type: "list_short",
       placeholder: "Connecticut\nKentucky\nNebraska",
       helpText:
-        "States that require a franchise filing but no review. Cheaper and faster than registration states.",
+        "These are states that require a franchise filing but no review. They're cheaper and faster than full registration states.",
       category: "State strategy",
       advanced: true,
     },
     {
       name: "non_registration_states",
-      label: "Non-registration states (free zone)",
+      label: "Which non-registration states will you target?",
       type: "list_short",
       placeholder: "Texas\nFlorida\nGeorgia\nNorth Carolina",
       helpText:
-        "States with no franchise-specific registration. You can sell here as soon as your FDD is complete. Most emerging franchisors prioritize these for early growth.",
+        "These states have no franchise-specific registration, so you can sell here as soon as your FDD is complete. Most emerging franchisors prioritize them for early growth.",
       category: "State strategy",
       advanced: true,
     },
     {
       name: "exemption_strategy",
-      label: "Exemption strategy",
+      label: "What's your exemption strategy?",
       type: "textarea",
       placeholder:
         "Pursuing the large-franchisor exemption (CA Corp Code §31101) once we hit 25 franchisees and $5M minimum net worth. Until then, full registration in all 14 registration states.",
       helpText:
-        "Optional now; matters more at scale. Federal and state exemptions can reduce ongoing registration burden.",
+        "This is optional for now and matters more once you scale. Federal and state exemptions can reduce your ongoing registration burden.",
       category: "State strategy",
       advanced: true,
     },
@@ -2208,30 +2208,30 @@ const COMPLIANCE_LEGAL: SectionSchema = {
     // ── Attorney ─────────────────────────────────────────────────────────
     {
       name: "attorney_name",
-      label: "Franchise attorney",
+      label: "Who's your franchise attorney?",
       type: "text",
       placeholder: "Sarah Lee, Esq.",
       helpText:
-        "The attorney drafting and filing your FDD. Required by every state registration application.",
+        "This is the attorney drafting and filing your FDD. Their name is required by every state registration application.",
       category: "Attorney",
     },
     {
       name: "attorney_firm",
-      label: "Law firm",
+      label: "What's the name of their law firm?",
       type: "text",
       placeholder: "Lee & Associates Franchise Law",
       category: "Attorney",
     },
     {
       name: "attorney_email",
-      label: "Attorney email",
+      label: "What's your attorney's email?",
       type: "email",
       placeholder: "sarah@leefranchiselaw.com",
       category: "Attorney",
     },
     {
       name: "attorney_phone",
-      label: "Attorney phone",
+      label: "What's your attorney's phone number?",
       type: "text",
       placeholder: "(555) 123-4567",
       category: "Attorney",
@@ -2241,18 +2241,18 @@ const COMPLIANCE_LEGAL: SectionSchema = {
     // ── Compliance dates ─────────────────────────────────────────────────
     {
       name: "fdd_target_completion_date",
-      label: "Target FDD completion date",
+      label: "When do you want your FDD ready for filing?",
       type: "date",
       helpText:
-        "When you want the FDD ready for filing. Most emerging franchisors target 90–120 days after they finish the underlying sections.",
+        "Most emerging franchisors target 90 to 120 days after they finish the underlying sections.",
       category: "Timeline",
     },
     {
       name: "first_franchisee_target_date",
-      label: "Target date for first franchisee signed",
+      label: "When do you want your first franchisee signed?",
       type: "date",
       helpText:
-        "Your goal date. Drives the marketing and Discovery Day cadence backward from here.",
+        "This is your goal date, and it drives the marketing and Discovery Day cadence backward from here.",
       category: "Timeline",
       advanced: true,
     },
@@ -2260,17 +2260,17 @@ const COMPLIANCE_LEGAL: SectionSchema = {
     // ── Insurance ────────────────────────────────────────────────────────
     {
       name: "general_liability_minimum_dollars",
-      label: "General liability insurance minimum ($)",
+      label: "What's the minimum general liability insurance franchisees must carry?",
       type: "currency",
       placeholder: "1000000",
       helpText:
-        "Minimum general liability coverage franchisees must carry. Industry standard: $1M per occurrence / $2M aggregate.",
+        "This is the minimum general liability coverage franchisees have to carry. The industry standard is $1M per occurrence and $2M aggregate.",
       category: "Insurance requirements",
       advanced: true,
     },
     {
       name: "additional_insurance_required",
-      label: "Other required insurance",
+      label: "What other insurance do franchisees need?",
       type: "list_short",
       placeholder:
         "Workers' comp (required by state)\nProperty insurance (full replacement)\nCyber liability ($500K minimum)\nFood-borne illness coverage",
@@ -2308,36 +2308,36 @@ const OPERATING_MODEL: SectionSchema = {
   fields: [
     {
       name: "standard_hours_of_operation",
-      label: "Standard hours of operation",
+      label: "What are your standard hours of operation?",
       type: "textarea",
       placeholder:
         "Mon–Fri 6am–4pm\nSat–Sun 7am–4pm\nClosed: New Year's Day, Thanksgiving, Christmas",
       helpText:
-        "The brand-mandated hours. Franchisees can extend with approval but can't open later or close earlier than these.",
+        "These are the brand-mandated hours. Franchisees can extend them with approval but can't open later or close earlier than what you set here.",
       category: "Schedule",
     },
     {
       name: "peak_hours",
-      label: "Peak hours (when staffing matters most)",
+      label: "When are your peak hours?",
       type: "text",
       placeholder: "Weekday 7am–10am, Weekend 8am–11am",
       helpText:
-        "When your locations get busiest. Drives staffing and throughput planning.",
+        "These are the times when your locations get busiest. They drive staffing and throughput planning.",
       category: "Schedule",
       advanced: true,
     },
     {
       name: "staff_per_shift_typical",
-      label: "Typical staff per shift",
+      label: "How many staff are on a typical shift?",
       type: "integer",
       placeholder: "4",
       helpText:
-        "Including the manager. Drives labor % in unit economics.",
+        "Include the manager in this count. It drives the labor percentage in your unit economics.",
       category: "Schedule",
     },
     {
       name: "staff_per_shift_peak",
-      label: "Peak-hour staff per shift",
+      label: "How many staff are on a peak-hour shift?",
       type: "integer",
       placeholder: "6",
       category: "Schedule",
@@ -2345,32 +2345,32 @@ const OPERATING_MODEL: SectionSchema = {
     },
     {
       name: "key_kpis_tracked_daily",
-      label: "KPIs tracked daily",
+      label: "What KPIs do you track daily?",
       type: "list_short",
       placeholder:
         "Transaction count\nAverage ticket\nLabor as % of sales\nWaste $\nCustomer satisfaction (NPS)",
       helpText:
-        "The numbers a franchisee owner watches every morning. Becomes the daily-report dashboard in the Operations Manual.",
+        "These are the numbers a franchisee owner watches every morning. They become the daily-report dashboard in the Operations Manual.",
       category: "Metrics",
     },
     {
       name: "daily_rituals",
-      label: "Daily rituals (open and close)",
+      label: "What are your daily open and close rituals?",
       type: "textarea",
       placeholder:
         "Open: temperature checks on equipment, brew calibration, first-shift briefing on specials.\nClose: deep clean of espresso machines, daily cash reconciliation, next-day prep.",
       helpText:
-        "The repeatable cadence that makes the brand consistent across locations. The full checklists live in the Operations Manual; this is the headline summary.",
+        "These are the repeatable rituals that make the brand consistent across locations. The full checklists live in the Operations Manual, and this is the headline summary.",
       category: "Cadence",
     },
     {
       name: "operations_software_required",
-      label: "Required operations software",
+      label: "What operations software do you require?",
       type: "list_short",
       placeholder:
         "Toast (POS)\nWhen I Work (scheduling)\nMarketMan (inventory)",
       helpText:
-        "The tools franchisees must use. Each is also a recurring cost franchisees take on.",
+        "These are the tools franchisees have to use, and each one is also a recurring cost they take on.",
       category: "Systems",
       advanced: true,
     },
@@ -2402,51 +2402,51 @@ const RECIPES_AND_MENU: SectionSchema = {
   fields: [
     {
       name: "menu_item_count",
-      label: "Number of items on the menu",
+      label: "How many items are on your menu?",
       type: "integer",
       placeholder: "32",
       helpText:
-        "Total SKUs or services on offer. Higher counts make training and inventory harder; many franchisors trim the menu before franchising.",
+        "Count the total SKUs or services you offer. Higher counts make training and inventory harder, and many franchisors trim the menu before they franchise.",
       category: "Scope",
     },
     {
       name: "signature_items",
-      label: "Signature items (what you're known for)",
+      label: "What signature items are you known for?",
       type: "list_short",
       placeholder:
         "Cypress Lane single-origin pour-over\nThe Oxford Mocha\nButtermilk biscuit and gravy",
       helpText:
-        "Three to five items the brand is identified by. Featured in marketing and Discovery Day.",
+        "List three to five items that identify the brand. We feature them in marketing and Discovery Day.",
       category: "Scope",
     },
     {
       name: "price_range_low_dollars",
-      label: "Price range — low",
+      label: "What's the price of your cheapest item?",
       type: "currency",
       placeholder: "3.50",
       helpText:
-        "Cheapest item on the menu. Drives perceived accessibility.",
+        "This is the cheapest item on your menu, and it shapes how accessible your concept feels.",
       category: "Pricing",
     },
     {
       name: "price_range_high_dollars",
-      label: "Price range — high",
+      label: "What's the price of your most expensive item?",
       type: "currency",
       placeholder: "12.00",
       category: "Pricing",
     },
     {
       name: "average_ticket_dollars",
-      label: "Average ticket size",
+      label: "What's your average ticket size?",
       type: "currency",
       placeholder: "8.50",
       helpText:
-        "Average dollar amount per transaction. Drives the AUV math in unit economics.",
+        "This is the average dollar amount per transaction, and it drives the AUV math in your unit economics.",
       category: "Pricing",
     },
     {
       name: "pricing_strategy",
-      label: "Pricing strategy",
+      label: "How will franchisees set their prices?",
       type: "select",
       options: [
         { value: "uniform_brand_wide", label: "Uniform across all locations (brand-mandated)" },
@@ -2455,13 +2455,13 @@ const RECIPES_AND_MENU: SectionSchema = {
         { value: "fully_franchisee_set", label: "Franchisee fully sets local pricing" },
       ],
       helpText:
-        "How franchisees are allowed to price. Note: federal antitrust law generally prohibits franchisors from FIXING resale prices — most concepts use 'suggested' pricing or banded floors/ceilings. Confirm with attorney.",
+        "This sets how franchisees are allowed to price. Federal antitrust law generally prohibits franchisors from fixing resale prices, so most concepts use suggested pricing or banded floors and ceilings. Confirm whatever you choose with your attorney.",
       category: "Pricing",
       advanced: true,
     },
     {
       name: "recipe_book_status",
-      label: "Recipe / spec book status",
+      label: "What's the status of your recipe and spec book?",
       type: "select",
       options: [
         { value: "complete", label: "Complete and tested at scale" },
@@ -2471,7 +2471,7 @@ const RECIPES_AND_MENU: SectionSchema = {
       ],
       required: true,
       helpText:
-        "Drives readiness — Jason's smell test for whether a concept is franchisable. 'Not yet started' is a flag we'd want to address before recruiting franchisees.",
+        "This drives your readiness, and it's Jason's smell test for whether a concept is franchisable. If your answer is 'Not yet started,' that's a flag we'd want to address before recruiting franchisees.",
       category: "Documentation",
     },
   ],
@@ -2503,17 +2503,17 @@ const TRAINING_PROGRAM: SectionSchema = {
     // ── Initial training ─────────────────────────────────────────────────
     {
       name: "initial_training_duration_days",
-      label: "Initial training duration (days)",
+      label: "How many days of initial training will franchisees go through?",
       type: "integer",
       required: true,
       placeholder: "10",
       helpText:
-        "How long the franchisee owner / GM trains before opening. Industry typical: 5–14 days.",
+        "This is how long the franchisee owner or GM trains before opening. The industry-typical range is 5 to 14 days.",
       category: "Initial training",
     },
     {
       name: "initial_training_format",
-      label: "Initial training format",
+      label: "What format will initial training take?",
       type: "select",
       required: true,
       options: [
@@ -2524,12 +2524,12 @@ const TRAINING_PROGRAM: SectionSchema = {
         { value: "hybrid", label: "Hybrid (some virtual, some in-person)" },
       ],
       helpText:
-        "Where training happens. Drives FDD Item 6 (initial fees that include training travel) and Item 11 disclosure.",
+        "This is where training happens. It drives the disclosures in FDD Item 6 (the initial fees that include training travel) and Item 11.",
       category: "Initial training",
     },
     {
       name: "initial_training_attendees",
-      label: "Who must attend initial training",
+      label: "Who must attend initial training?",
       type: "list_short",
       placeholder:
         "Franchisee owner (required)\nGeneral manager (required)\nUp to 2 additional managers (optional)",
@@ -2537,10 +2537,10 @@ const TRAINING_PROGRAM: SectionSchema = {
     },
     {
       name: "training_travel_at_franchisee_expense",
-      label: "Travel paid by franchisee?",
+      label: "Will franchisees pay their own travel costs for training?",
       type: "boolean",
       helpText:
-        "Almost always yes for emerging franchisors. Cost shows up in FDD Item 7 initial-investment estimate.",
+        "This is almost always yes for emerging franchisors, and the cost shows up in the FDD Item 7 initial-investment estimate.",
       category: "Initial training",
       advanced: true,
     },
@@ -2548,16 +2548,16 @@ const TRAINING_PROGRAM: SectionSchema = {
     // ── Opening support ──────────────────────────────────────────────────
     {
       name: "opening_support_days_on_site",
-      label: "Days franchisor staff on-site at opening",
+      label: "How many days will your team be on-site at opening?",
       type: "integer",
       placeholder: "5",
       helpText:
-        "How long a franchisor representative is at the franchisee's location during opening week. Industry typical: 3-7 days.",
+        "This is how long a franchisor representative is at the franchisee's location during opening week. The industry-typical range is 3 to 7 days.",
       category: "Opening support",
     },
     {
       name: "opening_support_team_size",
-      label: "Franchisor team size on-site",
+      label: "How many team members will you send on-site?",
       type: "integer",
       placeholder: "2",
       category: "Opening support",
@@ -2567,18 +2567,18 @@ const TRAINING_PROGRAM: SectionSchema = {
     // ── Ongoing training ─────────────────────────────────────────────────
     {
       name: "ongoing_training_required",
-      label: "Ongoing training required?",
+      label: "Will you require ongoing training?",
       type: "boolean",
       helpText:
-        "Whether franchisees must attend recurring training (annual conference, monthly webinars, etc.).",
+        "This is whether franchisees have to attend recurring training, like an annual conference or monthly webinars.",
       category: "Ongoing",
     },
     {
       name: "annual_conference_required",
-      label: "Annual franchisee conference required?",
+      label: "Will you require franchisees to attend an annual conference?",
       type: "boolean",
       helpText:
-        "Most concepts have one. Franchisee attendance is usually mandatory and at the franchisee's expense (disclosed in FDD Item 6).",
+        "Most concepts have one. Franchisee attendance is usually mandatory and at the franchisee's expense, which gets disclosed in FDD Item 6.",
       category: "Ongoing",
       advanced: true,
     },
@@ -2586,20 +2586,20 @@ const TRAINING_PROGRAM: SectionSchema = {
     // ── Certification ────────────────────────────────────────────────────
     {
       name: "certification_required",
-      label: "Certification required to operate?",
+      label: "Will you require certification to operate?",
       type: "boolean",
       helpText:
-        "Whether franchisees and key staff must pass a certification exam before opening or being authorized to perform key functions.",
+        "This covers whether franchisees and key staff have to pass a certification exam before opening or being authorized to perform key functions.",
       category: "Certification",
     },
     {
       name: "certification_levels",
-      label: "Certification levels",
+      label: "What certification levels do you offer?",
       type: "list_short",
       placeholder:
         "Owner / GM (required to open)\nLead Barista (required to handle bar alone)\nShift Manager (required to manage a shift)",
       helpText:
-        "If you have a tiered cert program, the levels. Each level usually has its own training + exam.",
+        "If you run a tiered certification program, list the levels here. Each level usually has its own training and exam.",
       category: "Certification",
       advanced: true,
     },
@@ -2636,11 +2636,11 @@ const TERRITORY_REAL_ESTATE: SectionSchema = {
     // ── Site criteria ────────────────────────────────────────────────────
     {
       name: "ideal_population_per_unit",
-      label: "Target population per unit",
+      label: "What's the ideal population per unit?",
       type: "integer",
       placeholder: "50000",
       helpText:
-        "Population within the trade area required to support a unit. We suggest a range from your industry — adjust based on your existing-location experience.",
+        "This is the population within the trade area needed to support a unit. We suggest a range from your industry, and you can adjust it based on your existing-location experience.",
       category: "Site criteria",
       suggestedFrom: {
         kind: "industry_lookup",
@@ -2650,11 +2650,11 @@ const TERRITORY_REAL_ESTATE: SectionSchema = {
     },
     {
       name: "ideal_household_income_min_dollars",
-      label: "Minimum median household income",
+      label: "What's the minimum median household income you need in a trade area?",
       type: "currency",
       placeholder: "55000",
       helpText:
-        "Median household income in the trade area required to support your price point. Drives site selection in lower-income markets.",
+        "This is the median household income needed in the trade area to support your price point, and it drives site selection in lower-income markets.",
       category: "Site criteria",
       suggestedFrom: {
         kind: "industry_lookup",
@@ -2664,49 +2664,49 @@ const TERRITORY_REAL_ESTATE: SectionSchema = {
     },
     {
       name: "target_square_footage_low",
-      label: "Footprint — low (sqft)",
+      label: "What's the smallest footprint you'd accept?",
       type: "integer",
       placeholder: "1400",
       category: "Site criteria",
     },
     {
       name: "target_square_footage_high",
-      label: "Footprint — high (sqft)",
+      label: "What's the largest footprint you'd accept?",
       type: "integer",
       placeholder: "1800",
       category: "Site criteria",
     },
     {
       name: "site_type_preferences",
-      label: "Site type preferences",
+      label: "What site types work for your concept?",
       type: "list_short",
       placeholder:
         "End-cap with patio access (preferred)\nMid-block with strong morning sun\nDrive-through capable (bonus, not required)",
       helpText:
-        "Specific site types that work for your concept. Specific enough that a real-estate broker can prequalify a site before showing it.",
+        "List the specific site types that work for your concept, and be specific enough that a real-estate broker can prequalify a site before showing it.",
       category: "Site criteria",
     },
 
     // ── Priority markets ─────────────────────────────────────────────────
     {
       name: "priority_geographic_markets",
-      label: "Priority markets for first 5 units",
+      label: "Where do you want your first five franchisees?",
       type: "list_short",
       required: true,
       placeholder:
         "Greater Oxford / North Mississippi corridor\nMemphis suburban ring\nBirmingham metro\nNashville (eastern suburbs)",
       helpText:
-        "Where you want the first 5 franchisees. Drives FDD state-registration prioritization (see compliance_legal).",
+        "These are the markets where you want your first five franchisees. They drive how you prioritize FDD state registration (see the compliance_legal section).",
       category: "Priority markets",
     },
     {
       name: "exclusion_zones",
-      label: "Markets you won't operate in",
+      label: "Which markets won't you operate in?",
       type: "list_short",
       placeholder:
-        "Major metros with > 5 existing third-wave competitors\nCollege towns with high seasonality\nCold-climate markets (winter < 25°F average)",
+        "Major metros with more than 5 existing third-wave competitors\nCollege towns with high seasonality\nCold-climate markets (winter under 25°F average)",
       helpText:
-        "Where the model doesn't work. Saves franchisees the trouble of pitching markets you'd reject.",
+        "These are the places where your model doesn't work. Listing them saves franchisees the trouble of pitching markets you'd reject.",
       category: "Priority markets",
       advanced: true,
     },
@@ -2714,20 +2714,20 @@ const TERRITORY_REAL_ESTATE: SectionSchema = {
     // ── Site approval process ───────────────────────────────────────────
     {
       name: "site_approval_required",
-      label: "Site approval required from franchisor?",
+      label: "Will franchisees need your approval on each site?",
       type: "boolean",
       helpText:
-        "Almost always yes. Drives FDD Item 12 (territory) language.",
+        "This is almost always yes, and it drives the language in FDD Item 12 (territory).",
       category: "Approval process",
       advanced: true,
     },
     {
       name: "site_approval_timeline_days",
-      label: "Site approval timeline (days)",
+      label: "How long will site approval take?",
       type: "integer",
       placeholder: "14",
       helpText:
-        "How long the franchisor takes to review a proposed site. Faster is friendlier — most franchisors target 7–21 days.",
+        "This is how long you take to review a proposed site. Faster is friendlier, and most franchisors target 7 to 21 days.",
       category: "Approval process",
       advanced: true,
     },
@@ -2752,30 +2752,30 @@ const MARKET_STRATEGY: SectionSchema = {
   slug: "market_strategy",
   title: "Market Strategy & Positioning",
   description:
-    "Where you'll grow first, why those markets, and how you'll position against alternatives. Mostly research the agent does — you confirm the priorities.",
+    "Where you'll grow first, why those markets, and how you'll position against alternatives. Most of this is research the agent does, and you confirm the priorities.",
   compilesInto: "Market Strategy Report, Discovery Day market-opportunity deck.",
   fields: [
     {
       name: "growth_horizon_years",
-      label: "Growth horizon (years)",
+      label: "How far out are you planning?",
       type: "integer",
       placeholder: "5",
       helpText:
-        "How far out you're planning. Drives the market-rollout sequencing.",
+        "This is your planning horizon, and it drives how you sequence your market rollout.",
       category: "Horizon",
     },
     {
       name: "target_unit_count_year_3",
-      label: "Target franchised unit count by year 3",
+      label: "How many franchised units do you want by year three?",
       type: "integer",
       placeholder: "12",
       helpText:
-        "How many franchisees you want signed and operating by the end of year 3. Realistic for emerging franchisors: 4–15 units.",
+        "This is how many franchisees you want signed and operating by the end of year three. A realistic range for emerging franchisors is 4 to 15 units.",
       category: "Horizon",
     },
     {
       name: "target_unit_count_year_5",
-      label: "Target franchised unit count by year 5",
+      label: "How many franchised units do you want by year five?",
       type: "integer",
       placeholder: "30",
       category: "Horizon",
@@ -2783,12 +2783,12 @@ const MARKET_STRATEGY: SectionSchema = {
     },
     {
       name: "competitive_positioning_summary",
-      label: "Competitive positioning",
+      label: "How do you position yourself against the alternatives?",
       type: "textarea",
       placeholder:
         "Cypress Lane is positioned between regional independents (Stumptown-style, $5+ drinks, urban-only) and national chains (Starbucks-tier convenience, lower quality). We're the smartest middle path for small-town markets that have been overlooked by both ends.",
       helpText:
-        "How you describe yourself relative to alternatives. The agent will sharpen this with research; your draft sets the direction.",
+        "This is how you describe yourself relative to the alternatives. The agent will sharpen it with research, and your draft sets the direction.",
       category: "Positioning",
       suggestedFrom: {
         kind: "from_scrape",
@@ -2797,16 +2797,16 @@ const MARKET_STRATEGY: SectionSchema = {
     },
     {
       name: "expansion_sequencing_strategy",
-      label: "Expansion sequencing",
+      label: "How will you sequence your expansion?",
       type: "select",
       options: [
-        { value: "concentric", label: "Concentric — expand outward from existing locations" },
-        { value: "hub_and_spoke", label: "Hub and spoke — major metros first, then satellite markets" },
-        { value: "opportunistic", label: "Opportunistic — wherever the right franchisee shows up" },
-        { value: "regional_clusters", label: "Regional clusters — fill one region before opening another" },
+        { value: "concentric", label: "Concentric (expand outward from existing locations)" },
+        { value: "hub_and_spoke", label: "Hub and spoke (major metros first, then satellite markets)" },
+        { value: "opportunistic", label: "Opportunistic (wherever the right franchisee shows up)" },
+        { value: "regional_clusters", label: "Regional clusters (fill one region before opening another)" },
       ],
       helpText:
-        "The geographic strategy. Concentric reduces marketing and supply-chain costs; hub-and-spoke speeds revenue; opportunistic is risky for emerging brands.",
+        "This is your geographic strategy. Concentric expansion reduces marketing and supply-chain costs, hub-and-spoke speeds up revenue, and opportunistic growth is risky for emerging brands.",
       category: "Sequencing",
       advanced: true,
     },
@@ -2836,55 +2836,55 @@ const COMPETITOR_LANDSCAPE: SectionSchema = {
   fields: [
     {
       name: "direct_competitors",
-      label: "Direct competitors (brands you compete with head-to-head)",
+      label: "Which brands do you compete with head-to-head?",
       type: "list_short",
       required: true,
       placeholder:
         "Stumptown Coffee Roasters\nIntelligentsia\nLocal Reverie Coffee (regional)",
       helpText:
-        "Brands that target the same customer with a similar offering. The agent will research each — pricing, positioning, expansion footprint, what they do well, where they're weak.",
+        "These are the brands that target the same customer with a similar offering. The agent will research each one, including pricing, positioning, expansion footprint, what they do well, and where they're weak.",
       category: "Competitors",
     },
     {
       name: "indirect_competitors",
-      label: "Indirect competitors (different format, same customer)",
+      label: "Which different formats compete for the same customer?",
       type: "list_short",
       placeholder:
         "Starbucks (mass premium)\nDunkin' (commute convenience)\nLocal independent cafés\nGas-station coffee (bottom of the market)",
       helpText:
-        "Brands or formats that win when your customer doesn't pick you. The agent fills in the broader landscape.",
+        "These are the brands or formats that win when your customer doesn't pick you. The agent will fill in the broader landscape from there.",
       category: "Competitors",
       advanced: true,
     },
     {
       name: "competitive_advantages",
-      label: "Where you win",
+      label: "Where do you win?",
       type: "list_short",
       placeholder:
         "Coffee quality on par with urban third-wave at small-town prices\nIn-house roasting (vertical integration)\nCommunity-room positioning (Starbucks-Reverse)",
       helpText:
-        "Why your customer picks you. Each should be a defensible claim — not marketing fluff.",
+        "Tell us why your customer picks you. Each one should be a defensible claim rather than marketing fluff.",
       category: "Differentiation",
     },
     {
       name: "competitive_vulnerabilities",
-      label: "Where you're vulnerable",
+      label: "Where are you vulnerable?",
       type: "list_short",
       placeholder:
         "Higher labor cost than Dunkin' (we have more skilled staff)\nNo drive-through (slower morning rush)\nSingle roast supplier (concentration risk)",
       helpText:
-        "Honest assessment. The FDD attorney will appreciate this; investors definitely will.",
+        "Give us an honest assessment. Your FDD attorney will appreciate it, and investors definitely will.",
       category: "Differentiation",
       advanced: true,
     },
     {
       name: "competitive_research_notes",
-      label: "Anything else about the competitive landscape",
+      label: "Is there anything else about the competitive landscape we should know?",
       type: "textarea",
       placeholder:
-        "Watching for Pour Five expansion into the Mid-South — they're testing the same small-town third-wave thesis we are. If they enter Mississippi before we franchise in volume, our market windows tighten.",
+        "Watching for Pour Five expansion into the Mid-South, since they're testing the same small-town third-wave thesis we are. If they enter Mississippi before we franchise in volume, our market windows tighten.",
       helpText:
-        "Open-ended notes. Agent will weave these into the Competitor Maps narrative.",
+        "Use this for open-ended notes. The agent will weave them into the Competitor Maps narrative.",
       category: "Research",
       advanced: true,
     },
@@ -2950,87 +2950,87 @@ const BRAND_VOICE: SectionSchema = {
   slug: "brand_voice",
   title: "Brand Standards",
   description:
-    "How your brand looks and sounds — the visual + verbal identity franchisees inherit and have to honor.",
+    "How your brand looks and sounds. This is the visual and verbal identity franchisees inherit and have to honor.",
   compilesInto: "FDD Item 1, Operations Manual §3 (Brand Standards), Marketing Playbook",
   fields: [
     {
       name: "brand_name",
-      label: "Brand name",
+      label: "What's your brand name?",
       type: "text",
       required: true,
       category: "Identity",
       placeholder: "Cypress Lane Coffee",
       helpText:
-        "The exact wording you want franchisees to use on every sign, package, and document.",
+        "Use the exact wording you want franchisees to use on every sign, package, and document.",
     },
     {
       name: "tagline",
-      label: "Tagline or slogan",
+      label: "Do you have a tagline or slogan?",
       type: "text",
       category: "Identity",
       placeholder: "Slow coffee, small streets.",
       helpText:
-        "Short. Memorable. The line you put on the side of the cup. Skip if you don't have one yet.",
+        "This is the short, memorable line you'd put on the side of the cup. Skip it if you don't have one yet.",
     },
     {
       name: "voice_adjectives",
-      label: "Voice in 3–5 words",
+      label: "What three to five words describe your voice?",
       type: "list_short",
       required: true,
       category: "Voice",
       placeholder: "Warm\nWelcoming\nCraft-honest\nNeighborly\nUn-corporate",
       helpText:
-        "How your brand sounds when it talks. One word per line.",
+        "Tell us how your brand sounds when it talks, one word per line.",
     },
     {
       name: "voice_description",
-      label: "Voice in a sentence or two",
+      label: "How would you describe your brand's voice in a sentence or two?",
       type: "textarea",
       required: true,
       category: "Voice",
       placeholder:
         "We sound like a friendly barista, not a corporate brochure. We use plain words, ask about the customer's day, and never pretend to be more than a good cup of coffee.",
       helpText:
-        "How would you describe the way your brand talks to a writer who'd never met you?",
+        "Imagine you're describing the way your brand talks to a writer who's never met you.",
     },
     {
       name: "brand_colors",
-      label: "Brand colors",
+      label: "What are your brand colors?",
       type: "color_list",
       required: true,
       category: "Visual",
       placeholder: "#1F3D2C",
       helpText:
-        "Your brand palette — primary, accent, neutrals, anything you use consistently. Pick a color or paste hex codes; add as many as you need.",
+        "Add your brand palette here, including primary, accent, neutral, and anything else you use consistently. You can pick a color or paste hex codes, and add as many as you need.",
     },
     {
       name: "typography_pairing",
-      label: "Typography",
+      label: "What fonts do you use?",
       type: "text",
       category: "Visual",
       placeholder: "Tiempos Headline (display) / Inter (body)",
       helpText:
-        "The fonts you use, in priority order. If you don't know the names, describe the vibe ('hand-drawn serif + simple sans').",
+        "List the fonts you use in priority order. If you don't know the names, describe the vibe (something like 'hand-drawn serif plus simple sans').",
     },
     {
       name: "logo_url",
-      label: "Logo file or URL",
+      label: "Where can we find your logo?",
       type: "url",
       category: "Visual",
       placeholder: "https://example.com/brand/logo.svg",
       helpText:
-        "Public link to your primary logo (SVG/PNG preferred). You can also attach the file via the References panel.",
+        "Paste a public link to your primary logo (SVG or PNG works best). You can also attach the file through the References panel.",
     },
     {
       name: "things_to_avoid",
-      label: "Words / styles to avoid",
+      label: "What words or styles should we avoid?",
       type: "list_short",
       category: "Voice",
       advanced: true,
       placeholder:
         "Exclamation marks\n\"Synergy\"\nStock-photo lifestyle imagery\nAll-caps headlines",
       helpText:
-        "Anything that's off-brand. Saves the agent from drafting copy you'll just have to rewrite.",
+        "List anything that's off-brand. It saves the agent from drafting copy you'd have to rewrite later.",
     },
   ],
 };
