@@ -1,5 +1,56 @@
 # GA4 events & Key Events — TFB master reference
 
+## Two kinds of events: auto-collected vs. custom
+
+GA4 fires **auto-collected events** on every site that has Google's tag —
+you don't write code for them. They appear in the events list alongside
+your custom events, which causes the "duplicate" feel. They're not
+duplicates; they're complementary.
+
+| Auto-collected event | What triggers it | Where it overlaps custom |
+|---|---|---|
+| `page_view` | Every page navigation | — |
+| `session_start` | First event of a new session | — |
+| `first_visit` | First-ever visit by this client_id | — |
+| `user_engagement` | User spent ≥10s on page (or interacted) | — |
+| `scroll` | Visitor reached 90% page depth (Enhanced Measurement) | — |
+| `click` | Outbound link click only (Enhanced Measurement) | NOT the same as our `cta_click` — that one is internal CTAs |
+| `form_start` | First focus inside any `<form>` (Enhanced Measurement) | Touches every form (contact, intake email, assessment lead, login) |
+| `form_submit` | Any `<form>` submit event (Enhanced Measurement) | Touches every form. Our `submit_lead_form`, `intake_email_saved`, `assessment_complete` are the typed versions you actually want as Key Events |
+| `file_download` | Click on link to common file extension (Enhanced Measurement) | — |
+
+**Rule of thumb:** auto-collected events are useful for "rough activity"
+graphs. Mark only the **custom typed events** as Key Events for conversion
+attribution. Otherwise `form_submit` will double-count every contact form
+submission against `submit_lead_form` and your conversion math gets fuzzy.
+
+## Internal traffic / bot filtering
+
+Two sources of fake traffic that distort GA4:
+
+1. **Automation bots** (Playwright smoke-test routine, Puppeteer QA,
+   Selenium, Cypress) — handled in code as of 2026-05-10. The layout
+   sets `window.__tfb_skip_ga` when `navigator.webdriver === true` and
+   stubs `gtag` so all custom + auto events become no-ops. Real visitors
+   never have `navigator.webdriver` set; every automation framework does.
+
+2. **Eric's own browsing** — needs an internal traffic filter in GA4
+   admin (one-time setup):
+   1. GA4 Admin → Data Streams → pick the web stream → Configure tag
+      settings → Show all → **Define internal traffic**
+   2. Add a rule: `IP address` equals your home/office IP (look it up
+      at `https://whatismyipaddress.com`)
+   3. Set `traffic_type` to `internal`
+   4. GA4 Admin → Data filters → create an "Internal Traffic" filter
+      → state Active → Exclude `traffic_type = internal`
+   5. (Optional) Install the [GA Opt-out Chrome extension](https://tools.google.com/dlpage/gaoptout)
+      as a belt-and-suspenders for browsers you can't reliably IP-filter
+      (mobile on cellular, etc.)
+
+   Until the internal-traffic filter lands, treat early portal usage
+   numbers as inflated by your own QA passes.
+
+
 **Last updated:** 2026-05-10. Source of truth lives in `src/lib/analytics.ts` (the
 `GA4Event` discriminated union). This doc explains what each event means in
 business terms and which ones to mark as **Key Events** in the GA4 admin so

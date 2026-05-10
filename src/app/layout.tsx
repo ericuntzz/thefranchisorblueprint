@@ -134,9 +134,18 @@ export default function RootLayout({
         <Analytics />
         <SpeedInsights />
 
-        {/* GA4 — only loads if NEXT_PUBLIC_GA4_ID is set in Vercel */}
+        {/* GA4 — only loads if NEXT_PUBLIC_GA4_ID is set in Vercel.
+            We hard-skip initialization for automated browsers
+            (Playwright, Puppeteer, Selenium, Cypress, etc.) so the daily
+            smoke-test routine + ad-hoc QA scripts don't pollute production
+            analytics. `navigator.webdriver === true` is the W3C-standard
+            signal every major automation framework sets. Real visitors
+            never have this set. */}
         {ga4Id && (
           <>
+            <Script id="ga4-bot-guard" strategy="beforeInteractive">
+              {`window.__tfb_skip_ga = (typeof navigator !== 'undefined' && navigator.webdriver === true);`}
+            </Script>
             <Script
               src={`https://www.googletagmanager.com/gtag/js?id=${ga4Id}`}
               strategy="afterInteractive"
@@ -144,8 +153,14 @@ export default function RootLayout({
             <Script id="ga4-init" strategy="afterInteractive">
               {`window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config', '${ga4Id}', { send_page_view: true });`}
+if (window.__tfb_skip_ga) {
+  // Stub gtag so track() calls in app code stay no-ops without throwing.
+  window.gtag = function(){};
+} else {
+  window.gtag = gtag;
+  gtag('js', new Date());
+  gtag('config', '${ga4Id}', { send_page_view: true });
+}`}
             </Script>
           </>
         )}
