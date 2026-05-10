@@ -182,6 +182,43 @@ export function QuestionQueueClient({
     },
   );
   const index = nav.index;
+  // Hydration gate. The restore-from-URL/localStorage effect below runs
+  // ONCE on mount; the index→URL/localStorage sync effect must NOT fire
+  // until that completes, otherwise it stomps the restored URL +
+  // localStorage with `queue[0].id` (the initial nav.index = 0).
+  // Eric hit exactly this on 2026-05-10: leave the builder mid-question,
+  // return, and the URL pointed at queue[0] instead of where you were.
+  // Pattern: state (not ref) so the sync effect re-fires after the
+  // restore lands.
+  const [hydrated, setHydrated] = useState(false);
+  // Frozen-at-mount per-phase totals. Used as the DENOMINATOR for both
+  // the "ANSWERED X / Y" counter and the segmented progress bar.
+  //
+  // Eric flagged 2026-05-10 that the counter "loaded weird" between
+  // saves: it'd go 0/23 → 1/22 → 2/21 → 3/21 → 4/19 → 5/18, etc.
+  // Root cause: the previous math used `queue.filter(...).length` as
+  // the denominator, but `queue` is the SERVER-COMPUTED list of
+  // unanswered fields. Each Save & Next triggers revalidatePath, the
+  // server re-renders the page, and queue arrives with the just-saved
+  // item removed — so the denominator decreases on every save.
+  //
+  // Reads to a customer as "X done of Y total" but Y is actually
+  // "Y remaining"; the math is right, the UX is broken — it implies
+  // total work is shrinking, when really it's the customer's own
+  // progress chewing through it.
+  //
+  // Fix: freeze the per-phase total at mount, then count done as
+  // (total - items currently in this phase ahead of cursor). Saved
+  // items no longer in queue count as done. Items still in queue but
+  // behind cursor (skipped, navigated past) count as done. Current
+  // item doesn't count yet — they're on it.
+  const [initialPhaseTotals] = useState<Record<PhaseId, number>>(() => {
+    const totals = {} as Record<PhaseId, number>;
+    for (const p of PHASES) {
+      totals[p.id] = initialQueue.filter((q) => q.phase.id === p.id).length;
+    }
+    return totals;
+  });
 
   // Sync URL `?at=<itemId>` ↔ current index. On mount, if the URL
   // has an `at` for an item still in the queue, jump to it.
@@ -227,11 +264,20 @@ export function QuestionQueueClient({
         // Storage disabled — fall through to default index 0.
       }
     }
-    if (!at) return;
+    if (!at) {
+      setHydrated(true);
+      return;
+    }
     const target = queue.findIndex((q) => q.id === at);
     if (target >= 0 && target !== nav.index) {
       setNav((n) => ({ ...n, index: target }));
     }
+    // Mark hydrated so the sync effect can fire — but only AFTER
+    // setNav has had a chance to land (which it will via the next
+    // render triggered by setHydrated). Order matters: setNav first
+    // schedules an index update; setHydrated triggers another render.
+    // Both batch into one re-render where index is correct.
+    setHydrated(true);
     // Run once on mount only — subsequent URL changes come FROM us,
     // not the browser address bar.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -239,6 +285,10 @@ export function QuestionQueueClient({
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    // Hydration gate — see the [hydrated] state declaration above for
+    // why. Skipping this effect on the first render lets the restore
+    // effect above land its setNav before we sync URL + localStorage.
+    if (!hydrated) return;
     const cur = queue[index];
     if (!cur) return;
     const url = new URL(window.location.href);
@@ -260,7 +310,7 @@ export function QuestionQueueClient({
     } catch {
       // Storage disabled — last-position won't survive the session.
     }
-  }, [index, queue, lsKeyLastAt]);
+  }, [index, queue, lsKeyLastAt, hydrated]);
   // Slide direction for the question-card transition. "forward" =
   // Save/Skip (new card slides in from the right). "back" = Back
   // (new card slides in from the left). Initial render = "forward".
@@ -286,13 +336,18 @@ export function QuestionQueueClient({
 
   const phaseProgress = useMemo(() => {
     if (!current) return null;
-    const inPhase = queue.filter((q) => q.phase.id === current.phase.id);
-    const doneInPhase = inPhase.filter(
-      (q) =>
-        completed.has(q.id) || queue.indexOf(q) < index,
-    ).length;
-    return { done: doneInPhase, total: inPhase.length };
-  }, [current, queue, completed, index]);
+    const total = initialPhaseTotals[current.phase.id] ?? 0;
+    // Items in the CURRENT queue that are in this phase AND still
+    // ahead of (or at) the cursor. "Done" = total minus those.
+    // Saved items have been removed from queue → counted toward done.
+    // Skipped items remain in queue but cursor is past them → counted
+    // toward done. The current item is at-cursor → not counted yet.
+    let stillAhead = 0;
+    for (let i = index; i < queue.length; i++) {
+      if (queue[i].phase.id === current.phase.id) stillAhead++;
+    }
+    return { done: Math.max(0, total - stillAhead), total };
+  }, [current, queue, index, initialPhaseTotals]);
 
   // Done — every item processed.
   if (!current) {
@@ -409,17 +464,21 @@ export function QuestionQueueClient({
   // where each click moves a sliver.
   const phaseSegments = useMemo(() => {
     return PHASES.map((p) => {
-      const inPhase = queue.filter((q) => q.phase.id === p.id);
-      if (inPhase.length === 0) return { id: p.id, pct: 0, isActive: false };
-      const doneInPhase = inPhase.filter(
-        (q) => completed.has(q.id) || queue.indexOf(q) < index,
-      ).length;
+      const total = initialPhaseTotals[p.id] ?? 0;
+      if (total === 0) return { id: p.id, pct: 0, isActive: false };
+      // Same math as phaseProgress: done = frozen-total minus items
+      // ahead of the cursor in this phase. Stable across server-side
+      // queue refreshes (revalidatePath after a save), so the bar
+      // only ticks forward.
+      let stillAhead = 0;
+      for (let i = index; i < queue.length; i++) {
+        if (queue[i].phase.id === p.id) stillAhead++;
+      }
+      const done = Math.max(0, total - stillAhead);
       const isActive = current?.phase.id === p.id;
-      const pct =
-        inPhase.length === 0 ? 0 : (doneInPhase / inPhase.length) * 100;
-      return { id: p.id, pct, isActive };
+      return { id: p.id, pct: (done / total) * 100, isActive };
     });
-  }, [queue, completed, index, current]);
+  }, [queue, index, current, initialPhaseTotals]);
 
   return (
     <div className="space-y-6">
