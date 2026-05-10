@@ -467,11 +467,13 @@ function DeliverableEntry({
             </span>
           </span>
         </button>
-        {/* Top-right action cluster: Complete Section (gold, only
-            when this deliverable has gaps) + Preview (outlined,
-            always). Both stop propagation so the click doesn't
-            also expand the card. */}
-        {review.totalGaps > 0 && (
+        {/* "Complete section" gold pill hidden 2026-05-10 per Eric —
+            a gold CTA on every gappy card was too much visual weight
+            across the grid. Customers still reach the field-filling
+            flow by expanding the card and clicking a section row, or
+            via the "Continue Building" primary nav item. Flip `false`
+            below to `review.totalGaps > 0` to bring the pill back. */}
+        {false && (
           <Link
             href={`/portal/blueprint-builder?focus=${deliverable.id}`}
             onClick={(e) => e.stopPropagation()}
