@@ -95,16 +95,21 @@ export function FreeTierDashboard({
             Welcome to your franchise readiness portal.
           </h1>
           <p className="text-grey-3 text-base md:text-lg leading-relaxed mt-2 max-w-[720px]">
-            You&apos;ve unlocked the free tier — run up to {monthlyCap} market
-            analyses every 30 days, save every snapshot to your portal, and
-            upgrade to The Blueprint whenever you&apos;re ready for the full
-            franchisor operating system.
+            You&apos;ve unlocked the free tier — run up to {monthlyCap}{" "}
+            market analyses every 30 days, save every snapshot to your
+            portal, and upgrade to The Blueprint whenever you&apos;re
+            ready for the full franchisor operating system.
           </p>
         </div>
 
         {/* ─── Run another analysis CTA + quota meter ────────────── */}
+        {/* Flex-row activates at lg (1024px), not md — the portal sidebar
+            takes 240px on md+ so a 768px viewport only has ~528px of
+            content width, which cramped the lg:flex-row text column into
+            single-word wraps. Stacked layout below lg keeps the headline
+            readable on tablet sizes. */}
         <section className="bg-white rounded-2xl border border-navy/10 shadow-sm p-6 md:p-7">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
             <div className="flex items-start gap-4">
               <span className="flex-shrink-0 w-12 h-12 rounded-xl bg-navy/5 flex items-center justify-center">
                 <Search size={22} className="text-navy" />
