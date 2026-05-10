@@ -604,6 +604,10 @@ export async function* runIntake(args: {
     scrape,
     business,
     sourceLocation,
+    homeMarketDemographics: prototypeDemographics,
+    homeMarketCompetitorCount: prototypeCompetitorCount,
+    topExpansion,
+    existingFranchisor,
   });
   costCents += COST.LLM_SUMMARY_CENTS;
 
@@ -1149,18 +1153,46 @@ async function generateWebsiteSpecificGaps(args: {
   scrape: ScrapeArtifacts;
   business: BusinessInfo;
   sourceLocation: { formattedAddress: string } | null;
+  /** Tranche 5: Census ACS demographics for the home ZIP. Lets the LLM
+   *  reference real numbers ("$74K median income"), not just website
+   *  copy. Null when we couldn't pin a home ZIP. */
+  homeMarketDemographics: Demographics | null;
+  /** Tranche 5: Google Places competitor count within 1 mi of home.
+   *  Powers observations like "18 competing concepts within a mile —
+   *  the home market is saturated." Null when Places is unavailable. */
+  homeMarketCompetitorCount: number | null;
+  /** Tranche 5: top expansion candidates with their pillar scores.
+   *  Lets the LLM contrast home vs candidate ("home market scored 53
+   *  on demographics; your top expansion candidate scored 78 — the
+   *  gap is the buying-power difference between $74K and $108K
+   *  median HHI"). */
+  topExpansion: ExpansionMarket[];
+  /** Tranche 5: existing-franchisor signal lets the LLM reframe the
+   *  observations from "readiness gaps" to "growth observations" when
+   *  the customer is already franchising. */
+  existingFranchisor: ExistingFranchisorSignal;
 }): Promise<string[]> {
   const anthropic = getAnthropic();
+  const isExisting = args.existingFranchisor.isFranchising === true;
 
-  const sysPrompt = `You are Jason Stowe, a 30-year franchise development consultant doing a quick pre-screen of a business's public web presence. Your job: write three short observations (each 1-3 sentences, 30-60 words) that a franchise candidate would find genuinely useful — things you can SEE from their website that bear on their franchise readiness, plus a concrete next step.
+  const sysPrompt = `You are Jason Stowe, a 30-year franchise development consultant doing a quick pre-screen of a business's public web presence AND their home-market demographic + competitive data. Your job: write three short observations (each 1-3 sentences, 30-60 words) that the business owner would find genuinely useful, plus a concrete next step in each.
+
+The observations should weave TOGETHER:
+  • What's visible on their website (menu, pricing, story, brand voice, location count, review density)
+  • What public demographic data tells us about their home market (median HHI, median age, household density from Census ACS)
+  • What competitive density tells us about their trade area (how many comparable concepts within 1 mile)
 
 CRITICAL CONSTRAINTS — read carefully:
-- Reference what's ACTUALLY visible on their site: their menu, services, pricing, founding story, brand voice, locations count, review presence, About page content, etc.
-- Do NOT prescribe specific franchise-development artifacts (FDD, Item 19, Operations Manual, training program, site-selection rubric) — we have no way to know if they have those things yet.
+- Reference SPECIFIC numbers when they're meaningful: "$74K median income," "18 competing coffee shops," etc.
+- Do NOT prescribe specific franchise-development artifacts (FDD, Item 19, Operations Manual, training program, site-selection rubric) — we have no way to know if they have those things yet${isExisting ? ", and this customer is already franchising so prescribing them would be silly" : ""}.
 - Do NOT say "isn't yet codified" or "isn't yet built" or any prescriptive checklist language.
-- Do say things like "We notice your home page leads with X — that's a strong/weak Y signal because Z."
+- DO weave website + demographic + competitive signals into a single insight when possible. Examples:
+  • "Your menu prices read like a $120K-median neighborhood, but your home ZIP is $74K-median Census. There's a pricing-vs-trade-area mismatch that'd hit franchisee unit economics in similar markets."
+  • "Within 1 mile of your home location there are 18 competing coffee shops. That's saturated even before you franchise. Lean on your roastery as the differentiator — competitors here don't have one."
+  • "Your home ZIP has projected -3% household growth 2024-2030 per Census. Soft tailwind. Lean expansion candidates toward growing metros so unit economics improve year-over-year."
+${isExisting ? "- Frame observations as GROWTH or PORTFOLIO STRATEGY (not readiness gaps). The customer is already franchising — recommend things that affect their next 10-50 units, not their first one." : ""}
 - Use plain English. No franchise jargon unless the customer is clearly already a multi-unit operator.
-- Each observation should feel like an experienced operator skimmed the site and noticed something specific. Not an AI templating itself into existence.
+- Each observation should feel like an experienced operator skimmed the site AND looked at the underlying data. Not an AI templating itself into existence.
 
 Return JSON only:
 {
@@ -1171,11 +1203,44 @@ Return JSON only:
   ]
 }`;
 
+  // Build a compact data summary the LLM can lean on. Order matters —
+  // demographic + competitive numbers first so they shape the
+  // observations, then website context, then the existing-franchisor
+  // signal at the bottom (only if it fired).
+  const demoLine = args.homeMarketDemographics
+    ? `Home market Census ACS (${args.homeMarketDemographics.zip}): median household income $${args.homeMarketDemographics.medianHouseholdIncome.toLocaleString()}, median age ${args.homeMarketDemographics.medianAge}, ZIP population ${args.homeMarketDemographics.population.toLocaleString()}.`
+    : "Home market demographics: not available (couldn't pin a home ZIP).";
+  const compLine =
+    args.homeMarketCompetitorCount != null
+      ? `Comparable concepts within 1 mile of home: ${args.homeMarketCompetitorCount}.`
+      : "Competitive density: not available.";
+  const expLine =
+    args.topExpansion.length > 0
+      ? `Top expansion candidates surfaced by our scoring: ${args.topExpansion
+          .map(
+            (m) =>
+              `${m.label} (${m.state}, ZIP ${m.zip}): overall ${m.score}/100, demographics ${m.pillars.demographicsAndMarket}/25, competition ${m.pillars.competition}/25, financial ${m.pillars.financialAndLegal}/25, ${m.competitorCount} competitors within 1mi`,
+          )
+          .join("; ")}.`
+      : "Expansion candidates: none ranked.";
+  const existingLine = isExisting
+    ? `Existing-franchisor signal FIRED: ${args.existingFranchisor.signalType}, ${
+        args.existingFranchisor.locationCount ?? "?"
+      }+ locations, evidence: ${args.existingFranchisor.evidence.join(" | ")}. Frame your observations as portfolio-strategy / growth observations, NOT readiness gaps.`
+    : "";
+
   const userPrompt = `Business: ${args.business.name ?? "(unknown)"}
 Concept (LLM-extracted): ${args.business.oneLineConcept ?? "(unknown)"}
 Brand voice: ${args.business.brandVoice ?? "(unknown)"}
 Location: ${args.sourceLocation?.formattedAddress ?? "(unknown)"}
 
+DATA SIGNALS:
+${demoLine}
+${compLine}
+${expLine}
+${existingLine}
+
+WEBSITE CONTEXT:
 Site title: ${args.scrape.title ?? "(none)"}
 Meta description: ${args.scrape.metaDescription ?? "(none)"}
 

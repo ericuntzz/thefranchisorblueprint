@@ -22,6 +22,15 @@ export const PER_DOMAIN_CACHE_DAYS = 7;
  * will replace them. Acts as a manual cache-busting key.
  *
  * Last bumped:
+ *   2026-05-10  Round 8: gap LLM prompt now sees Census ACS demos +
+ *               competitor density + top expansion candidates +
+ *               existing-franchisor signal. Observations weave
+ *               website + data signals into single insights
+ *               ("$74K-median home market vs $120K-priced menu —
+ *               franchisee unit economics break") rather than
+ *               purely website-derived comments. Existing-franchisor
+ *               branch reframes from readiness gaps to growth
+ *               observations.
  *   2026-05-10  Round 7: existing-footprint exclusion. Scrape now
  *               also pulls /locations / /stores / /find-us etc. and
  *               the franchise-detection LLM extracts existingMetros
@@ -60,7 +69,7 @@ export const PER_DOMAIN_CACHE_DAYS = 7;
  *               diversity + plain-English narratives + page-title
  *               fallback for business name.
  */
-export const CACHE_FRESHNESS_FLOOR_ISO = "2026-05-11T01:30:00Z";
+export const CACHE_FRESHNESS_FLOOR_ISO = "2026-05-11T02:00:00Z";
 
 /**
  * Per-IP rate limit — N distinct intake starts per hour. Stops
