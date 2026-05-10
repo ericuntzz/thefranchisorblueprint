@@ -482,11 +482,22 @@ export function IntakeHeroCTA() {
         setView({ kind: "snapshot", snapshot, sessionId });
         return;
       }
+      const data = (await r.json().catch(() => ({}))) as {
+        ok?: boolean;
+        redirectTo?: string | null;
+      };
       track("intake_email_saved", {
         readiness_score: snapshot.readiness.overall,
         recommended_tier: tierForGA(snapshot.readiness.suggestedTier),
         cta_location: "intake_hero_save",
       });
+      // Tranche 12: if the server auto-signed-in the user, navigate
+      // straight to /portal. Otherwise show the existing "saved"
+      // state (snapshot unblurred + "check your inbox" banner).
+      if (data.redirectTo && typeof window !== "undefined") {
+        window.location.href = data.redirectTo;
+        return;
+      }
       setView({ kind: "saved", email });
     } catch {
       setEmailError("Network hiccup — try again.");

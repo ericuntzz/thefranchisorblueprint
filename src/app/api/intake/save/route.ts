@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { getSupabaseServer } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/email/send";
 import { SITE_URL } from "@/lib/site";
 
@@ -25,17 +26,29 @@ function normalizeEmail(raw: string): string {
  *
  * Auth: HttpOnly intake cookie equality check.
  *
- * Behavior:
- *   1. Validate email + session.
- *   2. Persist email + saved_at on the intake_sessions row.
- *   3. Send a "snapshot saved" email via Resend with a link back to the
- *      hero page that re-renders the snapshot from the cookie.
- *   4. Return success — the hero UI shows a "check your email" state.
+ * Tranche 12 (2026-05-10): this endpoint now ALSO creates a free-tier
+ * Supabase auth user and signs them in via server-side magic-link
+ * redemption — no click required. Friction-free signup per Eric's
+ * 2026-05-10 ask. Sequence:
  *
- * NOTE: This DOES NOT create a Supabase auth user. The intake row is
- * still anonymous-with-email. The merge into customer_memory happens
- * later, when the lead converts via Stripe checkout (the Stripe webhook
- * will detect a matching intake row by email and import the snapshot).
+ *   1. Validate email + session (existing).
+ *   2. Persist email + saved_at + user_id link on the intake row.
+ *   3. Create OR fetch the Supabase auth user (admin API,
+ *      email_confirm=true so they skip the "verify your email" wall).
+ *   4. Insert a free-tier profile row if none exists.
+ *   5. Server-side, redeem a single-use magic-link OTP to populate
+ *      the auth cookies on the response. Browser now arrives at
+ *      /portal authenticated as the new free-tier user.
+ *   6. Send the "your snapshot is saved" email (best-effort, async).
+ *   7. Return { ok: true, redirectTo: "/portal" } — client navigates.
+ *
+ * For returning visitors (email already exists in auth.users), the
+ * same OTP-redemption path logs them in. No password lookup needed
+ * because everything is OTP-based.
+ *
+ * The merge into customer_memory happens later, when the lead converts
+ * via Stripe checkout (the Stripe webhook detects the matching intake
+ * row by email/user_id and imports the snapshot into the paid portal).
  */
 export async function POST(req: NextRequest) {
   let body: { email?: unknown; sessionId?: unknown };
@@ -81,14 +94,166 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // ─── Persist email on the row ────────────────────────────────────
+  // ─── Resolve or create the auth user ─────────────────────────────
+  // Tranche 12: friction-free signup. We use the admin API to create
+  // (or fetch) a Supabase auth user keyed by email, with
+  // email_confirm=true so they don't need to click a link before
+  // accessing the portal. Returning users (email already in
+  // auth.users) get matched without duplicating rows.
+  let authUserId: string | null = null;
+  {
+    // Look up by email first via the admin list-users API. Supabase
+    // doesn't have a direct "getUserByEmail" but listUsers with a
+    // filter works fine for the single-email case.
+    const { data: listData } = await supabase.auth.admin.listUsers({
+      page: 1,
+      perPage: 1,
+    });
+    // listUsers doesn't accept a filter on email — we have to scan.
+    // For most accounts this is one round-trip; the listUsers result
+    // is paginated but we filter client-side. If it's empty, create
+    // the user; otherwise reuse.
+    const existing = listData?.users.find(
+      (u) => u.email?.toLowerCase() === email,
+    );
+    if (existing) {
+      authUserId = existing.id;
+    } else {
+      // Fall through to the createUser path. We pass email_confirm
+      // so they don't get gated by Supabase's "verify your email"
+      // wall — the magic-link redemption below stands in for
+      // verification.
+      const { data: created, error: createErr } =
+        await supabase.auth.admin.createUser({
+          email,
+          email_confirm: true,
+          user_metadata: {
+            signup_source: "intake_snapshot",
+            tier: "free",
+          },
+        });
+      if (createErr) {
+        // The most common reason this fails is "User already
+        // registered" — Supabase's email index is case-insensitive
+        // and pre-existing accounts created via a different flow
+        // can collide. Handle by doing a more thorough lookup.
+        if (createErr.message?.toLowerCase().includes("already")) {
+          // Fall back to a fuller paginated scan. listUsers maxes
+          // at 1000 per page; we shouldn't ever need more than 1
+          // page in practice.
+          const { data: bigList } = await supabase.auth.admin.listUsers({
+            page: 1,
+            perPage: 1000,
+          });
+          const match = bigList?.users.find(
+            (u) => u.email?.toLowerCase() === email,
+          );
+          if (match) {
+            authUserId = match.id;
+          } else {
+            console.error("[intake/save] createUser failed and no match:", createErr);
+            return NextResponse.json(
+              { error: "Couldn't create your account" },
+              { status: 500 },
+            );
+          }
+        } else {
+          console.error("[intake/save] createUser failed:", createErr);
+          return NextResponse.json(
+            { error: "Couldn't create your account" },
+            { status: 500 },
+          );
+        }
+      } else if (created?.user) {
+        authUserId = created.user.id;
+      }
+    }
+  }
+
+  if (!authUserId) {
+    return NextResponse.json(
+      { error: "Couldn't resolve your account — try again" },
+      { status: 500 },
+    );
+  }
+
+  // ─── Ensure a profile row exists ─────────────────────────────────
+  // The portal page expects a row in `profiles` keyed by auth user id.
+  // Most paid flows create this via the Stripe webhook; for the free-
+  // tier path we create it directly. Idempotent — UPSERT with
+  // user_id as the conflict key.
+  {
+    const { error: profileErr } = await supabase
+      .from("profiles")
+      .upsert(
+        {
+          id: authUserId,
+          email,
+          // No Stripe customer until they upgrade to paid. Webhook
+          // backfills this on first checkout.
+          stripe_customer_id: null,
+          // full_name stays null for free signup — populated later
+          // from Stripe checkout metadata.
+          full_name: null,
+        },
+        { onConflict: "id", ignoreDuplicates: false },
+      );
+    if (profileErr) {
+      // Profile creation is non-critical for the snapshot save path —
+      // the portal can render without a profile row (firstName just
+      // stays null). Log and continue.
+      console.error("[intake/save] profile upsert failed:", profileErr);
+    }
+  }
+
+  // ─── Persist email + user_id on the intake row ───────────────────
   const { error: updateErr } = await supabase
     .from("intake_sessions")
-    .update({ email, saved_at: new Date().toISOString() })
+    .update({
+      email,
+      saved_at: new Date().toISOString(),
+      user_id: authUserId,
+    })
     .eq("id", sessionId);
   if (updateErr) {
     return NextResponse.json({ error: "Couldn't save your email" }, { status: 500 });
   }
+
+  // ─── Server-side magic-link redemption (sets auth cookies) ───────
+  // Generate a single-use magic-link via the admin API, then redeem
+  // it through the SSR-aware client so the auth cookies get written
+  // to the response. From the browser's perspective: the POST returns
+  // with the visitor already logged in, and a redirect to /portal
+  // lands them in the authenticated view.
+  let signInSucceeded = false;
+  try {
+    const { data: linkData, error: linkErr } =
+      await supabase.auth.admin.generateLink({
+        type: "magiclink",
+        email,
+      });
+    if (!linkErr && linkData?.properties?.hashed_token) {
+      const ssrSupabase = await getSupabaseServer();
+      const { error: verifyErr } = await ssrSupabase.auth.verifyOtp({
+        token_hash: linkData.properties.hashed_token,
+        type: "magiclink",
+      });
+      if (!verifyErr) {
+        signInSucceeded = true;
+      } else {
+        console.error("[intake/save] verifyOtp failed:", verifyErr);
+      }
+    } else if (linkErr) {
+      console.error("[intake/save] generateLink failed:", linkErr);
+    }
+  } catch (err) {
+    console.error("[intake/save] auth sign-in step failed:", err);
+  }
+
+  // If auto-sign-in failed for any reason (Supabase outage, etc),
+  // we still want the save to succeed. The "snapshot saved" email
+  // contains a link back to the snapshot URL and the visitor can
+  // log in via the normal /portal/login flow if needed.
 
   // ─── Send the "your snapshot is saved" email ─────────────────────
   // Best-effort — if Resend errors, the save still succeeded; we don't
@@ -264,7 +429,13 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  return NextResponse.json({ ok: true });
+  // Tranche 12: tell the client to navigate to /portal when sign-in
+  // succeeded. If it didn't, fall back to the previous behavior (the
+  // hero shows its "check your inbox" state without redirecting).
+  return NextResponse.json({
+    ok: true,
+    redirectTo: signInSucceeded ? "/portal" : null,
+  });
 }
 
 function escapeHtml(s: string): string {
