@@ -39,6 +39,7 @@ import { DocPromptCard } from "@/components/agent/DocPromptCard";
 import { docPromptFor } from "@/lib/memory/doc-prompts";
 import type { MemoryFileSlug } from "@/lib/memory/files";
 import { SECTION_SCHEMAS } from "@/lib/memory/schemas";
+import { track } from "@/lib/analytics";
 import { hasCalc } from "@/lib/calc";
 
 // Schema-static total of askable fields per phase — same for every
@@ -419,6 +420,13 @@ export function QuestionQueueClient({
         slug: current.slug,
         fieldName: current.fieldDef.name,
         value: draft,
+      });
+      // GA4: portal_section_save — fired per successful field write so
+      // we can see which sections + fields stall users vs. flow easily.
+      track("portal_section_save", {
+        section_slug: current.slug,
+        field_key: current.fieldDef.name,
+        source: "human",
       });
       setCompleted((s) => new Set(s).add(current.id));
       advance();

@@ -3,8 +3,12 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { ArrowLeft, ArrowRight, Calendar, MessageSquare } from "lucide-react";
 import { getSupabaseServer } from "@/lib/supabase/server";
-import { CalendlyEmbed } from "@/components/CalendlyEmbed";
+import { CoachingCalendlyEmbed } from "./CoachingCalendlyEmbed";
 import type { Profile, Purchase, Tier } from "@/lib/supabase/types";
+
+function tierNameFor(t: Tier): "the-blueprint" | "navigator" | "builder" {
+  return t === 3 ? "builder" : t === 2 ? "navigator" : "the-blueprint";
+}
 
 export const metadata: Metadata = {
   title: "Schedule a Coaching Call | The Franchisor Blueprint Portal",
@@ -85,7 +89,11 @@ export default async function SchedulePage() {
       <section className="py-10 md:py-14">
         <div className="max-w-[1100px] mx-auto px-6 md:px-8">
           <div className="bg-white rounded-2xl border border-card-border p-3 md:p-4 shadow-[0_8px_24px_rgba(30,58,95,0.08)] overflow-hidden">
-            <CalendlyEmbed url={prefillUrl.toString()} minHeight={760} />
+            <CoachingCalendlyEmbed
+              url={prefillUrl.toString()}
+              tier={tierNameFor(tier)}
+              minHeight={760}
+            />
           </div>
           <p className="text-center text-xs text-grey-3 italic mt-4">
             Trouble loading?{" "}

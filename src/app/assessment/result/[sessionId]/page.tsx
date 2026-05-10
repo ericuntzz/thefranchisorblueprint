@@ -38,6 +38,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import type { AssessmentResponse, AssessmentSession } from "@/lib/supabase/types";
 import { computeResult } from "@/lib/assessment/scoring";
 import { CategoryBars } from "./CategoryBars";
+import { AssessmentResultTracker } from "./AssessmentResultTracker";
 
 const RESUME_COOKIE = "tfb_assessment_resume";
 
@@ -117,6 +118,9 @@ export default async function AssessmentResultPage({
 
   return (
     <>
+      {/* Fires GA4 `assessment_complete` once per page mount with score
+          + recommended tier. Tiny client island; doesn't render anything. */}
+      <AssessmentResultTracker score={result.totalScore} band={result.band} />
       <SiteNav />
 
       {/* ===== Hero reveal ===== */}

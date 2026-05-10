@@ -28,6 +28,7 @@ import {
 } from "@/app/portal/lab/blueprint/actions";
 import { FocusedSectionClient } from "./FocusedSectionClient";
 import { SectionToolbar } from "./SectionToolbar";
+import { PortalEventTracker } from "@/components/portal/PortalEventTracker";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -174,6 +175,12 @@ export default async function FocusedSectionPage({ params }: Props) {
 
   return (
     <>
+      {/* GA4: portal_section_open. Per-page event (not session-deduped) so
+          we can see how many times each section is revisited. */}
+      <PortalEventTracker
+        event="portal_section_open"
+        params={{ section_slug: slug }}
+      />
       <main className="min-h-screen bg-cream-soft">
         {/* Top nav — back arrow + section toolbar (status pills only).
             Older "View in Blueprint" / "Version history" / voice

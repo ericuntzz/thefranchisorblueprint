@@ -78,9 +78,18 @@ function ensureCalendlyAssets() {
 export function CalendlyEmbed({
   url,
   minHeight = 700,
+  onScheduled,
 }: {
   url: string;
   minHeight?: number;
+  /**
+   * Optional callback when calendly.event_scheduled fires. Used by the
+   * /portal/coaching/schedule page to fire `portal_coaching_book` in
+   * addition to the standard `generate_lead` event the embed already
+   * fires. Called AFTER the standard track() so analytics ordering is
+   * predictable.
+   */
+  onScheduled?: () => void;
 }) {
   // Skeleton state — hides itself once Calendly's iframe signals it has
   // rendered the event-type page. Falls back to a 4s timeout so we never
@@ -119,6 +128,7 @@ export function CalendlyEmbed({
           event_type: eventType,
           cta_location: "calendly_inline_embed",
         });
+        onScheduled?.();
       }
     }
     window.addEventListener("message", onMessage);
@@ -126,7 +136,7 @@ export function CalendlyEmbed({
       window.removeEventListener("message", onMessage);
       window.clearTimeout(timeoutId);
     };
-  }, [url]);
+  }, [url, onScheduled]);
 
   return (
     <div className="relative" style={{ minHeight: `${minHeight}px` }}>

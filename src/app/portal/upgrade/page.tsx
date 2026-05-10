@@ -19,7 +19,12 @@ import {
   PROMO_DISCOUNT_PERCENT,
 } from "@/lib/upgrade-offers";
 import { OfferCountdown } from "@/components/OfferCountdown";
+import { PortalEventTracker } from "@/components/portal/PortalEventTracker";
 import type { Tier, Purchase, UpgradeOffer } from "@/lib/supabase/types";
+
+function tierNameFor(t: Tier): "the-blueprint" | "navigator" | "builder" {
+  return t === 3 ? "builder" : t === 2 ? "navigator" : "the-blueprint";
+}
 
 export const metadata: Metadata = {
   title: "Upgrade Your Tier | The Franchisor Blueprint Portal",
@@ -68,6 +73,11 @@ export default async function UpgradePage() {
 
   return (
     <>
+      {/* GA4: portal_upgrade_view (one event per page render). */}
+      <PortalEventTracker
+        event="portal_upgrade_view"
+        params={{ from_tier: tierNameFor(currentTier) }}
+      />
       {/* ===== Hero ===== */}
       <section className="bg-white border-b border-navy/5">
         <div className="max-w-[1200px] mx-auto px-6 md:px-8 py-10 md:py-14">

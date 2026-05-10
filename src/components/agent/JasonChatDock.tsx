@@ -55,6 +55,7 @@ import {
   MEMORY_FILE_TITLES,
   type MemoryFileSlug,
 } from "@/lib/memory/files";
+import { track } from "@/lib/analytics";
 
 type ChatTurn = {
   role: "user" | "assistant";
@@ -954,6 +955,14 @@ export function JasonChatDock({ pageContext: pageContextProp, firstName }: Props
     setTranscript((t) => [...t, userBubble]);
     setDraft("");
     setStreaming(true);
+
+    // GA4: portal_jason_ai_message — captures every user message into the
+    // dock. agent_wrote is set later if the assistant makes a tool call
+    // back into customer_memory (see `toolFired` flag a few lines down).
+    track("portal_jason_ai_message", {
+      surface: pageContext ?? "unknown",
+      agent_wrote: false,
+    });
 
     // Build server history including the just-added user turn.
     const nextHistory: ChatTurn[] = [

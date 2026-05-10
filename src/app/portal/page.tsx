@@ -26,6 +26,7 @@ import {
 } from "@/lib/memory/queue";
 import { CommandCenter } from "@/components/portal/CommandCenter";
 import { IntakeWelcomeBanner } from "@/components/portal/IntakeWelcomeBanner";
+import { PortalEventTracker } from "@/components/portal/PortalEventTracker";
 import {
   DeliverableExplorer,
   type SectionDataBundle,
@@ -309,8 +310,22 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
     };
   })();
 
+  // GA4: portal_login fires once per browser session. We use the daysSinceJoined
+  // signal as a soft proxy for "first login" (day 1 = first day in the portal).
+  // Real first-login attribution lives in the magic-link callback if we want
+  // it server-side later; this is good enough for the first cut.
+  const tierForGA = tier === 3 ? "builder" : tier === 2 ? "navigator" : "the-blueprint";
+
   return (
     <>
+      <PortalEventTracker
+        event="portal_login"
+        params={{
+          tier: tierForGA,
+          first_login: daysSinceJoined === 1,
+        }}
+        dedupeKey="portal_login"
+      />
       {intakeBanner && (
         <IntakeWelcomeBanner
           domain={intakeBanner.domain}

@@ -25,6 +25,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Download, FileText, Loader2, X } from "lucide-react";
 import type { DeliverableId } from "@/lib/export/types";
+import { track } from "@/lib/analytics";
 
 type DeliverableSummary = {
   id: DeliverableId;
@@ -243,6 +244,12 @@ export function DeliverablePreviewModal(props: Props) {
             {activeDeliverable && !isSlides && (
               <a
                 href={pdfHref}
+                onClick={() =>
+                  track("portal_export_request", {
+                    deliverable: activeDeliverable.id,
+                    format: "pdf",
+                  })
+                }
                 className="inline-flex items-center gap-1.5 text-navy hover:bg-cream-soft text-xs uppercase tracking-[0.1em] font-bold px-3.5 py-2 rounded-full border border-card-border transition-colors"
               >
                 <Download size={12} />
@@ -252,6 +259,12 @@ export function DeliverablePreviewModal(props: Props) {
             {props.mode === "single" && activeDeliverable && (
               <a
                 href={docxHref}
+                onClick={() =>
+                  track("portal_export_request", {
+                    deliverable: activeDeliverable.id,
+                    format: isSlides ? "pptx" : "docx",
+                  })
+                }
                 className="inline-flex items-center gap-1.5 bg-gold hover:bg-gold-dark text-navy text-xs uppercase tracking-[0.1em] font-bold px-4 py-2 rounded-full transition-colors"
               >
                 <Download size={12} />
@@ -261,6 +274,10 @@ export function DeliverablePreviewModal(props: Props) {
             {props.mode === "bundle" && (
               <button
                 onClick={async () => {
+                  track("portal_export_request", {
+                    deliverable: "bundle",
+                    format: "zip",
+                  });
                   setDownloadingBundle(true);
                   try {
                     await props.onDownloadBundle();

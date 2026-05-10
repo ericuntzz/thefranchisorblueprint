@@ -29,6 +29,7 @@ import {
   type AnswerLetter,
   type AssessmentQuestion,
 } from "@/lib/assessment/questions";
+import { track } from "@/lib/analytics";
 
 // The resume credential moved to an HttpOnly cookie set by the API
 // routes (see /api/assessment/start, /complete). The client never
@@ -137,6 +138,10 @@ export function AssessmentFlow({
     const answers: Record<string, AnswerLetter> = {};
     for (const a of data.answers ?? []) answers[a.questionId] = a.answerValue;
     setSession({ sessionId: data.sessionId, answers });
+    track("assessment_start", {
+      source: source ?? "unknown",
+      is_resume: (data.answers?.length ?? 0) > 0,
+    });
     // Resume to the first un-answered question (or 0 if fresh).
     const nextIndex = QUESTIONS.findIndex((q) => !(q.id in answers));
     if (nextIndex === -1) {
