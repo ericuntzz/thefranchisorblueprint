@@ -22,6 +22,13 @@ export const PER_DOMAIN_CACHE_DAYS = 7;
  * will replace them. Acts as a manual cache-busting key.
  *
  * Last bumped:
+ *   2026-05-10  Round 6: geographic bias now applied to FINAL overall
+ *               score, not just top-5 selection. Adjacent-state map
+ *               replaces coarse 4-region for the +6 tier; drive-time
+ *               (Haversine) adds +8/+4 within 250/500 mi; cost-base
+ *               parity penalizes mismatched income brackets. Costa
+ *               Vida should now surface SLC/Phoenix/Boise rather
+ *               than Denver/LA/Summerlin.
  *   2026-05-10  Round 5: existing-franchisor detection added. Old
  *               cached snapshots have no existingFranchisor field —
  *               rerunning catches the Costa Vida-class case where a
@@ -45,7 +52,7 @@ export const PER_DOMAIN_CACHE_DAYS = 7;
  *               diversity + plain-English narratives + page-title
  *               fallback for business name.
  */
-export const CACHE_FRESHNESS_FLOOR_ISO = "2026-05-10T23:30:00Z";
+export const CACHE_FRESHNESS_FLOOR_ISO = "2026-05-11T00:30:00Z";
 
 /**
  * Per-IP rate limit — N distinct intake starts per hour. Stops

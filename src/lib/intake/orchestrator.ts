@@ -41,6 +41,11 @@ import {
   detectFranchiseSignals,
   type ExistingFranchisorSignal,
 } from "./franchise-detection";
+import {
+  computeFinalProximityBias,
+  DEFAULT_GEO_WEIGHTS,
+  type GeoBiasWeights,
+} from "./geo-bias";
 
 /**
  * Normalized success-shape demographics. The Census wrapper returns
@@ -467,6 +472,16 @@ export async function* runIntake(args: {
   // Step 4: Final scoring per market — uses the reliability flag to
   // avoid both (a) ranking saturated markets as top picks and (b)
   // narrating them as "crowded — 20 within 1 mile."
+  //
+  // Tranche 3 (2026-05-10): geographic bias is also applied to the
+  // FINAL overall score (not just to selection-time similarity) so
+  // home-region markets actually surface in the visible top-3.
+  // Previously the +25 same-state similarity bonus only gated entry
+  // into the top-5 candidate pool; the 4-pillar score had the final
+  // say, and saturation-aware competition scoring was knocking
+  // home-state markets out of the visible top-3. The post-pillar
+  // bias closes that loop.
+  const geoWeights: GeoBiasWeights = DEFAULT_GEO_WEIGHTS;
   const expansion: ExpansionMarket[] = top5.map((s, i) => {
     const compCount = competitorCounts[i];
     const pillars = computePillars({
@@ -477,11 +492,26 @@ export async function* runIntake(args: {
       prototypeCompetitorCount,
       competitorSignalReliable,
     });
-    const overall =
+    const pillarSum =
       pillars.demographicsAndMarket +
       pillars.trafficAndAccess +
       pillars.competition +
       pillars.financialAndLegal;
+    const proximity = computeFinalProximityBias({
+      sourceState: business.state ?? null,
+      sourceLat: sourceLocation?.lat ?? null,
+      sourceLng: sourceLocation?.lng ?? null,
+      sourceMedianHHI: prototypeDemographics?.medianHouseholdIncome ?? null,
+      candState: s.candidate.state,
+      candLat: s.candidate.lat,
+      candLng: s.candidate.lng,
+      candMedianHHI: s.demographics?.medianHouseholdIncome ?? null,
+      regionForState,
+      weights: geoWeights,
+    });
+    // Clamp to [0, 100]; the visible "X/100 score" framing breaks
+    // outside that range and a -8 penalty stack is harmless to floor.
+    const overall = Math.max(0, Math.min(100, pillarSum + proximity.delta));
     return {
       zip: s.candidate.zip,
       label: s.candidate.label,
