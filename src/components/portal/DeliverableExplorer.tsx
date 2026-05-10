@@ -239,9 +239,9 @@ export function DeliverableExplorer({
           </h2>
           <p className="text-grey-3 text-sm md:text-base leading-relaxed mb-5 max-w-[920px]">
             This is where every document for your franchise lives.
-            Click a card to edit what&apos;s inside, preview the
-            finished doc before you send it out, or tick a few boxes
-            and grab them all as a bundle.
+            Click a card to edit what&apos;s inside, preview a
+            finished doc before you send it out, or use Select Section
+            to bundle a few together.
           </p>
         </>
       )}
@@ -263,37 +263,55 @@ export function DeliverableExplorer({
           />
           Select Section
         </button>
+        {selectMode && (
+          <button
+            type="button"
+            onClick={() => {
+              const allIds = deliverables.map((d) => d.id);
+              if (selected.size === allIds.length) {
+                setSelected(new Set());
+              } else {
+                setSelected(new Set(allIds));
+              }
+            }}
+            className="text-[11px] font-bold uppercase tracking-[0.1em] text-cream/65 hover:text-gold underline underline-offset-4 decoration-cream/30 hover:decoration-gold transition-colors"
+          >
+            {selected.size === deliverables.length ? "Clear" : "Select all"}
+          </button>
+        )}
         {selected.size > 0 && (
           <span className="text-[11px] text-cream/65">
             {selected.size} selected
           </span>
         )}
         <div className="flex-1" />
-        <button
-          type="button"
-          onClick={() =>
-            setPreview({
-              mode: "bundle",
-              deliverables: deliverables.filter((d) => selected.has(d.id)),
-            })
-          }
-          disabled={noneSelected || bundling}
-          className="inline-flex items-center gap-2 bg-gold text-navy hover:bg-gold-dark disabled:opacity-40 disabled:cursor-not-allowed font-bold text-xs uppercase tracking-[0.1em] px-4 py-2.5 rounded-full transition-colors"
-        >
-          {bundling ? (
-            <>
-              <Loader2 size={14} className="animate-spin" />
-              Building…
-            </>
-          ) : (
-            <>
-              <PackageOpen size={14} />
-              {selected.size > 0
-                ? `Preview ${selected.size} docs`
-                : "Preview docs"}
-            </>
-          )}
-        </button>
+        {selectMode && (
+          <button
+            type="button"
+            onClick={() =>
+              setPreview({
+                mode: "bundle",
+                deliverables: deliverables.filter((d) => selected.has(d.id)),
+              })
+            }
+            disabled={noneSelected || bundling}
+            className="inline-flex items-center gap-2 bg-gold text-navy hover:bg-gold-dark disabled:opacity-40 disabled:cursor-not-allowed font-bold text-xs uppercase tracking-[0.1em] px-4 py-2.5 rounded-full transition-colors"
+          >
+            {bundling ? (
+              <>
+                <Loader2 size={14} className="animate-spin" />
+                Building…
+              </>
+            ) : (
+              <>
+                <PackageOpen size={14} />
+                {selected.size > 0
+                  ? `Preview ${selected.size} docs`
+                  : "Preview docs"}
+              </>
+            )}
+          </button>
+        )}
       </div>
 
       {bundleErr && (
