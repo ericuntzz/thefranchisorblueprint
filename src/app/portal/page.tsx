@@ -335,7 +335,7 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
       )}
       {/* ===== Welcome ===== */}
       <section className="bg-white border-b border-navy/5">
-        <div className="max-w-[1200px] mx-auto px-6 md:px-8 py-10 md:py-14">
+        <div className="max-w-[1200px] mx-auto px-6 sm:px-8 md:px-12 lg:px-14 py-10 md:py-14">
           <div className="flex flex-wrap items-end justify-between gap-6 mb-8">
             <div>
               {/* Eyebrow consolidated 2026-05-09 per Eric: was a gold
@@ -396,7 +396,7 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
           remains available as expert mode via the Command Center's
           secondary "View full Blueprint" link. */}
       <section className="bg-cream-soft py-6 md:py-10 border-b border-navy/5">
-        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 space-y-6">
+        <div className="max-w-[1200px] mx-auto px-6 sm:px-8 md:px-12 lg:px-14 space-y-8 md:space-y-10">
           <CommandCenter
             firstName={firstName}
             readinessPct={readinessPct}

@@ -236,7 +236,7 @@ export function DeliverableExplorer({
   }
 
   return (
-    <section className="bg-white rounded-2xl border border-card-border p-5 sm:p-6 md:p-8">
+    <section>
       <div className="text-xs uppercase tracking-[0.14em] text-gold-text font-bold mb-1">
         Your Blueprint
       </div>
