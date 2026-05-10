@@ -1,4 +1,9 @@
-import "server-only";
+// NOTE: this file used to import "server-only" but was unrestricted
+// 2026-05-10 so the parameter-sweep harness in scripts/qa/ can call
+// computeFinalProximityBias from a Node script. The helpers are pure
+// math (no fetch / no env / no DB) so there's no actual server-only
+// requirement. Don't add server-side calls here without restoring
+// the import — keep the boundary clean.
 
 /**
  * Geographic-bias helpers used by the expansion-market scorer.
