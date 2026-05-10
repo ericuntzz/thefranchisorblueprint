@@ -22,6 +22,13 @@ export const PER_DOMAIN_CACHE_DAYS = 7;
  * will replace them. Acts as a manual cache-busting key.
  *
  * Last bumped:
+ *   2026-05-10  Round 10: per-market bullets (LLM-generated, plain
+ *               English) replace the algorithmic "why" sentence as
+ *               primary copy. Markets now show "Denver, LoDo" (was
+ *               "01 Denver — LoDo"). Default weights bumped to the
+ *               04-aggressive-home combo (~1.7× the prior). Old
+ *               cached snapshots lack bullets — re-running surfaces
+ *               them in the UI.
  *   2026-05-10  Round 9: snapshot now carries a second ranking
  *               (expansionAnywhere) computed without the geo-bias
  *               so the UI can offer a "near home / open to anywhere"
@@ -74,7 +81,7 @@ export const PER_DOMAIN_CACHE_DAYS = 7;
  *               diversity + plain-English narratives + page-title
  *               fallback for business name.
  */
-export const CACHE_FRESHNESS_FLOOR_ISO = "2026-05-11T02:30:00Z";
+export const CACHE_FRESHNESS_FLOOR_ISO = "2026-05-11T03:30:00Z";
 
 /**
  * Per-IP rate limit — N distinct intake starts per hour. Stops

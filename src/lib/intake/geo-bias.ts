@@ -167,13 +167,18 @@ export type GeoBiasWeights = {
 };
 
 export const DEFAULT_GEO_WEIGHTS: GeoBiasWeights = {
-  sameStateBonus: 12,
-  adjacentStateBonus: 6,
-  sameRegionBonus: 2,
-  within250MiBonus: 8,
-  within500MiBonus: 4,
-  costParityHighPenalty: -4,
-  costParityLowPenalty: -3,
+  // Tranche 9 (2026-05-10): bumped to the "04-aggressive-home" combo
+  // from the weight sweep. Eric picked this after reviewing the sweep
+  // — strongest home-region surfacing across the 4 test scenarios
+  // without breaking pillar-score ordering. ~1.7× the previous
+  // values. Sweep is at scripts/qa/intake-weight-sweep.ts.
+  sameStateBonus: 20,
+  adjacentStateBonus: 10,
+  sameRegionBonus: 4,
+  within250MiBonus: 14,
+  within500MiBonus: 7,
+  costParityHighPenalty: -6,
+  costParityLowPenalty: -4,
 };
 
 // ─── Final-ranking bias computation ──────────────────────────────────

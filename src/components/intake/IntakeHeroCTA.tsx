@@ -82,6 +82,19 @@ const SERVER_TO_DISPLAY: Record<ServerPhase, DisplayPhase> = {
   summary: "summary",
 };
 
+/**
+ * Map orchestrator's tier names ("blueprint" / "not-yet") to the GA4 event
+ * catalog's tier names ("the-blueprint" / "not-ready"). Keeps the GA4
+ * taxonomy aligned across the intake, assessment, and Stripe flows.
+ */
+function tierForGA(
+  t: IntakeSnapshot["readiness"]["suggestedTier"],
+): "the-blueprint" | "navigator" | "builder" | "not-ready" {
+  if (t === "blueprint") return "the-blueprint";
+  if (t === "not-yet") return "not-ready";
+  return t;
+}
+
 type View =
   | { kind: "loading" }
   | { kind: "capped" }
@@ -254,6 +267,9 @@ export function IntakeHeroCTA() {
         const data = (await r.json()) as { capped: boolean };
         if (cancelled) return;
         setView({ kind: data.capped ? "capped" : "idle" });
+        if (data.capped) {
+          track("intake_capped", { cta_location: "intake_hero" });
+        }
       } catch {
         if (!cancelled) setView({ kind: "idle" });
       }
@@ -270,10 +286,7 @@ export function IntakeHeroCTA() {
     const url = urlInput.trim();
     if (url.length < 4) return;
 
-    track("cta_click", {
-      cta_label: "intake_url_submit",
-      cta_location: "intake_hero",
-    });
+    track("intake_start", { cta_location: "intake_hero" });
 
     setView({ kind: "streaming", progress: freshProgress(), activePhase: null });
 
@@ -298,6 +311,7 @@ export function IntakeHeroCTA() {
 
     if (res.status === 429) {
       // Cap hit between mount-time check and submit. Switch to capped.
+      track("intake_capped", { cta_location: "intake_hero" });
       setView({ kind: "capped" });
       return;
     }
@@ -418,13 +432,17 @@ export function IntakeHeroCTA() {
     }
 
     if (finalSnapshot && finalSessionId) {
-      track("generate_lead", {
-        event_type: "intake_snapshot_complete",
+      track("intake_snapshot_view", {
+        readiness_score: finalSnapshot.readiness.overall,
+        recommended_tier: tierForGA(finalSnapshot.readiness.suggestedTier),
+        expansion_markets: finalSnapshot.expansion?.length ?? 0,
         cta_location: "intake_hero",
-        value: finalSnapshot.readiness.overall,
       });
       setView({ kind: "snapshot", snapshot: finalSnapshot, sessionId: finalSessionId });
     } else {
+      track("intake_failed", {
+        failure_reason: errorMessage ? "stream_error" : "no_snapshot",
+      });
       setView({
         kind: "error",
         message:
@@ -464,8 +482,9 @@ export function IntakeHeroCTA() {
         setView({ kind: "snapshot", snapshot, sessionId });
         return;
       }
-      track("cta_click", {
-        cta_label: "intake_save_email",
+      track("intake_email_saved", {
+        readiness_score: snapshot.readiness.overall,
+        recommended_tier: tierForGA(snapshot.readiness.suggestedTier),
         cta_location: "intake_hero_save",
       });
       setView({ kind: "saved", email });
@@ -939,11 +958,11 @@ function SnapshotView({
               Markets where we&apos;d open next
             </p>
             <p className="text-grey-3 text-base leading-relaxed mb-4">
-              We match each candidate market against the demographic
-              fingerprint of your home market and give bonus weight to
-              areas where comparable concepts haven&apos;t saturated the
-              trade area yet. The full 4-pillar breakdown unlocks when
-              you save your snapshot below.
+              We compare markets against your business&apos; unique
+              footprint, demographics, and competition so you can
+              make a more informed decision on where to franchise
+              next. The full 4-pillar breakdown unlocks when you
+              save your snapshot below.
             </p>
 
             {/* Tranche 6: geographic-preference toggle. Eric's
@@ -1086,13 +1105,19 @@ function SnapshotView({
           </Link>
         </div>
 
-        {/* Diagnostic footer — preserves the "30-year operator with software"
-            framing. Stays small intentionally — it's reassurance, not action. */}
+        {/* Diagnostic footer — reassurance, not action. Bumped to
+            text-sm + grey-3 (was text-xs italic grey-4) per Eric's
+            QA 2026-05-10 — the previous treatment was too easy to
+            miss. Copy rewritten to plain-English: "the same framework
+            we use to guide founders from emerging brand to franchise
+            launch." Avoids "full franchise ownership" which could be
+            misread as us owning the franchise — we're guiding the
+            owner THROUGH ownership, not taking it from them. */}
         <div className="mt-6 pt-5 border-t border-navy/10">
-          <p className="text-grey-4 text-xs italic leading-relaxed">
-            Built on Jason&apos;s 4-pillar / 100-point site-readiness diagnostic — the same
-            rubric we&apos;ll codify into your FDD Item 11 site-criteria sheet inside The
-            Blueprint.
+          <p className="text-grey-3 text-sm leading-relaxed">
+            Built on our proprietary 4-pillar, 100-point site-readiness
+            diagnostic — the same framework we use to guide founders
+            from emerging brand to franchise launch.
           </p>
         </div>
       </div>
@@ -1150,7 +1175,7 @@ function SnapshotView({
               className="bg-gold text-navy font-bold text-base uppercase tracking-[0.08em] px-8 py-4 rounded-xl hover:bg-gold-dark transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
             >
               {saving ? <Loader2 size={18} className="animate-spin" /> : <ArrowRight size={18} />}
-              {saving ? "Saving…" : "Unlock all three markets"}
+              {saving ? "Saving…" : "Unlock Full Insights"}
             </button>
           </div>
           {emailError && <p className="text-red-600 text-sm font-semibold mt-2">{emailError}</p>}
@@ -1176,23 +1201,26 @@ function SnapshotView({
       )}
 
       {/* Additive deeper-assessment CTA — only in the unsaved state.
-          Eric flagged the old text-sm white/70 link as too easy to
-          miss. Now: bigger type, gold accent, benefits-led headline. */}
+          Eric QA 2026-05-10: headline goes gold + bigger; sub-copy
+          bumped to base size; both more prominent so it doesn't read
+          as a footnote. Headline reworded from "Get a more accurate
+          score" (sounds remedial) to "Get even more insights about
+          your franchise opportunities" (positions as additive value). */}
       {!revealAll && (
         <Link
           href="/assessment"
-          className="mt-5 flex items-start gap-3 bg-white/10 hover:bg-white/15 backdrop-blur border border-white/15 hover:border-gold/40 rounded-xl px-5 py-4 transition-all group"
+          className="mt-5 flex items-start gap-3 bg-white/10 hover:bg-white/15 backdrop-blur border border-white/15 hover:border-gold/40 rounded-xl px-5 py-5 transition-all group"
         >
           <Sparkles
-            size={20}
-            className="text-gold flex-shrink-0 mt-0.5"
+            size={22}
+            className="text-gold flex-shrink-0 mt-1"
             aria-hidden
           />
           <div className="min-w-0 flex-1">
-            <p className="text-white font-bold text-base md:text-lg leading-tight">
-              Get a more accurate score in 5 minutes.
+            <p className="text-gold font-bold text-lg md:text-xl leading-tight">
+              Get even more insights about your franchise opportunities.
             </p>
-            <p className="text-white/75 text-sm mt-0.5 leading-relaxed">
+            <p className="text-white/85 text-base mt-1.5 leading-relaxed">
               Answer 15 honest questions about your business and we&apos;ll
               sharpen the read on your readiness, your gaps, and the
               right next step.
@@ -1228,7 +1256,7 @@ function SnapshotView({
  */
 function MarketCard({
   market,
-  index,
+  index: _index,
   blurred,
   showPillars,
 }: {
@@ -1237,6 +1265,18 @@ function MarketCard({
   blurred: boolean;
   showPillars: boolean;
 }) {
+  // Tranche 8: market.label still comes from the candidate-zips table
+  // as "Denver — LoDo" (em-dash separator). Eric asked for comma form
+  // ("Denver, LoDo") at render time without rewriting the underlying
+  // table. Split on the em-dash, fall back to the raw label if the
+  // separator isn't found (some entries have no neighborhood, e.g.
+  // "Summerlin").
+  const labelParts = market.label.split(" — ");
+  const displayLabel =
+    labelParts.length > 1 ? `${labelParts[0]}, ${labelParts[1]}` : market.label;
+  // Bullets are the primary copy (LLM-generated). Fall back to the
+  // algorithmic `why` line if bullets came back empty.
+  const hasBullets = Array.isArray(market.bullets) && market.bullets.length > 0;
   return (
     <div
       className={`bg-white rounded-xl border border-navy/10 p-5 md:p-6 ${
@@ -1251,13 +1291,10 @@ function MarketCard({
     >
       <div className="flex items-baseline justify-between gap-3 mb-2">
         <div className="min-w-0">
-          <span className="text-grey-4 text-base font-bold tabular-nums mr-2">
-            {String(index + 1).padStart(2, "0")}
-          </span>
           <span className="text-navy font-bold text-lg md:text-xl">
-            {market.label}
+            {displayLabel}
           </span>
-          <div className="text-grey-4 text-sm tabular-nums mt-0.5 ml-7">
+          <div className="text-grey-4 text-sm tabular-nums mt-0.5">
             {market.zip}, {market.state}
           </div>
         </div>
@@ -1265,9 +1302,25 @@ function MarketCard({
           {market.score}
         </div>
       </div>
-      <p className="text-grey-3 text-base leading-relaxed mt-2">
-        {market.why}
-      </p>
+      {hasBullets ? (
+        <ul className="mt-3 space-y-2 text-grey-3 text-[15px] md:text-base leading-relaxed">
+          {market.bullets.map((b, i) => (
+            <li key={i} className="flex gap-2.5">
+              <span
+                className="text-gold-warm font-bold flex-shrink-0 mt-0.5"
+                aria-hidden
+              >
+                →
+              </span>
+              <span>{b}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-grey-3 text-base leading-relaxed mt-2">
+          {market.why}
+        </p>
+      )}
       {showPillars && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-4 border-t border-navy/10 text-xs font-semibold uppercase tracking-wider">
           <PillarCell label="Demographics" score={market.pillars.demographicsAndMarket} max={25} />
