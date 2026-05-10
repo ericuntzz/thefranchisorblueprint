@@ -57,8 +57,7 @@
 
 ### Check: dynamic page title/description templates from data files
 - For `src/app/franchise-your/[industry]/business/page.tsx` and `src/app/franchise-your-business-in/[state]/page.tsx`, the title and description are built from industry/state data. After 2026-05-08 fix, templates are now within bounds for all entries.
-- On any future additions to `src/lib/franchise-industries.ts` or `src/lib/franchise-states.ts`, verify the template outputs stay within bounds by running:
-  `python3 -c "from src.lib.franchise_industries import allIndustries; [print(len(f'{i.shortName} Franchise | The Franchisor Blueprint'), i.shortName) for i in allIndustries if len(f'{i.shortName} Franchise | The Franchisor Blueprint') > 60]"` (adapt to TS as needed).
+- On any future additions to `src/lib/franchise-industries.ts` or `src/lib/franchise-states.ts`, verify the template outputs stay within bounds.
 
 ### Check: programs/pricing/homepage description length after price changes
 - `pricing/page.tsx`, `page.tsx`, and `programs/page.tsx` descriptions were fixed 2026-05-08 (173→150, 191→145, 254→155 chars respectively). On any future price or tier update, re-verify these don't drift back over 160 chars.
@@ -82,3 +81,21 @@
 - This may be intentional (different routing), but verify both inboxes are active and routed correctly.
 - grep: `grep -rn "@thefranchisorblueprint.com" src/app/ src/components/ --include="*.tsx" | grep -vE "portal|assessment" | grep -v "PORTAL_SUPPORT_EMAIL"`
 - REPORT-ONLY: could be intentional (pre-purchase vs post-purchase routing). Eric should confirm both addresses are active.
+
+## Additions from 2026-05-10
+
+### Check: IntakeHeroCTA multi-state link validity
+- The `src/components/intake/IntakeHeroCTA.tsx` component has 8 distinct view states (loading, capped, idle, streaming, snapshot, saving, saved, error). Each state renders different CTAs.
+- Verified 2026-05-10: all hrefs in IntakeHeroCTA point to valid routes (/assessment, /strategy-call, /programs/blueprint, /strategy-call/blueprint). Re-check after new states or CTA changes:
+  `grep -n 'href=' src/components/intake/IntakeHeroCTA.tsx | grep -v 'className\|//'`
+- Special attention: the `capped` state (daily spend cap hit) falls back to `/assessment` — confirm that assessment route stays live.
+
+### Check: hero subtitle non-breaking space intentionality
+- `src/app/page.tsx` "Now What?" heading uses `&nbsp;` between "Now" and "What?" to prevent awkward line break. This is intentional and should not be "fixed" by future runs.
+- Similarly `src/app/pricing/page.tsx` subtitle uses Unicode curly quotes (U+201C/201D) inside a straight-quoted JSX attribute for "call for pricing" — this is safe (not ASCII double quotes) and intentional.
+- Pattern: `grep -n 'nbsp' src/app/page.tsx` — any hits are known-intentional.
+
+### Check: LegalPage attorney-review banner persistence
+- As of 2026-05-10 the amber "Placeholder text — pending attorney review." banner in `src/components/LegalPage.tsx` has been REPORT-ONLY for 5 consecutive runs (since 2026-05-06). The banner is visible on all 4 public legal pages (privacy, terms, earnings-disclaimer, franchise-disclaimer).
+- Each run: verify the banner is still in `src/components/LegalPage.tsx` lines 22–33. If Eric removes it, also remove this check.
+- `grep -n "Placeholder text — pending attorney review" src/components/LegalPage.tsx`
