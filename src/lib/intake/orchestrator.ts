@@ -37,6 +37,10 @@ import {
   excludeSourceLocation,
   type CandidateZip,
 } from "./candidate-zips";
+import {
+  detectFranchiseSignals,
+  type ExistingFranchisorSignal,
+} from "./franchise-detection";
 
 /**
  * Normalized success-shape demographics. The Census wrapper returns
@@ -85,6 +89,15 @@ export type IntakeSnapshot = {
   homeMarket: HomeMarketProfile;
   expansion: ExpansionMarket[];
   readiness: ReadinessScore;
+  /**
+   * Optional. Populated only when the franchise-detection LLM pass
+   * found indicators that this URL belongs to a business already
+   * operating as a franchisor. UI uses this to branch from
+   * "are you ready to franchise?" framing into a portfolio-strategy
+   * conversation (Eric flagged 2026-05-10 — Costa Vida scored 53/100
+   * which is meaningless for a 94-location existing franchise).
+   */
+  existingFranchisor?: ExistingFranchisorSignal;
   /** Approximate cost in cents (used to enforce daily cap). */
   costCents: number;
 };
@@ -150,6 +163,8 @@ const COST = {
   PLACES_NEARBY_CENTS: 4,
   CENSUS_CENTS: 0,
   LLM_BUSINESS_EXTRACT_CENTS: 2,
+  /** LLM pass that classifies whether the URL is an existing franchisor. */
+  LLM_FRANCHISE_DETECT_CENTS: 2,
   LLM_SUMMARY_CENTS: 3,
 } as const;
 
@@ -191,8 +206,16 @@ export async function* runIntake(args: {
     message: "Identifying your business…",
   };
 
-  const business = await extractBusinessInfo(scrape);
+  // Two LLM passes run in parallel — extraction (name/concept/voice/
+  // address/category) and existing-franchisor detection. Both read
+  // the same scrape; we save wall-clock by parallelizing instead of
+  // chaining. Costs accumulate either way.
+  const [business, existingFranchisor] = await Promise.all([
+    extractBusinessInfo(scrape),
+    detectFranchiseSignals(scrape),
+  ]);
   costCents += COST.LLM_BUSINESS_EXTRACT_CENTS;
+  costCents += COST.LLM_FRANCHISE_DETECT_CENTS;
 
   // Fallback: if the LLM couldn't extract a business name (thin page,
   // JS-rendered SPA, etc.), derive one from the page title or domain
@@ -547,6 +570,12 @@ export async function* runIntake(args: {
     },
     expansion: topExpansion,
     readiness,
+    // Only attach the existing-franchisor signal when it actually
+    // fired — keeps the JSON payload minimal for the common case
+    // (candidate franchisor scoring through the standard rubric).
+    ...(existingFranchisor.isFranchising
+      ? { existingFranchisor }
+      : {}),
     costCents,
   };
 

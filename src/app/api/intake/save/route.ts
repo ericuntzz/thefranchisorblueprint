@@ -95,9 +95,26 @@ export async function POST(req: NextRequest) {
   // want to fail the response just because the email layer hiccupped.
   const business = (session.business_data as { name?: string | null } | null) ?? null;
   const businessName = business?.name ?? "your business";
-  const score = (session.score_data as { snapshot?: { readiness?: { overall?: number; suggestedTier?: string } } } | null)?.snapshot?.readiness;
+  const fullSnapshot = (session.score_data as {
+    snapshot?: {
+      readiness?: { overall?: number; suggestedTier?: string };
+      existingFranchisor?: {
+        isFranchising?: boolean;
+        signalType?: string;
+        locationCount?: number | null;
+      };
+    };
+  } | null)?.snapshot;
+  const score = fullSnapshot?.readiness;
   const overall = score?.overall ?? null;
   const suggestedTier = score?.suggestedTier ?? null;
+  // Existing-franchisor branch: when detectFranchiseSignals fired, the
+  // sales conversation is portfolio-strategy not franchise-readiness.
+  // Flag is propagated into the internal-team notification so sales
+  // doesn't walk into the call selling a $2,997 Blueprint to a brand
+  // that's already 94 locations deep.
+  const existingFranchisor = fullSnapshot?.existingFranchisor;
+  const isExistingFranchisor = existingFranchisor?.isFranchising === true;
 
   // Tier labels for the email body. "not-yet" gets special handling
   // below — the email skips the recommended-path line entirely and
@@ -178,7 +195,19 @@ export async function POST(req: NextRequest) {
       navigator: "[NAVIGATOR] coached engagement fit",
       builder: "[BUILDER] hot lead — done-with-you fit",
     };
-    const tierFlag = suggestedTier ? tierFlagMap[suggestedTier] ?? "" : "";
+    // Existing-franchisor flag overrides the readiness-tier flag when
+    // present — different sales conversation entirely (portfolio
+    // strategy, not first-time franchising). The locationCount tag is
+    // helpful triage signal: a 5-location lead vs. a 100-location
+    // lead are very different conversations.
+    const locTag = existingFranchisor?.locationCount
+      ? ` ${existingFranchisor.locationCount}+ units`
+      : "";
+    const tierFlag = isExistingFranchisor
+      ? `[EXISTING-FRANCHISOR${locTag}] portfolio strategy fit, NOT readiness funnel`
+      : suggestedTier
+        ? tierFlagMap[suggestedTier] ?? ""
+        : "";
     const businessUrl = (session as { url?: string }).url ?? "";
 
     const internalSubject = `New intake lead: ${businessName} ${tierFlag}`;
@@ -194,13 +223,22 @@ export async function POST(req: NextRequest) {
       `Open the snapshot: ${resumeUrl}`,
       ``,
       `What this means for the call:`,
-      suggestedTier === "builder"
-        ? `  Hot lead. Their business shape suggests Builder fit. Prep accordingly.`
-        : suggestedTier === "navigator"
-          ? `  Strong fit for Navigator. They likely need the coached path.`
-          : suggestedTier === "blueprint"
-            ? `  DIY-ready signal. Light-touch sales — they may want to self-serve.`
-            : `  Not-yet signal. Discovery call should focus on what to fix first.`,
+      isExistingFranchisor
+        ? `  Existing franchisor. Skip the readiness funnel — they're past it. ` +
+          `Open with a portfolio-strategy framing: what are they trying to scale ` +
+          `next, where are unit-economics tightest, what's their candidate-pipeline ` +
+          `velocity look like. ${
+            existingFranchisor?.locationCount
+              ? `Location count detected: ${existingFranchisor.locationCount}+. `
+              : ""
+          }Not a Blueprint/Navigator/Builder lead.`
+        : suggestedTier === "builder"
+          ? `  Hot lead. Their business shape suggests Builder fit. Prep accordingly.`
+          : suggestedTier === "navigator"
+            ? `  Strong fit for Navigator. They likely need the coached path.`
+            : suggestedTier === "blueprint"
+              ? `  DIY-ready signal. Light-touch sales — they may want to self-serve.`
+              : `  Not-yet signal. Discovery call should focus on what to fix first.`,
     ].join("\n");
     const internalHtml = `
       <div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; color: #1e3a5f; max-width: 560px; padding: 16px;">

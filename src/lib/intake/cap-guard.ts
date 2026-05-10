@@ -22,6 +22,12 @@ export const PER_DOMAIN_CACHE_DAYS = 7;
  * will replace them. Acts as a manual cache-busting key.
  *
  * Last bumped:
+ *   2026-05-10  Round 5: existing-franchisor detection added. Old
+ *               cached snapshots have no existingFranchisor field —
+ *               rerunning catches the Costa Vida-class case where a
+ *               94-location franchise was getting a meaningless
+ *               53/100 readiness score. Pipeline now branches into
+ *               portfolio-strategy framing instead.
  *   2026-05-10  Round 4: schema rename `snapshot.prototype` →
  *               `snapshot.homeMarket`. Old cached rows would render
  *               as "We sent the full snapshot for your business"
@@ -39,7 +45,7 @@ export const PER_DOMAIN_CACHE_DAYS = 7;
  *               diversity + plain-English narratives + page-title
  *               fallback for business name.
  */
-export const CACHE_FRESHNESS_FLOOR_ISO = "2026-05-10T22:00:00Z";
+export const CACHE_FRESHNESS_FLOOR_ISO = "2026-05-10T23:30:00Z";
 
 /**
  * Per-IP rate limit — N distinct intake starts per hour. Stops

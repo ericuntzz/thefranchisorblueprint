@@ -743,6 +743,23 @@ const TIER_COPY: Record<
   },
 };
 
+/**
+ * Recommended-next-step copy for the existing-franchisor branch.
+ * Triggered when detectFranchiseSignals classifies the URL as already
+ * operating as a franchisor (Eric flagged 2026-05-10 — Costa Vida
+ * scoring 53/100 "readiness" was nonsense for a 94-location franchise
+ * that's been selling franchises for 20 years).
+ *
+ * The copy pivots from "are you ready to franchise?" framing into
+ * "you're already there — let's talk growth." Different sales
+ * conversation, different lead qualification, different close.
+ */
+const EXISTING_FRANCHISOR_COPY = {
+  headline: "You're already franchising — let's talk growth, not setup.",
+  body:
+    "Your website signals you're past the readiness phase: existing franchisees, multi-state footprint, and a system already in market. The 15-minute call we offer to first-time franchisors doesn't fit your stage — but a portfolio strategy conversation might. Tell us what you're trying to scale next and we'll see if there's a fit.",
+};
+
 function SnapshotView({
   snapshot,
   sessionId: _sessionId,
@@ -774,7 +791,17 @@ function SnapshotView({
 
   const score = snapshot.readiness.overall;
   const tier = snapshot.readiness.suggestedTier;
-  const tierCopy = TIER_COPY[tier];
+  const isExisting = snapshot.existingFranchisor?.isFranchising === true;
+  // Existing-franchisor branch: hide the readiness number entirely
+  // (a 53/100 "readiness" label on a 94-location franchise reads as
+  // the model failing) and pivot the recommended-next-step copy from
+  // "let's coach you through becoming a franchisor" to "let's talk
+  // portfolio strategy." Eric's 2026-05-10 ask. The internal-team
+  // notification still includes the suggestedTier flag if any so
+  // sales has context.
+  const tierCopy = isExisting
+    ? EXISTING_FRANCHISOR_COPY
+    : TIER_COPY[tier];
 
   // Display name: prefer the LLM-extracted business name; if extraction
   // failed entirely, fall back to a friendly humanized version of the
@@ -842,13 +869,37 @@ function SnapshotView({
             )}
           </div>
           <div className="flex sm:flex-col items-baseline sm:items-end gap-2 sm:gap-0 flex-shrink-0">
-            <div className="text-5xl md:text-6xl font-extrabold text-navy tabular-nums leading-none">
-              {score}
-              <span className="text-grey-4 text-3xl font-bold">/100</span>
-            </div>
-            <p className="text-xs font-bold tracking-[0.15em] uppercase text-grey-4 sm:mt-1.5">
-              Preliminary
-            </p>
+            {isExisting ? (
+              // Existing-franchisor badge replaces the readiness number.
+              // A 53/100 "preliminary readiness" label is meaningless
+              // when the business has already been franchising for
+              // years; the badge surfaces what we DID detect (active
+              // franchise sales, multi-unit, etc.) without forcing the
+              // reader to translate a candidate-stage score.
+              <div className="flex flex-col items-end">
+                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold/15 border border-gold/40">
+                  <span className="w-2 h-2 rounded-full bg-gold-warm" />
+                  <span className="text-navy font-bold text-sm tracking-wide">
+                    Already franchising
+                  </span>
+                </span>
+                {snapshot.existingFranchisor?.locationCount ? (
+                  <p className="text-xs text-grey-3 mt-1.5 sm:mt-2 tabular-nums">
+                    {snapshot.existingFranchisor.locationCount.toLocaleString()}+ locations detected
+                  </p>
+                ) : null}
+              </div>
+            ) : (
+              <>
+                <div className="text-5xl md:text-6xl font-extrabold text-navy tabular-nums leading-none">
+                  {score}
+                  <span className="text-grey-4 text-3xl font-bold">/100</span>
+                </div>
+                <p className="text-xs font-bold tracking-[0.15em] uppercase text-grey-4 sm:mt-1.5">
+                  Preliminary
+                </p>
+              </>
+            )}
           </div>
         </div>
 
@@ -962,7 +1013,7 @@ function SnapshotView({
           style={{ animationDelay: "560ms" }}
         >
           <p className="text-xs font-bold tracking-[0.18em] uppercase text-gold-warm mb-2.5">
-            What we&apos;d recommend next
+            {isExisting ? "Where we'd take this conversation" : "What we'd recommend next"}
           </p>
           <p className="text-navy font-bold text-xl md:text-2xl mb-2.5 leading-tight">
             {tierCopy.headline}
@@ -974,7 +1025,7 @@ function SnapshotView({
             href="/strategy-call"
             className="inline-flex items-center gap-2 bg-gold hover:bg-gold-dark text-navy font-bold text-base px-7 py-3.5 rounded-full transition-colors"
           >
-            Book a 15-min call
+            {isExisting ? "Book a portfolio strategy call" : "Book a 15-min call"}
             <ArrowRight size={18} aria-hidden />
           </Link>
         </div>
