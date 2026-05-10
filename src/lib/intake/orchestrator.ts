@@ -215,8 +215,6 @@ export async function* runIntake(args: {
       const geo = await geocodeAddress(query);
       costCents += COST.PLACES_GEOCODE_CENTS;
       if (geo.ok) {
-        // Extract ZIP from the formatted address (Google's response includes
-        // ZIP within "City, ST 12345, USA" formatting).
         const zipMatch = geo.formattedAddress.match(/\b(\d{5})(?:-\d{4})?\b/);
         if (zipMatch) {
           sourceLocation = {
@@ -225,20 +223,58 @@ export async function* runIntake(args: {
             lng: geo.lng,
             formattedAddress: geo.formattedAddress,
           };
-          // Backfill business.state from the geocoded address if the LLM
-          // didn't extract it. The state drives the geographic-proximity
-          // bonus on expansion-market scoring; without it, a UT business
-          // gets ranked against the whole country evenly and ends up
-          // recommending Dallas as #1 (which Eric's QA flagged).
-          if (!business.state) {
-            const stateMatch = geo.formattedAddress.match(/,\s*([A-Z]{2})\s+\d{5}\b/);
-            if (stateMatch) business.state = stateMatch[1];
-          }
+        }
+        // Backfill business.state from the geocoded address — independent
+        // of zipMatch so even chain HQs without a specific street address
+        // contribute a state for the proximity bonus. Lenient regex
+        // catches the state in either "City, ST 12345" or "City, ST, USA"
+        // shapes that Google returns for different precision levels.
+        if (!business.state) {
+          const stateMatch =
+            geo.formattedAddress.match(/,\s*([A-Z]{2})\s+\d{5}\b/) ??
+            geo.formattedAddress.match(/,\s*([A-Z]{2}),\s*USA\b/);
+          if (stateMatch) business.state = stateMatch[1];
         }
       }
     } catch {
-      // Geocoding failed — fall through. We can still produce useful output
-      // without the prototype demographics, just less personalized.
+      // Geocoding failed — fall through.
+    }
+  }
+
+  // Final-fallback state extraction: scan the scraped title + about-page
+  // text for "City, UT" patterns when the LLM and geocode both missed it.
+  // Costa Vida's About page literally says "Layton, Utah" — we should
+  // catch that.
+  if (!business.state) {
+    const haystack = [scrape.title ?? "", scrape.metaDescription ?? "", scrape.aboutText ?? "", scrape.homeText.slice(0, 4000)].join(" ");
+    // Two-letter state right after a comma + space: "Layton, UT"
+    const codeMatch = haystack.match(/,\s+([A-Z]{2})\b(?!\w)/);
+    if (codeMatch && REGION_BY_STATE[codeMatch[1]]) {
+      business.state = codeMatch[1];
+    } else {
+      // Spelled-out state name: "Layton, Utah"
+      const STATE_NAME_TO_CODE: Record<string, string> = {
+        Alabama: "AL", Alaska: "AK", Arizona: "AZ", Arkansas: "AR",
+        California: "CA", Colorado: "CO", Connecticut: "CT", Delaware: "DE",
+        Florida: "FL", Georgia: "GA", Hawaii: "HI", Idaho: "ID",
+        Illinois: "IL", Indiana: "IN", Iowa: "IA", Kansas: "KS",
+        Kentucky: "KY", Louisiana: "LA", Maine: "ME", Maryland: "MD",
+        Massachusetts: "MA", Michigan: "MI", Minnesota: "MN", Mississippi: "MS",
+        Missouri: "MO", Montana: "MT", Nebraska: "NE", Nevada: "NV",
+        "New Hampshire": "NH", "New Jersey": "NJ", "New Mexico": "NM",
+        "New York": "NY", "North Carolina": "NC", "North Dakota": "ND",
+        Ohio: "OH", Oklahoma: "OK", Oregon: "OR", Pennsylvania: "PA",
+        "Rhode Island": "RI", "South Carolina": "SC", "South Dakota": "SD",
+        Tennessee: "TN", Texas: "TX", Utah: "UT", Vermont: "VT",
+        Virginia: "VA", Washington: "WA", "West Virginia": "WV",
+        Wisconsin: "WI", Wyoming: "WY",
+      };
+      for (const [name, code] of Object.entries(STATE_NAME_TO_CODE)) {
+        if (new RegExp(`,\\s+${name}\\b`, "i").test(haystack)) {
+          business.state = code;
+          break;
+        }
+      }
     }
   }
 

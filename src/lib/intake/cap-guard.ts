@@ -34,7 +34,7 @@ export const PER_DOMAIN_CACHE_DAYS = 7;
  *               diversity + plain-English narratives + page-title
  *               fallback for business name.
  */
-export const CACHE_FRESHNESS_FLOOR_ISO = "2026-05-10T18:00:00Z";
+export const CACHE_FRESHNESS_FLOOR_ISO = "2026-05-10T19:00:00Z";
 
 /**
  * Per-IP rate limit — N distinct intake starts per hour. Stops
