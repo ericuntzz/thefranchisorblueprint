@@ -418,7 +418,7 @@ function DeliverableEntry({
       className={`rounded-xl border transition-[border-color,background-color,box-shadow,transform] duration-200 ease-out scroll-mt-4 ${
         isSelected
           ? "border-gold bg-gold/5 shadow-[0_4px_12px_rgba(212,162,76,0.12)]"
-          : "border-card-border bg-cream/30 hover:border-navy/15 hover:bg-cream/50 hover:shadow-[0_4px_14px_rgba(30,58,95,0.06)] motion-safe:hover:-translate-y-0.5"
+          : "border-card-border bg-white hover:border-navy/15 hover:shadow-[0_4px_14px_rgba(30,58,95,0.06)] motion-safe:hover:-translate-y-0.5"
       }`}
     >
       {/* Header row — click anywhere except the checkbox or
@@ -572,7 +572,7 @@ function ReadinessBar({
   const allGaps = review.sections.flatMap((c) => c.gaps);
   const visibleGaps = allGaps.slice(0, 12);
   return (
-    <div className="rounded-xl border border-card-border bg-cream/30 p-4">
+    <div className="rounded-xl border border-card-border bg-white p-4">
       <div className="flex items-baseline justify-between gap-3 mb-2">
         <span className="text-navy font-bold text-sm">Document readiness</span>
         <span className="text-navy font-bold tabular-nums text-sm">
@@ -679,10 +679,10 @@ function SectionRow({
   return (
     <div
       id={`section-row-${section.slug}`}
-      className={`rounded-lg border bg-cream/30 overflow-hidden scroll-mt-4 transition-[border-color,background-color,box-shadow] duration-200 ease-out ${
+      className={`rounded-lg border bg-white overflow-hidden scroll-mt-4 transition-[border-color,background-color,box-shadow] duration-200 ease-out ${
         isOpen
-          ? "border-navy/20 bg-white shadow-[0_2px_8px_rgba(30,58,95,0.05)]"
-          : "border-card-border hover:border-navy/15 hover:bg-cream/50"
+          ? "border-navy/20 shadow-[0_2px_8px_rgba(30,58,95,0.05)]"
+          : "border-card-border hover:border-navy/15"
       }`}
     >
       {/* Header is a flex row, not a single button — we need the
