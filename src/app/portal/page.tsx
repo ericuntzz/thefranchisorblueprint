@@ -25,6 +25,7 @@ import {
   summarizeQueue,
 } from "@/lib/memory/queue";
 import { CommandCenter } from "@/components/portal/CommandCenter";
+import { FreeTierDashboard } from "@/components/portal/FreeTierDashboard";
 import { IntakeWelcomeBanner } from "@/components/portal/IntakeWelcomeBanner";
 import { PortalEventTracker } from "@/components/portal/PortalEventTracker";
 import {
@@ -120,8 +121,64 @@ export default async function PortalDashboard({ searchParams }: PortalPageProps)
   const hasActiveAccess = paidPurchases.length > 0;
   const firstName = profile?.full_name?.split(" ")[0] ?? null;
 
+  // Tranche 13-14 (2026-05-10): tier-aware /portal. Three branches:
+  //   - User has at least one PAID purchase → full Blueprint portal (below)
+  //   - User had a paid purchase that was refunded → revoked-access view
+  //   - User has no purchases ever → FREE-TIER dashboard
+  //
+  // The free-tier view is the new default for accounts created via
+  // the intake-save signup flow (Tranche 12). No more "you don't have
+  // access" dead-end for these users.
   if (!hasActiveAccess) {
-    return <RevokedAccessView firstName={firstName} hadRefund={refundedPurchases.length > 0} />;
+    if (refundedPurchases.length > 0) {
+      return <RevokedAccessView firstName={firstName} hadRefund={true} />;
+    }
+    // Pull this user's saved analyses and a 30-day analysis count for
+    // the quota meter. Both come from intake_sessions.
+    const userEmail = user.email ?? "";
+    const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const adminClient = getSupabaseAdmin();
+    const [{ data: savedAnalyses }, { count: usedThisMonth }] = await Promise.all([
+      adminClient
+        .from("intake_sessions")
+        .select("id, domain, business_data, score_data, created_at, cookie_token")
+        .eq("user_id", user.id)
+        .eq("status", "complete")
+        .order("created_at", { ascending: false })
+        .limit(20),
+      adminClient
+        .from("intake_sessions")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .gte("created_at", since30d),
+    ]);
+    type SavedRow = {
+      id: string;
+      domain: string;
+      business_data: { name?: string | null } | null;
+      score_data: {
+        snapshot?: { readiness?: { overall?: number | null } | null } | null;
+      } | null;
+      created_at: string;
+    };
+    const analyses = ((savedAnalyses ?? []) as SavedRow[]).map((row) => ({
+      id: row.id,
+      domain: row.domain,
+      business_name: row.business_data?.name ?? null,
+      readiness_score: row.score_data?.snapshot?.readiness?.overall ?? null,
+      created_at: row.created_at,
+      // Resume the snapshot via the homepage hero's ?intake=<id>
+      // resume mode (same path Tranche 1 wires up).
+      resume_path: `/?intake=${row.id}`,
+    }));
+    return (
+      <FreeTierDashboard
+        email={userEmail}
+        analyses={analyses}
+        usedThisMonth={usedThisMonth ?? 0}
+        monthlyCap={5}
+      />
+    );
   }
 
   const tier = (Math.max(...paidPurchases.map((p) => p.tier)) as Tier);

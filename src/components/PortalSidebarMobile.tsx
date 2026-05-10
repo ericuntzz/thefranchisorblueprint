@@ -33,6 +33,7 @@ import {
   ArrowRight,
   CircleUser,
   HelpCircle,
+  Lock,
   Mail,
   Menu,
   Sparkles,
@@ -52,6 +53,8 @@ type Props = {
   tier?: Tier;
   blueprintPct?: number;
   checklistPct?: number;
+  /** Tranche 13: free-tier flag — mirrors PortalSidebar.isFree. */
+  isFree?: boolean;
 };
 
 export function PortalSidebarMobile({
@@ -60,15 +63,17 @@ export function PortalSidebarMobile({
   tier,
   blueprintPct = 0,
   checklistPct = 0,
+  isFree = false,
 }: Props) {
   const pathname = usePathname() || "";
-  const showUpgrade = tier !== undefined && tier < 3;
+  const showUpgrade = isFree || (tier !== undefined && tier < 3);
   const label = displayName?.trim() || email || "";
   const [open, setOpen] = useState(false);
 
   const { primary, secondary } = getPortalNavItems({
     blueprintPct,
     checklistPct,
+    isFree,
   });
 
   const isActive = (item: PortalNavItem) =>
@@ -321,6 +326,37 @@ function DrawerItem({
           <ArrowRight size={14} className="ml-auto flex-shrink-0" />
         )}
       </Link>
+    );
+  }
+
+  // Tranche 13 (2026-05-10) — locked free-tier item in mobile drawer.
+  // Mirrors the desktop sidebar: render as a button, dispatch the
+  // tfb:locked-tab-click event. Also closes the drawer via onSelect.
+  if (item.locked) {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(
+              new CustomEvent("tfb:locked-tab-click", {
+                detail: {
+                  href: item.href,
+                  label: item.label,
+                  carrot: item.lockedCarrot ?? "",
+                },
+              }),
+            );
+          }
+          onSelect?.();
+        }}
+        title={item.label}
+        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors text-cream/55 hover:text-cream hover:bg-cream/10 cursor-pointer"
+      >
+        <Icon size={18} className="flex-shrink-0" />
+        <span className="truncate flex-1 text-left">{item.label}</span>
+        <Lock size={14} className="ml-auto flex-shrink-0 text-gold-warm" aria-hidden />
+      </button>
     );
   }
 

@@ -5,6 +5,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { PortalSidebar } from "@/components/PortalSidebar";
 import { PortalSidebarMobile } from "@/components/PortalSidebarMobile";
 import { JasonChatDock } from "@/components/agent/JasonChatDock";
+import { LockedTabUpsell } from "@/components/portal/LockedTabUpsell";
 import {
   computeSectionReadiness,
   indexMemoryRows,
@@ -71,6 +72,12 @@ export default async function PortalLayout({ children }: { children: ReactNode }
 
   const profile = profileData as Pick<Profile, "full_name"> | null;
   const purchases = (purchasesData ?? []) as Pick<Purchase, "tier" | "status">[];
+  // Tranche 13 (2026-05-10): "isFree" is true when the user has zero
+  // paid purchases — they signed up via the intake-save free flow but
+  // haven't upgraded to Blueprint/Navigator/Builder yet. tier still
+  // defaults to 1 for type-compat with the existing sidebar API; the
+  // isFree flag is what actually drives the locked-tab rendering.
+  const isFree = purchases.length === 0;
   const tier = (purchases.length > 0
     ? Math.max(...purchases.map((p) => p.tier))
     : 1) as Tier;
@@ -105,6 +112,7 @@ export default async function PortalLayout({ children }: { children: ReactNode }
         tier={tier}
         blueprintPct={blueprintPct}
         checklistPct={checklistPct}
+        isFree={isFree}
       />
       {/* Mobile: top bar + slide-out drawer mirroring the desktop
           sidebar. Hidden on md+ where the desktop rail takes over. */}
@@ -114,6 +122,7 @@ export default async function PortalLayout({ children }: { children: ReactNode }
         tier={tier}
         blueprintPct={blueprintPct}
         checklistPct={checklistPct}
+        isFree={isFree}
       />
       {/* Main content offset by the sidebar width on desktop. The
           sidebar exposes its current width via the --portal-sidebar-w
@@ -128,6 +137,11 @@ export default async function PortalLayout({ children }: { children: ReactNode }
           navigation between portal pages. The dock derives its
           pageContext from usePathname() internally. */}
       <JasonChatDock firstName={firstName} />
+      {/* Tranche 13 (2026-05-10): contextual upsell modal for
+          free-tier users. Listens for tfb:locked-tab-click events
+          emitted by the sidebar; no-op for paid users since their
+          sidebar never emits that event (no locked items). */}
+      <LockedTabUpsell />
     </div>
   );
 }

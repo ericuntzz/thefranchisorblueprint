@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { getSupabaseServer } from "@/lib/supabase/server";
 import {
   canonicalizeDomain,
   checkCapAndRateLimit,
@@ -84,6 +85,52 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // ─── Per-user 30-day quota (Tranche 14) ─────────────────────────
+  // Free-tier accounts get 5 analyses every rolling 30 days. Paid
+  // tier accounts skip this check (Stripe webhook will eventually
+  // also bump the tier check). Anonymous visitors (no session) hit
+  // the per-IP hourly limit above and the daily $20 cap; the per-
+  // user limit only applies once they're authenticated.
+  const FREE_TIER_MONTHLY_CAP = 5;
+  let authUserId: string | null = null;
+  try {
+    const ssrSupabase = await getSupabaseServer();
+    const { data: authData } = await ssrSupabase.auth.getUser();
+    authUserId = authData?.user?.id ?? null;
+  } catch {
+    // Auth lookup failed — treat as anonymous and fall through.
+    authUserId = null;
+  }
+  if (authUserId) {
+    // Is this user paid? If so, no cap.
+    const admin = getSupabaseAdmin();
+    const { data: paidRows } = await admin
+      .from("purchases")
+      .select("id")
+      .eq("user_id", authUserId)
+      .eq("status", "paid")
+      .limit(1);
+    const isPaid = (paidRows?.length ?? 0) > 0;
+    if (!isPaid) {
+      const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const { count } = await admin
+        .from("intake_sessions")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", authUserId)
+        .gte("created_at", since30d);
+      if ((count ?? 0) >= FREE_TIER_MONTHLY_CAP) {
+        return NextResponse.json(
+          {
+            error:
+              "You've used your 5 free analyses this month. Quota resets on a rolling 30-day window — or upgrade to The Blueprint to remove the cap.",
+            reason: "free-tier-monthly-cap",
+          },
+          { status: 429 },
+        );
+      }
+    }
+  }
+
   // ─── Per-domain cache hit ────────────────────────────────────────
   const cached = await findCachedIntakeForDomain(domain);
   if (cached) {
@@ -115,6 +162,11 @@ export async function POST(req: NextRequest) {
       url,
       domain,
       status: "analyzing",
+      // Tranche 14: if the visitor is already authenticated (free-tier
+      // account from a prior save), link the analysis to them so it
+      // counts toward their monthly quota and shows up in their
+      // /portal saved-analyses list.
+      ...(authUserId ? { user_id: authUserId } : {}),
     })
     .select("id")
     .single();

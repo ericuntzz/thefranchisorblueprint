@@ -32,6 +32,7 @@ import {
   ChevronsRight,
   CircleUser,
   HelpCircle,
+  Lock,
   Mail,
   Sparkles,
 } from "lucide-react";
@@ -53,6 +54,12 @@ type Props = {
   /** Launch-checklist progress (0–100). Drives the ring around the
    *  Launch Checklist entry. */
   checklistPct?: number;
+  /** Tranche 13: free-tier flag flips the sidebar to its locked
+   *  layout — 8 of 9 secondary items render with a gold lock icon,
+   *  click triggers the upsell modal instead of navigating, and
+   *  the primary CTA changes from "Continue Building" to "Run
+   *  Market Analysis." */
+  isFree?: boolean;
 };
 
 export function PortalSidebar({
@@ -61,9 +68,13 @@ export function PortalSidebar({
   tier,
   blueprintPct = 0,
   checklistPct = 0,
+  isFree = false,
 }: Props) {
   const pathname = usePathname() || "";
-  const showUpgrade = tier !== undefined && tier < 3;
+  // Show the Upgrade CTA when the user is on a paid tier below the
+  // top tier, OR when they're on the free tier (they have nothing
+  // paid yet and Upgrade is the headline conversion path).
+  const showUpgrade = isFree || (tier !== undefined && tier < 3);
   const label = displayName?.trim() || email || "";
 
   const [collapsed, setCollapsed] = useState(false);
@@ -98,6 +109,7 @@ export function PortalSidebar({
   const { primary, secondary } = getPortalNavItems({
     blueprintPct,
     checklistPct,
+    isFree,
   });
 
   const isActive = (item: PortalNavItem) =>
@@ -300,6 +312,46 @@ function SidebarItem({
           <ArrowRight size={14} className="ml-auto flex-shrink-0" />
         )}
       </Link>
+    );
+  }
+
+  // Tranche 13 (2026-05-10) — locked free-tier item. Render as a
+  // button (not a Link) and dispatch a custom event the upsell modal
+  // component listens for. Visual treatment: dimmed text + gold lock
+  // icon on the right edge. Per the conversion research: visible-
+  // with-lock outperforms hidden-tabs because users form a mental
+  // model of what they're missing.
+  if (item.locked) {
+    return (
+      <button
+        type="button"
+        title={item.label}
+        onClick={() => {
+          if (typeof window === "undefined") return;
+          window.dispatchEvent(
+            new CustomEvent("tfb:locked-tab-click", {
+              detail: {
+                href: item.href,
+                label: item.label,
+                carrot: item.lockedCarrot ?? "",
+              },
+            }),
+          );
+        }}
+        className={`w-full flex items-center gap-3 ${
+          collapsed ? "justify-center px-2" : "px-3"
+        } py-2.5 rounded-lg text-sm font-semibold transition-colors text-cream/55 hover:text-cream hover:bg-cream/10 cursor-pointer`}
+      >
+        <Icon size={18} className="flex-shrink-0" />
+        {showLabels && <span className="truncate flex-1 text-left">{item.label}</span>}
+        {showLabels && (
+          <Lock
+            size={14}
+            className="ml-auto flex-shrink-0 text-gold-warm"
+            aria-hidden
+          />
+        )}
+      </button>
     );
   }
 
