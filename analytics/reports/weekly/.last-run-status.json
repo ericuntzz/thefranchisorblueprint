@@ -1,7 +1,12 @@
 {
-  "last_attempt_at": "2026-05-06T17:37:33.142171+00:00",
-  "last_attempt_week": "2026-05-03",
-  "last_attempt_status": "success",
+  "last_attempt_at": "2026-05-11T00:09:57.664728+00:00",
+  "last_attempt_week": "2026-05-10",
+  "last_attempt_status": "partial",
   "last_success_at": "2026-05-06T17:37:33.142171+00:00",
-  "last_success_week": "2026-05-03"
+  "last_success_week": "2026-05-03",
+  "last_errors": [
+    "GA4: all 3 retries failed: Traceback (most recent call last):\n  File \"/Users/fin/Documents/The Franchisor",
+    "GSC: all 3 retries failed: Traceback (most recent call last):\n  File \"/Users/fin/Documents/The Franchisor",
+    "PageSpeed: all 3 retries failed: Command '['/tmp/ga4-test-venv/bin/python3', '/Users/fin/Documents/The Franchis"
+  ]
 }

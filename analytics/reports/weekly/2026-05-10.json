@@ -1,0 +1,224 @@
+{
+  "ga4": {
+    "error": "all 3 retries failed: Traceback (most recent call last):\n  File \"/Users/fin/Documents/The Franchisor Blueprint Website/scripts/ga4-report.py\", line 237, in <module>\n    main()\n    ~~~~^^\n  File \"/Users/fin/Documents/The Franchisor Blueprint Website/scripts/ga4-report.py\", line 230, in main\n    report = collect_report(days=args.days)\n  File \"/Users/fin/Documents/The Franchisor Blueprint Website/scripts/ga4-report.py\", line 89, in collect_report\n    client = build_client(env)\n  File \"/Users/fin/Documents/The Franchisor"
+  },
+  "gsc": {
+    "error": "all 3 retries failed: Traceback (most recent call last):\n  File \"/Users/fin/Documents/The Franchisor Blueprint Website/scripts/gsc-report.py\", line 189, in <module>\n    main()\n    ~~~~^^\n  File \"/Users/fin/Documents/The Franchisor Blueprint Website/scripts/gsc-report.py\", line 182, in main\n    report = collect_report(days=args.days)\n  File \"/Users/fin/Documents/The Franchisor Blueprint Website/scripts/gsc-report.py\", line 89, in collect_report\n    service = build_client(env)\n  File \"/Users/fin/Documents/The Franchiso"
+  },
+  "bing": {
+    "metadata": {
+      "generated_at": "2026-05-11T00:00:23.581898+00:00",
+      "site_url": "https://www.thefranchisorblueprint.com"
+    },
+    "query_stats": [],
+    "page_stats": [],
+    "query_traffic_stats": [],
+    "rank_stats": [
+      {
+        "__type": "RankAndTrafficStats:#Microsoft.Bing.Webmaster.Api",
+        "Clicks": 0,
+        "Date": "/Date(1777878000000-0700)/",
+        "Impressions": 0
+      },
+      {
+        "__type": "RankAndTrafficStats:#Microsoft.Bing.Webmaster.Api",
+        "Clicks": 0,
+        "Date": "/Date(1777964400000-0700)/",
+        "Impressions": 0
+      },
+      {
+        "__type": "RankAndTrafficStats:#Microsoft.Bing.Webmaster.Api",
+        "Clicks": 0,
+        "Date": "/Date(1778050800000-0700)/",
+        "Impressions": 0
+      },
+      {
+        "__type": "RankAndTrafficStats:#Microsoft.Bing.Webmaster.Api",
+        "Clicks": 0,
+        "Date": "/Date(1778137200000-0700)/",
+        "Impressions": 0
+      },
+      {
+        "__type": "RankAndTrafficStats:#Microsoft.Bing.Webmaster.Api",
+        "Clicks": 0,
+        "Date": "/Date(1778223600000-0700)/",
+        "Impressions": 0
+      },
+      {
+        "__type": "RankAndTrafficStats:#Microsoft.Bing.Webmaster.Api",
+        "Clicks": 0,
+        "Date": "/Date(1778310000000-0700)/",
+        "Impressions": 0
+      }
+    ],
+    "crawl_stats": [
+      {
+        "__type": "CrawlStats:#Microsoft.Bing.Webmaster.Api",
+        "AllOtherCodes": 0,
+        "BlockedByRobotsTxt": 0,
+        "Code2xx": 1,
+        "Code301": 1,
+        "Code302": 0,
+        "Code4xx": 0,
+        "Code5xx": 0,
+        "ConnectionTimeout": 0,
+        "ContainsMalware": 0,
+        "CrawlErrors": 0,
+        "CrawledPages": 0,
+        "Date": "/Date(1778137200000-0700)/",
+        "DnsFailures": 0,
+        "InIndex": 0,
+        "InLinks": 0
+      },
+      {
+        "__type": "CrawlStats:#Microsoft.Bing.Webmaster.Api",
+        "AllOtherCodes": 0,
+        "BlockedByRobotsTxt": 0,
+        "Code2xx": 2,
+        "Code301": 1,
+        "Code302": 0,
+        "Code4xx": 0,
+        "Code5xx": 0,
+        "ConnectionTimeout": 0,
+        "ContainsMalware": 0,
+        "CrawlErrors": 0,
+        "CrawledPages": 3,
+        "Date": "/Date(1778223600000-0700)/",
+        "DnsFailures": 0,
+        "InIndex": 0,
+        "InLinks": 0
+      },
+      {
+        "__type": "CrawlStats:#Microsoft.Bing.Webmaster.Api",
+        "AllOtherCodes": 0,
+        "BlockedByRobotsTxt": 0,
+        "Code2xx": 2,
+        "Code301": 1,
+        "Code302": 0,
+        "Code4xx": 0,
+        "Code5xx": 0,
+        "ConnectionTimeout": 0,
+        "ContainsMalware": 0,
+        "CrawlErrors": 0,
+        "CrawledPages": 2,
+        "Date": "/Date(1778310000000-0700)/",
+        "DnsFailures": 0,
+        "InIndex": 0,
+        "InLinks": 0
+      }
+    ]
+  },
+  "stripe": {
+    "metadata": {
+      "generated_at": "2026-05-11T00:00:25.590285+00:00",
+      "window_days": 7
+    },
+    "totals": {
+      "checkout_sessions": 0,
+      "complete_paid_external": 0,
+      "complete_paid_internal": 0,
+      "expired": 0,
+      "open_or_other": 0,
+      "external_revenue_usd": 0.0,
+      "total_charges": 0,
+      "total_refunds": 0,
+      "total_disputes": 0
+    },
+    "external_sessions": [],
+    "anonymous_expired_sessions": []
+  },
+  "supabase": {
+    "metadata": {
+      "generated_at": "2026-05-11T00:00:26.589782+00:00",
+      "window_days": 7
+    },
+    "assessment_funnel": {
+      "starts_in_window": 0,
+      "completions_in_window": 0,
+      "completion_rate_pct": 0,
+      "starts_last_30_days": 11,
+      "completions_last_30_days": 3,
+      "completion_rate_30d_pct": 27.27272727272727,
+      "score_band_distribution_30d": {
+        "building_foundation": 1,
+        "nearly_there": 2
+      },
+      "source_attribution_in_window": {},
+      "completions_detail": []
+    },
+    "contact_form": {
+      "submissions_in_window": 1,
+      "real_submissions_in_window": 1,
+      "spam_submissions_in_window": 0,
+      "real_submissions_detail": [
+        {
+          "created_at": "2026-05-05T10:43:22.631689+00:00",
+          "email": "no.reply.espenwillems@gmail.com",
+          "name": "AndrewKnees AndrewKneesCX",
+          "business": null,
+          "program_interest": "Partnership or media inquiry"
+        }
+      ]
+    }
+  },
+  "calendly": {
+    "metadata": {
+      "generated_at": "2026-05-11T00:00:28.196287+00:00",
+      "window_days": 7,
+      "user": "TFB Team"
+    },
+    "totals": {
+      "events_in_window": 0,
+      "canceled_in_window": 0,
+      "external_bookings": 0
+    },
+    "external_bookings": [],
+    "canceled_count": 0
+  },
+  "resend": {
+    "metadata": {
+      "generated_at": "2026-05-11T00:00:32.700375+00:00",
+      "window_days": 7
+    },
+    "totals": {
+      "sent": 30,
+      "delivered": 27,
+      "opened": 0,
+      "clicked": 0,
+      "bounced": 3,
+      "complained": 0,
+      "delivery_rate_pct": 90.0,
+      "open_rate_pct": 0.0,
+      "click_rate_pct": 0.0,
+      "bounce_rate_pct": 10.0
+    },
+    "by_status": {
+      "delivered": 27,
+      "bounced": 3
+    },
+    "by_template_bucket": {
+      "TFB traffic": 6,
+      "TFB Ops": 4,
+      "\u2713 Smoke test 2026-05-07": 3,
+      "New intake lead": 2,
+      "\u2713 Smoke test 2026-05-09": 2,
+      "Inbox Review": 2,
+      "\ud83d\udea8 Urgent inbox": 2,
+      "Your Franchise Readiness Snapshot for JDog Brands": 1,
+      "Your Franchise Readiness Snapshot for Highpointcoffee": 1,
+      "\u2713 Smoke test 2026-05-10": 1,
+      "\u2713 Smoke test 2026-05-08": 1,
+      "Your access link to The Blueprint": 1,
+      "\ud83d\udea8 2 urgent \u00b7 Inbox Review": 1,
+      "TFB weekly traffic": 1,
+      "[TFB Lead] Strategy call request": 1
+    },
+    "by_recipient_domain": {
+      "thefranchisorblueprint.com": 21,
+      "gmail.com": 9
+    }
+  },
+  "pagespeed": {
+    "error": "all 3 retries failed: Command '['/tmp/ga4-test-venv/bin/python3', '/Users/fin/Documents/The Franchisor Blueprint Website/scripts/pagespeed-report.py', '--json']' timed out after 180 seconds"
+  }
+}
