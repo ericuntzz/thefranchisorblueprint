@@ -890,43 +890,6 @@ function MidwayUpgradeHero({
   );
 }
 
-/**
- * Compact chip that lives next to the access-tier badge on the dashboard.
- * Shows the customer's available coaching credits and links to either:
- *   - the coaching purchase page (if they have 0 — encourages add-on)
- *   - the coaching schedule page (if they have ≥ 1 — encourages booking)
- */
-function CoachingCreditsChip({ credits, tier }: { credits: number; tier: Tier }) {
-  // Tier 3 customers always get coaching included — chip would feel weird
-  // for them. (We can revisit this once we have actual Tier 3 buyers.)
-  if (tier >= 3 && credits === 0) return null;
-
-  const hasCredits = credits > 0;
-  const href = hasCredits ? "/portal/coaching/schedule" : "/portal/coaching";
-  return (
-    <Link
-      href={href}
-      className={`group rounded-xl px-5 py-4 border transition-colors ${
-        hasCredits
-          ? "bg-white border-navy/15 hover:border-gold/50"
-          : "bg-grey-1/40 border-navy/10 hover:border-navy/25"
-      }`}
-    >
-      <div className="text-[10px] font-bold tracking-[0.16em] uppercase text-gold-warm mb-1">
-        Coaching credits
-      </div>
-      <div className="flex items-baseline gap-2">
-        <div className="text-navy font-bold text-base tabular-nums">
-          {credits}
-        </div>
-        <div className="text-[11px] text-grey-3 group-hover:text-navy transition-colors">
-          {hasCredits ? "→ Book a call" : "→ Add coaching"}
-        </div>
-      </div>
-    </Link>
-  );
-}
-
 function RevokedAccessView({
   firstName,
   hadRefund,
