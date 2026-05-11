@@ -581,7 +581,14 @@ function ReadinessBar({
           {pct}%
         </span>
       </div>
-      <div className="h-2 rounded-full bg-grey-1 overflow-hidden mb-3">
+      <div
+        role="progressbar"
+        aria-valuenow={pct}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Document readiness"
+        className="h-2 rounded-full bg-grey-1 overflow-hidden mb-3"
+      >
         <div
           className={`h-full transition-all duration-500 ${
             pct >= 95
