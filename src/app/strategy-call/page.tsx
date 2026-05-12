@@ -1,1 +1,144 @@
-aW1wb3J0IExpbmsgZnJvbSAibmV4dC9saW5rIjsKaW1wb3J0IHR5cGUgeyBNZXRhZGF0YSB9IGZyb20gIm5leHQiOwppbXBvcnQgeyBDYWxlbmRhciwgQ2xvY2ssIFNoaWVsZCwgTWVzc2FnZUNpcmNsZSwgTWFpbCB9IGZyb20gImx1Y2lkZS1yZWFjdCI7CmltcG9ydCB7IFNpdGVOYXYgfSBmcm9tICJAL2NvbXBvbmVudHMvU2l0ZU5hdiI7CmltcG9ydCB7IFNpdGVGb290ZXIgfSBmcm9tICJAL2NvbXBvbmVudHMvU2l0ZUZvb3RlciI7CmltcG9ydCB7IFBhZ2VIZXJvIH0gZnJvbSAiQC9jb21wb25lbnRzL1BhZ2VIZXJvIjsKaW1wb3J0IHsgQ2FsZW5kbHlFbWJlZCB9IGZyb20gIkAvY29tcG9uZW50cy9DYWxlbmRseUVtYmVkIjsKaW1wb3J0IHsgSnNvbkxkIH0gZnJvbSAiQC9jb21wb25lbnRzL0pzb25MZCI7CmltcG9ydCB7IGJyZWFkY3J1bWJTY2hlbWEgfSBmcm9tICJAL2xpYi9zY2hlbWEiOwoKY29uc3QgQ0FMRU5ETFlfVVJMID0gImh0dHBzOi8vY2FsZW5kbHkuY29tL3RlYW0tdGhlZnJhbmNoaXNvcmJsdWVwcmludC8zMC1taW51dGUtZGlzY292ZXJ5LWNhbGwiOwoKZXhwb3J0IGNvbnN0IG1ldGFkYXRhOiBNZXRhZGF0YSA9IHsKICB0aXRsZTogIkJvb2sgYSBTdHJhdGVneSBDYWxsIHwgVGhlIEZyYW5jaGlzb3IgQmx1ZXByaW50IiwKICBkZXNjcmlwdGlvbjoKICAgICJCb29rIGEgZnJlZSAzMC1taW51dGUgc3RyYXRlZ3kgY2FsbCB3aXRoIEphc29uLiBXZSdsbCBldmFsdWF0ZSB5b3VyIGJ1c2luZXNzIGFuZCByZWNvbW1lbmQgYSBwYXRoIGZvcndhcmQg4oCUIG5vIHByZXNzdXJlLCBubyBzYWxlcyB0YWN0aWNzLiIsCiAgb3BlbkdyYXBoOiB7CiAgICB0aXRsZTogIkJvb2sgYSBTdHJhdGVneSBDYWxsIHwgVGhlIEZyYW5jaGlzb3IgQmx1ZXByaW50IiwKICAgIGRlc2NyaXB0aW9uOgogICAgICAiQm9vayBhIGZyZWUgMzAtbWludXRlIHN0cmF0ZWd5IGNhbGwgd2l0aCBKYXNvbi4gV2UnbGwgZXZhbHVhdGUgeW91ciBidXNpbmVzcyBhbmQgcmVjb21tZW5kIGEgcGF0aCBmb3J3YXJkIOKAlCBubyBwcmVzc3VyZSwgbm8gc2FsZXMgdGFjdGljcy4iLAogICAgdXJsOiAiL3N0cmF0ZWd5LWNhbGwiLAogIH0sCn07CgpleHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBTdHJhdGVneUNhbGxQYWdlKCkgewogIHJldHVybiAoCiAgICA8PgogICAgICA8SnNvbkxkCiAgICAgICAgZGF0YT17YnJlYWRjcnVtYlNjaGVtYShbCiAgICAgICAgICB7IG5hbWU6ICJIb21lIiwgdXJsOiAiLyIgfSwKICAgICAgICAgIHsgbmFtZTogIlN0cmF0ZWd5IENhbGwiLCB1cmw6ICIvc3RyYXRlZ3ktY2FsbCIgfSwKICAgICAgICBdKX0KICAgICAgLz4KICAgICAgPFNpdGVOYXYgLz4KCiAgICAgIDxQYWdlSGVybwogICAgICAgIGV5ZWJyb3c9IlN0cmF0ZWd5IENhbGwiCiAgICAgICAgdGl0bGU9IkJvb2sgWW91ciBGcmVlIDMwLU1pbnV0ZSBTdHJhdGVneSBDYWxsIgogICAgICAgIHN1YnRpdGxlPSJObyBwcmVzc3VyZSwgbm8gc2FsZXMgdGFjdGljcyDigJQganVzdCBjbGFyaXR5IG9uIHdoZXRoZXIgeW91ciBidXNpbmVzcyBpcyByZWFkeSB0byBmcmFuY2hpc2UgYW5kIHdoaWNoIHBhdGggZm9yd2FyZCBtYWtlcyBzZW5zZSBmb3IgeW91LiIKICAgICAgLz4KCiAgICAgIHsvKiA9PT09PSBDYWxlbmRseSBlbWJlZCA9PT09PSAqL30KICAgICAgPHNlY3Rpb24gY2xhc3NOYW1lPSJiZy13aGl0ZSBweS0yMCBtZDpweS0yNCI+CiAgICAgICAgPGRpdiBjbGFzc05hbWU9Im1heC13LVsxMTAwcHhdIG14LWF1dG8gcHgtOCI+CiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iYmctZ3JleS0xIHJvdW5kZWQtMnhsIGJvcmRlciBib3JkZXItbmF2eS8xMCBwLTggbWQ6cC0xMiBncmlkIG1kOmdyaWQtY29scy1bMWZyXzEuNGZyXSBnYXAtMTAgbWQ6Z2FwLTE0IGl0ZW1zLXN0YXJ0Ij4KICAgICAgICAgICAgey8qIExlZnQ6IHdoYXQgdG8gZXhwZWN0ICovfQogICAgICAgICAgICA8ZGl2PgogICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT0iaW5saW5lLWJsb2NrIHRleHQtZ29sZC13YXJtIGZvbnQtc2VtaWJvbGQgdGV4dC14cyB0cmFja2luZy1bMC4xOGVtXSB1cHBlcmNhc2UgbWItNCBib3JkZXItYi0yIGJvcmRlci1nb2xkIHBiLTEiPgogICAgICAgICAgICAgICAgVGhlIFBsYW4KICAgICAgICAgICAgICA8L3NwYW4+CiAgICAgICAgICAgICAgPGgyIGNsYXNzTmFtZT0idGV4dC0yeGwgbWQ6dGV4dC0zeGwgZm9udC1ib2xkIHRleHQtbmF2eSBtYi02Ij4KICAgICAgICAgICAgICAgIEhlcmUmYXBvcztzIGhvdyB0aGUgMzAgbWludXRlcyB3aWxsIGdvCiAgICAgICAgICAgICAgPC9oMj4KICAgICAgICAgICAgICA8dWwgY2xhc3NOYW1lPSJzcGFjZS15LTQiPgogICAgICAgICAgICAgICAge1sKICAgICAgICAgICAgICAgICAgeyBJY29uOiBNZXNzYWdlQ2lyY2xlLCB0OiAiRmlyc3QgMTAgbWluOiBXZSBsaXN0ZW4iLCBkOiAiWW91IHdhbGsgdXMgdGhyb3VnaCB0aGUgYnVzaW5lc3Mg4oCUIHdoZXJlIGl0IGlzIG5vdywgd2hlcmUgeW91IHdhbnQgdG8gdGFrZSBpdCwgYW5kIHdoYXQncyBpbiB0aGUgd2F5LiIgfSwKICAgICAgICAgICAgICAgICAgeyBJY29uOiBTaGllbGQsIHQ6ICJOZXh0IDEwIG1pbjogV2UgZGlhZ25vc2UiLCBkOiAiV2UgaG9sZCB5b3VyIG1vZGVsIHVwIGFnYWluc3QgdGhlIHNhbWUgY3JpdGVyaWEgYSBmcmFuY2hpc2UgYXR0b3JuZXkgYW5kIHlvdXIgZmlyc3QgZnJhbmNoaXNlZXMgd2lsbCBydW4uIFN0cmVuZ3RocywgZ2Fwcywgd2hhdCBhdHRvcm5leXMgYXNrIGZpcnN0LiIgfSwKICAgICAgICAgICAgICAgICAgeyBJY29uOiBDYWxlbmRhciwgdDogIkxhc3QgMTAgbWluOiBBIGNsZWFyIG5leHQgc3RlcCIsIGQ6ICJXaGljaCB0aWVyIGZpdHMsIHdoYXQgdG8gZml4IGJlZm9yZSBmcmFuY2hpc2luZyBtYWtlcyBzZW5zZSwgb3IgYSBzdHJhaWdodCBcIndhaXQgc2l4IG1vbnRocy5cIiBXaGljaGV2ZXIncyB0cnVlLiIgfSwKICAgICAgICAgICAgICAgIF0ubWFwKCh7IEljb24sIHQsIGQgfSkgPT4gKAogICAgICAgICAgICAgICAgICA8bGkga2V5PXt0fSBjbGFzc05hbWU9ImZsZXggZ2FwLTQiPgogICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJmbGV4LXNocmluay0wIHctMTAgaC0xMCByb3VuZGVkLXhsIGJnLWdyYWRpZW50LXRvLWJyIGZyb20tbmF2eSB0by1uYXZ5LWxpZ2h0IGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIHRleHQtZ29sZCI+CiAgICAgICAgICAgICAgICAgICAgICA8SWNvbiBzaXplPXsxOH0gLz4KICAgICAgICAgICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgICAgICAgICA8ZGl2PgogICAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9InRleHQtbmF2eSBmb250LWJvbGQgdGV4dC1iYXNlIG1iLTAuNSI+e3R9PC9kaXY+CiAgICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0idGV4dC1ncmV5LTMgdGV4dC1zbSBsZWFkaW5nLXJlbGF4ZWQiPntkfTwvZGl2PgogICAgICAgICAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgICAgICAgICA8L2xpPgogICAgICAgICAgICAgICAgKSl9CiAgICAgICAgICAgICAgPC91bD4KCiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9Im10LTggcHQtNiBib3JkZXItdCBib3JkZXItbmF2eS8xMCBmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMiB0ZXh0LXNtIHRleHQtZ3JleS0zIj4KICAgICAgICAgICAgICAgIDxDbG9jayBzaXplPXsxNn0gY2xhc3NOYW1lPSJ0ZXh0LWdvbGQiIC8+CiAgICAgICAgICAgICAgICA8c3Bhbj4zMCBtaW51dGVzIMK3IEZyZWUgwrcgWm9vbSBvciBwaG9uZTwvc3Bhbj4KICAgICAgICAgICAgICA8L2Rpdj4KICAgICAgICAgICAgPC9kaXY+CgogICAgICAgICAgICB7LyogUmlnaHQ6IGxpdmUgQ2FsZW5kbHkgZW1iZWQgKi99CiAgICAgICAgICAgIDxkaXY+CiAgICAgICAgICAgICAgPENhbGVuZGx5RW1iZWQgdXJsPXtDQUxFTkRMWV9VUkx9IG1pbkhlaWdodD17NzYwfSAvPgogICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT0ibXQtMyB0ZXh0LXhzIHRleHQtZ3JleS00IHRleHQtY2VudGVyIj4KICAgICAgICAgICAgICAgIFRyb3VibGUgbG9hZGluZz97IiAifQogICAgICAgICAgICAgICAgPGEKICAgICAgICAgICAgICAgICAgaHJlZj17Q0FMRU5ETFlfVVJMfQogICAgICAgICAgICAgICAgICB0YXJnZXQ9Il9ibGFuayIKICAgICAgICAgICAgICAgICAgcmVsPSJub29wZW5lciBub3JlZmVycmVyIgogICAgICAgICAgICAgICAgICBjbGFzc05hbWU9InRleHQtbmF2eSBmb250LXNlbWlib2xkIHVuZGVybGluZSIKICAgICAgICAgICAgICAgID4KICAgICAgICAgICAgICAgICAgT3BlbiBzY2hlZHVsZXIgaW4gYSBuZXcgdGFiIOKGkgogICAgICAgICAgICAgICAgPC9hPgogICAgICAgICAgICAgIDwvcD4KICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICA8L2Rpdj4KICAgICAgICA8L2Rpdj4KICAgICAgPC9zZWN0aW9uPgoKICAgICAgey8qID09PT09IFJlYXNzdXJhbmNlID09PT09ICovfQogICAgICA8c2VjdGlvbiBjbGFzc05hbWU9ImJnLWNyZWFtIHB5LTIwIG1kOnB5LTI0Ij4KICAgICAgICA8ZGl2IGNsYXNzTmFtZT0ibWF4LXctWzg2MHB4XSBteC1hdXRvIHB4LTggdGV4dC1jZW50ZXIiPgogICAgICAgICAgPGgyIGNsYXNzTmFtZT0idGV4dC0yeGwgbWQ6dGV4dC00eGwgZm9udC1ib2xkIG1iLTYgbWF4LXctWzY4MHB4XSBteC1hdXRvIj4KICAgICAgICAgICAgV2UmYXBvcztkIFJhdGhlciBUZWxsIFlvdSBOb3QgdG8gRnJhbmNoaXNlIFRoYW4gU2VsbCBZb3UgU29tZXRoaW5nIFRoYXQgV29uJmFwb3M7dCBXb3JrCiAgICAgICAgICA8L2gyPgogICAgICAgICAgPHAgY2xhc3NOYW1lPSJ0ZXh0LWdyZXktMyB0ZXh0LWxnIGxlYWRpbmctcmVsYXhlZCI+CiAgICAgICAgICAgIElmIHlvdXIgYnVzaW5lc3MgaXNuJmFwb3M7dCBwcm9maXRhYmxlIHlldCwgaGFzbiZhcG9zO3QgYmVlbiBvcGVyYXRpbmcgbG9uZyBlbm91Z2gsIG9yIGRvZXNuJmFwb3M7dCBoYXZlIHRoZSBzeXN0ZW1zIGluIHBsYWNlIHRvIGJlIHJlcGxpY2F0ZWQg4oCUIHdlJmFwb3M7bGwgdGVsbCB5b3UuIFJlcHV0YXRpb24gaXMgbW9yZSB2YWx1YWJsZSB0aGFuIGFueSBzaW5nbGUgc2FsZS4KICAgICAgICAgIDwvcD4KICAgICAgICA8L2Rpdj4KICAgICAgPC9zZWN0aW9uPgoKICAgICAgey8qID09PT09IFF1aXogYWx0IENUQSA9PT09PSAqL30KICAgICAgPHNlY3Rpb24gY2xhc3NOYW1lPSJiZy13aGl0ZSBweS0yMCBtZDpweS0yNCI+CiAgICAgICAgPGRpdiBjbGFzc05hbWU9Im1heC13LVs4NjBweF0gbXgtYXV0byBweC04IHRleHQtY2VudGVyIj4KICAgICAgICAgIDxoMiBjbGFzc05hbWU9InRleHQtMnhsIG1kOnRleHQtM3hsIGZvbnQtYm9sZCBtYi00Ij5XYW50IHRvIFByZS1RdWFsaWZ5IFlvdXJzZWxmIEZpcnN0PzwvaDI+CiAgICAgICAgICA8cCBjbGFzc05hbWU9InRleHQtZ3JleS0zIHRleHQtbGcgbWItOCBtYXgtdy1bNjAwcHhdIG14LWF1dG8iPgogICAgICAgICAgICBUaGUgZnJlZSBGcmFuY2hpc2UgUmVhZGluZXNzIEFzc2Vzc21lbnQgdGFrZXMgMiBtaW51dGVzIGFuZCB0ZWxscyB5b3UgaW5zdGFudGx5IHdoZXJlIHlvdSBzdGFuZC4KICAgICAgICAgIDwvcD4KICAgICAgICAgIDxMaW5rCiAgICAgICAgICAgIGhyZWY9Ii9hc3Nlc3NtZW50IgogICAgICAgICAgICBjbGFzc05hbWU9ImlubGluZS1ibG9jayBiZy10cmFuc3BhcmVudCB0ZXh0LW5hdnkgYm9yZGVyLTIgYm9yZGVyLW5hdnkgZm9udC1ib2xkIHRleHQtc20gdXBwZXJjYXNlIHRyYWNraW5nLVswLjFlbV0gcHgtOSBweS00IHJvdW5kZWQtZnVsbCBob3ZlcjpiZy1uYXZ5IGhvdmVyOnRleHQtd2hpdGUgdHJhbnNpdGlvbi1jb2xvcnMiCiAgICAgICAgICA+CiAgICAgICAgICAgIFRha2UgdGhlIEZyZWUgQXNzZXNzbWVudAogICAgICAgICAgPC9MaW5rPgogICAgICAgIDwvZGl2PgogICAgICA8L3NlY3Rpb24+CgogICAgICB7LyogPT09PT0gVGVydGlhcnk6IGhhdmUgYSBxdWVzdGlvbiBmaXJzdD8gPT09PT0gKi99CiAgICAgIDxzZWN0aW9uIGNsYXNzTmFtZT0iYmctZ3JleS0xIGJvcmRlci10IGJvcmRlci1uYXZ5LzUgcHktMTAiPgogICAgICAgIDxkaXYgY2xhc3NOYW1lPSJtYXgtdy1bODYwcHhdIG14LWF1dG8gcHgtOCBmbGV4IGZsZXgtY29sIHNtOmZsZXgtcm93IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBnYXAtMyBzbTpnYXAtNSB0ZXh0LWNlbnRlciI+CiAgICAgICAgICA8TWFpbCBzaXplPXsxOH0gY2xhc3NOYW1lPSJ0ZXh0LWdvbGQgZmxleC1zaHJpbmstMCIgLz4KICAgICAgICAgIDxwIGNsYXNzTmFtZT0idGV4dC1ncmV5LTMgdGV4dC1bMTVweF0iPgogICAgICAgICAgICBIYXZlIGEgcXVlc3Rpb24gZmlyc3Q/IE5vdCByZWFkeSB0byBib29rPwogICAgICAgICAgPC9wPgogICAgICAgICAgPExpbmsKICAgICAgICAgICAgaHJlZj0iL2NvbnRhY3QiCiAgICAgICAgICAgIGNsYXNzTmFtZT0idGV4dC1uYXZ5IGZvbnQtc2VtaWJvbGQgdGV4dC1bMTVweF0gaG92ZXI6dGV4dC1nb2xkIHRyYW5zaXRpb24tY29sb3JzIHVuZGVybGluZS1vZmZzZXQtNCBob3Zlcjp1bmRlcmxpbmUiCiAgICAgICAgICA+CiAgICAgICAgICAgIFNlbmQgdXMgYSBtZXNzYWdlIOKGkgogICAgICAgICAgPC9MaW5rPgogICAgICAgIDwvZGl2PgogICAgICA8L3NlY3Rpb24+CgogICAgICA8U2l0ZUZvb3RlciAvPgogICAgPC8+CiAgKTsKfQo=
+import Link from "next/link";
+import type { Metadata } from "next";
+import { Calendar, Clock, Shield, MessageCircle, Mail } from "lucide-react";
+import { SiteNav } from "@/components/SiteNav";
+import { SiteFooter } from "@/components/SiteFooter";
+import { PageHero } from "@/components/PageHero";
+import { CalendlyEmbed } from "@/components/CalendlyEmbed";
+import { JsonLd } from "@/components/JsonLd";
+import { breadcrumbSchema } from "@/lib/schema";
+
+const CALENDLY_URL = "https://calendly.com/team-thefranchisorblueprint/30-minute-discovery-call";
+
+export const metadata: Metadata = {
+  title: "Book a Strategy Call | The Franchisor Blueprint",
+  description:
+    "Book a free 30-minute strategy call with Jason. We'll evaluate your business and recommend a path forward — no pressure, no sales tactics.",
+  openGraph: {
+    title: "Book a Strategy Call | The Franchisor Blueprint",
+    description:
+      "Book a free 30-minute strategy call with Jason. We'll evaluate your business and recommend a path forward — no pressure, no sales tactics.",
+    url: "/strategy-call",
+  },
+};
+
+export default function StrategyCallPage() {
+  return (
+    <>
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "Home", url: "/" },
+          { name: "Strategy Call", url: "/strategy-call" },
+        ])}
+      />
+      <SiteNav />
+
+      <PageHero
+        eyebrow="Strategy Call"
+        title="Book Your Free 30-Minute Strategy Call"
+        subtitle="No pressure, no sales tactics — just clarity on whether your business is ready to franchise and which path forward makes sense for you."
+      />
+
+      {/* ===== Calendly embed ===== */}
+      <section className="bg-white py-20 md:py-24">
+        <div className="max-w-[1100px] mx-auto px-8">
+          <div className="bg-grey-1 rounded-2xl border border-navy/10 p-8 md:p-12 grid md:grid-cols-[1fr_1.4fr] gap-10 md:gap-14 items-start">
+            {/* Left: what to expect */}
+            <div>
+              <span className="inline-block text-gold-warm font-semibold text-xs tracking-[0.18em] uppercase mb-4 border-b-2 border-gold pb-1">
+                The Plan
+              </span>
+              <h2 className="text-2xl md:text-3xl font-bold text-navy mb-6">
+                Here&apos;s how the 30 minutes will go
+              </h2>
+              <ul className="space-y-4">
+                {[
+                  { Icon: MessageCircle, t: "First 10 min: We listen", d: "You walk us through the business — where it is now, where you want to take it, and what's in the way." },
+                  { Icon: Shield, t: "Next 10 min: We diagnose", d: "We hold your model up against the same criteria a franchise attorney and your first franchisees will run. Strengths, gaps, what attorneys ask first." },
+                  { Icon: Calendar, t: "Last 10 min: A clear next step", d: "Which tier fits, what to fix before franchising makes sense, or a straight \"wait six months.\" Whichever's true." },
+                ].map(({ Icon, t, d }) => (
+                  <li key={t} className="flex gap-4">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-navy to-navy-light flex items-center justify-center text-gold">
+                      <Icon size={18} />
+                    </div>
+                    <div>
+                      <div className="text-navy font-bold text-base mb-0.5">{t}</div>
+                      <div className="text-grey-3 text-sm leading-relaxed">{d}</div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-8 pt-6 border-t border-navy/10 flex items-center gap-2 text-sm text-grey-3">
+                <Clock size={16} className="text-gold" />
+                <span>30 minutes · Free · Zoom or phone</span>
+              </div>
+            </div>
+
+            {/* Right: live Calendly embed */}
+            <div>
+              <CalendlyEmbed url={CALENDLY_URL} minHeight={760} />
+              <p className="mt-3 text-xs text-grey-4 text-center">
+                Trouble loading?{" "}
+                <a
+                  href={CALENDLY_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-navy font-semibold underline"
+                >
+                  Open scheduler in a new tab →
+                </a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== Reassurance ===== */}
+      <section className="bg-cream py-20 md:py-24">
+        <div className="max-w-[860px] mx-auto px-8 text-center">
+          <h2 className="text-2xl md:text-4xl font-bold mb-6 max-w-[680px] mx-auto">
+            We&apos;d Rather Tell You Not to Franchise Than Sell You Something That Won&apos;t Work
+          </h2>
+          <p className="text-grey-3 text-lg leading-relaxed">
+            If your business isn&apos;t profitable yet, hasn&apos;t been operating long enough, or doesn&apos;t have the systems in place to be replicated — we&apos;ll tell you. Reputation is more valuable than any single sale.
+          </p>
+        </div>
+      </section>
+
+      {/* ===== Quiz alt CTA ===== */}
+      <section className="bg-white py-20 md:py-24">
+        <div className="max-w-[860px] mx-auto px-8 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">Want to Pre-Qualify Yourself First?</h2>
+          <p className="text-grey-3 text-lg mb-8 max-w-[600px] mx-auto">
+            The free Franchise Readiness Assessment takes 2 minutes and tells you instantly where you stand.
+          </p>
+          <Link
+            href="/assessment"
+            className="inline-block bg-transparent text-navy border-2 border-navy font-bold text-sm uppercase tracking-[0.1em] px-9 py-4 rounded-full hover:bg-navy hover:text-white transition-colors"
+          >
+            Take the Free Assessment
+          </Link>
+        </div>
+      </section>
+
+      {/* ===== Tertiary: have a question first? ===== */}
+      <section className="bg-grey-1 border-t border-navy/5 py-10">
+        <div className="max-w-[860px] mx-auto px-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5 text-center">
+          <Mail size={18} className="text-gold flex-shrink-0" />
+          <p className="text-grey-3 text-[15px]">
+            Have a question first? Not ready to book?
+          </p>
+          <Link
+            href="/contact"
+            className="text-navy font-semibold text-[15px] hover:text-gold transition-colors underline-offset-4 hover:underline"
+          >
+            Send us a message →
+          </Link>
+        </div>
+      </section>
+
+      <SiteFooter />
+    </>
+  );
+}
