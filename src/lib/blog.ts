@@ -22,7 +22,7 @@ export type BlogPost = {
 };
 
 export const allPosts: BlogPost[] = [
-  // ─── Pillar: Pricing ────────────────────────────────────────────────────
+  // ─── Pillar: Pricing ────────────────────────────────────────────────
   {
     slug: "the-real-cost-of-franchising-your-business",
     title: "The Real Cost of Franchising Your Business in 2026",
@@ -33,7 +33,7 @@ export const allPosts: BlogPost[] = [
     readingTimeMin: 9,
     tags: ["pricing", "fdd", "consulting"],
   },
-  // ─── Pillar: Readiness ──────────────────────────────────────────────────
+  // ─── Pillar: Readiness ──────────────────────────────────────────────
   {
     slug: "is-my-business-ready-to-franchise",
     title: "Is My Business Ready to Franchise? A 10-Point Checklist",
@@ -50,7 +50,7 @@ export const allPosts: BlogPost[] = [
     slug: "franchise-disclosure-document-explained",
     title: "The Franchise Disclosure Document (FDD) Explained: All 23 Items in Plain English",
     excerpt:
-      "The FDD is the single most important document in franchising — and the most misunderstood. Here's what every one of the 23 federally required items actually means, in plain English.",
+      "The FDD is the most important document in franchising — and the most misunderstood. Here's what all 23 federally required items actually mean, in plain English.",
     category: "FDD",
     date: "2026-04-29",
     readingTimeMin: 14,
@@ -60,7 +60,7 @@ export const allPosts: BlogPost[] = [
     slug: "fdd-item-7-initial-investment",
     title: "FDD Item 7 Explained: How to Calculate the Total Initial Investment Range",
     excerpt:
-      "Item 7 is the number every franchise candidate scrolls to first. Get it wrong and you scare off good leads — or worse, attract under-capitalized ones. Here's how to build it right.",
+      "Item 7 is the number every franchise candidate scrolls to first. Get it wrong and you scare off good leads — or attract under-capitalized ones.",
     category: "FDD",
     date: "2026-04-29",
     readingTimeMin: 9,
@@ -70,19 +70,19 @@ export const allPosts: BlogPost[] = [
     slug: "fdd-item-19-financial-performance-representations",
     title: "FDD Item 19: Should Your Franchise Make Financial Performance Representations?",
     excerpt:
-      "Item 19 is optional. Most new franchisors skip it. That's almost always a mistake. Here's what disclosing real financial performance does for your sales — and how to do it without legal exposure.",
+      "Item 19 is optional. Most franchisors skip it — almost always a mistake. Here's what financial performance disclosure does for your sales.",
     category: "FDD",
     date: "2026-04-29",
     readingTimeMin: 10,
     tags: ["fdd", "financials", "sales"],
   },
 
-  // ─── Cluster: Franchise Economics ──────────────────────────────────────
+  // ─── Cluster: Franchise Economics ─────────────────────────────────────────
   {
     slug: "franchise-royalty-rate-benchmarks",
     title: "How to Set Franchise Royalty Rates: Industry Benchmarks by Sector (2026)",
     excerpt:
-      "Royalty rates make or break your unit economics. Set them too low and you starve the system. Too high and franchisees can't make money. Here are the real benchmarks by sector — and the framework for picking your number.",
+      "Royalty rates make or break unit economics. Too low starves the system; too high franchisees fail. Here are sector benchmarks and the right-pricing framework.",
     category: "Economics",
     date: "2026-04-29",
     readingTimeMin: 13,
@@ -92,7 +92,7 @@ export const allPosts: BlogPost[] = [
     slug: "franchise-fee-vs-royalty",
     title: "Initial Franchise Fee vs. Royalty: What Each One Pays For (And How to Price Both)",
     excerpt:
-      "These two numbers determine whether your franchise system is a real business or a pyramid in disguise. Here's what each one is for, what the market expects, and how to price both without leaving money on the table.",
+      "These two numbers determine if your franchise is a real business or a pyramid. Here's what each is for, what the market expects, and how to price both.",
     category: "Economics",
     date: "2026-04-29",
     readingTimeMin: 9,
@@ -104,19 +104,19 @@ export const allPosts: BlogPost[] = [
     slug: "how-to-write-franchise-operations-manual",
     title: "How to Write a Franchise Operations Manual: The 17-Section Framework Every Franchisor Needs",
     excerpt:
-      "Your Operations Manual is the document franchisees actually live by. Skip it or write it weak and your brand standards collapse the moment you sell unit #5. Here's the 17-section framework that separates real franchise systems from glorified licensing deals.",
+      "Your Operations Manual is what franchisees actually live by. Write it weak and brand standards collapse. Here's the 17-section framework.",
     category: "Operations",
     date: "2026-04-29",
     readingTimeMin: 14,
     tags: ["operations", "fdd", "readiness"],
   },
 
-  // ─── Cluster: Sales / Recruitment ──────────────────────────────────────
+  // ─── Cluster: Sales / Recruitment ────────────────────────────────────────
   {
     slug: "how-to-recruit-first-10-franchisees",
     title: "How to Recruit Your First 10 Franchisees: A Marketing Playbook for Emerging Brands",
     excerpt:
-      "The first 10 franchisees are the hardest. No track record, no peer testimonials, no Item 19 numbers worth showing. Here's the actual playbook — channels, copy patterns, qualification, and the five-step funnel that converts in this market.",
+      "The first 10 franchisees are the hardest. No track record, no testimonials, no Item 19. Here's the playbook — channels, qualification, and the funnel.",
     category: "Sales",
     date: "2026-04-29",
     readingTimeMin: 13,
@@ -126,19 +126,19 @@ export const allPosts: BlogPost[] = [
     slug: "discovery-day-playbook",
     title: "Discovery Day Playbook: How Top Franchisors Convert Qualified Candidates Into Signed Agreements",
     excerpt:
-      "Discovery Day is the closing instrument of franchise sales. Run it well and you sign the candidate that day. Run it as a tour and you lose them to the next firm with a sharper presentation. Here's the agenda, the materials, and the close.",
+      "Discovery Day is the closing instrument of franchise sales. Run it well and you sign the candidate; run it as a tour and you lose them. Here's the agenda.",
     category: "Sales",
     date: "2026-04-29",
     readingTimeMin: 10,
     tags: ["sales", "marketing"],
   },
 
-  // ─── Cluster: Decision / Strategy ──────────────────────────────────────
+  // ─── Cluster: Decision / Strategy ───────────────────────────────────────
   {
     slug: "franchise-vs-license-vs-company-owned",
     title: "Franchise vs. License vs. Company-Owned Expansion: Which Growth Model Fits Your Business?",
     excerpt:
-      "Franchising isn't the only way to scale. License agreements, dealer networks, and company-owned expansion all have their place. Here's how to decide — without the bias of someone trying to sell you franchise development.",
+      "Franchising isn't the only way to scale. Licenses, dealer networks, and company-owned expansion all have their place. Here's how to decide objectively.",
     category: "Strategy",
     date: "2026-04-29",
     readingTimeMin: 12,
@@ -148,7 +148,7 @@ export const allPosts: BlogPost[] = [
     slug: "why-new-franchisors-stall-in-year-2",
     title: "Why Most New Franchisors Stall in Year 2: 7 Patterns and How to Avoid Each",
     excerpt:
-      "Most new franchise systems hit a wall around month 14–18. They sell the first three franchises on hustle and friends-and-family, then growth flatlines for a year. Here are the seven patterns we see repeatedly — and the systemic fixes.",
+      "Most franchise systems hit a wall around month 14–18. First sales come on hustle, then growth flatlines. Here are the seven patterns and fixes.",
     category: "Strategy",
     date: "2026-04-29",
     readingTimeMin: 11,
