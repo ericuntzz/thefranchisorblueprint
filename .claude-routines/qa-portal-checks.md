@@ -138,3 +138,40 @@ grep -A3 'type="file"' \
 ```
 
 Should return ≥5 matches (DraftWithJasonModal ×1, DocPromptCard ×2, ChapterAttachments ×1, IntakeClient ×1, JasonChatDock ×1). If fewer, flag the missing one.
+
+---
+
+## Additions from 2026-05-12
+
+### 13. Dead component functions (defined but never rendered)
+
+**Pattern:** TypeScript does NOT error on unused local `function Foo()` declarations in `.tsx` files — only on unused imports. A removed component whose JSX tag was deleted from the return statement leaves the function definition silently behind. These accumulate as dead code that misleads readers into thinking the surface renders more than it does.
+
+**Grep:**
+```bash
+grep -n "^function [A-Z]" src/app/portal/page.tsx src/app/portal/layout.tsx src/app/portal/*/page.tsx src/app/portal/*/*/page.tsx 2>/dev/null
+```
+
+For each matched `function Foo`, confirm `<Foo` or `{Foo` appears in the same file's JSX. If it doesn't, check git blame to see when the function stopped being called. If the surrounding code has a comment saying "removed per Eric" or "chip removed" etc., the function itself is safe to delete.
+
+**Fixed (2026-05-12):** `src/app/portal/page.tsx` — `CoachingCreditsChip` defined at line 899 (before fix), removed in commit `86e1ab8`. The chip was stripped from the welcome hero on 2026-05-09 but the function body survived.
+
+**Boundary:** Only remove a component function if (a) it's not exported, (b) its call site has a comment explicitly saying it was removed, and (c) the git blame shows no recent changes to the function body that suggest active development.
+
+---
+
+### 14. Refine the `type="file"` / `accept=` multi-line grep false positive
+
+The check in baseline Step 3 (`grep -rn 'type="file"' ... | grep -v "accept="`) fires false positives because `accept=` is almost always on a separate line from `type="file"` in multi-line JSX. The corrected check:
+
+```bash
+grep -A5 'type="file"' \
+  src/app/portal/lab/intake/IntakeClient.tsx \
+  src/components/agent/DraftWithJasonModal.tsx \
+  src/components/agent/DocPromptCard.tsx \
+  src/components/agent/ChapterAttachments.tsx \
+  src/components/agent/JasonChatDock.tsx \
+  | grep "accept="
+```
+
+This reads 5 lines after each `type="file"` match and checks those for `accept=`. A file input without an `accept=` within 5 lines is genuinely missing it. Do NOT use the single-line grep form from the baseline for these multi-line inputs.
