@@ -102,9 +102,9 @@ export const allPosts: BlogPost[] = [
   // ─── Cluster: Operations ───────────────────────────────────────────────
   {
     slug: "how-to-write-franchise-operations-manual",
-    title: "How to Write a Franchise Operations Manual: The 17-Section Framework Every Franchisor Needs",
+    title: "How to Write a Franchise Operations Manual: The 17-Chapter Framework Every Franchisor Needs",
     excerpt:
-      "Your Operations Manual is what franchisees actually live by. Write it weak and brand standards collapse. Here's the 17-section framework.",
+      "Your Operations Manual is what franchisees actually live by. Write it weak and brand standards collapse. Here's the 17-chapter framework.",
     category: "Operations",
     date: "2026-04-29",
     readingTimeMin: 14,
