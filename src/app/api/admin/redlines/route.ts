@@ -8,9 +8,8 @@
  *   DELETE /api/admin/redlines?id=...                → drop redline
  *
  * Auth: ADMIN_USER_IDS gate. Customers don't hit this; they read their
- * own redlines via the section UI which goes through a separate
- * `/api/agent/redlines` route (TODO if needed) or a server-component
- * read.
+ * own redlines via the section UI which goes through the separate
+ * `/api/agent/redlines` route or a server-component read.
  */
 
 import { NextRequest, NextResponse } from "next/server";

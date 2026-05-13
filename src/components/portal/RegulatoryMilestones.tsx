@@ -60,7 +60,14 @@ export function RegulatoryMilestones({ states, summary }: Props) {
         )}
       </p>
 
-      <div className="h-2 rounded-full bg-grey-1 overflow-hidden mb-6">
+      <div
+        role="progressbar"
+        aria-valuenow={summary.percentComplete}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Milestone completion"
+        className="h-2 rounded-full bg-grey-1 overflow-hidden mb-6"
+      >
         <div
           className="h-full bg-gradient-to-r from-gold to-gold-warm transition-all duration-500"
           style={{ width: `${summary.percentComplete}%` }}

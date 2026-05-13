@@ -168,6 +168,7 @@ export function DeliverablePreviewModal(props: Props) {
                           setActiveId(d.id);
                           setIframeLoading(true);
                         }}
+                        aria-pressed={isActive}
                         className={`w-full text-left px-4 py-2.5 flex items-start gap-2.5 transition-colors text-sm ${
                           isActive
                             ? "bg-cream-soft border-l-2 border-l-gold"

@@ -56,7 +56,14 @@ export function CommandCenter({
       </h1>
 
       {/* Progress bar — gold gradient pops against navy. */}
-      <div className="h-2 rounded-full bg-cream/15 overflow-hidden mb-6">
+      <div
+        role="progressbar"
+        aria-valuenow={readinessPct}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Blueprint completion"
+        className="h-2 rounded-full bg-cream/15 overflow-hidden mb-6"
+      >
         <div
           className="h-full bg-gradient-to-r from-gold to-gold-warm transition-all duration-500"
           style={{ width: `${readinessPct}%` }}
