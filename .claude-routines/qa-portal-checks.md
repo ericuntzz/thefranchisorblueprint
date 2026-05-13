@@ -175,3 +175,44 @@ grep -A5 'type="file"' \
 ```
 
 This reads 5 lines after each `type="file"` match and checks those for `accept=`. A file input without an `accept=` within 5 lines is genuinely missing it. Do NOT use the single-line grep form from the baseline for these multi-line inputs.
+
+---
+
+## Additions from 2026-05-13
+
+### 15. Progress bar ARIA scan must include `src/components/portal/`
+
+Prior additions noted fixes in `src/app/portal/` and `src/components/AssessmentFlow.tsx`, but this run found three more progress bars missing the full ARIA triad in `src/components/portal/` (CommandCenter, DeliverableExplorer/ReadinessBar, RegulatoryMilestones). The baseline grep only targets `src/app/portal` and `src/app/assessment`. Extend it:
+
+```bash
+grep -rn "overflow-hidden" \
+  src/app/portal src/app/assessment \
+  src/components/portal src/components/AssessmentFlow.tsx \
+  | grep "rounded-full" | grep -E "h-1[^0-9]|h-2[^0-9]|h-1\.5"
+```
+
+For each hit, check whether the outer container div has ALL of `role="progressbar"`, `aria-valuenow`, `aria-valuemin`, `aria-valuemax`. Missing any one of the three is a MEDIUM finding. The `aria-label` is additionally required when the surrounding heading doesn't already announce what the bar measures.
+
+**Fixed 2026-05-13:** `CommandCenter.tsx:59`, `RegulatoryMilestones.tsx:63`, `DeliverableExplorer.tsx:584`.
+
+---
+
+### 16. List-rail "active item" buttons need `aria-pressed`
+
+Any button inside a `<ul>/<li>` navigation rail (sidebar, tab-like selector) that visually marks one item as "currently selected" using a class toggle must carry `aria-pressed={isActive}`. The pattern `const isActive = X.id === activeId` followed by a `className={... isActive ? ... : ...}` with no ARIA attribute is the signature to grep for:
+
+```bash
+grep -rn "isActive\s*?" src/components/portal/ | grep "className" | grep -v "aria-"
+```
+
+For each match, check if the corresponding `<button` has `aria-pressed` or `aria-current`. If not, add `aria-pressed={isActive}`.
+
+**Fixed 2026-05-13:** `DeliverablePreviewModal.tsx:166` — bundle sidebar deliverable-selector buttons.
+
+---
+
+### 17. `void notFound` in admin pages — ambiguous, leave alone
+
+`src/app/portal/admin/redline/page.tsx:223` contains `void notFound;` with an explicit comment saying it's kept for future use. This is NOT a lying suppression — it's a genuine forward-compatibility placeholder. Do not flag or remove it on future runs unless the comment is gone and `notFound()` is now actively called in the same file.
+
+**Pattern to distinguish:** If the `void X` has a comment saying "kept for future use" or "available for," treat it as ambiguous and skip. Only flag `void X` where X is called elsewhere in the same file (lying suppression) or where there is no comment at all.
