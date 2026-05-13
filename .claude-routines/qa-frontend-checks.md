@@ -144,3 +144,20 @@
 - `src/components/BlueprintUpsellBuyBox.tsx` lines 205-265: when `NEXT_PUBLIC_STRIPE_LIVE !== "true"`, renders "Self-serve checkout coming soon. Until then, every customer starts with a quick call."
 - This copy becomes stale once Stripe goes live (env var flipped). Each run: `grep -n "NEXT_PUBLIC_STRIPE_LIVE" .env* 2>/dev/null || grep -rn "NEXT_PUBLIC_STRIPE_LIVE" src/ --include="*.tsx" | grep -v "components/BlueprintUpsellBuyBox"` — if the env var is set to "true" in production, the "coming soon" branch is unreachable and the copy is moot. REPORT-ONLY until env var status confirmed.
 - Fix when Stripe is live: remove lines 258-262 (the `<p>` with "Self-serve checkout coming soon") from the `!STRIPE_LIVE` render branch in BlueprintUpsellBuyBox.tsx.
+
+## Additions from 2026-05-13
+
+### Check: blog post content terminology vs. blog.ts metadata
+- When a blog post article consistently uses a specific term (e.g. "17-chapter"), verify that blog.ts `title` and `excerpt` use the same term — not an older synonym ("17-section"). This drift happens when the MDX is written or edited independently of blog.ts.
+- grep: `grep -n '17-section\|17-chapter' src/lib/blog.ts src/app/blog/\(posts\)/how-to-write-franchise-operations-manual/page.mdx 2>/dev/null` — any mismatch between the two files flags a content drift.
+- Auto-fixable: update blog.ts title/excerpt to match the article content's terminology.
+- Fixed 2026-05-13: "17-Section Framework" → "17-Chapter Framework" in title; "17-section framework" → "17-chapter framework" in excerpt.
+
+### Check: cross-asset terminology consistency (marketing pages vs. blog posts)
+- Marketing pages (page.tsx, programs/page.tsx, programs/blueprint/page.tsx, ComparisonTable.tsx, DeviceMockups.tsx) use "17-section" when describing the Operations Manual template as a product feature. The blog post uses "17-chapter". These may be intentionally different (product terminology vs. educational framework) or may be a legacy mismatch.
+- grep: `grep -rn '17-section\|17-chapter' src/app/page.tsx src/app/programs/page.tsx src/app/programs/blueprint/page.tsx src/components/ComparisonTable.tsx src/components/DeviceMockups.tsx src/lib/blog.ts --include="*.tsx" --include="*.ts"` — if any inconsistency, REPORT-ONLY. This is a positioning/voice decision for Eric.
+- REPORT-ONLY: as of 2026-05-13 the marketing pages say "17-section" (product copy) and the blog post says "17-chapter" (framework terminology). Eric should decide which is canonical across the site.
+
+### Check: git detached HEAD during QA routine
+- If the working directory is in detached HEAD state at the start of a QA run (e.g., due to a worktree or prior session state), commits will not land on `main`. After every commit, verify `git branch --show-current` is not empty. If detached, cherry-pick the commit(s) onto `main` before pushing.
+- Pattern: `git branch --show-current | grep -q '^$' && echo "DETACHED HEAD — commits will not land on main"`
