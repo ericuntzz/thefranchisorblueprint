@@ -121,7 +121,7 @@
 - Re-check if new `dangerouslySetInnerHTML` usages appear outside these two files.
 
 ### Check: metadata description regex false positive (apostrophe in strings)
-- The regex pattern `r'description:\s*[\"\'](.*)[\'\"']'` stops at the first apostrophe in the content when matching single-quoted strings — e.g. "We'll" causes a 50-char false positive for a 162-char description.
+- The regex pattern `r'description:\s*["\'](.*)[\'"']'` stops at the first apostrophe in the content when matching single-quoted strings — e.g. "We'll" causes a 50-char false positive for a 162-char description.
 - Use a more robust pattern: read the raw file and look for the string manually, or use a multi-line regex that avoids stopping at apostrophes in double-quoted strings.
 - Safer pattern: `python3 -c "d = open(f).read(); import re; [print(len(m), m[:80]) for m in re.findall(r'description:\n\s*\"(.*?)\"', d, re.DOTALL)]"` — use double-quote delimiters only.
 
@@ -161,3 +161,17 @@
 ### Check: git detached HEAD during QA routine
 - If the working directory is in detached HEAD state at the start of a QA run (e.g., due to a worktree or prior session state), commits will not land on `main`. After every commit, verify `git branch --show-current` is not empty. If detached, cherry-pick the commit(s) onto `main` before pushing.
 - Pattern: `git branch --show-current | grep -q '^$' && echo "DETACHED HEAD — commits will not land on main"`
+- **IMPORTANT (2026-05-14):** Run this check at the VERY START of the routine, before Step 2, not just after each commit. If detached, check whether origin/main already has those commits before cherry-picking — duplicate cherry-picks cause diverged history requiring a rebase. Recovery pattern: `git fetch origin main && git log --oneline origin/main -5` then rebase with `git pull --rebase origin main` before pushing.
+
+## Additions from 2026-05-14
+
+### Check: InlineCTA body vs. marketing-page product specs
+- Blog posts embed `<InlineCTA>` components with product feature details (slide counts, framework counts, etc.) in the `body` prop. These are written as static strings and drift independently from the marketing pages that describe the same product.
+- Key spec to verify on each run: the Discovery Day Deck slide count. All marketing pages use "29-slide". The blog's InlineCTA at `src/app/blog/(posts)/discovery-day-playbook/page.mdx` line 147 must say "29-slide".
+- grep: `grep -n "slide" src/app/blog/\(posts\)/discovery-day-playbook/page.mdx` — any value other than "29-slide" in the InlineCTA body (line ~147) or inconsistent with marketing pages is auto-fixable.
+- Fixed 2026-05-14: "25-slide" → "29-slide" in the discovery-day-playbook InlineCTA.
+- Broader pattern: for any InlineCTA in any blog post, cross-check its `body` prop against the canonical marketing page (homepage, programs, pricing, ComparisonTable) for the same product spec. If it differs, it's auto-fixable unless it appears in narrative prose (where a range like "25-30 slide" is acceptable).
+
+### Check: orphaned commits from prior runs on remote but not pushed
+- After the push to origin/main succeeds, run `git log --oneline origin/main -5` and confirm the top commit matches local HEAD. If git push fails with 403 and local git proxy is broken, fall back to `mcp__github__push_files` to push the changed file(s) directly.
+- After using mcp__github__push_files, sync local with `git fetch origin main && git reset --hard origin/main` to avoid future divergence.
