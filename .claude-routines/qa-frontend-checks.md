@@ -175,3 +175,26 @@
 ### Check: orphaned commits from prior runs on remote but not pushed
 - After the push to origin/main succeeds, run `git log --oneline origin/main -5` and confirm the top commit matches local HEAD. If git push fails with 403 and local git proxy is broken, fall back to `mcp__github__push_files` to push the changed file(s) directly.
 - After using mcp__github__push_files, sync local with `git fetch origin main && git reset --hard origin/main` to avoid future divergence.
+
+## Additions from 2026-05-15
+
+### Check: "strategy call" vs "onboarding call" terminology on programs/blueprint page
+- The post-purchase kickoff is the "onboarding call" (60-min, Calendly: `60-minute-blueprint-onboarding`). The pre-sale call is the "strategy call" (/strategy-call, 30-min). These must not be conflated.
+- grep: `grep -n "strategy call" src/app/programs/blueprint/page.tsx` — any hit outside a reference to the separate strategy-call CTA is a bug. The onboarding-specific copy should say "onboarding call" or "kickoff call".
+- Fixed 2026-05-15: line 52 "onboarding strategy call" → "Onboarding Call"; line 106 "strategy call" → "onboarding call".
+
+### Check: SiteNav hardcoded hex backgroundColor
+- `src/components/SiteNav.tsx` nav element should use `bg-cream` Tailwind class, not `style={{ backgroundColor: "#ece9df" }}`.
+- grep: `grep -n "backgroundColor.*ece9df\|backgroundColor.*cream" src/components/SiteNav.tsx` — any hit is a LOW fix (replace with bg-cream in className).
+- Fixed 2026-05-15: replaced inline style with bg-cream.
+
+### Check: "Save 5%" pricing math vs installment amounts (REPORT-ONLY)
+- Blueprint: pay-in-full $2,997, installments $1,100 × 3 = $3,300. Actual savings = 9.2%, not 5%.
+- Navigator: pay-in-full $8,500, installments $3,200 × 3 = $9,600. Actual savings = 11.5%, not 5%.
+- Builder: pay-in-full $29,500, installments $13,000 + $3,000 × 6 = $31,000. Actual savings ≈ 4.8% ≈ 5%. ✓
+- grep: `python3 -c "print((3300-2997)/3300*100, (9600-8500)/9600*100, (31000-29500)/31000*100)"` — Blueprint and Navigator "Save 5%" copy is mathematically off. REPORT-ONLY: this is a pricing/positioning decision for Eric. Do not auto-fix without confirmation.
+
+### Check: pricing page Blueprint card includes list label consistency
+- `src/app/pricing/page.tsx` blueprint features list uses "60-Min White-Glove Onboarding Call". Should stay consistent with programs/blueprint/page.tsx includes array.
+- grep: `grep -n "60-min\|60-Minute\|onboarding" src/app/pricing/page.tsx src/app/programs/blueprint/page.tsx` — verify both say "onboarding call" (not "strategy call").
+- As of 2026-05-15: both pages say "onboarding call". ✓
