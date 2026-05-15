@@ -216,3 +216,41 @@ For each match, check if the corresponding `<button` has `aria-pressed` or `aria
 `src/app/portal/admin/redline/page.tsx:223` contains `void notFound;` with an explicit comment saying it's kept for future use. This is NOT a lying suppression — it's a genuine forward-compatibility placeholder. Do not flag or remove it on future runs unless the comment is gone and `notFound()` is now actively called in the same file.
 
 **Pattern to distinguish:** If the `void X` has a comment saying "kept for future use" or "available for," treat it as ambiguous and skip. Only flag `void X` where X is called elsewhere in the same file (lying suppression) or where there is no comment at all.
+
+---
+
+## Additions from 2026-05-15
+
+### 18. Segmented quota/usage meters need the ARIA progressbar triad
+
+**Pattern:** Any component that renders a "used N of M" quota meter as a row of
+pill segments (e.g. `Array.from({ length: cap }).map((_, i) => <span ... />)`)
+is functionally a progress bar and must carry the full ARIA triad on the
+**container** div:
+
+```tsx
+role="progressbar"
+aria-valuenow={usedCount}
+aria-valuemin={0}
+aria-valuemax={cap}
+aria-label="<descriptive label>"
+```
+
+Without this, screen readers see only a series of meaningless `<span>` elements.
+
+**Grep:**
+```bash
+grep -rn "Array.from.*length.*\.map" src/app/portal/ src/app/assessment/ src/components/portal/ \
+  | grep -v "role=\"progressbar\""
+```
+
+For each hit, check whether the container div of the mapped spans has the role
++ three aria-value attributes. If not and the visual output looks like a usage
+bar, flag as MEDIUM accessibility.
+
+**Fixed 2026-05-15:** `src/components/portal/FreeTierDashboard.tsx` lines
+153-167 — monthly analyses quota meter. Commit `b9522e6`.
+
+**Boundary:** Pure list/grid renders (e.g. `stars.map(...)`) are not progress
+bars. Only flag when the coloring pattern is `i < usedCount ? active : inactive`
+(i.e. the first N are lit, the rest are dim).
