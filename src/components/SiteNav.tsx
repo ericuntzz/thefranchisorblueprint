@@ -40,7 +40,7 @@ export function SiteNav() {
   }, [open]);
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-black/5" style={{ backgroundColor: "#ece9df" }}>
+    <nav className="sticky top-0 z-50 border-b border-black/5 bg-cream">
       <div className="max-w-[1400px] mx-auto px-6 md:px-8 py-3 flex items-center justify-between">
         <Link
           href="/"

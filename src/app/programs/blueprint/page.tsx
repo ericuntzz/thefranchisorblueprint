@@ -49,7 +49,7 @@ const includes = [
   "Qualify Every Candidate — weighted franchisee scoring matrix",
   "Close Discovery Day — 29-slide sales presentation deck",
   "Implementation guides for every framework",
-  "60-Minute white-glove onboarding strategy call",
+  "60-Minute White-Glove Onboarding Call",
   "30 days of email support",
   "Lifetime access to system updates",
 ];
@@ -103,7 +103,7 @@ export default async function BlueprintProductPage() {
               The Full $33,500+ System for $2,997
             </h2>
             <p className="text-grey-3 text-lg leading-relaxed mb-8">
-              You get instant access to every document in our system, plus the implementation guides that walk you through how to use each one. We also kick off your engagement with a 60-minute strategy call so you start with momentum.
+              You get instant access to every document in our system, plus the implementation guides that walk you through how to use each one. We also kick off your engagement with a 60-minute onboarding call so you start with momentum.
             </p>
             <ul className="space-y-3">
               {includes.map((item) => (
