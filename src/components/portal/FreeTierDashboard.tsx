@@ -151,7 +151,14 @@ export function FreeTierDashboard({
 
           {/* Quota meter — 5 segments, gold for used, grey for unused. */}
           <div className="mt-6 flex items-center gap-3">
-            <div className="flex-1 flex gap-1.5">
+            <div
+              className="flex-1 flex gap-1.5"
+              role="progressbar"
+              aria-valuenow={usedThisMonth}
+              aria-valuemin={0}
+              aria-valuemax={monthlyCap}
+              aria-label="Monthly analyses used"
+            >
               {Array.from({ length: monthlyCap }).map((_, i) => (
                 <span
                   key={i}
