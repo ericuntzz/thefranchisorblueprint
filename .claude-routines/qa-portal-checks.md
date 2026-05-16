@@ -254,3 +254,66 @@ bar, flag as MEDIUM accessibility.
 **Boundary:** Pure list/grid renders (e.g. `stars.map(...)`) are not progress
 bars. Only flag when the coloring pattern is `i < usedCount ? active : inactive`
 (i.e. the first N are lit, the rest are dim).
+
+---
+
+## Additions from 2026-05-16
+
+### 19. `void (async () => {...})()` inside `useEffect` is NOT fire-and-forget
+
+**Pattern:** The baseline fire-and-forget check greps for `void (async () =>` in portal/assessment files. This will hit `useEffect` bodies that use the pattern:
+
+```tsx
+useEffect(() => {
+  void (async () => {
+    await doSomething();
+  })();
+}, [dep]);
+```
+
+This is the **correct** React pattern for async work inside `useEffect` — you can't make the effect callback itself async, so you wrap in an IIFE and `void` the returned promise. It is NOT a fire-and-forget risk because React's cleanup function handles the lifecycle, and the IIFE awaits its own internal promises.
+
+**Updated grep to exclude this pattern:**
+
+```bash
+grep -rn "void (async" src/app/portal/ src/app/assessment/ | grep -v "useEffect\|onClick\|onSubmit\|onDrop\|onChange\|handler"
+```
+
+Only flag if the `void (async ...` is at module scope or inside a server component function body (not in a React hook or event handler).
+
+**Found 2026-05-16:** `src/app/portal/section/[slug]/SectionToolbar.tsx:59` — confirmed safe `useEffect` IIFE pattern. Not a finding.
+
+---
+
+### 20. `!` non-null assertions guarded by `Array.isArray` are safe
+
+**Pattern:** The baseline "null/undefined guards" check may flag code like:
+
+```ts
+const count = Array.isArray(data?.nested?.arr)
+  ? data!.nested!.arr!.length
+  : 0;
+```
+
+TypeScript doesn't narrow properly through optional chaining in ternary branches, so the `!` assertions are necessary and safe when the branch condition already confirms existence. Do NOT flag `!` assertions when:
+1. They are in the truthy branch of `Array.isArray(x?.y?.z)`, or
+2. They are in the truthy branch of `x !== null && x !== undefined`.
+
+**Found 2026-05-16:** `src/app/portal/page.tsx:395` — `scoreData!.snapshot!.expansion!.length` guarded by `Array.isArray(scoreData?.snapshot?.expansion)`. Safe; not a finding.
+
+---
+
+### 21. Clean-run indicator: file count for future regression detection
+
+This run scanned **~65 files** across portal, assessment, API, and shared components with zero findings. If a future run suddenly finds 10+ new issues, check the git log — a large feature ship or merge may have introduced regressions the routine should catch earlier.
+
+**Baseline count (2026-05-16):**
+- `src/app/portal/**`: 27 files
+- `src/app/assessment/**`: 5 files
+- `src/app/api/portal/**`: 4 files
+- `src/app/api/assessment/**`: 5 files
+- `src/components/portal/**`: 13 files
+- `src/components/agent/**` (scoped): ~6 files
+- Shared components (PortalNav, AssessmentFlow, etc.): 5 files
+
+If the file count grows by more than 30% between runs, scan the new files first before re-scanning the known-good ones.
