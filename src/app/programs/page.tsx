@@ -111,7 +111,7 @@ const tiers: Tier[] = [
       "You get the complete franchisor operating system with detailed implementation guides for every framework. We kick off with a 60-minute onboarding call to orient you to the materials. From there, you execute at your own pace.",
     features: [
       "The Complete Operating System (9 frameworks)",
-      "60-Minute Onboarding Strategy Call",
+      "60-Minute White-Glove Onboarding Call",
       "Self-Paced Implementation Guides",
       "30 Days of Email Support",
       "Lifetime access to system updates",
