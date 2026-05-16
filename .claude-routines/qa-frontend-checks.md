@@ -198,3 +198,11 @@
 - `src/app/pricing/page.tsx` blueprint features list uses "60-Min White-Glove Onboarding Call". Should stay consistent with programs/blueprint/page.tsx includes array.
 - grep: `grep -n "60-min\|60-Minute\|onboarding" src/app/pricing/page.tsx src/app/programs/blueprint/page.tsx` — verify both say "onboarding call" (not "strategy call").
 - As of 2026-05-15: both pages say "onboarding call". ✓
+
+## Additions from 2026-05-16
+
+### Check: programs/page.tsx Tier 1 feature list label vs. pricing/blueprint pages
+- `src/app/programs/page.tsx` Tier 1 features array (around line 114) must say "60-Minute White-Glove Onboarding Call", not "Onboarding Strategy Call".
+- grep: `grep -n "60-Minute\|onboarding.*call\|strategy call" src/app/programs/page.tsx | head -5` — any "strategy call" in the Tier 1 features array is a terminology bug (strategy call = pre-sale; onboarding call = post-purchase).
+- Fixed 2026-05-16: "60-Minute Onboarding Strategy Call" → "60-Minute White-Glove Onboarding Call".
+- Extend the check to ALL tier feature arrays in programs/page.tsx, not just Tier 1: `grep -n "Strategy Call" src/app/programs/page.tsx` — should return zero hits after this fix.
