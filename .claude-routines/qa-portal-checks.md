@@ -317,3 +317,43 @@ This run scanned **~65 files** across portal, assessment, API, and shared compon
 - Shared components (PortalNav, AssessmentFlow, etc.): 5 files
 
 If the file count grows by more than 30% between runs, scan the new files first before re-scanning the known-good ones.
+
+---
+
+## Additions from 2026-05-17
+
+### 22. Refine `isActive` aria-pressed grep to avoid false positives on child elements
+
+**Problem:** Check 16's grep pattern fires false positives when `isActive ?` appears inside the `className` of **child elements** (like `<div>` or `<span>`) inside a button that already has `aria-pressed`. The pattern `grep -rn "isActive\s*?" ... | grep "className" | grep -v "aria-"` matches any element with `isActive` in its className, not just the `<button>` itself.
+
+**Refined grep:**
+```bash
+# First find all buttons with isActive-driven className
+grep -rn -B2 'isActive ? ' src/components/portal/ \
+  | grep '<button' \
+  | grep -v 'aria-pressed\|aria-current'
+```
+
+This searches 2 lines before any `isActive ? ` usage and checks if the preceding `<button` line is missing the ARIA attribute — avoiding hits on child `<div>`/`<span>` elements inside already-accessible buttons.
+
+**Verified 2026-05-17:** `DeliverablePreviewModal.tsx:180,184` are child elements inside the button at line 166 which already has `aria-pressed={isActive}`. Not a finding.
+
+---
+
+### 23. Sections using only `pb-*` without `pt-*` — LOW polish, context-dependent
+
+**Pattern:** A `<section>` with only `className="pb-N md:pb-M"` (no `pt-*`) relies entirely on the preceding sibling's bottom padding for vertical separation. This is functionally fine as long as the preceding section has adequate `pb-`, but creates fragile coupling — if the preceding section is removed or its padding changes, the following section has zero top breathing room.
+
+**Grep:**
+```bash
+grep -rn '<section className="pb-' src/app/portal/ src/app/assessment/ src/components/portal/ \
+  | grep -v 'pt-\|py-'
+```
+
+**Found 2026-05-17:**
+- `src/app/portal/coaching/page.tsx:93` — `pb-16 md:pb-24`, relies on preceding `py-12 md:py-16` section for 48px gap. Functionally OK.
+- `src/app/portal/upgrade/page.tsx:164` — `pb-16 md:pb-24`, same pattern. Functionally OK.
+
+**Boundary:** Only flag if the preceding section is conditionally rendered (i.e., could be absent, leaving zero top padding). If the preceding section is always present, this is LOW and can be left to accumulate.
+
+**Action:** Flag only if the preceding section is conditional (`{condition && <section ...>}`). Otherwise report-only.
