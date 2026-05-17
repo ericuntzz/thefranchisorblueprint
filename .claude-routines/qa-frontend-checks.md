@@ -206,3 +206,18 @@
 - grep: `grep -n "60-Minute\|onboarding.*call\|strategy call" src/app/programs/page.tsx | head -5` — any "strategy call" in the Tier 1 features array is a terminology bug (strategy call = pre-sale; onboarding call = post-purchase).
 - Fixed 2026-05-16: "60-Minute Onboarding Strategy Call" → "60-Minute White-Glove Onboarding Call".
 - Extend the check to ALL tier feature arrays in programs/page.tsx, not just Tier 1: `grep -n "Strategy Call" src/app/programs/page.tsx` — should return zero hits after this fix.
+
+## Additions from 2026-05-17
+
+### Check: blog MDX description-length false positive — howToSchema / JSON-LD fields
+- Blog post MDX files use `post.excerpt` (from `src/lib/blog.ts`) as their metadata description, NOT any inline `description:` string in the MDX body.
+- The description at the top of `how-to-write-franchise-operations-manual/page.mdx` line 31 is inside a `howToSchema` JSON-LD object — it is NOT the `<meta name="description">` value and should not be length-checked as such.
+- Correct check: read the `excerpt` field from `src/lib/blog.ts` directly for each post, not the MDX body.
+- Pattern: `python3 -c "import re; c=open('src/lib/blog.ts').read(); posts=re.findall(r'slug:.*?tags:.*?\]', c, re.DOTALL); [print(len(re.search(r'excerpt:\s*\"(.*?)\"', p, re.DOTALL).group(1)), p[:60]) for p in posts if re.search(r'excerpt:\s*\"(.*?)\"', p, re.DOTALL) and len(re.search(r'excerpt:\s*\"(.*?)\"', p, re.DOTALL).group(1)) > 160]"`
+- As of 2026-05-17: all blog.ts excerpts are under 160 chars (max: 147 chars). No fix needed.
+
+### Check: cherry-pick + rebase recovery when origin already has the commits
+- When cherry-picking orphaned commits onto local main and then pushing, if origin already contains those commits (e.g., pushed via mcp__github__push_files in a prior session), `git push` will be rejected as non-fast-forward.
+- Recovery: `git fetch origin main && git rebase origin/main` — git will skip already-applied commits (same patch signature) and sync local to origin cleanly.
+- Verification after rebase: `git log --oneline -3` should show local HEAD matching origin/main HEAD.
+- Do NOT force-push. If rebase leaves zero un-skipped commits, the content is already on origin — no push needed.
